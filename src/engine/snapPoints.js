@@ -28,16 +28,16 @@ const RAW_SNAP_POINTS = {
       // y = shelf surface (pot bottoms anchor here). Increase y to move pots DOWN.
       // x spacing between pots on top shelf = ~186px. Decrease to pack tighter.
       // Top shelf: 5 pots. Shelf surface y ≈ 490.
-      { id: 'r1_p1', x: 188,  y: 490 }, // leftmost
-      { id: 'r1_p2', x: 374,  y: 490 },
-      { id: 'r1_p3', x: 567,  y: 490 }, // center
-      { id: 'r1_p4', x: 754,  y: 490 },
-      { id: 'r1_p5', x: 944,  y: 490 }, // rightmost
+      { id: 'r1_p1', x: 208, y: 530 }, // leftmost
+      { id: 'r1_p2', x: 374, y: 530 },
+      { id: 'r1_p3', x: 567, y: 530 }, // center
+      { id: 'r1_p4', x: 754, y: 530 },
+      { id: 'r1_p5', x: 944, y: 530 }, // rightmost
       // Bottom shelf: 4 pots. Shelf surface y ≈ 638. x spacing ≈ 192px.
-      { id: 'r1_p6', x: 282,  y: 638 }, // leftmost
-      { id: 'r1_p7', x: 474,  y: 638 },
-      { id: 'r1_p8', x: 664,  y: 638 },
-      { id: 'r1_p9', x: 856,  y: 638 }, // rightmost
+      { id: 'r1_p6', x: 282, y: 730 }, // leftmost
+      { id: 'r1_p7', x: 474, y: 730 },
+      { id: 'r1_p8', x: 664, y: 730 },
+      { id: 'r1_p9', x: 856, y: 730 }, // rightmost
       // ────────────────────────────────────────────────────────────────────────
     ],
     hanging: [],
@@ -45,9 +45,9 @@ const RAW_SNAP_POINTS = {
   2: {
     potted: [],
     hanging: [
-      { id: 'r2_h1', x: 235, y: 54  },
-      { id: 'r2_h2', x: 385, y: 54  },
-      { id: 'r2_h3', x: 528, y: 54  },
+      { id: 'r2_h1', x: 235, y: 54 },
+      { id: 'r2_h2', x: 385, y: 54 },
+      { id: 'r2_h3', x: 528, y: 54 },
       { id: 'r2_h4', x: 234, y: 311 },
       { id: 'r2_h5', x: 386, y: 311 },
       { id: 'r2_h6', x: 527, y: 311 },
@@ -85,16 +85,22 @@ export const DECOR_POSITIONS = {
   },
 };
 
+// Draggable pot source positions per room (anchor: bottom-center, like pots)
+export const POT_SOURCE_POSITIONS = {
+  1: { x: 100, y: 348 },
+  3: { x: 120, y: 600 },
+};
+
 export const SNAP_RADIUS = 40;
 
 // Window sill storage slots — room 1 only
 // Bags bottom-anchored to ledge surface (y≈330), center = 330-70 = 260
 // Daisy hint at x=170, slots step by exactly one bag width (140)
 const RAW_SILL_POINTS = [
-  { id: 'sill_1', x: 285,  y: 268 },
-  { id: 'sill_2', x: 415,  y: 268 },
-  { id: 'sill_3', x: 545,  y: 268 },
-  { id: 'sill_4', x: 675,  y: 268 },
+  { id: 'sill_1', x: 190, y: 275 }, // matches ghost bag position exactly
+  { id: 'sill_2', x: 320, y: 275 },
+  { id: 'sill_3', x: 450, y: 275 },
+  { id: 'sill_4', x: 580, y: 275 },
 ];
 
 export function getSillPoints(screenWidth, screenHeight) {

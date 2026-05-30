@@ -15,7 +15,8 @@ import { RAW_SHELF_SLOTS, ALL_SEEDS } from '../constants/nurseryData';
 
 
 // Shuffle once per app session at module load time — stable across remounts
-const _shuffledSlots = (() => {
+// Exported so CartTransitionScreen can render bags in the exact same order
+export const _shuffledSlots = (() => {
   const slots = [...RAW_SHELF_SLOTS];
   for (let i = slots.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));

@@ -32,14 +32,14 @@ export const HANGING_PLANTS = {
 };
 
 export const WALL_COLORS = {
-  room1: ['green', 'pink', 'white'],
+  room1: ['white'],
   room2: ['pink', 'white'],
   room3: ['white'],
 };
 
 export const ROOM_UNLOCK_COSTS = {
-  2: 500,
-  3: 1500,
+  2: 0,
+  3: 0,
 };
 
 export const PAINTINGS = {
@@ -81,7 +81,7 @@ export const INITIAL_PLAYER_STATE = {
   coins: 50,
   unlockedRooms: [1, 2, 3],
   currentRoom: 1,
-  wallColor: { room1: 'green', room2: 'pink', room3: 'white' },
+  wallColor: { room1: 'white', room2: 'pink', room3: 'white' },
   inventory: { daisy: 1 },
   placedDecor: {
     room2: { photoFrame: null, pet: null },

@@ -1,11 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
-export default function PlantPopup({ slot, position, onWater, onHarvest, onRemove, onClose }) {
+export default function PlantPopup({ slot, position, onHarvest, onRemove, onClose }) {
   if (!slot) return null;
 
   const canHarvest = slot.type === 'potted' && slot.stage === 3 && !slot.isDead;
-  const canWater = !!slot.flowerKey && !slot.isDead;
 
   return (
     <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>
@@ -18,11 +17,6 @@ export default function PlantPopup({ slot, position, onWater, onHarvest, onRemov
           },
         ]}
       >
-        {canWater && (
-          <TouchableOpacity style={styles.btn} onPress={onWater}>
-            <Text style={styles.btnText}>Water</Text>
-          </TouchableOpacity>
-        )}
         {canHarvest && (
           <TouchableOpacity style={[styles.btn, styles.btnHarvest]} onPress={onHarvest}>
             <Text style={styles.btnText}>Harvest</Text>

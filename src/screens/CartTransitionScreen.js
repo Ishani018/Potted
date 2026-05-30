@@ -4,7 +4,8 @@ import { useGame } from '../context/GameContext';
 import { useLayout } from '../context/LayoutContext';
 import { UI_IMAGES, NURSERY_EMPTY_BG, SEED_IMAGES, POTTED_PLANT_IMAGES } from '../engine/assets';
 import { projectPoint, projectSize } from '../engine/project';
-import { RAW_SHELF_SLOTS, ALL_SEEDS, BASE_SEED_SIZE, BASE_CART_W, BASE_CART_H } from '../constants/nurseryData';
+import { ALL_SEEDS, BASE_SEED_SIZE, BASE_CART_W, BASE_CART_H } from '../constants/nurseryData';
+import { _shuffledSlots } from './NurseryScreen';
 import { getCartBedSlots } from '../engine/snapPoints';
 
 // Cart in nursery art: x:180–520, y:280–430 → ~340px wide, right edge at ~520, bottom at ~430.
@@ -66,7 +67,7 @@ export default function CartTransitionScreen({ navigation, route }) {
 
   // Shelf bag positions — identical to NurseryScreen so they look frozen
   const shelfBags = ALL_SEEDS.map((seed, i) => {
-    const raw = RAW_SHELF_SLOTS[i];
+    const raw = _shuffledSlots[i] ?? _shuffledSlots[_shuffledSlots.length - 1];
     const p = projectPoint(raw.x, raw.y, sw, sh);
     return { key: `${i}_${seed.key}`, flowerKey: seed.key, x: p.x, y: p.y };
   });

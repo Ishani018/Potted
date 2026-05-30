@@ -31,8 +31,13 @@ export function plantSeed(slot, flowerKey) {
 export function waterPlant(slot) {
   const now = Date.now();
   const wasBud = slot.type === 'potted' && slot.stage === 1;
+  // Watering a seed (stage 0) advances it to bud (stage 1) immediately
+  const advanceSeed = slot.type === 'potted' && slot.stage === 0;
   return {
     ...slot,
+    stage: advanceSeed ? 1 : slot.stage,
+    // Backdate plantedAt so tick agrees elapsed >= seedToBud
+    plantedAt: advanceSeed ? now - GROWTH_TIMERS.potted.seedToBud : slot.plantedAt,
     lastWatered: now,
     isDead: false,
     _budWatered: slot._budWatered || wasBud,

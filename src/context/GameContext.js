@@ -50,7 +50,8 @@ function reducer(state, action) {
       const { screenWidth, screenHeight } = action;
       const slots = { ...state.slots };
       for (const room of [1, 2, 3]) {
-        for (const type of ['potted', 'hanging']) {
+        // Only auto-create hanging slots; potted pots are placed by dragging
+        for (const type of ['hanging']) {
           const pts = getSnapPoints(room, type, screenWidth, screenHeight);
           for (const pt of pts) {
             if (!slots[pt.id]) {
@@ -112,6 +113,15 @@ function reducer(state, action) {
       };
     }
 
+    case 'PLACE_POT': {
+      const { slotId, room } = action;
+      if (state.slots[slotId]) return state;
+      return {
+        ...state,
+        slots: { ...state.slots, [slotId]: createEmptySlot(slotId, room, 'potted') },
+      };
+    }
+
     case 'SET_CART_IN_ROOM': {
       return { ...state, cartInRoom: action.value };
     }
@@ -155,6 +165,12 @@ function reducer(state, action) {
       const { slotId } = action;
       const slot = state.slots[slotId];
       if (!slot) return state;
+      if (slot.type === 'potted') {
+        // Remove pot entirely — user drags a new one from the sill
+        const { [slotId]: _, ...rest } = state.slots;
+        return { ...state, slots: rest };
+      }
+      // Hanging: just clear the plant, keep the hook
       return {
         ...state,
         slots: { ...state.slots, [slotId]: createEmptySlot(slotId, slot.room, slot.type) },

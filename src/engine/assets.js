@@ -1,18 +1,6 @@
 // ─── Backgrounds ────────────────────────────────────────────────────────────
 export const BACKGROUNDS = {
   room1: {
-    green: {
-      spring: require('../../room1/green/spring.jpeg'),
-      summer: require('../../room1/green/summer.jpeg'),
-      autumn: require('../../room1/green/autumn.jpeg'),
-      winter: require('../../room1/green/winter.jpeg'),
-    },
-    pink: {
-      spring: require('../../room1/pink/spring.jpeg'),
-      summer: require('../../room1/pink/summer.jpeg'),
-      autumn: require('../../room1/pink/autumn.jpeg'),
-      winter: require('../../room1/pink/winter.jpeg'),
-    },
     white: {
       spring: require('../../room1/white/spring.jpeg'),
       summer: require('../../room1/white/summer.jpeg'),

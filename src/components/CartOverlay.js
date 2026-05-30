@@ -104,13 +104,14 @@ function RoomSeed({ item, snapPoints, sillPoints, onSnap, onStoreSill, startX, s
   );
 }
 
-// ─── Draggable seed on window sill — drags to plant snap points ──────────────
+// ─── Draggable seed on window sill — shows bag at rest, seed.png while dragging ─
 export function SillSeed({ item, snapPoints, startX, startY, size }) {
   const { dispatch } = useGame();
   const tx = useSharedValue(startX);
   const ty = useSharedValue(startY);
   const ox = useSharedValue(startX);
   const oy = useSharedValue(startY);
+  const dragging = useSharedValue(0); // 0 = at rest (bag), 1 = dragging (seed)
 
   const trySnap = useCallback((x, y) => {
     let best = null, bestDist = SNAP_RADIUS + 1;
@@ -126,11 +127,14 @@ export function SillSeed({ item, snapPoints, startX, startY, size }) {
   }, [snapPoints, dispatch, item, startX, startY, tx, ty]);
 
   const drag = Gesture.Pan()
-    .onStart(() => { ox.value = tx.value; oy.value = ty.value; })
+    .onStart(() => {
+      ox.value = tx.value; oy.value = ty.value;
+      dragging.value = 1;
+    })
     .onUpdate((e) => { tx.value = ox.value + e.translationX; ty.value = oy.value + e.translationY; })
-    .onEnd(() => { runOnJS(trySnap)(tx.value, ty.value); });
+    .onEnd(() => { dragging.value = 0; runOnJS(trySnap)(tx.value, ty.value); });
 
-  const animStyle = useAnimatedStyle(() => ({
+  const containerStyle = useAnimatedStyle(() => ({
     position: 'absolute',
     left: tx.value - size / 2,
     top: ty.value - size / 2,
@@ -139,10 +143,27 @@ export function SillSeed({ item, snapPoints, startX, startY, size }) {
     zIndex: 500,
   }));
 
+  // Bag image fades out while dragging
+  const bagStyle = useAnimatedStyle(() => ({ opacity: dragging.value === 0 ? 1 : 0 }));
+  const seedStyle = useAnimatedStyle(() => ({ opacity: dragging.value === 1 ? 1 : 0 }));
+
+  // Seed sprite is much smaller than the bag — centered within the same container
+  const seedSize = Math.round(size * 0.28);
+  const seedOffset = Math.round((size - seedSize) / 2);
+
   return (
     <GestureDetector gesture={drag}>
-      <Animated.View style={animStyle}>
-        <Image source={getSeedImage(item.flowerKey)} style={{ width: size, height: size }} resizeMode="contain" />
+      <Animated.View style={containerStyle}>
+        <Animated.Image
+          source={getSeedImage(item.flowerKey)}
+          style={[{ position: 'absolute', width: size, height: size }, bagStyle]}
+          resizeMode="contain"
+        />
+        <Animated.Image
+          source={UI_IMAGES.seed}
+          style={[{ position: 'absolute', left: seedOffset, top: seedOffset, width: seedSize, height: seedSize }, seedStyle]}
+          resizeMode="contain"
+        />
       </Animated.View>
     </GestureDetector>
   );

@@ -1,6 +1,21 @@
 node_modules/
-assets/
 .expo/
 dist/
 *.log
 .env
+
+# Asset directories (large image/media files)
+room1/
+room2/
+room3/
+pottedplants/
+hangingplants/
+seeds/
+walldecor/
+pets/
+ui_comps/
+*.png
+*.jpeg
+*.jpg
+*.gif
+!src/**
