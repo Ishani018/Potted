@@ -79,10 +79,10 @@ export const BONUS_COIN_MULTIPLIER = 1.2;
 
 export const INITIAL_PLAYER_STATE = {
   coins: 50,
-  unlockedRooms: [1],
+  unlockedRooms: [1, 2, 3],
   currentRoom: 1,
   wallColor: { room1: 'green', room2: 'pink', room3: 'white' },
-  inventory: {},
+  inventory: { daisy: 1 },
   placedDecor: {
     room2: { photoFrame: null, pet: null },
   },

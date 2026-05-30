@@ -1,12 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
+import { UI_IMAGES } from '../engine/assets';
 
 export default function CoinHUD() {
   const { state } = useGame();
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>{'$'} {state.player.coins}</Text>
+      <Image source={UI_IMAGES.goldcoins} style={styles.icon} resizeMode="contain" />
+      <Text style={styles.text}>{state.player.coins}</Text>
     </View>
   );
 }
@@ -16,17 +18,22 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 12,
     left: 14,
-    backgroundColor: 'rgba(30,15,0,0.72)',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderWidth: 1.5,
-    borderColor: '#c8873a',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    zIndex: 20,
+  },
+  icon: {
+    width: 28,
+    height: 28,
   },
   text: {
     color: '#ffe8a0',
     fontSize: 15,
     fontWeight: 'bold',
     letterSpacing: 1,
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
 });

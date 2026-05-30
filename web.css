@@ -1,0 +1,29 @@
+html,
+body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    background-color: #1a1a1a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#root {
+    height: 100%;
+    width: 100%;
+    max-width: 854px;
+    max-height: 480px;
+    background-color: black;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.7);
+    border-radius: 32px;
+    overflow: hidden;
+    border: 10px solid #2a2a2a;
+}
+
+[data-testid="root"] {
+    flex: 1;
+}

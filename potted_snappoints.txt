@@ -1,0 +1,113 @@
+POTTED - SNAP POINTS
+Base image resolution: 1376 x 768
+Anchor: bottom-center for pots, top-center for hanging plants
+=====================================================
+
+ROOM 1 - GREENHOUSE
+-----------------------------------------------------
+Shelf 1 (y = 472):
+  P1:  (188, 472)
+  P2:  (374, 472)
+  P3:  (567, 472)
+  P4:  (754, 472)
+  P5:  (944, 472)
+
+Shelf 2 (y = 617):
+  P6:  (282, 617)
+  P7:  (474, 617)
+  P8:  (664, 617)
+  P9:  (856, 617)
+
+Watering Can: (1235, 280)  [center anchor; size BASE_CAN_SIZE = 200]
+
+=====================================================
+
+ROOM 2 - BALCONY
+-----------------------------------------------------
+Rod 1 (y = 54):
+  P1:  (235, 54)
+  P2:  (385, 54)
+  P3:  (528, 54)
+
+Rod 2 (y = 311):
+  P4:  (234, 311)
+  P5:  (386, 311)
+  P6:  (527, 311)
+
+Photo Frame:   (1093, 130)
+Watering Can:  (1099, 469)
+
+=====================================================
+
+ROOM 3 - SUNROOM
+-----------------------------------------------------
+Hanging Rod (y = 72):
+  P1:  (379, 72)
+  P2:  (544, 72)
+  P3:  (706, 73)
+  P4:  (852, 72)
+
+Floor Pots (y ≈ 584):
+  P5:  (215, 584)
+  P6:  (334, 586)
+  P7:  (470, 584)
+  P8:  (579, 582)
+  P9:  (695, 583)
+
+Rack Pot:      (975, 412)
+Watering Can:  (1118, 420)
+
+=====================================================
+
+NURSERY - SHELF SNAP POINTS (seed bags)
+Base image: nursery.jpeg (1376 x 768)
+Anchor: bottom-center of each bag
+Seed image source size: 1024 x 1024
+-----------------------------------------------------
+Anchor: center. Bags 140px, columns 130px apart. Layout: row0 → shelf1 → shelf2.
+
+Row 0 (above top shelf):
+  P1:  (270, 100)
+  P2:  (400, 100)
+  P3:  (530, 100)
+  P4:  (660, 100)
+  P5:  (790, 100)
+
+Shelf 1 (top):
+  P6:  (270, 285)
+  P7:  (400, 285)
+  P8:  (530, 285)
+  P9:  (660, 285)
+  P10: (790, 285)
+
+Shelf 2 (middle):
+  P11: (270, 445)
+  P12: (400, 445)
+  P13: (530, 445)
+  P14: (660, 445)
+  P15: (790, 445)
+
+NURSERY - CART SNAP POINTS (drop seeds here to load cart)
+Cart poly corners: (943.7,576.6) (856.6,637.3) (1257.9,641.9) (1309.5,577.7)
+-----------------------------------------------------
+  C1: (940, 620)
+  C2: (1040, 625)
+  C3: (1140, 625)
+  C4: (1240, 620)
+
+=====================================================
+
+NORMALIZATION (use in React Native):
+  IMPORTANT: backgrounds are drawn with resizeMode="cover", which scales the
+  image to FILL the container (preserving aspect ratio) and center-crops the
+  overflow. A naive (screenWidth/1376) scale is WRONG when the container aspect
+  ratio differs from 1376:768. Use the cover transform instead:
+
+    scale   = max(containerW / 1376, containerH / 768)
+    offsetX = (containerW - 1376 * scale) / 2
+    offsetY = (containerH -  768 * scale) / 2
+    screenX = rawX * scale + offsetX
+    screenY = rawY * scale + offsetY
+
+  This is implemented in src/engine/project.js (projectPoint / projectSize)
+  and used by all snap-point lookups + sprite sizing.

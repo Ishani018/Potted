@@ -73,19 +73,18 @@ export const HANGING_PLANT_IMAGES = {
 
 // ─── Seeds ───────────────────────────────────────────────────────────────────
 export const SEED_IMAGES = {
-  daisy:      require('../../seeds/daisyseed.png'),
-  snapdragon: require('../../seeds/snapdragonseed.png'),
-  poppy:      require('../../seeds/poppyseed.png'),
-  marigold:   require('../../seeds/marigoldseed.png'),
-  peony:      require('../../seeds/peonyseed.png'),
-  hydrenga:   require('../../seeds/hydrengaseed.png'),
-  rose:       require('../../seeds/roseseed.png'),
-  // hanging seeds reuse potted seed bags
-  stringofpearls: require('../../seeds/daisyseed.png'),
-  Philodendron:   require('../../seeds/hydrengaseed.png'),
-  jasmine:        require('../../seeds/roseseed.png'),
-  petunia:        require('../../seeds/peonyseed.png'),
-  Bougainvillea:  require('../../seeds/marigoldseed.png'),
+  daisy:          require('../../seeds/daisyseed.png'),
+  snapdragon:     require('../../seeds/snapdragonseed.png'),
+  poppy:          require('../../seeds/poppyseed.png'),
+  marigold:       require('../../seeds/marigoldseed.png'),
+  peony:          require('../../seeds/peonyseed.png'),
+  hydrenga:       require('../../seeds/hydrengaseed.png'),
+  rose:           require('../../seeds/roseseed.png'),
+  stringofpearls: require('../../seeds/stringofpearlseed.png'),
+  Philodendron:   require('../../seeds/philodendronseed.png'),
+  jasmine:        require('../../seeds/jasmineseed.png'),
+  petunia:        require('../../seeds/petuniaseed.png'),
+  Bougainvillea:  require('../../seeds/bougenvillaseed.png'),
 };
 
 // ─── Wall Decor ──────────────────────────────────────────────────────────────
@@ -106,9 +105,17 @@ export const PET_IMAGES = {
 
 // ─── UI ──────────────────────────────────────────────────────────────────────
 export const UI_IMAGES = {
-  nurseryshop:   require('../../ui_comps/nurseryshop.png'),
-  hangingplants: require('../../ui_comps/hangingplants.png'),
-  pottedplants:  require('../../ui_comps/pottedplants.png'),
-  wateringcan1:  require('../../wateringcan1.png'),
-  wateringcan2:  require('../../wateringcan2.png'),
+  nurseryshop:  require('../../ui_comps/nurseryshop.png'),
+  goldcoins:    require('../../ui_comps/goldcoins.png'),
+  back:         require('../../ui_comps/back.png'),
+  settings:     require('../../ui_comps/settings.png'),
+  cartgif:      require('../../ui_comps/cartgif.gif'),
+  stillcart:    require('../../ui_comps/stillcart.png'),
+  seed:         require('../../ui_comps/seed.png'),
+  wateringcan1: require('../../wateringcan1.png'),
+  wateringcan2: require('../../wateringcan2.png'),
 };
+
+// ─── Nursery backgrounds ──────────────────────────────────────────────────────
+export const NURSERY_BG = require('../../nursery.jpeg');
+export const NURSERY_EMPTY_BG = require('../../nurserywithoutcart.jpeg');

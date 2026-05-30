@@ -1,37 +1,70 @@
+import './imports';
 import 'react-native-gesture-handler';
-import React from 'react';
+import React, { useState, useCallback } from 'react';
+import { View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { GameProvider } from './src/context/GameContext';
+import { LayoutContext } from './src/context/LayoutContext';
 import GardenScreen from './src/screens/GardenScreen';
-import ShopScreen from './src/screens/ShopScreen';
-import AchievementsScreen from './src/screens/AchievementsScreen';
+import NurseryScreen from './src/screens/NurseryScreen';
 import RoomScreen from './src/screens/RoomScreen';
+import CartTransitionScreen from './src/screens/CartTransitionScreen';
 
 const Stack = createStackNavigator();
 
 export default function App() {
+  const [layout, setLayout] = useState({ width: 854, height: 480 });
+
+  const onLayout = useCallback((e) => {
+    const { width, height } = e.nativeEvent.layout;
+    if (width > 0 && height > 0) setLayout({ width, height });
+  }, []);
+
   return (
-    <GameProvider>
-      <NavigationContainer>
-        <StatusBar hidden />
-        <Stack.Navigator
-          initialRouteName="Garden"
-          screenOptions={{
-            headerShown: false,
-            gestureEnabled: false,
-            animationEnabled: true,
-            cardStyle: { backgroundColor: '#000' },
-          }}
-        >
-          <Stack.Screen name="Garden" component={GardenScreen} />
-          <Stack.Screen name="Shop" component={ShopScreen} />
-          <Stack.Screen name="Achievements" component={AchievementsScreen} />
-          <Stack.Screen name="Room" component={RoomScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </GameProvider>
+    <GestureHandlerRootView style={{ flex: 1, overflow: 'hidden' }}>
+      <SafeAreaProvider style={{ flex: 1 }}>
+        <GameProvider>
+          <LayoutContext.Provider value={layout}>
+            <View style={{ flex: 1 }} onLayout={onLayout}>
+              <NavigationContainer>
+                <StatusBar hidden />
+                <Stack.Navigator
+                  initialRouteName="Garden"
+                  screenOptions={{
+                    headerShown: false,
+                    gestureEnabled: false,
+                    animationEnabled: true,
+                    cardStyle: { backgroundColor: '#000' },
+                  }}
+                >
+                  <Stack.Screen name="Garden" component={GardenScreen} />
+                  <Stack.Screen name="Nursery" component={NurseryScreen} />
+                  <Stack.Screen name="Room" component={RoomScreen} />
+                  <Stack.Screen
+                    name="CartTransition"
+                    component={CartTransitionScreen}
+                    options={{
+                      animationEnabled: true,
+                      cardStyleInterpolator: ({ current }) => ({
+                        cardStyle: { opacity: current.progress },
+                      }),
+                      transitionSpec: {
+                        open:  { animation: 'timing', config: { duration: 400 } },
+                        close: { animation: 'timing', config: { duration: 400 } },
+                      },
+                    }}
+                  />
+                </Stack.Navigator>
+              </NavigationContainer>
+            </View>
+          </LayoutContext.Provider>
+        </GameProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

@@ -15,9 +15,6 @@
         "backgroundColor": "#1a0f00"
       },
       "package": "com.ishani.potted"
-    },
-    "plugins": [
-      "react-native-reanimated"
-    ]
+    }
   }
 }

@@ -1,142 +1,126 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Animated } from 'react-native';
 import {
   View,
   Image,
   TouchableOpacity,
   StyleSheet,
-  useWindowDimensions,
   Text,
 } from 'react-native';
+import { useLayout } from '../context/LayoutContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useGame } from '../context/GameContext';
-import { BACKGROUNDS, UI_IMAGES, PAINTING_IMAGES, PET_IMAGES } from '../engine/assets';
-import {
-  getSnapPoints,
-  WATERING_CAN_POSITIONS,
-  DECOR_POSITIONS,
-  scalePoint,
-} from '../engine/snapPoints';
+import { BACKGROUNDS, UI_IMAGES, PAINTING_IMAGES, PET_IMAGES, POTTED_PLANT_IMAGES, SEED_IMAGES } from '../engine/assets';
+import { getSnapPoints, getSillPoints, WATERING_CAN_POSITIONS, DECOR_POSITIONS, scalePoint } from '../engine/snapPoints';
 import { getCurrentSeason } from '../constants/gameData';
+import { projectSize } from '../engine/project';
+import { BASE_SEED_SIZE } from '../constants/nurseryData';
 
 import CoinHUD from '../components/CoinHUD';
 import PlantSlot from '../components/PlantSlot';
 import WateringCan from '../components/WateringCan';
 import PlantPopup from '../components/PlantPopup';
-import NurseryMenu from '../components/NurseryMenu';
-import DraggablePlant from '../components/DraggablePlant';
+import { RoomCart, SillSeed } from '../components/CartOverlay';
 
-const BASE_W = 1376;
-const BASE_H = 768;
+function GhostBag({ x, y, size, source }) {
+  const pulse = useRef(new Animated.Value(0.25)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 0.55, duration: 900, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0.25, duration: 900, useNativeDriver: true }),
+      ])
+    ).start();
+  }, []);
+  return (
+    <Animated.Image
+      source={source}
+      style={{
+        position: 'absolute',
+        left: x - size / 2,
+        top: y - size / 2,
+        width: size,
+        height: size,
+        opacity: pulse,
+      }}
+      resizeMode="contain"
+    />
+  );
+}
 
 export default function GardenScreen({ navigation }) {
-  const { width: sw, height: sh } = useWindowDimensions();
+  const { width: sw, height: sh } = useLayout();
   const { state, dispatch } = useGame();
-  const { player, slots } = state;
+  const { player, slots, cart, cartInRoom, windowSill } = state;
 
-  const [activeTab, setActiveTab] = useState('potted'); // 'potted' | 'hanging'
   const [waterMode, setWaterMode] = useState(false);
-  const [menuVisible, setMenuVisible] = useState(false);
-  const [popup, setPopup] = useState(null); // { slot, position }
-  const [dragging, setDragging] = useState(null); // { flowerKey, plantType }
+  const [popup, setPopup] = useState(null);
 
   const room = player.currentRoom;
   const wallColor = player.wallColor[`room${room}`] ?? 'white';
   const season = getCurrentSeason();
 
-  // Initialize slots with screen dimensions once
   useEffect(() => {
     if (state.initialized) {
       dispatch({ type: 'INIT_SLOTS', screenWidth: sw, screenHeight: sh });
     }
   }, [state.initialized, sw, sh]);
 
-  // Background image
+  useEffect(() => {
+    if (cart.length > 0) {
+      dispatch({ type: 'SET_CART_IN_ROOM', value: true });
+    }
+  }, []);
+
   const bgSource = BACKGROUNDS[`room${room}`]?.[wallColor]?.[season]
     ?? BACKGROUNDS.room1.green.spring;
 
-  // Snap points for current room + tab
-  const snapPoints = getSnapPoints(room, activeTab, sw, sh);
+  // All snap points for the current room (both potted + hanging)
+  const pottedPoints = getSnapPoints(room, 'potted', sw, sh);
+  const hangingPoints = getSnapPoints(room, 'hanging', sw, sh);
+  const allSnapPoints = [...pottedPoints, ...hangingPoints];
 
-  // For room 2 only: show all snap points (both potted + hanging are hanging rods)
-  // For room 3: show both potted floor slots + hanging rod slots
-  const allSlotsForRoom = Object.values(slots).filter(
-    (s) => s.room === room && s.type === activeTab,
+  // All planted slots for this room
+  const plantedSlots = Object.values(slots).filter(
+    (s) => s.room === room && s.flowerKey,
   );
 
-  // Watering can position
-  const rawCan = WATERING_CAN_POSITIONS[room] ?? WATERING_CAN_POSITIONS[1];
-  const canPos = scalePoint(rawCan.x, rawCan.y, sw, sh);
-
-  // Room 2 decor
-  const photoFrameKey = player.placedDecor?.room2?.photoFrame ?? null;
-  const petKey = player.placedDecor?.room2?.pet ?? null;
-
-  // Inventory items for drag panel
-  const inventoryItems = Object.entries(player.inventory)
-    .filter(([, count]) => count > 0)
-    .map(([key, count]) => ({ key, count }));
-
-  const handleSlotPress = useCallback(
-    (slot, position) => {
-      if (waterMode && slot.flowerKey && !slot.isDead) {
-        dispatch({ type: 'WATER_PLANT', slotId: slot.slotId });
-        setWaterMode(false);
-        return;
-      }
-      if (slot.flowerKey) {
-        setPopup({ slot, position });
-      }
-    },
-    [waterMode, dispatch],
-  );
-
-  const handlePopupWater = () => {
-    if (popup) dispatch({ type: 'WATER_PLANT', slotId: popup.slot.slotId });
-    setPopup(null);
-  };
-
-  const handlePopupHarvest = () => {
-    if (popup) dispatch({ type: 'HARVEST_PLANT', slotId: popup.slot.slotId });
-    setPopup(null);
-  };
-
-  const handlePopupRemove = () => {
-    if (popup) dispatch({ type: 'REMOVE_PLANT', slotId: popup.slot.slotId });
-    setPopup(null);
-  };
-
-  const handleSnap = useCallback(
-    (slotId, flowerKey) => {
-      const slot = slots[slotId];
-      if (!slot || slot.flowerKey) return;
-      dispatch({ type: 'PLANT_SEED', slotId, flowerKey });
-    },
-    [slots, dispatch],
-  );
-
-  const handleNavigate = (screen) => {
-    if (screen === 'shop') navigation.navigate('Shop');
-    else if (screen === 'achievements') navigation.navigate('Achievements');
-    else if (screen === 'room') navigation.navigate('Room');
-  };
-
-  // Determine valid snap targets for drag (empty slots of correct type)
-  const dragSnapPoints = snapPoints.filter((pt) => {
+  // Empty snap points — valid targets for cart seeds
+  const emptySnapPoints = allSnapPoints.filter((pt) => {
     const s = slots[pt.id];
     return s && !s.flowerKey;
   });
 
-  // Inventory tray bottom-center
-  const trayY = sh - 60;
+  const rawCan = WATERING_CAN_POSITIONS[room] ?? WATERING_CAN_POSITIONS[1];
+  const canPos = scalePoint(rawCan.x, rawCan.y, sw, sh);
+
+  const photoFrameKey = player.placedDecor?.room2?.photoFrame ?? null;
+  const petKey = player.placedDecor?.room2?.pet ?? null;
+
+  const handleSlotPress = useCallback((slot, position) => {
+    if (waterMode && slot.flowerKey && !slot.isDead) {
+      dispatch({ type: 'WATER_PLANT', slotId: slot.slotId });
+      setWaterMode(false);
+      return;
+    }
+    if (slot.flowerKey) setPopup({ slot, position });
+  }, [waterMode, dispatch]);
+
+  const handlePopupWater = () => { if (popup) dispatch({ type: 'WATER_PLANT', slotId: popup.slot.slotId }); setPopup(null); };
+  const handlePopupHarvest = () => { if (popup) dispatch({ type: 'HARVEST_PLANT', slotId: popup.slot.slotId }); setPopup(null); };
+  const handlePopupRemove = () => { if (popup) dispatch({ type: 'REMOVE_PLANT', slotId: popup.slot.slotId }); setPopup(null); };
 
   return (
     <GestureHandlerRootView style={styles.root}>
       <View style={styles.root}>
-        {/* Background */}
-        <Image source={bgSource} style={styles.bg} resizeMode="cover" />
+        <Image
+          source={bgSource}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' }}
+          resizeMode="cover"
+        />
 
-        {/* Room 2 decor: painting */}
+        {/* Room 2 painting */}
         {room === 2 && photoFrameKey && (() => {
           const raw = DECOR_POSITIONS.room2.photoFrame;
           const pos = scalePoint(raw.x, raw.y, sw, sh);
@@ -149,7 +133,8 @@ export default function GardenScreen({ navigation }) {
           );
         })()}
 
-        {/* Room 2 decor: pet */}
+
+        {/* Room 2 pet */}
         {room === 2 && petKey && (
           <Image
             source={PET_IMAGES[petKey]}
@@ -158,82 +143,110 @@ export default function GardenScreen({ navigation }) {
           />
         )}
 
-        {/* Placed plant slots */}
-        {allSlotsForRoom.map((slot) => {
-          const pt = snapPoints.find((p) => p.id === slot.slotId);
-          if (!pt) return null;
+        {/* Ghost hint bag — pulses at sill slot 1 when sill is empty */}
+        {room === 1 && windowSill.length === 0 && (() => {
+          const sillPts = getSillPoints(sw, sh);
+          const pt = sillPts[0];
+          const bagSize = Math.round(projectSize(BASE_SEED_SIZE, sw, sh));
           return (
-            <PlantSlot
-              key={slot.slotId}
-              slot={slot}
-              position={pt}
-              onPress={handleSlotPress}
+            <GhostBag
+              x={pt.x}
+              y={pt.y}
+              size={bagSize}
+              source={SEED_IMAGES.daisy}
+            />
+          );
+        })()}
+
+        {/* Window sill stored seeds — draggable to plant slots */}
+        {room === 1 && (() => {
+          const sillPts = getSillPoints(sw, sh);
+          const bagSize = Math.round(projectSize(BASE_SEED_SIZE, sw, sh));
+          return windowSill.map((item, i) => {
+            const pt = sillPts[i];
+            if (!pt) return null;
+            return (
+              <SillSeed
+                key={item.id}
+                item={item}
+                snapPoints={emptySnapPoints}
+                startX={pt.x}
+                startY={pt.y}
+                size={bagSize}
+              />
+            );
+          });
+        })()}
+
+        {/* Empty pots — always visible at every unoccupied potted snap point */}
+        {pottedPoints.filter((pt) => {
+          const s = slots[pt.id];
+          return s && !s.flowerKey;
+        }).map((pt) => {
+          // Same values as BASE_POT_W/H in PlantSlot.js — keep them in sync
+          const potW = Math.round(projectSize(90, sw, sh));
+          const potH = Math.round(projectSize(115, sw, sh));
+          return (
+            <Image
+              key={`emptypot_${pt.id}`}
+              source={POTTED_PLANT_IMAGES._seed}
+              style={{ position: 'absolute', left: pt.x - potW / 2, top: pt.y - potH, width: potW, height: potH, zIndex: 5 }}
+              resizeMode="contain"
             />
           );
         })}
 
-        {/* Watering can */}
-        <WateringCan position={canPos} isWatering={waterMode} onPress={() => setWaterMode((v) => !v)} />
+        {/* Planted slots */}
+        {plantedSlots.map((slot) => {
+          const pt = allSnapPoints.find((p) => p.id === slot.slotId);
+          if (!pt) return null;
+          return (
+            <PlantSlot key={slot.slotId} slot={slot} position={pt} onPress={handleSlotPress} />
+          );
+        })}
 
-        {/* Coin HUD */}
+        <WateringCan
+          position={canPos}
+          isWatering={waterMode}
+          onDragStart={() => setWaterMode(true)}
+          onDragEnd={() => setWaterMode(false)}
+        />
+
         <CoinHUD />
 
-        {/* Nursery button top-right */}
-        <TouchableOpacity style={styles.nurseryBtn} onPress={() => setMenuVisible(true)}>
+        {/* Nursery button */}
+        <TouchableOpacity style={styles.nurseryBtn} onPress={() => navigation.navigate('Nursery')}>
           <Image source={UI_IMAGES.nurseryshop} style={styles.nurseryImg} resizeMode="contain" />
         </TouchableOpacity>
 
-        {/* Tab switcher bottom-center */}
-        <View style={styles.tabBar}>
-          <TouchableOpacity onPress={() => setActiveTab('potted')} style={[styles.tabBtn, activeTab === 'potted' && styles.tabActive]}>
-            <Image source={UI_IMAGES.pottedplants} style={styles.tabImg} resizeMode="contain" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setActiveTab('hanging')} style={[styles.tabBtn, activeTab === 'hanging' && styles.tabActive]}>
-            <Image source={UI_IMAGES.hangingplants} style={styles.tabImg} resizeMode="contain" />
-          </TouchableOpacity>
-        </View>
+        {/* Room settings */}
+        <TouchableOpacity style={styles.settingsBtn} onPress={() => navigation.navigate('Room')}>
+          <Image source={UI_IMAGES.settings} style={styles.settingsBtnImg} resizeMode="contain" />
+        </TouchableOpacity>
 
-        {/* Room switcher bottom-right */}
-        <View style={styles.roomBar}>
-          {player.unlockedRooms.map((r) => (
-            <TouchableOpacity
-              key={r}
-              style={[styles.roomBtn, player.currentRoom === r && styles.roomBtnActive]}
-              onPress={() => dispatch({ type: 'SET_ROOM', room: r })}
-            >
-              <Text style={styles.roomBtnText}>{r}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Inventory tray */}
-        {inventoryItems.length > 0 && (
-          <View style={[styles.inventoryTray, { bottom: 64, left: sw * 0.3, right: sw * 0.3 }]}>
-            {inventoryItems.map(({ key, count }) => (
-              <DraggablePlant
-                key={key}
-                flowerKey={key}
-                plantType={activeTab}
-                startX={0}
-                startY={0}
-                snapPoints={dragSnapPoints}
-                onSnap={handleSnap}
-              />
+        {/* Room switcher */}
+        {player.unlockedRooms.length > 1 && (
+          <View style={styles.roomBar}>
+            {player.unlockedRooms.map((r) => (
+              <TouchableOpacity
+                key={r}
+                style={[styles.roomBtn, player.currentRoom === r && styles.roomBtnActive]}
+                onPress={() => dispatch({ type: 'SET_ROOM', room: r })}
+              >
+                <Text style={styles.roomBtnText}>{r}</Text>
+              </TouchableOpacity>
             ))}
           </View>
         )}
 
-        {/* Draggable seeds panel */}
-        <InventoryPanel
-          items={inventoryItems}
-          activeTab={activeTab}
-          dragSnapPoints={dragSnapPoints}
-          onSnap={handleSnap}
-          sw={sw}
-          sh={sh}
-        />
+        {/* Cart (travels from nursery) */}
+        {cartInRoom && (
+          <RoomCart
+            snapPoints={emptySnapPoints}
+            onDismiss={() => navigation.navigate('CartTransition', { destination: 'Garden', exiting: true })}
+          />
+        )}
 
-        {/* Popup */}
         {popup && (
           <PlantPopup
             slot={popup.slot}
@@ -245,17 +258,9 @@ export default function GardenScreen({ navigation }) {
           />
         )}
 
-        {/* Nursery menu */}
-        <NurseryMenu
-          visible={menuVisible}
-          onClose={() => setMenuVisible(false)}
-          onNavigate={handleNavigate}
-        />
-
-        {/* Water mode indicator */}
         {waterMode && (
           <View style={styles.waterModeBar}>
-            <Text style={styles.waterModeText}>Water Mode — tap a plant</Text>
+            <Text style={styles.waterModeText}>Water mode — tap a plant</Text>
           </View>
         )}
       </View>
@@ -263,136 +268,33 @@ export default function GardenScreen({ navigation }) {
   );
 }
 
-// Separate inventory panel so draggable seeds are positioned correctly
-function InventoryPanel({ items, activeTab, dragSnapPoints, onSnap, sw, sh }) {
-  if (items.length === 0) return null;
-
-  const startY = sh - 40;
-  const spacing = 60;
-  const totalW = items.length * spacing;
-  const startX = (sw - totalW) / 2 + 25;
-
-  return (
-    <>
-      <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 58, backgroundColor: 'rgba(20,10,2,0.78)', borderTopWidth: 1.5, borderTopColor: '#7a4a18' }} />
-      {items.map(({ key, count }, i) => (
-        <View key={key} style={{ position: 'absolute', bottom: 4, left: startX + i * spacing - 25, alignItems: 'center' }}>
-          <DraggablePlant
-            flowerKey={key}
-            plantType={activeTab}
-            startX={startX + i * spacing}
-            startY={startY}
-            snapPoints={dragSnapPoints}
-            onSnap={onSnap}
-          />
-          <Text style={{ position: 'absolute', bottom: -2, right: 0, color: '#ffe8a0', fontSize: 10, fontWeight: 'bold', backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 4, paddingHorizontal: 3 }}>
-            x{count}
-          </Text>
-        </View>
-      ))}
-    </>
-  );
-}
-
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-  bg: {
-    ...StyleSheet.absoluteFillObject,
-    width: '100%',
-    height: '100%',
-  },
-  nurseryBtn: {
-    position: 'absolute',
-    top: 10,
-    right: 14,
-    width: 52,
-    height: 52,
+  root: { flex: 1, backgroundColor: '#000', overflow: 'hidden' },
+  nurseryBtn: { position: 'absolute', top: 10, right: 14, width: 52, height: 52, zIndex: 20 },
+  nurseryImg: { width: 52, height: 52 },
+  settingsBtn: {
+    position: 'absolute', top: 10, right: 72,
+    width: 36, height: 36,
     zIndex: 20,
   },
-  nurseryImg: {
-    width: 52,
-    height: 52,
-  },
-  tabBar: {
-    position: 'absolute',
-    bottom: 60,
-    alignSelf: 'center',
-    flexDirection: 'row',
-    gap: 10,
-    backgroundColor: 'rgba(20,10,2,0.72)',
-    borderRadius: 10,
-    padding: 6,
-    borderWidth: 1.5,
-    borderColor: '#7a4a18',
-    zIndex: 20,
-  },
-  tabBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 6,
-    padding: 3,
-  },
-  tabActive: {
-    backgroundColor: '#3d2009',
-    borderWidth: 1,
-    borderColor: '#c8873a',
-  },
-  tabImg: {
-    width: 34,
-    height: 34,
-  },
+  settingsBtnImg: { width: 36, height: 36 },
   roomBar: {
-    position: 'absolute',
-    bottom: 62,
-    right: 14,
-    flexDirection: 'row',
-    gap: 6,
-    zIndex: 20,
+    position: 'absolute', bottom: 14, right: 14,
+    flexDirection: 'row', gap: 6, zIndex: 20,
   },
   roomBtn: {
-    width: 30,
-    height: 30,
+    width: 30, height: 30,
     backgroundColor: 'rgba(30,15,0,0.72)',
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#7a4a18',
+    borderRadius: 6, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: '#7a4a18',
   },
-  roomBtnActive: {
-    backgroundColor: '#3d2009',
-    borderColor: '#c8873a',
-  },
-  roomBtnText: {
-    color: '#ffe8a0',
-    fontSize: 13,
-    fontWeight: 'bold',
-  },
-  inventoryTray: {
-    position: 'absolute',
-    flexDirection: 'row',
-    gap: 8,
-  },
+  roomBtnActive: { backgroundColor: '#3d2009', borderColor: '#c8873a' },
+  roomBtnText: { color: '#ffe8a0', fontSize: 13, fontWeight: 'bold' },
   waterModeBar: {
-    position: 'absolute',
-    top: 10,
-    alignSelf: 'center',
+    position: 'absolute', top: 10, alignSelf: 'center',
     backgroundColor: 'rgba(0,80,140,0.82)',
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 5,
-    borderWidth: 1,
-    borderColor: '#60b0ff',
-    zIndex: 99,
+    borderRadius: 8, paddingHorizontal: 14, paddingVertical: 5,
+    borderWidth: 1, borderColor: '#60b0ff', zIndex: 99,
   },
-  waterModeText: {
-    color: '#ddf0ff',
-    fontSize: 13,
-    fontWeight: 'bold',
-  },
+  waterModeText: { color: '#ddf0ff', fontSize: 13, fontWeight: 'bold' },
 });
