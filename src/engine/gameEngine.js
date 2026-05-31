@@ -1,7 +1,7 @@
 import { GROWTH_TIMERS, POTTED_FLOWERS, BONUS_COIN_MULTIPLIER } from '../constants/gameData';
 
 // ─── Slot factory ─────────────────────────────────────────────────────────────
-export function createEmptySlot(slotId, room, type) {
+export function createEmptySlot(slotId, room, type, hasPot = false) {
   return {
     slotId,
     room,
@@ -12,6 +12,7 @@ export function createEmptySlot(slotId, room, type) {
     lastWatered: null,
     isDead: false,
     _budWatered: false,
+    hasPot, // true only when explicitly placed by user via PLACE_POT
   };
 }
 
@@ -87,6 +88,8 @@ function tickPotted(slot, elapsed, now) {
 
 function tickHanging(slot, elapsed) {
   const t = GROWTH_TIMERS.hanging;
+  // Only advance past stage 0 if plant has been watered at least once
+  if (!slot.lastWatered || slot.lastWatered === slot.plantedAt) return { ...slot, stage: 0 };
   const stage = elapsed >= t.budToFull ? 2 : 1;
   return { ...slot, stage };
 }

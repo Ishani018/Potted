@@ -7,7 +7,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useGame } from '../context/GameContext';
 import { SEED_IMAGES, POTTED_PLANT_IMAGES, UI_IMAGES } from '../engine/assets';
-import { isInCartZone, getCartBedSlots, getSillPoints } from '../engine/snapPoints';
+import { isInCartZone, getCartZone, getCartBedSlots, getSillPoints, FLOOR_SILL_POINTS } from '../engine/snapPoints';
 import { projectSize, projectPoint } from '../engine/project';
 import { BASE_SEED_SIZE, BASE_CART_W, BASE_CART_H, BASE_STILL_CART_W, BASE_STILL_CART_H } from '../constants/nurseryData';
 const SNAP_RADIUS = 60;
@@ -56,7 +56,7 @@ function DraggableSeed({ item, onDropOnCart, startX, startY, size }) {
 }
 
 // ─── Draggable seed in room — drags from cart onto plant snap points or sill ───
-function RoomSeed({ item, snapPoints, sillPoints, onSnap, onStoreSill, startX, startY, size }) {
+function RoomSeed({ item, snapPoints, sillPoints, onSnap, onStoreSill, startX, startY, size, zIndex = 90 }) {
   const tx = useSharedValue(startX);
   const ty = useSharedValue(startY);
   const ox = useSharedValue(startX);
@@ -74,7 +74,7 @@ function RoomSeed({ item, snapPoints, sillPoints, onSnap, onStoreSill, startX, s
       if (dist < bestDist) { bestDist = dist; best = { pt, isSill: false }; }
     }
     if (best) {
-      if (best.isSill) onStoreSill(item);
+      if (best.isSill) onStoreSill(item, best.pt.id);
       else onSnap(best.pt.id, item);
     }
     tx.value = withSpring(startX);
@@ -92,7 +92,7 @@ function RoomSeed({ item, snapPoints, sillPoints, onSnap, onStoreSill, startX, s
     top: ty.value - size / 2,
     width: size,
     height: size,
-    zIndex: 500,
+    zIndex,
   }));
 
   return (
@@ -105,7 +105,7 @@ function RoomSeed({ item, snapPoints, sillPoints, onSnap, onStoreSill, startX, s
 }
 
 // ─── Draggable seed on window sill — shows bag at rest, seed.png while dragging ─
-export function SillSeed({ item, snapPoints, startX, startY, size }) {
+export function SillSeed({ item, snapPoints, startX, startY, size, restZIndex = 500 }) {
   const { dispatch } = useGame();
   const tx = useSharedValue(startX);
   const ty = useSharedValue(startY);
@@ -140,7 +140,8 @@ export function SillSeed({ item, snapPoints, startX, startY, size }) {
     top: ty.value - size / 2,
     width: size,
     height: size,
-    zIndex: 500,
+    // At rest use the row's z (back row lower). While dragging jump on top.
+    zIndex: dragging.value === 1 ? 500 : restZIndex,
   }));
 
   // Bag image fades out while dragging
@@ -174,44 +175,58 @@ export function NurseryCartScene({ shelfItems }) {
   const { state, dispatch } = useGame();
   const { width: sw, height: sh } = useLayout();
   const cart = state.cart;
-  const size = getSeedSize(sw, sh);
+  const shelfSize = getSeedSize(sw, sh); // shelf bags keep original size
   const bedSlots = getCartBedSlots(sw, sh);
+  // Cart-placed bags sized to fit one column of the bed
+  const zone = getCartZone(sw, sh);
+  const cartSize = Math.round((zone.x2 - zone.x1) / 4 * 1.3);
 
-  // Drop anywhere on the cart zone — bag snaps to next free grid slot
+  // Keys already in cart — hide those shelf bags so they don't reappear
+  const inCartKeys = new Set(cart.map((i) => i.flowerKey));
+
   const handleDropOnCart = useCallback((item, screenX, screenY) => {
     if (!isInCartZone(screenX, screenY, sw, sh)) return false;
     if (cart.length >= 8) return false;
-    dispatch({ type: 'ADD_TO_CART', flowerKey: item.flowerKey });
+    // Find nearest free grid slot to drop position
+    const usedSlots = new Set(cart.map((i) => i.gridSlot));
+    let best = -1, bestDist = Infinity;
+    bedSlots.forEach((s, idx) => {
+      if (usedSlots.has(idx)) return;
+      const d = Math.sqrt((screenX - s.x) ** 2 + (screenY - s.y) ** 2);
+      if (d < bestDist) { bestDist = d; best = idx; }
+    });
+    if (best === -1) return false;
+    dispatch({ type: 'ADD_TO_CART', flowerKey: item.flowerKey, gridSlot: best });
     return true;
-  }, [dispatch, sw, sh, cart.length]);
+  }, [dispatch, sw, sh, cart, bedSlots]);
 
   return (
     <>
-      {/* Seeds on cart — snapped to grid slots within the bed */}
-      {cart.map((item, i) => {
-        const slot = bedSlots[i];
+      {/* Seeds on cart — each rendered at its assigned grid slot */}
+      {cart.map((item) => {
+        const slot = bedSlots[item.gridSlot ?? 0];
         if (!slot) return null;
         return (
           <TouchableOpacity
             key={item.id}
-            style={{ position: 'absolute', left: slot.x - size / 2, top: slot.y - size / 2, zIndex: 50 }}
+            style={{ position: 'absolute', left: slot.x - cartSize / 2, top: slot.y - cartSize / 2, zIndex: (item.gridSlot ?? 0) < 4 ? 50 : 55 }}
             onPress={() => dispatch({ type: 'REMOVE_FROM_CART', id: item.id })}
             activeOpacity={0.7}
           >
-            <Image source={getSeedImage(item.flowerKey)} style={{ width: size, height: size }} resizeMode="contain" />
+            <Image source={getSeedImage(item.flowerKey)} style={{ width: cartSize, height: cartSize }} resizeMode="contain" />
           </TouchableOpacity>
         );
       })}
 
-      {/* Draggable shelf seeds (permanent stock) */}
-      {shelfItems.map((item) => (
+      {/* Draggable shelf seeds — hidden once added to cart, restock on next visit */}
+      {shelfItems.filter((item) => !inCartKeys.has(item.flowerKey)).map((item) => (
         <DraggableSeed
           key={item.id}
           item={item}
           onDropOnCart={handleDropOnCart}
           startX={item.shelfX}
           startY={item.shelfY}
-          size={size}
+          size={shelfSize}
         />
       ))}
     </>
@@ -219,12 +234,17 @@ export function NurseryCartScene({ shelfItems }) {
 }
 
 // ─── Room cart: still cart PNG bottom-right, seeds draggable onto snap points ──
-export function RoomCart({ snapPoints, onDismiss }) {
+export function RoomCart({ snapPoints, room = 1, onDismiss }) {
   const { state, dispatch } = useGame();
   const { width: sw, height: sh } = useLayout();
   const cart = state.cart;
-  const size = getSeedSize(sw, sh);
-  const sillPoints = getSillPoints(sw, sh);
+  const activeSill = room === 2 ? (state.windowSill2 ?? []) : (state.windowSill ?? []);
+  const occupiedSillIds = new Set(activeSill.map((i) => i.sillSlotId));
+  // Room 1 uses window sill points, room 2 uses floor sill points
+  const rawSillPts = room === 2
+    ? (FLOOR_SILL_POINTS[2] ?? []).map((p) => ({ id: p.id, ...projectPoint(p.x, p.y, sw, sh) }))
+    : getSillPoints(sw, sh);
+  const sillPoints = rawSillPts.filter((pt) => !occupiedSillIds.has(pt.id));
 
   const cartW = Math.round(projectSize(BASE_STILL_CART_W, sw, sh));
   const cartH = Math.round(projectSize(BASE_STILL_CART_H, sw, sh));
@@ -244,14 +264,25 @@ export function RoomCart({ snapPoints, onDismiss }) {
     transform: [{ translateX: slideX.value }],
   }));
 
-  const bedSlots = getCartBedSlots(sw, sh);
+  // Bag size matches CartTransitionScreen exactly
+  const zone = getCartZone(sw, sh);
+  const size = Math.round((zone.x2 - zone.x1) / 4 * 1.3);
+
+  // Offset bed slots from nursery zone to still cart position in room
+  // The nursery zone left edge projects to zone.x1; still cart left edge is cartLeft
+  const offsetX = cartLeft - zone.x1;
+  const offsetY = (sh - cartH * 0.55) - zone.y1; // align bag Y to cart surface
+  const bedSlots = getCartBedSlots(sw, sh).map((s) => ({
+    x: s.x + offsetX,
+    y: s.y + offsetY,
+  }));
 
   const handleSnap = useCallback((slotId, item) => {
     dispatch({ type: 'PLANT_FROM_CART', slotId, cartItemId: item.id, flowerKey: item.flowerKey });
   }, [dispatch]);
 
-  const handleStoreSill = useCallback((item) => {
-    dispatch({ type: 'STORE_ON_SILL', cartItemId: item.id, flowerKey: item.flowerKey });
+  const handleStoreSill = useCallback((item, sillSlotId) => {
+    dispatch({ type: 'STORE_ON_SILL', cartItemId: item.id, flowerKey: item.flowerKey, sillSlotId });
   }, [dispatch]);
 
   // Slide cart off to the right then hide when all bags are gone
@@ -273,8 +304,8 @@ export function RoomCart({ snapPoints, onDismiss }) {
       />
 
       {/* Seeds on the cart bed — draggable to plant snap points or window sill */}
-      {cart.map((item, i) => {
-        const slot = bedSlots[i];
+      {cart.map((item) => {
+        const slot = bedSlots[item.gridSlot ?? 0];
         if (!slot) return null;
         return (
           <RoomSeed
@@ -287,6 +318,7 @@ export function RoomCart({ snapPoints, onDismiss }) {
             startX={slot.x}
             startY={slot.y}
             size={size}
+            zIndex={(item.gridSlot ?? 0) < 4 ? 90 : 95}
           />
         );
       })}

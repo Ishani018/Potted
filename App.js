@@ -10,6 +10,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { GameProvider } from './src/context/GameContext';
 import { LayoutContext } from './src/context/LayoutContext';
+import MainScreen from './src/screens/MainScreen';
 import GardenScreen from './src/screens/GardenScreen';
 import NurseryScreen from './src/screens/NurseryScreen';
 import RoomScreen from './src/screens/RoomScreen';
@@ -34,7 +35,7 @@ export default function App() {
               <NavigationContainer>
                 <StatusBar hidden />
                 <Stack.Navigator
-                  initialRouteName="Garden"
+                  initialRouteName="Main"
                   screenOptions={{
                     headerShown: false,
                     gestureEnabled: false,
@@ -42,6 +43,7 @@ export default function App() {
                     cardStyle: { backgroundColor: '#000' },
                   }}
                 >
+                  <Stack.Screen name="Main" component={MainScreen} />
                   <Stack.Screen name="Garden" component={GardenScreen} />
                   <Stack.Screen name="Nursery" component={NurseryScreen} />
                   <Stack.Screen name="Room" component={RoomScreen} />

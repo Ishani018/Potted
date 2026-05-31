@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useRef } from 'react';
+import { createContext, useContext, useReducer, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { INITIAL_PLAYER_STATE, ROOM_UNLOCK_COSTS } from '../constants/gameData';
 import {
@@ -11,7 +11,7 @@ import {
 } from '../engine/gameEngine';
 import { getSnapPoints } from '../engine/snapPoints';
 
-const STORAGE_KEY = '@potted_save_v3';
+const STORAGE_KEY = '@potted_save_v4';
 const TICK_INTERVAL_MS = 60_000;
 
 // cart item: { id, flowerKey }
@@ -21,7 +21,8 @@ const initialState = {
   player: INITIAL_PLAYER_STATE,
   slots: {},
   cart: [],            // seed items loaded in nursery
-  windowSill: [],      // { id, flowerKey } seeds stored on room 1 ledge
+  windowSill: [],      // { id, flowerKey, sillSlotId } seeds stored on room 1 ledge
+  windowSill2: [],     // { id, flowerKey, sillSlotId } seeds stored on room 2 floor
   cartInRoom: false,
   initialized: false,
   lastPassiveTick: Date.now(),
@@ -73,8 +74,7 @@ function reducer(state, action) {
         cart: [...state.cart, {
           id,
           flowerKey: action.flowerKey,
-          screenX: action.screenX ?? null,
-          screenY: action.screenY ?? null,
+          gridSlot: action.gridSlot ?? state.cart.length,
         }],
       };
     }
@@ -88,37 +88,46 @@ function reducer(state, action) {
     }
 
     case 'STORE_ON_SILL': {
-      const { cartItemId, flowerKey } = action;
-      if (state.windowSill.length >= 4) return state;
-      const id = `sill_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      // sillSlotId prefix determines which sill: 'sill_*' = room 1, 'r2_sill_*' = room 2
+      const { cartItemId, flowerKey, sillSlotId } = action;
+      const isRoom2 = sillSlotId?.startsWith('r2_sill_');
+      const sillKey = isRoom2 ? 'windowSill2' : 'windowSill';
+      if (state[sillKey].some((i) => i.sillSlotId === sillSlotId)) return state;
+      const id = `sillitem_${Date.now()}_${Math.random().toString(36).slice(2)}`;
       return {
         ...state,
         cart: state.cart.filter((i) => i.id !== cartItemId),
-        windowSill: [...state.windowSill, { id, flowerKey }],
+        [sillKey]: [...state[sillKey], { id, flowerKey, sillSlotId }],
       };
     }
 
     case 'REMOVE_FROM_SILL': {
-      return { ...state, windowSill: state.windowSill.filter((i) => i.id !== action.id) };
+      const isRoom2 = state.windowSill2.some((i) => i.id === action.id);
+      const sillKey = isRoom2 ? 'windowSill2' : 'windowSill';
+      return { ...state, [sillKey]: state[sillKey].filter((i) => i.id !== action.id) };
     }
 
     case 'PLANT_FROM_SILL': {
       const { slotId, sillItemId, flowerKey } = action;
       const slot = state.slots[slotId];
       if (!slot || slot.flowerKey) return state;
+      const isRoom2 = state.windowSill2.some((i) => i.id === sillItemId);
+      const sillKey = isRoom2 ? 'windowSill2' : 'windowSill';
       return {
         ...state,
         slots: { ...state.slots, [slotId]: plantSeed(slot, flowerKey) },
-        windowSill: state.windowSill.filter((i) => i.id !== sillItemId),
+        [sillKey]: state[sillKey].filter((i) => i.id !== sillItemId),
       };
     }
 
     case 'PLACE_POT': {
       const { slotId, room } = action;
-      if (state.slots[slotId]) return state;
+      // Reject if pot already placed (hasPot:true) or if slot has a plant
+      if (state.slots[slotId]?.hasPot) return state;
+      const type = slotId.includes('_h') ? 'hanging' : 'potted';
       return {
         ...state,
-        slots: { ...state.slots, [slotId]: createEmptySlot(slotId, room, 'potted') },
+        slots: { ...state.slots, [slotId]: createEmptySlot(slotId, room, type, true) },
       };
     }
 
@@ -152,7 +161,7 @@ function reducer(state, action) {
       const { coins, slot: clearedSlot } = harvestPlant(slot);
       return {
         ...state,
-        slots: { ...state.slots, [slotId]: clearedSlot },
+        slots: { ...state.slots, [slotId]: { ...clearedSlot, hasPot: slot.hasPot } },
         player: {
           ...state.player,
           coins: state.player.coins + coins,
@@ -162,18 +171,26 @@ function reducer(state, action) {
     }
 
     case 'REMOVE_PLANT': {
-      const { slotId } = action;
+      const { slotId, deletePot } = action;
       const slot = state.slots[slotId];
       if (!slot) return state;
+      // deletePot (room 2) or potted: remove the pot too. For hanging slots that
+      // are auto-created by INIT_SLOTS, reset to hasPot:false instead of deleting
+      // so the empty rod hook (drag target) reappears.
       if (slot.type === 'potted') {
-        // Remove pot entirely — user drags a new one from the sill
         const { [slotId]: _, ...rest } = state.slots;
         return { ...state, slots: rest };
       }
-      // Hanging: just clear the plant, keep the hook
+      if (deletePot) {
+        return {
+          ...state,
+          slots: { ...state.slots, [slotId]: createEmptySlot(slotId, slot.room, slot.type, false) },
+        };
+      }
+      // Hanging default: clear the plant but preserve hasPot so the empty pot stays
       return {
         ...state,
-        slots: { ...state.slots, [slotId]: createEmptySlot(slotId, slot.room, slot.type) },
+        slots: { ...state.slots, [slotId]: createEmptySlot(slotId, slot.room, slot.type, true) },
       };
     }
 
@@ -260,6 +277,26 @@ export function GameProvider({ children }) {
         const raw = await AsyncStorage.getItem(STORAGE_KEY);
         if (raw) {
           const saved = JSON.parse(raw);
+          // Strip stale sill items that have no sillSlotId (from old save format)
+          if (saved.windowSill) {
+            saved.windowSill = saved.windowSill.filter((i) => i.sillSlotId && !i.sillSlotId.startsWith('r2_sill_'));
+          }
+          if (saved.windowSill2) {
+            saved.windowSill2 = saved.windowSill2.filter((i) => i.sillSlotId?.startsWith('r2_sill_'));
+          }
+          // Migrate old potted slots: only mark hasPot:true if they have/had a plant
+          if (saved.slots) {
+            Object.values(saved.slots).forEach((s) => {
+              if (s.type === 'potted' && s.hasPot === undefined) {
+                s.hasPot = !!(s.flowerKey || s.plantedAt);
+              }
+              // Empty hanging slots must not claim a pot — the pot is drag-placed.
+              // Fixes stale dev saves where hanging slots got hasPot:true with no plant.
+              if (s.type === 'hanging' && s.hasPot && !s.flowerKey && !s.plantedAt) {
+                s.hasPot = false;
+              }
+            });
+          }
           dispatch({ type: 'LOAD', payload: { ...initialState, ...saved, initialized: true } });
         } else {
           dispatch({ type: 'LOAD', payload: { ...initialState, initialized: true } });
@@ -272,7 +309,7 @@ export function GameProvider({ children }) {
 
   const saveState = async (s) => {
     try {
-      const toSave = { player: s.player, slots: s.slots, windowSill: s.windowSill, lastPassiveTick: s.lastPassiveTick };
+      const toSave = { player: s.player, slots: s.slots, windowSill: s.windowSill, windowSill2: s.windowSill2, lastPassiveTick: s.lastPassiveTick };
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
     } catch {}
   };
@@ -287,7 +324,7 @@ export function GameProvider({ children }) {
 
   useEffect(() => {
     if (state.initialized) saveState(state);
-  }, [state.player, state.slots]);
+  }, [state.player, state.slots, state.windowSill, state.windowSill2]);
 
   return (
     <GameContext.Provider value={{ state, dispatch }}>

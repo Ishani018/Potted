@@ -6,13 +6,18 @@ import { UI_IMAGES } from '../engine/assets';
 import { useLayout } from '../context/LayoutContext';
 import { projectSize } from '../engine/project';
 
-const BASE_CAN_SIZE = 200;
-const WATER_RADIUS = 60;  // px — how close to pot center to trigger watering
-const HOLD_MS = 2000;     // hold duration before watering fires
+// ── Watering can size ────────────────────────────────────────────────────────
+// BASE_CAN_SIZE: default size in base coords (1376×768). Used for all rooms
+// unless overridden by the baseCanSize prop.
+// Room 2 can override this by passing baseCanSize={150} (for example).
+const BASE_CAN_SIZE = 200;  // ← CHANGE THIS to resize can globally
+// ────────────────────────────────────────────────────────────────────────────
+const WATER_RADIUS = 100;
+const HOLD_MS = 2000;
 
-export default function WateringCan({ position, plantedSnapPoints = [], onWater, onDragStart, onDragEnd }) {
+export default function WateringCan({ position, plantedSnapPoints = [], onWater, onDragStart, onDragEnd, baseCanSize }) {
   const { width: sw, height: sh } = useLayout();
-  const size = Math.round(projectSize(BASE_CAN_SIZE, sw, sh));
+  const size = Math.round(projectSize(baseCanSize ?? BASE_CAN_SIZE, sw, sh));
   const half = size / 2;
 
   const tx = useSharedValue(0);
@@ -86,8 +91,9 @@ export default function WateringCan({ position, plantedSnapPoints = [], onWater,
     .onUpdate((e) => {
       tx.value = ox.value + e.translationX;
       ty.value = oy.value + e.translationY;
-      const absX = position.x + tx.value - half;
-      const absY = position.y + ty.value;
+      // Spout is bottom-left of the can image: x - 35%, y + 30% of half
+      const absX = position.x + tx.value - half * 0.7;
+      const absY = position.y + ty.value + half * 0.3;
       runOnJS(checkHover)(absX, absY);
     })
     .onEnd(() => {

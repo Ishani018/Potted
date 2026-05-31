@@ -3,6 +3,7 @@ node_modules/
 dist/
 *.log
 .env
+.claude/
 
 # Asset directories (large image/media files)
 room1/
@@ -18,4 +19,6 @@ ui_comps/
 *.jpeg
 *.jpg
 *.gif
+*.mp3
+*.wav
 !src/**

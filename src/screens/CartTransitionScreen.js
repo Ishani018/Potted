@@ -5,6 +5,7 @@ import { useLayout } from '../context/LayoutContext';
 import { UI_IMAGES, NURSERY_EMPTY_BG, SEED_IMAGES, POTTED_PLANT_IMAGES } from '../engine/assets';
 import { projectPoint, projectSize } from '../engine/project';
 import { ALL_SEEDS, BASE_SEED_SIZE, BASE_CART_W, BASE_CART_H } from '../constants/nurseryData';
+import { getCartZone } from '../engine/snapPoints';
 import { _shuffledSlots } from './NurseryScreen';
 import { getCartBedSlots } from '../engine/snapPoints';
 
@@ -25,7 +26,11 @@ export default function CartTransitionScreen({ navigation, route }) {
 
   const cartW = Math.round(projectSize(BASE_CART_W, sw, sh));
   const cartH = Math.round(projectSize(BASE_CART_H, sw, sh));
-  const seedSize = Math.round(projectSize(BASE_SEED_SIZE, sw, sh));
+  // Shelf bags match NurseryScreen size exactly
+  const shelfBagSize = Math.round(projectSize(BASE_SEED_SIZE, sw, sh));
+  // Cart bags sized to cart bed slot width
+  const _zone = getCartZone(sw, sh);
+  const seedSize = Math.round((_zone.x2 - _zone.x1) / 4 * 1.3);
 
   const cornerPt = projectPoint(CART_RIGHT_RAW.x, CART_RIGHT_RAW.y, sw, sh);
   const cartTop = cornerPt.y - cartH;
@@ -65,12 +70,16 @@ export default function CartTransitionScreen({ navigation, route }) {
     });
   }, []);
 
-  // Shelf bag positions — identical to NurseryScreen so they look frozen
-  const shelfBags = ALL_SEEDS.map((seed, i) => {
-    const raw = _shuffledSlots[i] ?? _shuffledSlots[_shuffledSlots.length - 1];
-    const p = projectPoint(raw.x, raw.y, sw, sh);
-    return { key: `${i}_${seed.key}`, flowerKey: seed.key, x: p.x, y: p.y };
-  });
+  // Shelf bag positions — hide seeds already in cart, matching NurseryScreen exactly
+  const inCartKeys = new Set(cart.map((i) => i.flowerKey));
+  const shelfBags = ALL_SEEDS
+    .filter((seed) => !inCartKeys.has(seed.key))
+    .map((seed) => {
+      const originalIndex = ALL_SEEDS.indexOf(seed);
+      const raw = _shuffledSlots[originalIndex] ?? _shuffledSlots[_shuffledSlots.length - 1];
+      const p = projectPoint(raw.x, raw.y, sw, sh);
+      return { key: `${originalIndex}_${seed.key}`, flowerKey: seed.key, x: p.x, y: p.y };
+    });
 
   return (
     <View style={styles.root}>
@@ -88,10 +97,10 @@ export default function CartTransitionScreen({ navigation, route }) {
           source={getSeedImage(bag.flowerKey)}
           style={{
             position: 'absolute',
-            width: seedSize,
-            height: seedSize,
-            left: bag.x - seedSize / 2,
-            top: bag.y - seedSize / 2,
+            width: shelfBagSize,
+            height: shelfBagSize,
+            left: bag.x - shelfBagSize / 2,
+            top: bag.y - shelfBagSize / 2,
           }}
           resizeMode="contain"
         />
@@ -115,8 +124,8 @@ export default function CartTransitionScreen({ navigation, route }) {
       {/* Seeds travel with cart — use same bed grid slots as nursery display */}
       {(() => {
         const bedSlots = getCartBedSlots(sw, sh);
-        return cart.map((item, i) => {
-          const slot = bedSlots[i];
+        return cart.map((item) => {
+          const slot = bedSlots[item.gridSlot ?? 0];
           if (!slot) return null;
           return (
             <Animated.Image
@@ -129,7 +138,7 @@ export default function CartTransitionScreen({ navigation, route }) {
                 left: slot.x - seedSize / 2,
                 top: slot.y - seedSize / 2,
                 transform: [{ translateX: seedX }],
-                zIndex: 10,
+                zIndex: (item.gridSlot ?? 0) < 4 ? 10 : 15,
               }}
               resizeMode="contain"
             />

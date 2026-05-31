@@ -1,3 +1,6 @@
+export const MAIN_BG = require('../../ui_comps/mainscreen.jpeg');
+export const GAME_MUSIC = require('../../Sunlight_on_the_Sprouts.mp3');
+
 // ─── Backgrounds ────────────────────────────────────────────────────────────
 export const BACKGROUNDS = {
   room1: {
@@ -9,12 +12,6 @@ export const BACKGROUNDS = {
     },
   },
   room2: {
-    pink: {
-      spring: require('../../room2/pink/spring.jpeg'),
-      summer: require('../../room2/pink/summer.jpeg'),
-      autumn: require('../../room2/pink/autumn.jpeg'),
-      winter: require('../../room2/pink/winter.jpeg'),
-    },
     white: {
       spring: require('../../room2/white/spring.jpeg'),
       summer: require('../../room2/white/summer.jpeg'),
@@ -35,7 +32,8 @@ export const BACKGROUNDS = {
 // ─── Potted Plants ───────────────────────────────────────────────────────────
 // stage 0 = potwithseed (shared), 1-3 = growth stages, 4 = dead (marigold3)
 export const POTTED_PLANT_IMAGES = {
-  _seed:   require('../../pottedplants/potwithseed.png'),
+  _seed:        require('../../pottedplants/potwithseed.png'),
+  _seedVisible: require('../../pottedplants/potwithseedvisible.png'),
   _dead:   require('../../pottedplants/marigold3.png'),
 
   daisy:      [require('../../pottedplants/daisy.png'),      require('../../pottedplants/daisy1.png'),      require('../../pottedplants/daisy2.png'),      require('../../pottedplants/daisy3.png')],
@@ -50,7 +48,9 @@ export const POTTED_PLANT_IMAGES = {
 // ─── Hanging Plants ──────────────────────────────────────────────────────────
 // stage 0 = emptyhangingpotwithseed, 1 = bud, 2 = full, 3 = dead
 export const HANGING_PLANT_IMAGES = {
-  _seed: require('../../hangingplants/emptyhangingpotwithseed.png'),
+  _seed:        require('../../hangingplants/emptyhangingpotwithseed.png'),
+  _seedVisible: require('../../hangingplants/hangingpotwithseedvisible.png'),
+  _stool:       require('../../hangingplants/potonstool.png'),
 
   stringofpearls: [require('../../hangingplants/stringofpearls.png'),  require('../../hangingplants/stringofpearls1.png'),  require('../../hangingplants/stringofpearls2.png')],
   Philodendron:   [require('../../hangingplants/Philodendron.png'),    require('../../hangingplants/Philodendron1 .png'),   require('../../hangingplants/Philodendron2.png')],

@@ -67,21 +67,25 @@ export default function RoomScreen({ navigation }) {
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        {/* Wall color section */}
-        <Text style={styles.section}>Wall Color — Room {currentRoom}</Text>
-        <View style={styles.swatchRow}>
-          {availableColors.map((color) => (
-            <TouchableOpacity
-              key={color}
-              style={[
-                styles.swatch,
-                { backgroundColor: COLOR_SWATCH[color] ?? '#aaa' },
-                currentColor === color && styles.swatchActive,
-              ]}
-              onPress={() => handleSetColor(color)}
-            />
-          ))}
-        </View>
+        {/* Wall color section — room 1 is always white, no picker */}
+        {currentRoom !== 1 && (
+          <>
+            <Text style={styles.section}>Wall Color — Room {currentRoom}</Text>
+            <View style={styles.swatchRow}>
+              {availableColors.map((color) => (
+                <TouchableOpacity
+                  key={color}
+                  style={[
+                    styles.swatch,
+                    { backgroundColor: COLOR_SWATCH[color] ?? '#aaa' },
+                    currentColor === color && styles.swatchActive,
+                  ]}
+                  onPress={() => handleSetColor(color)}
+                />
+              ))}
+            </View>
+          </>
+        )}
 
         {/* Room unlock */}
         <Text style={styles.section}>Unlock Rooms</Text>
