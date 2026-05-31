@@ -267,13 +267,7 @@ export default function Room1Screen({ navigation }) {
           </View>
         )}
 
-        {cartInRoom && (
-          <RoomCart
-            snapPoints={emptySnapPoints}
-            room={1}
-            onDismiss={() => navigation.navigate('CartTransition', { destination: 'Garden', exiting: true })}
-          />
-        )}
+        {cartInRoom && <RoomCart room={1} />}
 
         {popup && (
           <PlantPopup

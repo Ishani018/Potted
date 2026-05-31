@@ -1,9 +1,9 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useLayout } from '../context/LayoutContext';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
-  useSharedValue, useAnimatedStyle, withSpring, withTiming, runOnJS,
+  useSharedValue, useAnimatedStyle, withSpring, withTiming, withDelay, runOnJS,
 } from 'react-native-reanimated';
 import { useGame } from '../context/GameContext';
 import { SEED_IMAGES, POTTED_PLANT_IMAGES, UI_IMAGES } from '../engine/assets';
@@ -233,27 +233,51 @@ export function NurseryCartScene({ shelfItems }) {
   );
 }
 
-// ─── Room cart: still cart PNG bottom-right, seeds draggable onto snap points ──
-export function RoomCart({ snapPoints, room = 1, onDismiss }) {
+// ─── Auto-delivered bag: flies from the cart bed to its assigned spot and STAYS ──
+// there (at the stored-bag size) until the whole RoomCart unmounts. We dispatch the
+// STORE_ON_SILL only after the cart leaves, so the flyer is the only bag on screen
+// the entire time — no big/small double-image during the handoff.
+function FlyingBag({ item, fromX, fromY, toX, toY, size, delay = 0, onArrive }) {
+  // Fly at the RESTING size the whole way (no size tween) so it always matches the
+  // final stored bag exactly — eliminates the big/small double-image on handoff.
+  const tx = useSharedValue(fromX);
+  const ty = useSharedValue(fromY);
+
+  useEffect(() => {
+    const FLIGHT_MS = 550;
+    tx.value = withDelay(delay, withTiming(toX, { duration: FLIGHT_MS }));
+    ty.value = withDelay(delay, withTiming(toY, { duration: FLIGHT_MS }, (finished) => {
+      if (finished && onArrive) runOnJS(onArrive)(item);
+    }));
+  }, []);
+
+  const style = useAnimatedStyle(() => ({
+    position: 'absolute',
+    left: tx.value - size / 2,
+    top: ty.value - size / 2,
+    width: size,
+    height: size,
+    zIndex: 96,
+  }));
+
+  return (
+    <Animated.Image source={getSeedImage(item.flowerKey)} style={style} resizeMode="contain" />
+  );
+}
+
+// ─── Room cart: rolls in, auto-delivers seed bags to their spots, rolls out ──
+export function RoomCart({ room = 1 }) {
   const { state, dispatch } = useGame();
   const { width: sw, height: sh } = useLayout();
   const cart = state.cart;
-  const activeSill = room === 2 ? (state.windowSill2 ?? []) : (state.windowSill ?? []);
-  const occupiedSillIds = new Set(activeSill.map((i) => i.sillSlotId));
-  // Room 1 uses window sill points, room 2 uses floor sill points
-  const rawSillPts = room === 2
-    ? (FLOOR_SILL_POINTS[2] ?? []).map((p) => ({ id: p.id, ...projectPoint(p.x, p.y, sw, sh) }))
-    : getSillPoints(sw, sh);
-  const sillPoints = rawSillPts.filter((pt) => !occupiedSillIds.has(pt.id));
 
   const cartW = Math.round(projectSize(BASE_STILL_CART_W, sw, sh));
   const cartH = Math.round(projectSize(BASE_STILL_CART_H, sw, sh));
-
   const cartLeft = sw - cartW;
   const cartTop  = sh - cartH;
 
-  // Slide-out offset — animates to cartW+20 (off right edge) when cart empties
-  const slideX = useSharedValue(0);
+  // Cart slides in from the right, then out again after delivery.
+  const slideX = useSharedValue(cartW + 20);
   const cartStyle = useAnimatedStyle(() => ({
     position: 'absolute',
     left: cartLeft,
@@ -264,74 +288,126 @@ export function RoomCart({ snapPoints, room = 1, onDismiss }) {
     transform: [{ translateX: slideX.value }],
   }));
 
-  // Bag size matches CartTransitionScreen exactly
   const zone = getCartZone(sw, sh);
   const size = Math.round((zone.x2 - zone.x1) / 4 * 1.3);
+  // Resting size of a stored bag (must match SillSeed's bagSize in the room screens).
+  const restSize = Math.round(projectSize(BASE_SEED_SIZE * 0.88, sw, sh));
 
-  // Offset bed slots from nursery zone to still cart position in room
-  // The nursery zone left edge projects to zone.x1; still cart left edge is cartLeft
+  // Cart bed positions (where bags start) offset to the still cart in the room.
   const offsetX = cartLeft - zone.x1;
-  const offsetY = (sh - cartH * 0.55) - zone.y1; // align bag Y to cart surface
-  const bedSlots = getCartBedSlots(sw, sh).map((s) => ({
-    x: s.x + offsetX,
-    y: s.y + offsetY,
+  const offsetY = (sh - cartH * 0.55) - zone.y1;
+  const bedSlots = getCartBedSlots(sw, sh).map((s) => ({ x: s.x + offsetX, y: s.y + offsetY }));
+
+  // Sill/floor target positions for this room. Room 1 = window sill, room 2 =
+  // floor bags. Other rooms have no bag spots yet → empty (cart just passes through).
+  const rawSillPts = room === 1
+    ? getSillPoints(sw, sh)
+    : room === 2
+    ? (FLOOR_SILL_POINTS[2] ?? []).map((p) => ({ id: p.id, ...projectPoint(p.x, p.y, sw, sh) }))
+    : [];
+
+  // ── Build the delivery plan ONCE on mount ───────────────────────────────────
+  // Snapshot cart + currently-free slots, pair bags with slots up to capacity.
+  // Bags beyond capacity ride in/out ON the cart (persist for the next visit).
+  const planRef = useRef(null);
+  if (planRef.current === null) {
+    const activeSill = room === 2 ? (state.windowSill2 ?? []) : (state.windowSill ?? []);
+    const occupied = new Set(activeSill.map((i) => i.sillSlotId));
+    const freeSlots = rawSillPts.filter((pt) => !occupied.has(pt.id));
+    const deliver = cart.slice(0, freeSlots.length).map((item, idx) => ({
+      item,
+      from: bedSlots[item.gridSlot ?? 0] ?? bedSlots[0],
+      to: freeSlots[idx],
+    }));
+    // Leftover bags stay on the cart bed at their own grid slot positions.
+    const leftover = cart.slice(freeSlots.length).map((item) => ({
+      item,
+      at: bedSlots[item.gridSlot ?? 0] ?? bedSlots[0],
+    }));
+    planRef.current = { deliver, leftover };
+  }
+  const plan = planRef.current.deliver;
+  const leftover = planRef.current.leftover;
+
+  // Leftover bags translate with the cart as it slides in/out.
+  const leftoverStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: slideX.value }],
   }));
 
-  const handleSnap = useCallback((slotId, item) => {
-    dispatch({ type: 'PLANT_FROM_CART', slotId, cartItemId: item.id, flowerKey: item.flowerKey });
-  }, [dispatch]);
+  const [arrived, setArrived] = useState(0);
+  const rolledOut = useRef(false);
 
-  const handleStoreSill = useCallback((item, sillSlotId) => {
-    dispatch({ type: 'STORE_ON_SILL', cartItemId: item.id, flowerKey: item.flowerKey, sillSlotId });
-  }, [dispatch]);
+  const handleArrive = useCallback(() => {
+    setArrived((n) => n + 1);
+  }, []);
 
-  // Slide cart off to the right then hide when all bags are gone
+  // Commit all deliveries to state, then drop the cart. Doing this together (and
+  // only after the cart has rolled out) means the stored SillSeeds appear as this
+  // RoomCart unmounts — the flyers never overlap them.
+  const finish = useCallback(() => {
+    plan.forEach(({ item, to }) => {
+      dispatch({ type: 'STORE_ON_SILL', cartItemId: item.id, flowerKey: item.flowerKey, sillSlotId: to.id });
+    });
+    dispatch({ type: 'SET_CART_IN_ROOM', value: false });
+  }, [dispatch, plan]);
+
+  // Roll the cart IN on mount, then OUT once all planned bags have landed.
   useEffect(() => {
-    if (cart.length === 0) {
+    slideX.value = withTiming(0, { duration: 600 });
+  }, []);
+
+  useEffect(() => {
+    if (rolledOut.current) return;
+    if (arrived < plan.length) return; // wait for all flyers to land
+    rolledOut.current = true;
+    const pause = plan.length === 0 ? 900 : 450; // let bags settle on their spots
+    const t = setTimeout(() => {
       slideX.value = withTiming(cartW + 20, { duration: 600 }, () => {
-        runOnJS(dispatch)({ type: 'SET_CART_IN_ROOM', value: false });
+        runOnJS(finish)();
       });
-    }
-  }, [cart.length]);
+    }, pause);
+    return () => clearTimeout(t);
+  }, [arrived, plan.length, finish]);
 
   return (
     <>
-      {/* Still cart image — animated slide out */}
-      <Animated.Image
-        source={UI_IMAGES.stillcart}
-        style={cartStyle}
-        resizeMode="contain"
-      />
+      {/* Still cart image — slides in then out */}
+      <Animated.Image source={UI_IMAGES.stillcart} style={cartStyle} resizeMode="contain" />
 
-      {/* Seeds on the cart bed — draggable to plant snap points or window sill */}
-      {cart.map((item) => {
-        const slot = bedSlots[item.gridSlot ?? 0];
-        if (!slot) return null;
-        return (
-          <RoomSeed
-            key={item.id}
-            item={item}
-            snapPoints={snapPoints}
-            sillPoints={sillPoints}
-            onSnap={handleSnap}
-            onStoreSill={handleStoreSill}
-            startX={slot.x}
-            startY={slot.y}
-            size={size}
-            zIndex={(item.gridSlot ?? 0) < 4 ? 90 : 95}
-          />
-        );
-      })}
+      {/* Leftover bags (no free spot) ride on the cart bed in and back out */}
+      {leftover.map(({ item, at }) => (
+        <Animated.Image
+          key={item.id}
+          source={getSeedImage(item.flowerKey)}
+          style={[
+            {
+              position: 'absolute',
+              left: at.x - size / 2,
+              top: at.y - size / 2,
+              width: size,
+              height: size,
+              zIndex: 82,
+            },
+            leftoverStyle,
+          ]}
+          resizeMode="contain"
+        />
+      ))}
 
-      {/* Dismiss button */}
-      <TouchableOpacity
-        style={[styles.dismissBtn, { position: 'absolute', right: 14, bottom: 14, zIndex: 90 }]}
-        onPress={onDismiss}
-      >
-        <Text style={styles.dismissBtnText}>
-          {cart.length > 0 ? `Cart (${cart.length})` : 'Send back'}
-        </Text>
-      </TouchableOpacity>
+      {/* Auto-delivered bags fly from the cart bed to their assigned spots */}
+      {plan.map(({ item, from, to }, idx) => (
+        <FlyingBag
+          key={item.id}
+          item={item}
+          fromX={from.x}
+          fromY={from.y}
+          toX={to.x}
+          toY={to.y}
+          size={restSize}
+          delay={600 + idx * 180}  // wait for roll-in, then stagger each bag
+          onArrive={handleArrive}
+        />
+      ))}
     </>
   );
 }

@@ -45,11 +45,18 @@ function DraggableHangingPot({ startX, startY, potW, potH, dragW, dragH, ghostW,
   const [isDragging, setIsDragging] = useState(false);
 
   const trySnap = useCallback((x, y) => {
-    const SNAP_R = 60;
-    let best = null, bestDist = SNAP_R + 1;
+    // Hooks on a rod differ mainly in x (same y per rod), and the pot hangs below
+    // the rod, so the drop y is always well under pt.y. Weight x distance heavily
+    // and y loosely so we snap to the column you aimed at, not a wrong neighbour.
+    const X_RANGE = 70;   // must be within this horizontal band of a hook
+    const Y_RANGE = 260;  // generous vertical band (rod → bottom of hanging pot)
+    let best = null, bestScore = Infinity;
     for (const pt of targets) {
-      const dist = Math.sqrt((x - pt.x) ** 2 + (y - pt.y) ** 2);
-      if (dist < bestDist) { bestDist = dist; best = pt; }
+      const dx = Math.abs(x - pt.x);
+      const dy = Math.abs(y - pt.y);
+      if (dx > X_RANGE || dy > Y_RANGE) continue;
+      const score = dx * 3 + dy; // x dominates the choice
+      if (score < bestScore) { bestScore = score; best = pt; }
     }
     if (best) onPlace(best);
     tx.value = startX;
@@ -320,13 +327,7 @@ export default function Room2Screen({ navigation }) {
           </View>
         )}
 
-        {cartInRoom && (
-          <RoomCart
-            snapPoints={seedTargets}
-            room={2}
-            onDismiss={() => navigation.navigate('CartTransition', { destination: 'Garden', exiting: true })}
-          />
-        )}
+        {cartInRoom && <RoomCart room={2} />}
 
         {popup && (
           <PlantPopup
