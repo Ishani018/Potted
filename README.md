@@ -1,92 +1,194 @@
-# 🌱 Potted
+<p align="center">
+  <img src="readme_assets/mainscreen.jpeg" width="600" alt="Potted — Main Screen" />
+</p>
 
-> **Grow. Tend. Bloom. Repeat.**
+<h1 align="center">🌱 Potted</h1>
 
-*(Screenshots coming soon — game in development)*
+<p align="center">
+  <em>A cozy pixel-art plant nursery game built with React Native & Expo</em>
+</p>
 
----
-
-## 🎮 About
-
-Potted is a cozy pixel art idle game about the quiet joy of keeping plants alive. You're given a little room, some seed money, and the gentle pressure of time — water your flowers before they wilt, harvest them at peak bloom, and slowly grow your collection into something beautiful.
-
-The core loop is simple and meditative: buy seeds from the nursery shop, plant them in your pots and hanging planters, water them every few hours, and harvest blooms for coins. Coins buy more seeds, unlock new rooms, and let you redecorate your space. Plants grow in real time — even while you're away — so there's always something to come back to.
-
-Every room has hand-painted seasonal backgrounds that change automatically with the real-world date. Spring brings soft pastels and fresh greens. Summer is warm and lush. Autumn turns everything amber and gold. Winter wraps the room in quiet blue light. The art is fully hand-crafted, pixel by pixel, room by room.
-
-Three rooms wait to be unlocked: a cozy greenhouse with wooden shelves and a garden window, a warm balcony with macramé hanging rods and a sliding glass door, and a bright sunroom conservatory with a tiered plant stand and glass panels that flood the room with light. Each room has its own layout, its own mood, and its own way of being lived in.
+<p align="center">
+  <img src="https://img.shields.io/badge/React_Native-0.74-61DAFB?logo=react&logoColor=white" />
+  <img src="https://img.shields.io/badge/Expo-51-000020?logo=expo&logoColor=white" />
+  <img src="https://img.shields.io/badge/Platform-iOS%20%7C%20Android%20%7C%20Web-green" />
+</p>
 
 ---
 
-## 🌸 Features
+## 🌸 What is Potted?
 
-- 7 hand-drawn pixel art flowers with 5 growth stages each (seed → bud → slight bloom → full bloom → dead)
-- 5 hanging plant varieties with passive coin trickle while alive
-- 3 unlockable rooms with full seasonal backgrounds (spring / summer / autumn / winter)
-- Real-time growth system — plants grow and die while you're away
-- Drag-and-snap plant placement with a 40px snap radius
-- Coin economy — harvest blooms, buy new seeds, spend wisely
-- Watering can mechanic with bonus coins for watering during the bud stage
-- Wall color customization per room (green, pink, white)
-- Collectible paintings and pet companions for Room 2
-- Achievements system tracking your garden milestones
-- Landscape-only (16:9), built for Android
-- Built with React Native (Expo)
+**Potted** is a relaxing plant nursery game where you buy seeds, plant them in pots, water them, and watch them bloom through beautiful growth stages. Decorate your rooms with paintings and pets, manage your inventory, and earn coins by harvesting flowers.
 
----
+<p align="center">
+  <img src="readme_assets/daisyseed.png" width="80" />
+  <img src="readme_assets/potwithseed.png" width="80" />
+  <img src="readme_assets/wateringcan2.png" width="100" />
+  <img src="readme_assets/daisy.png" width="80" />
+  <img src="readme_assets/rose.png" width="80" />
+  <img src="readme_assets/hydrenga.png" width="80" />
+</p>
 
-## 🏡 Rooms
-
-1. **Greenhouse** — A cozy indoor room with a large garden window, wooden shelves along two walls, and warm afternoon light. Your starting space. Five pots on the top shelf, four on the lower.
-
-2. **Balcony** — A warm indoor balcony with macramé hanging rods strung across two levels. A sliding glass door opens onto whatever season is outside. Comes with a photo frame slot and a spot for a pet. Unlocks at 500 coins.
-
-3. **Sunroom** — A bright glass-panel conservatory where the light pours in from every angle. A tiered plant stand holds floor pots and a rack pot. Hanging rods run along the top. The most expensive room to unlock — but worth it. Unlocks at 1500 coins.
+<p align="center"><em>Seed → Plant → Water → Bloom 🌷</em></p>
 
 ---
 
-## 🌿 Plants
+## 🎮 Features
 
-### Potted Flowers
-Daisy · Hydrangea · Marigold · Peony · Poppy · Rose · Snapdragon
+### 🏡 Three Unique Rooms
+| Room | Description |
+|------|-------------|
+| **Room 1 — Window Shelf** | Two wooden shelves by the window. Drag pots from the sill, plant seeds, and water them. |
+| **Room 2 — Balcony** | Hanging pots on curtain rods. Drag pots from the stool and hang your plants. |
+| **Room 3 — Sunroom** | A bright sunroom with shelf pots and hanging hooks. |
 
-### Hanging Plants
-Bougainvillea · Jasmine · Petunia · Philodendron · String of Pearls
+### 🌻 7 Potted Flowers
+
+Each flower grows through 4 stages: **Seed → Bud → Slight Bloom → Full Bloom**
+
+<p align="center">
+  <img src="readme_assets/daisy.png" width="70" title="Daisy" />
+  <img src="readme_assets/rose.png" width="70" title="Rose" />
+  <img src="readme_assets/hydrenga.png" width="70" title="Hydrangea" />
+  <img src="readme_assets/snapdragon.png" width="70" title="Snapdragon" />
+  <img src="readme_assets/poppy.png" width="70" title="Poppy" />
+  <img src="readme_assets/marigold.png" width="70" title="Marigold" />
+  <img src="readme_assets/peony.png" width="70" title="Peony" />
+</p>
+<p align="center">
+  <em>Daisy · Rose · Hydrangea · Snapdragon · Poppy · Marigold · Peony</em>
+</p>
+
+### 🪴 5 Hanging Plants
+
+<p align="center">
+  <img src="readme_assets/jasmine.png" width="70" title="Jasmine" />
+  <img src="readme_assets/stringofpearls.png" width="70" title="String of Pearls" />
+</p>
+<p align="center">
+  <em>Jasmine · String of Pearls · Philodendron · Petunia · Bougainvillea</em>
+</p>
+
+### 🐾 Adorable Pets
+
+<p align="center">
+  <img src="readme_assets/persiancat.png" width="90" title="Persian Cat" />
+  <img src="readme_assets/puppybeagle.png" width="90" title="Puppy Beagle" />
+</p>
+
+### 🛒 Nursery Shop
+Visit the nursery to buy seed bags with your earned coins. Seeds go into your inventory — drag them onto empty pots to plant!
+
+<p align="center">
+  <img src="readme_assets/nurseryshop.png" width="80" />
+  <img src="readme_assets/goldcoins.png" width="80" />
+  <img src="readme_assets/inventory.png" width="200" />
+</p>
+
+### 💧 Watering Mechanic
+Drag the watering can over a planted pot and **hold for 2 seconds** to water it. Watering a seed instantly advances it to the bud stage!
+
+### ✨ More Features
+- 🎵 **Background Music** — Looping ambient music with mute toggle
+- 🌤️ **Seasonal Backgrounds** — Room backgrounds change with spring, summer, autumn, and winter
+- 🖼️ **Wall Decor** — Hang paintings on your walls (6 paintings available)
+- 🏆 **Achievements** — Unlock achievements like "First Bloom" and "Green Thumb"
+- 💾 **Auto-Save** — Progress is saved with AsyncStorage
 
 ---
 
 ## 🛠️ Tech Stack
 
-- React Native (Expo)
-- React Navigation (Stack)
-- AsyncStorage — all game state persisted locally
-- react-native-gesture-handler — drag and drop
-- react-native-reanimated — spring animations
-- expo-av — snap sound effects
+| Technology | Purpose |
+|------------|---------|
+| **React Native** 0.74 | Cross-platform mobile framework |
+| **Expo** 51 | Development toolchain & build system |
+| **React Navigation** | Screen routing & transitions |
+| **Reanimated** 3 | Smooth drag-and-drop animations |
+| **Gesture Handler** | Touch gestures for dragging pots, seeds, and watering can |
+| **AsyncStorage** | Persistent game state storage |
+| **Expo AV** | Background music playback |
 
 ---
 
 ## 🚀 Getting Started
 
+### Prerequisites
+- Node.js 18+
+- npm or yarn
+- Expo CLI (`npx expo`)
+- Expo Go app (for mobile testing)
+
+### Installation
+
 ```bash
+# Clone the repo
 git clone https://github.com/Ishani018/Potted.git
 cd Potted
+
+# Install dependencies
 npm install
+
+# Start the dev server
 npx expo start
 ```
 
-> **Note:** Game assets (backgrounds, plant sprites, UI images) are not included in this repository. You'll need to supply your own `assets/` folder matching the structure described in the project documentation.
+> **Note:** Asset files (images, sounds) are not included in the repository due to their size. Contact the repo owner for the asset bundle.
 
 ---
 
-## 👩‍💻 Developer
+## 📁 Project Structure
 
-Made with love by **Ishani**
+```
+potted/
+├── App.js                    # Entry point & navigation setup
+├── src/
+│   ├── components/           # Reusable UI components
+│   │   ├── CartOverlay.js    # Seed cart from nursery
+│   │   ├── InventoryOverlay.js # Inventory grid overlay
+│   │   ├── PlantPopup.js     # Plant info / harvest / remove popup
+│   │   ├── PlantSlot.js      # Individual plant rendering
+│   │   └── WateringCan.js    # Draggable watering can
+│   ├── constants/
+│   │   ├── gameData.js       # Flowers, timers, achievements, prices
+│   │   └── nurseryData.js    # Nursery shop layout constants
+│   ├── context/
+│   │   ├── GameContext.js     # Game state reducer (buy, plant, water, harvest)
+│   │   └── LayoutContext.js   # Screen dimensions provider
+│   ├── engine/
+│   │   ├── assets.js          # All asset require() mappings
+│   │   ├── gameEngine.js      # Growth tick logic & watering
+│   │   ├── project.js         # Coordinate projection (base → screen)
+│   │   └── snapPoints.js      # Pot/hook positions per room
+│   └── screens/
+│       ├── MainScreen.js      # Title screen with play button
+│       ├── GardenScreen.js    # Main game screen (all rooms)
+│       ├── NurseryScreen.js   # Seed shop
+│       └── CartTransitionScreen.js # Cart animation between screens
+├── readme_assets/             # Images used in this README
+└── package.json
+```
 
-Solo developer — code, game design, and art direction. Every shelf, every petal, every pixel placed by hand.
+---
+
+## 🎯 Game Loop
+
+```
+Buy Seeds (Nursery) → Store in Inventory → Drag Pot to Shelf
+         ↓
+  Plant Seed in Pot → Water with Can (hold 2s) → Watch it Grow
+         ↓
+   Harvest at Full Bloom → Earn Coins 💰 → Buy More Seeds!
+```
 
 ---
 
 ## 📄 License
 
-MIT
+This project is private. All pixel art assets are original creations.
+
+---
+
+<p align="center">
+  Made with 🌿 and lots of pixel love
+</p>

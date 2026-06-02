@@ -14,7 +14,6 @@ import MainScreen from './src/screens/MainScreen';
 import GardenScreen from './src/screens/GardenScreen';
 import NurseryScreen from './src/screens/NurseryScreen';
 import RoomScreen from './src/screens/RoomScreen';
-import CartTransitionScreen from './src/screens/CartTransitionScreen';
 
 const Stack = createStackNavigator();
 
@@ -47,20 +46,6 @@ export default function App() {
                   <Stack.Screen name="Garden" component={GardenScreen} />
                   <Stack.Screen name="Nursery" component={NurseryScreen} />
                   <Stack.Screen name="Room" component={RoomScreen} />
-                  <Stack.Screen
-                    name="CartTransition"
-                    component={CartTransitionScreen}
-                    options={{
-                      animationEnabled: true,
-                      cardStyleInterpolator: ({ current }) => ({
-                        cardStyle: { opacity: current.progress },
-                      }),
-                      transitionSpec: {
-                        open:  { animation: 'timing', config: { duration: 400 } },
-                        close: { animation: 'timing', config: { duration: 400 } },
-                      },
-                    }}
-                  />
                 </Stack.Navigator>
               </NavigationContainer>
             </View>

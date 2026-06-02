@@ -78,7 +78,7 @@ export const BONUS_COIN_MULTIPLIER = 1.2;
 // Hanging: 0=seed, 1=bud, 2=full, 3=dead
 
 export const INITIAL_PLAYER_STATE = {
-  coins: 50,
+  coins: 50000,
   unlockedRooms: [1, 2, 3],
   currentRoom: 1,
   wallColor: { room1: 'white', room2: 'white', room3: 'white' },

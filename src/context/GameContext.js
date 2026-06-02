@@ -14,16 +14,15 @@ import { getSnapPoints } from '../engine/snapPoints';
 const STORAGE_KEY = '@potted_save_v4';
 const TICK_INTERVAL_MS = 60_000;
 
-// cart item: { id, flowerKey }
 // slot: { slotId, room, type, flowerKey, stage, plantedAt, lastWatered, isDead, _budWatered }
+
+const INVENTORY_CAP = 35; // 7×5 grid
 
 const initialState = {
   player: INITIAL_PLAYER_STATE,
   slots: {},
-  cart: [],            // seed items loaded in nursery
-  windowSill: [],      // { id, flowerKey, sillSlotId } seeds stored on room 1 ledge
-  windowSill2: [],     // { id, flowerKey, sillSlotId } seeds stored on room 2 floor
-  cartInRoom: false,
+  inventory: [],       // { id, flowerKey } seed bags owned (shared across rooms)
+  heldSeed: null,      // { invItemId, flowerKey } picked from inventory, awaiting a pot tap
   initialized: false,
   lastPassiveTick: Date.now(),
 };
@@ -64,59 +63,41 @@ function reducer(state, action) {
       return { ...state, slots };
     }
 
-    // Add a seed to cart (free, unlimited in nursery).
-    // screenX/screenY = exact pixel position where user dropped it — stored as-is.
-    case 'ADD_TO_CART': {
-      if (state.cart.length >= 8) return state;
-      const id = `cart_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    // Buy a seed in the nursery → charge coins, add a bag to the shared inventory.
+    // action: { flowerKey, price }
+    case 'BUY_SEED': {
+      const { flowerKey, price = 0 } = action;
+      if (state.player.coins < price) return state;          // can't afford
+      if (state.inventory.length >= INVENTORY_CAP) return state; // inventory full
+      const id = `inv_${Date.now()}_${Math.random().toString(36).slice(2)}`;
       return {
         ...state,
-        cart: [...state.cart, {
-          id,
-          flowerKey: action.flowerKey,
-          gridSlot: action.gridSlot ?? state.cart.length,
-        }],
+        player: { ...state.player, coins: state.player.coins - price },
+        inventory: [...state.inventory, { id, flowerKey }],
       };
     }
 
-    case 'REMOVE_FROM_CART': {
-      return { ...state, cart: state.cart.filter((i) => i.id !== action.id) };
+    // Pick a seed from the inventory to plant next (held until a pot is tapped).
+    case 'HOLD_SEED': {
+      const { invItemId, flowerKey } = action;
+      return { ...state, heldSeed: { invItemId, flowerKey } };
     }
 
-    case 'CLEAR_CART': {
-      return { ...state, cart: [] };
+    case 'CLEAR_HELD': {
+      return { ...state, heldSeed: null };
     }
 
-    case 'STORE_ON_SILL': {
-      // sillSlotId prefix determines which sill: 'sill_*' = room 1, 'r2_sill_*' = room 2
-      const { cartItemId, flowerKey, sillSlotId } = action;
-      const isRoom2 = sillSlotId?.startsWith('r2_sill_');
-      const sillKey = isRoom2 ? 'windowSill2' : 'windowSill';
-      if (state[sillKey].some((i) => i.sillSlotId === sillSlotId)) return state;
-      const id = `sillitem_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-      return {
-        ...state,
-        cart: state.cart.filter((i) => i.id !== cartItemId),
-        [sillKey]: [...state[sillKey], { id, flowerKey, sillSlotId }],
-      };
-    }
-
-    case 'REMOVE_FROM_SILL': {
-      const isRoom2 = state.windowSill2.some((i) => i.id === action.id);
-      const sillKey = isRoom2 ? 'windowSill2' : 'windowSill';
-      return { ...state, [sillKey]: state[sillKey].filter((i) => i.id !== action.id) };
-    }
-
-    case 'PLANT_FROM_SILL': {
-      const { slotId, sillItemId, flowerKey } = action;
+    // Tap an empty pot while holding a seed → plant it, consume from inventory.
+    case 'PLANT_HELD': {
+      const { slotId } = action;
+      const held = state.heldSeed;
       const slot = state.slots[slotId];
-      if (!slot || slot.flowerKey) return state;
-      const isRoom2 = state.windowSill2.some((i) => i.id === sillItemId);
-      const sillKey = isRoom2 ? 'windowSill2' : 'windowSill';
+      if (!held || !slot || slot.flowerKey) return state;
       return {
         ...state,
-        slots: { ...state.slots, [slotId]: plantSeed(slot, flowerKey) },
-        [sillKey]: state[sillKey].filter((i) => i.id !== sillItemId),
+        slots: { ...state.slots, [slotId]: plantSeed(slot, held.flowerKey) },
+        inventory: state.inventory.filter((i) => i.id !== held.invItemId),
+        heldSeed: null,
       };
     }
 
@@ -128,22 +109,6 @@ function reducer(state, action) {
       return {
         ...state,
         slots: { ...state.slots, [slotId]: createEmptySlot(slotId, room, type, true) },
-      };
-    }
-
-    case 'SET_CART_IN_ROOM': {
-      return { ...state, cartInRoom: action.value };
-    }
-
-    // Drag seed from cart onto an empty snap point → plant directly
-    case 'PLANT_FROM_CART': {
-      const { slotId, cartItemId, flowerKey } = action;
-      const slot = state.slots[slotId];
-      if (!slot || slot.flowerKey) return state;
-      return {
-        ...state,
-        slots: { ...state.slots, [slotId]: plantSeed(slot, flowerKey) },
-        cart: state.cart.filter((i) => i.id !== cartItemId),
       };
     }
 
@@ -277,13 +242,16 @@ export function GameProvider({ children }) {
         const raw = await AsyncStorage.getItem(STORAGE_KEY);
         if (raw) {
           const saved = JSON.parse(raw);
-          // Strip stale sill items that have no sillSlotId (from old save format)
-          if (saved.windowSill) {
-            saved.windowSill = saved.windowSill.filter((i) => i.sillSlotId && !i.sillSlotId.startsWith('r2_sill_'));
+          // Migrate old sill/floor storage into the shared inventory (one-time).
+          const legacyBags = [...(saved.windowSill ?? []), ...(saved.windowSill2 ?? [])];
+          if (legacyBags.length && !saved.inventory) {
+            saved.inventory = legacyBags.map((b) => ({
+              id: b.id ?? `inv_${Math.random().toString(36).slice(2)}`,
+              flowerKey: b.flowerKey,
+            }));
           }
-          if (saved.windowSill2) {
-            saved.windowSill2 = saved.windowSill2.filter((i) => i.sillSlotId?.startsWith('r2_sill_'));
-          }
+          delete saved.windowSill;
+          delete saved.windowSill2;
           // Migrate old potted slots: only mark hasPot:true if they have/had a plant
           if (saved.slots) {
             Object.values(saved.slots).forEach((s) => {
@@ -297,6 +265,9 @@ export function GameProvider({ children }) {
               }
             });
           }
+          // TEMP TESTING: force coins on every load so we don't have to clear
+          // storage. REMOVE this line when done testing.
+          saved.player = { ...saved.player, coins: 50000 };
           dispatch({ type: 'LOAD', payload: { ...initialState, ...saved, initialized: true } });
         } else {
           dispatch({ type: 'LOAD', payload: { ...initialState, initialized: true } });
@@ -309,7 +280,7 @@ export function GameProvider({ children }) {
 
   const saveState = async (s) => {
     try {
-      const toSave = { player: s.player, slots: s.slots, windowSill: s.windowSill, windowSill2: s.windowSill2, lastPassiveTick: s.lastPassiveTick };
+      const toSave = { player: s.player, slots: s.slots, inventory: s.inventory, lastPassiveTick: s.lastPassiveTick };
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
     } catch {}
   };
@@ -324,7 +295,7 @@ export function GameProvider({ children }) {
 
   useEffect(() => {
     if (state.initialized) saveState(state);
-  }, [state.player, state.slots, state.windowSill, state.windowSill2]);
+  }, [state.player, state.slots, state.inventory]);
 
   return (
     <GameContext.Provider value={{ state, dispatch }}>

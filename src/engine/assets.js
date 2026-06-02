@@ -94,16 +94,24 @@ export const PET_IMAGES = {
 // ─── UI ──────────────────────────────────────────────────────────────────────
 export const UI_IMAGES = {
   nurseryshop:  require('../../ui_comps/nurseryshop.png'),
+  gallery:      require('../../ui_comps/gallery.png'),
+  inventorybtn: require('../../ui_comps/inventorybutton.png'),
   goldcoins:    require('../../ui_comps/goldcoins.png'),
   back:         require('../../ui_comps/back.png'),
   settings:     require('../../ui_comps/settings.png'),
-  cartgif:      require('../../ui_comps/cartgif.gif'),
-  stillcart:    require('../../ui_comps/stillcart.png'),
+  settingsnobg: require('../../ui_comps/settingsnobg.png'),
   seed:         require('../../ui_comps/seed.png'),
   wateringcan1: require('../../wateringcan1.png'),
   wateringcan2: require('../../wateringcan2.png'),
+  // Main screen buttons
+  play:         require('../../ui_comps/play.png'),
+  sound:        require('../../ui_comps/sound.png'),
+  mutedsound:   require('../../ui_comps/mutedsound.png'),
+  info:         require('../../ui_comps/info.png'),
 };
 
-// ─── Nursery backgrounds ──────────────────────────────────────────────────────
+// ─── Nursery background ───────────────────────────────────────────────────────
 export const NURSERY_BG = require('../../nursery.jpeg');
-export const NURSERY_EMPTY_BG = require('../../nurserywithoutcart.jpeg');
+
+// ─── Inventory grid background (7 cols × 5 rows, 1226×912) ────────────────────
+export const INVENTORY_BG = require('../../ui_comps/inventory.png');

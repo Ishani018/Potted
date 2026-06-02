@@ -4,7 +4,7 @@ import { useLayout } from '../context/LayoutContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useGame } from '../context/GameContext';
-import { BACKGROUNDS, UI_IMAGES } from '../engine/assets';
+import { BACKGROUNDS, UI_IMAGES, SEED_IMAGES } from '../engine/assets';
 import { getSnapPoints, WATERING_CAN_POSITIONS, scalePoint } from '../engine/snapPoints';
 import { getCurrentSeason } from '../constants/gameData';
 import { projectSize } from '../engine/project';
@@ -13,14 +13,15 @@ import CoinHUD from '../components/CoinHUD';
 import PlantSlot from '../components/PlantSlot';
 import WateringCan from '../components/WateringCan';
 import PlantPopup from '../components/PlantPopup';
-import { RoomCart } from '../components/CartOverlay';
+import InventoryOverlay from '../components/InventoryOverlay';
 
 export default function Room3Screen({ navigation }) {
   const { width: sw, height: sh } = useLayout();
   const { state, dispatch } = useGame();
-  const { player, slots, cart, cartInRoom } = state;
+  const { player, slots, heldSeed } = state;
 
   const [popup, setPopup] = useState(null);
+  const [invOpen, setInvOpen] = useState(false);
   const canDragging = useRef(false);
   const season = getCurrentSeason();
 
@@ -29,10 +30,6 @@ export default function Room3Screen({ navigation }) {
       dispatch({ type: 'INIT_SLOTS', screenWidth: sw, screenHeight: sh });
     }
   }, [state.initialized, sw, sh]);
-
-  useEffect(() => {
-    if (cart.length > 0) dispatch({ type: 'SET_CART_IN_ROOM', value: true });
-  }, []);
 
   const wallColor = player.wallColor?.room3 ?? 'white';
   const bgSource = BACKGROUNDS.room3?.[wallColor]?.[season] ?? BACKGROUNDS.room1.white.spring;
@@ -61,6 +58,16 @@ export default function Room3Screen({ navigation }) {
     if (slot.flowerKey) setPopup({ slot, position });
   }, []);
 
+  // Tap an empty snap point while holding a seed → plant it there.
+  const handleEmptyPress = useCallback((slotId) => {
+    if (heldSeed) dispatch({ type: 'PLANT_HELD', slotId });
+  }, [heldSeed, dispatch]);
+
+  const handlePickSeed = useCallback((item) => {
+    dispatch({ type: 'HOLD_SEED', invItemId: item.id, flowerKey: item.flowerKey });
+    setInvOpen(false);
+  }, [dispatch]);
+
   const handleWater = useCallback((slotId) => {
     dispatch({ type: 'WATER_PLANT', slotId });
   }, [dispatch]);
@@ -76,6 +83,19 @@ export default function Room3Screen({ navigation }) {
           style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' }}
           resizeMode="cover"
         />
+
+        {/* Empty snap points become tappable plant targets while holding a seed */}
+        {heldSeed && emptySnapPoints.map((pt) => {
+          const size = Math.round(projectSize(80, sw, sh));
+          return (
+            <TouchableOpacity
+              key={`plant_${pt.id}`}
+              style={{ position: 'absolute', left: pt.x - size / 2, top: pt.y - size / 2, width: size, height: size, zIndex: 6 }}
+              activeOpacity={0.6}
+              onPress={() => handleEmptyPress(pt.id)}
+            />
+          );
+        })}
 
         {/* Planted slots */}
         {plantedSlots.map((slot) => {
@@ -95,12 +115,14 @@ export default function Room3Screen({ navigation }) {
 
         <CoinHUD />
 
+        {/* Top-right: nursery shop */}
         <TouchableOpacity style={styles.nurseryBtn} onPress={() => navigation.navigate('Nursery')}>
           <Image source={UI_IMAGES.nurseryshop} style={styles.nurseryImg} resizeMode="contain" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.settingsBtn} onPress={() => navigation.navigate('Room')}>
-          <Image source={UI_IMAGES.settings} style={styles.settingsBtnImg} resizeMode="contain" />
+        {/* Top-left: inventory (no settings on this screen) */}
+        <TouchableOpacity style={styles.inventoryBtn} onPress={() => setInvOpen(true)}>
+          <Image source={UI_IMAGES.inventorybtn} style={styles.inventoryImg} resizeMode="contain" />
         </TouchableOpacity>
 
         {player.unlockedRooms.length > 1 && (
@@ -117,8 +139,6 @@ export default function Room3Screen({ navigation }) {
           </View>
         )}
 
-        {cartInRoom && <RoomCart room={3} />}
-
         {popup && (
           <PlantPopup
             slot={popup.slot}
@@ -127,6 +147,21 @@ export default function Room3Screen({ navigation }) {
             onRemove={handlePopupRemove}
             onClose={() => setPopup(null)}
           />
+        )}
+
+        {heldSeed && !invOpen && (
+          <TouchableOpacity
+            style={styles.heldBanner}
+            onPress={() => dispatch({ type: 'CLEAR_HELD' })}
+            activeOpacity={0.85}
+          >
+            <Image source={SEED_IMAGES[heldSeed.flowerKey]} style={styles.heldImg} resizeMode="contain" />
+            <Text style={styles.heldText}>Tap an empty pot to plant · tap here to cancel</Text>
+          </TouchableOpacity>
+        )}
+
+        {invOpen && (
+          <InventoryOverlay onClose={() => setInvOpen(false)} onPick={handlePickSeed} />
         )}
       </View>
     </GestureHandlerRootView>
@@ -137,8 +172,8 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000', overflow: 'hidden' },
   nurseryBtn: { position: 'absolute', top: 10, right: 14, width: 52, height: 52, zIndex: 20 },
   nurseryImg: { width: 52, height: 52 },
-  settingsBtn: { position: 'absolute', top: 10, right: 72, width: 36, height: 36, zIndex: 20 },
-  settingsBtnImg: { width: 36, height: 36 },
+  inventoryBtn: { position: 'absolute', top: 10, left: 14, width: 52, height: 52, zIndex: 20 },
+  inventoryImg: { width: 52, height: 52 },
   roomBar: { position: 'absolute', bottom: 14, right: 14, flexDirection: 'row', gap: 6, zIndex: 20 },
   roomBtn: {
     width: 30, height: 30,
@@ -148,4 +183,13 @@ const styles = StyleSheet.create({
   },
   roomBtnActive: { backgroundColor: '#3d2009', borderColor: '#c8873a' },
   roomBtnText: { color: '#ffe8a0', fontSize: 13, fontWeight: 'bold' },
+  heldBanner: {
+    position: 'absolute', top: 10, alignSelf: 'center',
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: 'rgba(20,40,8,0.92)',
+    borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6,
+    borderWidth: 1.5, borderColor: '#70a840', zIndex: 120,
+  },
+  heldImg: { width: 28, height: 28 },
+  heldText: { color: '#d8ffa0', fontSize: 12, fontWeight: 'bold' },
 });

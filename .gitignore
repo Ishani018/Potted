@@ -22,3 +22,7 @@ ui_comps/
 *.mp3
 *.wav
 !src/**
+
+# Allow readme showcase images
+!readme_assets/
+!readme_assets/**

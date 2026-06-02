@@ -173,35 +173,11 @@ export function getSillPoints(screenWidth, screenHeight) {
   });
 }
 
-// ─── Nursery cart drop zone (the cart bed in the nursery background) ──────────
-// Poly corners: (943.7,576.6) (856.6,637.3) (1257.9,641.9) (1309.5,577.7)
-// Treated as a rectangle covering the cart bed — seeds can be dropped anywhere
-// inside it and stay where they're dropped.
-const RAW_CART_ZONE = { x1: 856, y1: 540, x2: 1310, y2: 595 };
-
-export function getCartZone(screenWidth, screenHeight) {
-  const tl = projectPoint(RAW_CART_ZONE.x1, RAW_CART_ZONE.y1, screenWidth, screenHeight);
-  const br = projectPoint(RAW_CART_ZONE.x2, RAW_CART_ZONE.y2, screenWidth, screenHeight);
-  return { x1: tl.x, y1: tl.y, x2: br.x, y2: br.y };
+// Ordered list of storage-bag slot IDs for a room (room 1 = window sill,
+// room 2 = floor bags). Used to find the first free spot when buying a seed.
+export function getSillSlotIds(room) {
+  if (room === 2) return (FLOOR_SILL_POINTS[2] ?? []).map((p) => p.id);
+  if (room === 1) return RAW_SILL_POINTS.map((p) => p.id);
+  return [];
 }
 
-export function isInCartZone(x, y, screenWidth, screenHeight) {
-  const z = getCartZone(screenWidth, screenHeight);
-  return x >= z.x1 && x <= z.x2 && y >= z.y1 && y <= z.y2;
-}
-
-// Fixed grid slots on the cart bed: 2 rows × 4 cols = 8 slots.
-export function getCartBedSlots(screenWidth, screenHeight) {
-  const z = getCartZone(screenWidth, screenHeight);
-  const cols = 4, rows = 2;
-  const slots = [];
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      slots.push({
-        x: z.x1 + (z.x2 - z.x1) * (c + 0.5) / cols,
-        y: z.y1 + (z.y2 - z.y1) * (r + 0.5) / rows,
-      });
-    }
-  }
-  return slots;
-}
