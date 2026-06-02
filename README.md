@@ -2,7 +2,7 @@
   <img src="readme_assets/mainscreen.jpeg" width="600" alt="Potted — Main Screen" />
 </p>
 
-<h1 align="center">🌱 Potted</h1>
+<h1 align="center">Potted</h1>
 
 <p align="center">
   <em>A cozy pixel-art plant nursery game built with React Native & Expo</em>
@@ -16,7 +16,7 @@
 
 ---
 
-## 🌸 What is Potted?
+## What is Potted?
 
 **Potted** is a relaxing plant nursery game where you buy seeds, plant them in pots, water them, and watch them bloom through beautiful growth stages. Decorate your rooms with paintings and pets, manage your inventory, and earn coins by harvesting flowers.
 
@@ -29,22 +29,22 @@
   <img src="readme_assets/hydrenga.png" width="80" />
 </p>
 
-<p align="center"><em>Seed → Plant → Water → Bloom 🌷</em></p>
+<p align="center"><em>Seed > Plant > Water > Bloom</em></p>
 
 ---
 
-## 🎮 Features
+## Features
 
-### 🏡 Three Unique Rooms
+### Three Unique Rooms
 | Room | Description |
 |------|-------------|
 | **Room 1 — Window Shelf** | Two wooden shelves by the window. Drag pots from the sill, plant seeds, and water them. |
 | **Room 2 — Balcony** | Hanging pots on curtain rods. Drag pots from the stool and hang your plants. |
 | **Room 3 — Sunroom** | A bright sunroom with shelf pots and hanging hooks. |
 
-### 🌻 7 Potted Flowers
+### 7 Potted Flowers
 
-Each flower grows through 4 stages: **Seed → Bud → Slight Bloom → Full Bloom**
+Each flower grows through 4 stages: **Seed > Bud > Slight Bloom > Full Bloom**
 
 <p align="center">
   <img src="readme_assets/daisy.png" width="70" title="Daisy" />
@@ -59,7 +59,7 @@ Each flower grows through 4 stages: **Seed → Bud → Slight Bloom → Full Blo
   <em>Daisy · Rose · Hydrangea · Snapdragon · Poppy · Marigold · Peony</em>
 </p>
 
-### 🪴 5 Hanging Plants
+### 5 Hanging Plants
 
 <p align="center">
   <img src="readme_assets/jasmine.png" width="70" title="Jasmine" />
@@ -69,14 +69,14 @@ Each flower grows through 4 stages: **Seed → Bud → Slight Bloom → Full Blo
   <em>Jasmine · String of Pearls · Philodendron · Petunia · Bougainvillea</em>
 </p>
 
-### 🐾 Adorable Pets
+### Adorable Pets
 
 <p align="center">
   <img src="readme_assets/persiancat.png" width="90" title="Persian Cat" />
   <img src="readme_assets/puppybeagle.png" width="90" title="Puppy Beagle" />
 </p>
 
-### 🛒 Nursery Shop
+### Nursery Shop
 Visit the nursery to buy seed bags with your earned coins. Seeds go into your inventory — drag them onto empty pots to plant!
 
 <p align="center">
@@ -85,19 +85,19 @@ Visit the nursery to buy seed bags with your earned coins. Seeds go into your in
   <img src="readme_assets/inventory.png" width="200" />
 </p>
 
-### 💧 Watering Mechanic
+### Watering Mechanic
 Drag the watering can over a planted pot and **hold for 2 seconds** to water it. Watering a seed instantly advances it to the bud stage!
 
-### ✨ More Features
-- 🎵 **Background Music** — Looping ambient music with mute toggle
-- 🌤️ **Seasonal Backgrounds** — Room backgrounds change with spring, summer, autumn, and winter
-- 🖼️ **Wall Decor** — Hang paintings on your walls (6 paintings available)
-- 🏆 **Achievements** — Unlock achievements like "First Bloom" and "Green Thumb"
-- 💾 **Auto-Save** — Progress is saved with AsyncStorage
+### More Features
+- **Background Music** — Looping ambient music with mute toggle
+- **Seasonal Backgrounds** — Room backgrounds change with spring, summer, autumn, and winter
+- **Wall Decor** — Hang paintings on your walls (6 paintings available)
+- **Achievements** — Unlock achievements like "First Bloom" and "Green Thumb"
+- **Auto-Save** — Progress is saved with AsyncStorage
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Technology | Purpose |
 |------------|---------|
@@ -111,7 +111,7 @@ Drag the watering can over a planted pot and **hold for 2 seconds** to water it.
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js 18+
@@ -137,7 +137,7 @@ npx expo start
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 potted/
@@ -158,7 +158,7 @@ potted/
 │   ├── engine/
 │   │   ├── assets.js          # All asset require() mappings
 │   │   ├── gameEngine.js      # Growth tick logic & watering
-│   │   ├── project.js         # Coordinate projection (base → screen)
+│   │   ├── project.js         # Coordinate projection (base > screen)
 │   │   └── snapPoints.js      # Pot/hook positions per room
 │   └── screens/
 │       ├── MainScreen.js      # Title screen with play button
@@ -171,24 +171,24 @@ potted/
 
 ---
 
-## 🎯 Game Loop
+## Game Loop
 
 ```
-Buy Seeds (Nursery) → Store in Inventory → Drag Pot to Shelf
-         ↓
-  Plant Seed in Pot → Water with Can (hold 2s) → Watch it Grow
-         ↓
-   Harvest at Full Bloom → Earn Coins 💰 → Buy More Seeds!
+Buy Seeds (Nursery) > Store in Inventory > Drag Pot to Shelf
+         |
+  Plant Seed in Pot > Water with Can (hold 2s) > Watch it Grow
+         |
+   Harvest at Full Bloom > Earn Coins > Buy More Seeds!
 ```
 
 ---
 
-## 📄 License
+## License
 
 This project is private. All pixel art assets are original creations.
 
 ---
 
 <p align="center">
-  Made with 🌿 and lots of pixel love
+  Made with love and lots of pixels
 </p>
