@@ -11,8 +11,12 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { GameProvider } from './src/context/GameContext';
 import { LayoutContext } from './src/context/LayoutContext';
 import MainScreen from './src/screens/MainScreen';
+import MapScreen from './src/screens/MapScreen';
+import HomeScreen from './src/screens/HomeScreen';
 import GardenScreen from './src/screens/GardenScreen';
 import NurseryScreen from './src/screens/NurseryScreen';
+import PetShopScreen from './src/screens/PetShopScreen';
+import TradeScreen from './src/screens/TradeScreen';
 import RoomScreen from './src/screens/RoomScreen';
 
 const Stack = createStackNavigator();
@@ -43,8 +47,12 @@ export default function App() {
                   }}
                 >
                   <Stack.Screen name="Main" component={MainScreen} />
+                  <Stack.Screen name="Map" component={MapScreen} />
+                  <Stack.Screen name="Home" component={HomeScreen} />
                   <Stack.Screen name="Garden" component={GardenScreen} />
                   <Stack.Screen name="Nursery" component={NurseryScreen} />
+                  <Stack.Screen name="PetShop" component={PetShopScreen} />
+                  <Stack.Screen name="Trade" component={TradeScreen} />
                   <Stack.Screen name="Room" component={RoomScreen} />
                 </Stack.Navigator>
               </NavigationContainer>

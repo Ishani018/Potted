@@ -11,6 +11,7 @@ import { getCurrentSeason } from '../constants/gameData';
 import { projectSize, projectPoint } from '../engine/project';
 
 import PlantSlot from '../components/PlantSlot';
+import RoomPets from '../components/RoomPets';
 import WateringCan from '../components/WateringCan';
 import PlantPopup from '../components/PlantPopup';
 import InventoryOverlay from '../components/InventoryOverlay';
@@ -156,6 +157,9 @@ export default function Room1Screen({ navigation }) {
           resizeMode="cover"
         />
 
+        {/* Placed pets */}
+        <RoomPets room={1} sw={sw} sh={sh} />
+
         {/* Pot source on window sill */}
         <Image
           source={POTTED_PLANT_IMAGES._seed}
@@ -210,14 +214,19 @@ export default function Room1Screen({ navigation }) {
           baseCanSize={200}
         />
 
-        {/* Top-left: inventory (no settings on this screen) */}
-        <TouchableOpacity style={styles.settingsBtn} onPress={() => setInvOpen(true)}>
-          <Image source={UI_IMAGES.inventorybtn} style={styles.settingsBtnImg} resizeMode="contain" />
+        {/* Settings — top-left */}
+        <TouchableOpacity style={styles.hudTL} onPress={() => navigation.navigate('Room')}>
+          <Image source={UI_IMAGES.settingsnobg} style={styles.hudImg} resizeMode="contain" />
         </TouchableOpacity>
 
-        {/* Top-right: nursery shop */}
-        <TouchableOpacity style={styles.nurseryBtn} onPress={() => navigation.navigate('Nursery')}>
-          <Image source={UI_IMAGES.nurseryshop} style={styles.nurseryImg} resizeMode="contain" />
+        {/* Map — top-right */}
+        <TouchableOpacity style={styles.hudTR} onPress={() => navigation.navigate('Map')}>
+          <Image source={UI_IMAGES.mapicon} style={styles.hudImg} resizeMode="contain" />
+        </TouchableOpacity>
+
+        {/* Inventory — bottom-left */}
+        <TouchableOpacity style={styles.hudBL} onPress={() => setInvOpen(true)}>
+          <Image source={UI_IMAGES.inventorybtn} style={styles.hudImg} resizeMode="contain" />
         </TouchableOpacity>
 
         {player.unlockedRooms.length > 1 && (
@@ -267,14 +276,11 @@ export default function Room1Screen({ navigation }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000', overflow: 'hidden' },
-  // Top-right: nursery shop, with gallery directly beneath it (same size)
-  nurseryBtn: { position: 'absolute', top: 10, right: 4, width: 52, height: 52, zIndex: 20 },
-  nurseryImg: { width: 52, height: 52 },
-  galleryBtn: { position: 'absolute', top: 70, right: 4, width: 52, height: 52, zIndex: 20 },
-  galleryImg: { width: 52, height: 52 },
-  // Top-left: settings
-  settingsBtn: { position: 'absolute', top: 10, left: 14, width: 44, height: 44, zIndex: 20 },
-  settingsBtnImg: { width: 44, height: 44 },
+  // Standard HUD
+  hudTL: { position: 'absolute', top: 10, left: 14,   width: 48, height: 48, zIndex: 20 },
+  hudTR: { position: 'absolute', top: 10, right: 14,  width: 48, height: 48, zIndex: 20 },
+  hudBL: { position: 'absolute', bottom: 14, left: 14, width: 48, height: 48, zIndex: 20 },
+  hudImg: { width: '100%', height: '100%' },
   roomBar: { position: 'absolute', bottom: 14, right: 14, flexDirection: 'row', gap: 6, zIndex: 20 },
   roomBtn: {
     width: 30, height: 30,

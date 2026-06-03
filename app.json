@@ -4,14 +4,14 @@
     "slug": "potted",
     "version": "1.0.0",
     "orientation": "landscape",
-    "icon": "./ui_comps/nurseryshop.png",
+    "icon": "./assets/ui_comps/nurseryshop.png",
     "splash": {
       "resizeMode": "contain",
       "backgroundColor": "#1a0f00"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./ui_comps/nurseryshop.png",
+        "foregroundImage": "./assets/ui_comps/nurseryshop.png",
         "backgroundColor": "#1a0f00"
       },
       "package": "com.ishani.potted"

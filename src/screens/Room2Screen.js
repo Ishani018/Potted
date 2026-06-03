@@ -12,6 +12,7 @@ import { projectSize, projectPoint } from '../engine/project';
 
 import CoinHUD from '../components/CoinHUD';
 import PlantSlot from '../components/PlantSlot';
+import RoomPets from '../components/RoomPets';
 import WateringCan from '../components/WateringCan';
 import PlantPopup from '../components/PlantPopup';
 import InventoryOverlay from '../components/InventoryOverlay';
@@ -169,6 +170,9 @@ export default function Room2Screen({ navigation }) {
           resizeMode="cover"
         />
 
+        {/* Placed pets */}
+        <RoomPets room={2} sw={sw} sh={sh} />
+
         {/* Photo frame */}
         {photoFrameKey && (() => {
           const raw = DECOR_POSITIONS.room2.photoFrame;
@@ -260,14 +264,19 @@ export default function Room2Screen({ navigation }) {
 
         <CoinHUD />
 
-        {/* Top-right: nursery shop */}
-        <TouchableOpacity style={styles.nurseryBtn} onPress={() => navigation.navigate('Nursery')}>
-          <Image source={UI_IMAGES.nurseryshop} style={styles.nurseryImg} resizeMode="contain" />
+        {/* Settings — top-left */}
+        <TouchableOpacity style={styles.hudTL} onPress={() => navigation.navigate('Room')}>
+          <Image source={UI_IMAGES.settingsnobg} style={styles.hudImg} resizeMode="contain" />
         </TouchableOpacity>
 
-        {/* Top-left: inventory (no settings on this screen) */}
-        <TouchableOpacity style={styles.inventoryBtn} onPress={() => setInvOpen(true)}>
-          <Image source={UI_IMAGES.inventorybtn} style={styles.inventoryImg} resizeMode="contain" />
+        {/* Map — top-right */}
+        <TouchableOpacity style={styles.hudTR} onPress={() => navigation.navigate('Map')}>
+          <Image source={UI_IMAGES.mapicon} style={styles.hudImg} resizeMode="contain" />
+        </TouchableOpacity>
+
+        {/* Inventory — bottom-left */}
+        <TouchableOpacity style={styles.hudBL} onPress={() => setInvOpen(true)}>
+          <Image source={UI_IMAGES.inventorybtn} style={styles.hudImg} resizeMode="contain" />
         </TouchableOpacity>
 
         {player.unlockedRooms.length > 1 && (
@@ -316,10 +325,11 @@ export default function Room2Screen({ navigation }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000', overflow: 'hidden' },
-  nurseryBtn: { position: 'absolute', top: 10, right: 14, width: 52, height: 52, zIndex: 20 },
-  nurseryImg: { width: 52, height: 52 },
-  inventoryBtn: { position: 'absolute', top: 10, left: 14, width: 52, height: 52, zIndex: 20 },
-  inventoryImg: { width: 52, height: 52 },
+  // Standard HUD
+  hudTL: { position: 'absolute', top: 10, left: 14,   width: 48, height: 48, zIndex: 20 },
+  hudTR: { position: 'absolute', top: 10, right: 14,  width: 48, height: 48, zIndex: 20 },
+  hudBL: { position: 'absolute', bottom: 14, left: 14, width: 48, height: 48, zIndex: 20 },
+  hudImg: { width: '100%', height: '100%' },
   roomBar: { position: 'absolute', bottom: 14, right: 14, flexDirection: 'row', gap: 6, zIndex: 20 },
   roomBtn: {
     width: 30, height: 30,

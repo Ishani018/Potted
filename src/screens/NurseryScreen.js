@@ -5,6 +5,7 @@ import { useLayout } from '../context/LayoutContext';
 import { NURSERY_BG, SEED_IMAGES, UI_IMAGES } from '../engine/assets';
 import { POTTED_FLOWERS, HANGING_PLANTS } from '../constants/gameData';
 import { projectPoint, projectSize } from '../engine/project';
+import InventoryOverlay from '../components/InventoryOverlay';
 
 // The image has two shelf units side by side:
 //   LEFT cabinet  → potted seeds (7)
@@ -42,6 +43,7 @@ export default function NurseryScreen({ navigation }) {
   const coins = state.player.coins;
 
   const [toast, setToast] = useState(null);
+  const [invOpen, setInvOpen] = useState(false);
   const showToast = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(null), 1400);
@@ -67,13 +69,22 @@ export default function NurseryScreen({ navigation }) {
         resizeMode="cover"
       />
 
-      {/* Back + settings (top-left), coins (top-right) */}
-      <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-        <Image source={UI_IMAGES.back} style={styles.backImg} resizeMode="contain" />
+      {/* Settings — top-left */}
+      <TouchableOpacity style={styles.hudTL} onPress={() => navigation.navigate('Room')}>
+        <Image source={UI_IMAGES.settingsnobg} style={styles.hudImg} resizeMode="contain" />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.settingsBtn} onPress={() => navigation.navigate('Room')}>
-        <Image source={UI_IMAGES.settingsnobg} style={styles.settingsImg} resizeMode="contain" />
+
+      {/* Map — top-right */}
+      <TouchableOpacity style={styles.hudTR} onPress={() => navigation.navigate('Map')}>
+        <Image source={UI_IMAGES.mapicon} style={styles.hudImg} resizeMode="contain" />
       </TouchableOpacity>
+
+      {/* Inventory — bottom-left (view-only; you buy here, not plant) */}
+      <TouchableOpacity style={styles.hudBL} onPress={() => setInvOpen(true)}>
+        <Image source={UI_IMAGES.inventorybtn} style={styles.hudImg} resizeMode="contain" />
+      </TouchableOpacity>
+
+      {/* Coins — bottom-right */}
       <View style={styles.coinBox}>
         <Image source={UI_IMAGES.goldcoins} style={styles.coinIcon} resizeMode="contain" />
         <Text style={styles.coinText}>{coins}</Text>
@@ -109,6 +120,10 @@ export default function NurseryScreen({ navigation }) {
           <Text style={styles.toastText}>{toast}</Text>
         </View>
       )}
+
+      {invOpen && (
+        <InventoryOverlay onClose={() => setInvOpen(false)} onPick={() => setInvOpen(false)} />
+      )}
     </View>
   );
 }
@@ -116,14 +131,14 @@ export default function NurseryScreen({ navigation }) {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#1a0f00', overflow: 'hidden' },
 
-  backBtn: { position: 'absolute', top: 12, left: 12, width: 66, height: 66, zIndex: 50 },
-  backImg: { width: 66, height: 66 },
-
-  settingsBtn: { position: 'absolute', bottom: 14, right: 14, width: 44, height: 44, zIndex: 50 },
-  settingsImg: { width: 44, height: 44 },
+  // Standard HUD
+  hudTL: { position: 'absolute', top: 12, left: 12,   width: 48, height: 48, zIndex: 50 },
+  hudTR: { position: 'absolute', top: 12, right: 14,  width: 48, height: 48, zIndex: 50 },
+  hudBL: { position: 'absolute', bottom: 14, left: 14, width: 48, height: 48, zIndex: 50 },
+  hudImg: { width: '100%', height: '100%' },
 
   coinBox: {
-    position: 'absolute', top: 12, right: 14,
+    position: 'absolute', bottom: 14, right: 14,
     flexDirection: 'row', alignItems: 'center', gap: 5, zIndex: 50,
   },
   coinIcon: { width: 26, height: 26 },

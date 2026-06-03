@@ -177,12 +177,27 @@ function reducer(state, action) {
       const { petKey, price } = action;
       if (state.player.coins < price) return state;
       if ((state.player.ownedPets ?? []).includes(petKey)) return state;
+      // Adopt and auto-place in the current room (user can reassign later).
       return {
         ...state,
         player: {
           ...state.player,
           coins: state.player.coins - price,
           ownedPets: [...(state.player.ownedPets ?? []), petKey],
+          petPlacements: { ...(state.player.petPlacements ?? {}), [petKey]: state.player.currentRoom },
+        },
+      };
+    }
+
+    // Assign an owned pet to a room (room = number, or null to hide it).
+    case 'PLACE_PET': {
+      const { petKey, room } = action;
+      if (!(state.player.ownedPets ?? []).includes(petKey)) return state;
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          petPlacements: { ...(state.player.petPlacements ?? {}), [petKey]: room },
         },
       };
     }

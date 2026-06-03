@@ -3,7 +3,7 @@ import { View, Image, TouchableOpacity, StyleSheet, useWindowDimensions } from '
 import { Audio } from 'expo-av';
 import { MAIN_BG, UI_IMAGES } from '../engine/assets';
 
-const MUSIC = require('../../Sunlight_on_the_Sprouts.mp3');
+const MUSIC = require('../../assets/Sunlight_on_the_Sprouts.mp3');
 
 export default function MainScreen({ navigation }) {
   const soundRef = useRef(null);
@@ -59,7 +59,7 @@ export default function MainScreen({ navigation }) {
   // TODO: play a short click SFX here once a click sound asset is added.
   const handlePlay = async () => {
     await ensureMusic();             // guarantees music is running (user gesture)
-    navigation.replace('Garden');
+    navigation.replace('Map');
   };
 
   return (

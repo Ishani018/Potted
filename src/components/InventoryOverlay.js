@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Image, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, Image, TouchableOpacity, StyleSheet, Text, useWindowDimensions } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { INVENTORY_BG, SEED_IMAGES, POTTED_PLANT_IMAGES } from '../engine/assets';
 
@@ -51,6 +51,11 @@ export default function InventoryOverlay({ onClose, onPick }) {
       {/* Stop taps on the grid from closing */}
       <TouchableOpacity activeOpacity={1} onPress={() => { }}>
         <View style={{ width: dispW, height: dispH }}>
+
+          {/* ✕ close button — top-right of panel */}
+          <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+            <Text style={styles.closeTxt}>✕</Text>
+          </TouchableOpacity>
           <Image source={INVENTORY_BG} style={{ width: dispW, height: dispH }} resizeMode="contain" />
 
           {inventory.slice(0, GRID_COLS * GRID_ROWS).map((item, i) => {
@@ -78,6 +83,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.85)',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 9000, // above the room's pot source (598) and draggable pot (600)
+    zIndex: 9000,
   },
+  closeBtn: {
+    position: 'absolute',
+    top: -14,
+    right: -14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#3d1800',
+    borderWidth: 2,
+    borderColor: '#c8873a',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  closeTxt: { color: '#ffe8a0', fontSize: 15, fontWeight: 'bold', lineHeight: 18 },
 });

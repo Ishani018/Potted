@@ -5,16 +5,8 @@ dist/
 .env
 .claude/
 
-# Asset directories (large image/media files)
-room1/
-room2/
-room3/
-pottedplants/
-hangingplants/
-seeds/
-walldecor/
-pets/
-ui_comps/
+# Asset directory (large image/media files) — all assets now live under assets/
+assets/
 *.png
 *.jpeg
 *.jpg

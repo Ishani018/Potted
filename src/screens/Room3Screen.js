@@ -11,6 +11,7 @@ import { projectSize } from '../engine/project';
 
 import CoinHUD from '../components/CoinHUD';
 import PlantSlot from '../components/PlantSlot';
+import RoomPets from '../components/RoomPets';
 import WateringCan from '../components/WateringCan';
 import PlantPopup from '../components/PlantPopup';
 import InventoryOverlay from '../components/InventoryOverlay';
@@ -84,6 +85,9 @@ export default function Room3Screen({ navigation }) {
           resizeMode="cover"
         />
 
+        {/* Placed pets */}
+        <RoomPets room={3} sw={sw} sh={sh} />
+
         {/* Empty snap points become tappable plant targets while holding a seed */}
         {heldSeed && emptySnapPoints.map((pt) => {
           const size = Math.round(projectSize(80, sw, sh));
@@ -115,9 +119,9 @@ export default function Room3Screen({ navigation }) {
 
         <CoinHUD />
 
-        {/* Top-right: nursery shop */}
-        <TouchableOpacity style={styles.nurseryBtn} onPress={() => navigation.navigate('Nursery')}>
-          <Image source={UI_IMAGES.nurseryshop} style={styles.nurseryImg} resizeMode="contain" />
+        {/* Top-right: map (back to town) */}
+        <TouchableOpacity style={styles.nurseryBtn} onPress={() => navigation.navigate('Map')}>
+          <Image source={UI_IMAGES.mapicon} style={styles.nurseryImg} resizeMode="contain" />
         </TouchableOpacity>
 
         {/* Top-left: inventory (no settings on this screen) */}
