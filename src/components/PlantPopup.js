@@ -4,7 +4,8 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 export default function PlantPopup({ slot, position, onHarvest, onRemove, onClose }) {
   if (!slot) return null;
 
-  const canHarvest = slot.type === 'potted' && slot.stage === 3 && !slot.isDead;
+  // Full bloom = potted stage 3 (the harvestable stage).
+  const canHarvest = slot.type === 'potted' && slot.stage === 3;
 
   return (
     <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>

@@ -133,8 +133,25 @@ export const UI_IMAGES = {
   marketbtn:    require('../../assets/ui_comps/marketbutton.png'),
   gallerybtn:   require('../../assets/ui_comps/gallerybutton.png'),
   tradebtn:     require('../../assets/ui_comps/tradebutton.png'),
+  cancelbutton: require('../../assets/ui_comps/cancelbutton.png'),
   trashclosed:  require('../../assets/ui_comps/trashclosed.png'),
   trashopen:    require('../../assets/ui_comps/trashopen.png'),
+};
+
+// ─── Trade flower images (market) ─────────────────────────────────────────────
+export const TRADE_IMAGES = {
+  daisytrade:          require('../../assets/ui_comps/daisytrade.png'),
+  snapdragontrade:     require('../../assets/ui_comps/snapdragontrade.png'),
+  poppytrade:          require('../../assets/ui_comps/poppytrade.png'),
+  marigoldtrade:       require('../../assets/ui_comps/marigoldtrade.png'),
+  peonytrade:          require('../../assets/ui_comps/peonytrade.png'),
+  hydrengatrade:       require('../../assets/ui_comps/hydrengatrade.png'),
+  rosetrade:           require('../../assets/ui_comps/rosetrade.png'),
+  stringofpearlstrade: require('../../assets/ui_comps/stringofpearlstrade.png'),
+  philodendrontrade:   require('../../assets/ui_comps/philodendrontrade.png'),
+  jasminetrade:        require('../../assets/ui_comps/jasminetrade.png'),
+  petuniatrade:        require('../../assets/ui_comps/petuniatrade.png'),
+  bougenvillatrade:    require('../../assets/ui_comps/bougenvillatrade.png'),
 };
 
 // ─── Nursery background ───────────────────────────────────────────────────────
@@ -147,6 +164,6 @@ export const INVENTORY_BG = require('../../assets/ui_comps/inventory.png');
 export const MAP_BG = require('../../assets/ui_comps/mapoftown.png');
 export const HOME_BG = require('../../assets/homeinsidescreen.png');
 export const PETSHOP_BG = require('../../assets/petshop.png');
-export const TRADE_BG = require('../../assets/flowertradeshop.png');
+export const TRADE_BG = require('../../assets/tradingscreen.png');
 export const GALLERY_BG = require('../../assets/gallery.png');
 export const LOADING_BG = require('../../assets/loadingscreen.jpeg');

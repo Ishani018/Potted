@@ -117,25 +117,102 @@ export const PET_POSITIONS = {
 };
 
 // Growth timers in milliseconds
+const HOUR = 60 * 60 * 1000;
+
+// ── Water-with-cooldown growth ────────────────────────────────────────────────
+// Each watering advances ONE stage. After watering, the plant becomes "thirsty"
+// again WATER_COOLDOWN later, and only then can it be watered to the next stage.
+// If left thirsty past WILT_AFTER it wilts (sad look, growth paused) — watering
+// revives it. Nothing dies. A full bloom never expires.
 export const GROWTH_TIMERS = {
-  potted: {
-    seedToBud:          4  * 60 * 60 * 1000,
-    budToSlightBloom:   6  * 60 * 60 * 1000,
-    slightBloomToBloom: 8  * 60 * 60 * 1000,
-    bloomDeathTime:     4  * 60 * 60 * 1000,
-  },
-  hanging: {
-    budToFull: 8 * 60 * 60 * 1000,
-  },
-  deathIfNotWatered: 12 * 60 * 60 * 1000,
-  hangingPassiveCoins: { amount: 2, interval: 6 * 60 * 60 * 1000 },
+  waterCooldown: 3 * HOUR,   // time until a watered plant is thirsty again
+  wiltAfter:     24 * HOUR,  // thirsty for this long → wilts (recoverable by watering)
+  // Max growth stage per type (full bloom). Watering past this does nothing.
+  maxStage: { potted: 3, hanging: 2 },
+  hangingPassiveCoins: { amount: 2, interval: 6 * HOUR },
 };
 
 export const BONUS_COIN_MULTIPLIER = 1.2;
 
 // Stages
-// Potted: 0=seed, 1=bud, 2=slight bloom, 3=bloom, 4=dead
-// Hanging: 0=seed, 1=bud, 2=full, 3=dead
+// Potted:  0=seed, 1=bud, 2=slight bloom, 3=full bloom (harvest)
+// Hanging: 0=seed, 1=bud, 2=full (harvest)
+// (no dead stage — neglected plants wilt, they don't die)
+
+// ── Per-flower, per-stage display scale ───────────────────────────────────────
+// Each flower PNG is cropped tightly to a different degree, so a single size
+// makes some render tiny. This multiplies the base pot width PER flower PER
+// growth stage. 1.0 = base size; bump up if a flower looks too small at a stage.
+// Stage 0 (seed) uses the shared pot image, so it's not listed here.
+// Indexed [flowerKey][stage]. Missing entries default to 1.0.
+export const FLOWER_STAGE_SCALE = {
+  // Potted (stages 1=bud, 2=slight bloom, 3=full bloom)
+  daisy:      { 1: 1.0, 2: 1.0, 3: 1.0 },
+  snapdragon: { 1: 1.0, 2: 1.0, 3: 1.0 },
+  poppy:      { 1: 1.0, 2: 1.0, 3: 1.0 },
+  marigold:   { 1: 1.0, 2: 1.0, 3: 1.0 },
+  peony:      { 1: 1.0, 2: 1.0, 3: 1.0 },
+  hydrenga:   { 1: 1.0, 2: 1.0, 3: 1.0 },
+  rose:       { 1: 1.0, 2: 1.0, 3: 1.0 },
+  // Hanging (stages 1=bud, 2=full)
+  stringofpearls: { 1: 1.0, 2: 1.0 },
+  Philodendron:   { 1: 1.0, 2: 1.0 },
+  jasmine:        { 1: 1.0, 2: 1.0 },
+  petunia:        { 1: 1.0, 2: 1.0 },
+  Bougainvillea:  { 1: 1.0, 2: 1.0 },
+};
+
+// ── Market trading ────────────────────────────────────────────────────────────
+// All 12 tradeable flowers, mapped to their trade-image key + a base value the
+// daily price varies around. Each day, 6 of these appear in the market's 6 slots
+// at a price near their base value (chosen by a date seed, so it's stable within
+// a day and changes the next).
+export const TRADE_FLOWERS = {
+  daisy:          { key: 'daisy',          name: 'Daisy',            img: 'daisytrade',          base: 10 },
+  snapdragon:     { key: 'snapdragon',     name: 'Snapdragon',       img: 'snapdragontrade',     base: 12 },
+  poppy:          { key: 'poppy',          name: 'Poppy',            img: 'poppytrade',          base: 14 },
+  marigold:       { key: 'marigold',       name: 'Marigold',         img: 'marigoldtrade',       base: 16 },
+  peony:          { key: 'peony',          name: 'Peony',            img: 'peonytrade',          base: 18 },
+  hydrenga:       { key: 'hydrenga',       name: 'Hydrangea',        img: 'hydrengatrade',       base: 20 },
+  rose:           { key: 'rose',           name: 'Rose',             img: 'rosetrade',           base: 22 },
+  stringofpearls: { key: 'stringofpearls', name: 'String of Pearls', img: 'stringofpearlstrade', base: 13 },
+  Philodendron:   { key: 'Philodendron',   name: 'Philodendron',     img: 'philodendrontrade',   base: 15 },
+  jasmine:        { key: 'jasmine',        name: 'Jasmine',          img: 'jasminetrade',        base: 17 },
+  petunia:        { key: 'petunia',        name: 'Petunia',          img: 'petuniatrade',        base: 19 },
+  Bougainvillea:  { key: 'Bougainvillea',  name: 'Bougainvillea',    img: 'bougenvillatrade',    base: 22 },
+};
+
+// Deterministic per-day pseudo-random (mulberry32 seeded by an integer).
+function seededRandom(seed) {
+  let t = seed + 0x6D2B79F5;
+  return () => {
+    t += 0x6D2B79F5;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Returns today's 6 market offers: [{ key, name, img, price }] — stable per day.
+export function getDailyTrades() {
+  const now = new Date();
+  const daySeed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+  const rand = seededRandom(daySeed);
+
+  // Shuffle the 12 keys, take 6.
+  const keys = Object.keys(TRADE_FLOWERS);
+  for (let i = keys.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [keys[i], keys[j]] = [keys[j], keys[i]];
+  }
+  return keys.slice(0, 6).map((key) => {
+    const f = TRADE_FLOWERS[key];
+    // Price varies ±40% around base value, rounded, min 1.
+    const factor = 0.6 + rand() * 0.8;
+    const price = Math.max(1, Math.round(f.base * factor));
+    return { key, name: f.name, img: f.img, price };
+  });
+}
 
 export const INITIAL_PLAYER_STATE = {
   coins: 50000,
@@ -148,6 +225,7 @@ export const INITIAL_PLAYER_STATE = {
   },
   achievements: [],
   harvestCount: 0,
+  harvestedFlowers: {}, // flowerKey → count, harvested flowers awaiting trade for coins
   ownedPaintings: [],
   ownedPets: [],
   petPlacements: {}, // petKey → room number where the owned pet is currently placed

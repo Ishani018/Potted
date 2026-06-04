@@ -31,36 +31,39 @@ const SHOP_PETS = [
   { key: 'storm',         x: 1198, y: 483, w: 108, h: 144, flip: false, z: 11 },
 ];
 
-// ── Adoption modal ────────────────────────────────────────────────────────────
+const REFUND_FRACTION = 0.5; // coins returned when giving a pet up for adoption
+
+// ── Pet modal — adopt (unowned) or manage (owned) ─────────────────────────────
 function AdoptModal({ petKey, onClose }) {
   const { state, dispatch } = useGame();
   const pet = PETS[petKey];
   const owned = (state.player.ownedPets ?? []).includes(petKey);
+  const placedRoom = state.player.petPlacements?.[petKey] ?? null;
   const canAfford = state.player.coins >= pet.price;
+  const refund = Math.floor(pet.price * REFUND_FRACTION);
 
   const handleAdopt = () => {
     dispatch({ type: 'BUY_PET', petKey, price: pet.price });
+    onClose();
+  };
+  const handlePlace = (room) => dispatch({ type: 'PLACE_PET', petKey, room });
+  const handleGiveUp = () => {
+    dispatch({ type: 'GIVE_UP_PET', petKey, refund });
     onClose();
   };
 
   return (
     <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
       <TouchableOpacity style={styles.modal} activeOpacity={1} onPress={() => {}}>
-        {/* Close */}
         <TouchableOpacity style={styles.modalClose} onPress={onClose}>
           <Text style={styles.modalCloseTxt}>✕</Text>
         </TouchableOpacity>
 
         <Image source={PET_IMAGES[petKey]} style={styles.modalPetImg} resizeMode="contain" />
-
         <Text style={styles.modalName}>{pet.name}</Text>
         <Text style={styles.modalBreed}>{pet.breed}</Text>
 
-        {owned ? (
-          <View style={styles.ownedBadge}>
-            <Text style={styles.ownedTxt}>✓ Already in your home</Text>
-          </View>
-        ) : (
+        {!owned ? (
           <TouchableOpacity
             style={[styles.adoptBtn, !canAfford && styles.adoptBtnDim]}
             onPress={canAfford ? handleAdopt : undefined}
@@ -71,6 +74,33 @@ function AdoptModal({ petKey, onClose }) {
               {canAfford ? `Adopt  ·  ${pet.price}` : `Need ${pet.price - state.player.coins} more`}
             </Text>
           </TouchableOpacity>
+        ) : (
+          <>
+            {/* Re-home: choose a room (or tuck away) */}
+            <Text style={styles.sectionLabel}>Lives in</Text>
+            <View style={styles.roomRow}>
+              {[1, 2, 3].map((r) => (
+                <TouchableOpacity
+                  key={r}
+                  style={[styles.roomChip, placedRoom === r && styles.roomChipActive]}
+                  onPress={() => handlePlace(r)}
+                >
+                  <Text style={styles.roomChipTxt}>{r}</Text>
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity
+                style={[styles.tuckChip, placedRoom == null && styles.roomChipActive]}
+                onPress={() => handlePlace(null)}
+              >
+                <Text style={styles.roomChipTxt}>Tuck away</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Give up for adoption (partial refund) */}
+            <TouchableOpacity style={styles.giveUpBtn} onPress={handleGiveUp} activeOpacity={0.8}>
+              <Text style={styles.giveUpTxt}>Put up for adoption  ·  +{refund}</Text>
+            </TouchableOpacity>
+          </>
         )}
       </TouchableOpacity>
     </TouchableOpacity>
@@ -188,13 +218,6 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
 
-  ownedBadge: {
-    backgroundColor: '#1e4a10',
-    borderRadius: 8, paddingHorizontal: 14, paddingVertical: 7,
-    borderWidth: 1, borderColor: '#5aaa3a',
-  },
-  ownedTxt: { color: '#c0ffa0', fontSize: 13, fontWeight: 'bold' },
-
   adoptBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     backgroundColor: '#3d6020',
@@ -203,4 +226,26 @@ const styles = StyleSheet.create({
   },
   adoptBtnDim: { backgroundColor: '#2a2a1a', borderColor: '#555' },
   adoptBtnTxt: { color: '#e0ffc0', fontSize: 14, fontWeight: 'bold' },
+
+  // ── Manage (owned) ──────────────────────────────────────────────
+  sectionLabel: { color: '#b89a6a', fontSize: 11, letterSpacing: 1, marginBottom: 6, textTransform: 'uppercase' },
+  roomRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 14 },
+  roomChip: {
+    width: 34, height: 34, borderRadius: 8,
+    backgroundColor: '#3d2810', borderWidth: 1.5, borderColor: '#7a4a18',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  tuckChip: {
+    height: 34, borderRadius: 8, paddingHorizontal: 10,
+    backgroundColor: '#3d2810', borderWidth: 1.5, borderColor: '#7a4a18',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  roomChipActive: { backgroundColor: '#3d6020', borderColor: '#70a840' },
+  roomChipTxt: { color: '#ffe8a0', fontSize: 12, fontWeight: 'bold' },
+  giveUpBtn: {
+    backgroundColor: '#5c2a1e', borderRadius: 10,
+    paddingHorizontal: 16, paddingVertical: 9,
+    borderWidth: 1.5, borderColor: '#aa5a3a',
+  },
+  giveUpTxt: { color: '#ffd0b0', fontSize: 13, fontWeight: 'bold' },
 });

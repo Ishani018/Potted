@@ -14,7 +14,7 @@ import { getSnapPoints } from '../engine/snapPoints';
 const STORAGE_KEY = '@potted_save_v4';
 const TICK_INTERVAL_MS = 60_000;
 
-// slot: { slotId, room, type, flowerKey, stage, plantedAt, lastWatered, isDead, _budWatered }
+// slot: { slotId, room, type, flowerKey, stage, plantedAt, lastWatered, wilting, _budWatered }
 
 const INVENTORY_CAP = 35; // 7×5 grid
 
@@ -123,14 +123,37 @@ function reducer(state, action) {
       const { slotId } = action;
       const slot = state.slots[slotId];
       if (!slot) return state;
-      const { coins, slot: clearedSlot } = harvestPlant(slot);
+      const { flowerKey, amount, slot: clearedSlot } = harvestPlant(slot);
+      if (!flowerKey || amount <= 0) return state; // not harvestable
+      const harvested = { ...(state.player.harvestedFlowers ?? {}) };
+      harvested[flowerKey] = (harvested[flowerKey] ?? 0) + amount;
       return {
         ...state,
         slots: { ...state.slots, [slotId]: { ...clearedSlot, hasPot: slot.hasPot } },
         player: {
           ...state.player,
-          coins: state.player.coins + coins,
-          harvestCount: (state.player.harvestCount ?? 0) + (coins > 0 ? 1 : 0),
+          harvestedFlowers: harvested,
+          harvestCount: (state.player.harvestCount ?? 0) + 1,
+        },
+      };
+    }
+
+    // Trade harvested flowers for coins at the market.
+    // action: { flowerKey, qty, unitPrice }
+    case 'TRADE_FLOWERS': {
+      const { flowerKey, qty, unitPrice } = action;
+      const have = state.player.harvestedFlowers?.[flowerKey] ?? 0;
+      const n = Math.min(qty, have);
+      if (n <= 0) return state;
+      const harvested = { ...(state.player.harvestedFlowers ?? {}) };
+      harvested[flowerKey] = have - n;
+      if (harvested[flowerKey] <= 0) delete harvested[flowerKey];
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          coins: state.player.coins + n * unitPrice,
+          harvestedFlowers: harvested,
         },
       };
     }
@@ -198,6 +221,23 @@ function reducer(state, action) {
         player: {
           ...state.player,
           petPlacements: { ...(state.player.petPlacements ?? {}), [petKey]: room },
+        },
+      };
+    }
+
+    // Put a pet up for adoption: remove it from the collection + refund coins.
+    case 'GIVE_UP_PET': {
+      const { petKey, refund = 0 } = action;
+      if (!(state.player.ownedPets ?? []).includes(petKey)) return state;
+      const placements = { ...(state.player.petPlacements ?? {}) };
+      delete placements[petKey];
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          coins: state.player.coins + refund,
+          ownedPets: state.player.ownedPets.filter((k) => k !== petKey),
+          petPlacements: placements,
         },
       };
     }
