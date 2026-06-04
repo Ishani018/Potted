@@ -4,7 +4,7 @@ import { useLayout } from '../context/LayoutContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useGame } from '../context/GameContext';
-import { BACKGROUNDS, UI_IMAGES, SEED_IMAGES } from '../engine/assets';
+import { BACKGROUNDS, SEED_IMAGES } from '../engine/assets';
 import { getSnapPoints, WATERING_CAN_POSITIONS, scalePoint } from '../engine/snapPoints';
 import { getCurrentSeason } from '../constants/gameData';
 import { projectSize } from '../engine/project';
@@ -12,6 +12,7 @@ import { projectSize } from '../engine/project';
 import CoinHUD from '../components/CoinHUD';
 import PlantSlot from '../components/PlantSlot';
 import RoomPets from '../components/RoomPets';
+import ScreenHud from '../components/ScreenHud';
 import WateringCan from '../components/WateringCan';
 import PlantPopup from '../components/PlantPopup';
 import InventoryOverlay from '../components/InventoryOverlay';
@@ -119,15 +120,13 @@ export default function Room3Screen({ navigation }) {
 
         <CoinHUD />
 
-        {/* Top-right: map (back to town) */}
-        <TouchableOpacity style={styles.nurseryBtn} onPress={() => navigation.navigate('Map')}>
-          <Image source={UI_IMAGES.mapicon} style={styles.nurseryImg} resizeMode="contain" />
-        </TouchableOpacity>
-
-        {/* Top-left: inventory (no settings on this screen) */}
-        <TouchableOpacity style={styles.inventoryBtn} onPress={() => setInvOpen(true)}>
-          <Image source={UI_IMAGES.inventorybtn} style={styles.inventoryImg} resizeMode="contain" />
-        </TouchableOpacity>
+        {/* Standard HUD — settings (TL) + map (TR) + inventory (BL) */}
+        <ScreenHud
+          sw={sw} sh={sh}
+          onSettings={() => navigation.navigate('Room')}
+          onMap={() => navigation.navigate('Map')}
+          onInventory={() => setInvOpen(true)}
+        />
 
 
         {popup && (

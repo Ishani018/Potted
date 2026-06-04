@@ -5,6 +5,7 @@ import {
 import { useGame } from '../context/GameContext';
 import { TRADE_BG, UI_IMAGES } from '../engine/assets';
 import InventoryOverlay from '../components/InventoryOverlay';
+import ScreenHud from '../components/ScreenHud';
 
 // TRADE button laid out in Plopper (1376×768 base, sprite CENTER anchor).
 // Render bg stretched + position against the measured box → exact placement.
@@ -53,21 +54,13 @@ export default function TradeScreen({ navigation }) {
         />
       </TouchableOpacity>
 
-      {/* ── Standard HUD ────────────────────────────────────────────── */}
-      {/* Settings — top-left */}
-      <TouchableOpacity style={styles.hudTL} onPress={() => navigation.navigate('Room')}>
-        <Image source={UI_IMAGES.settingsnobg} style={styles.hudImg} resizeMode="contain" />
-      </TouchableOpacity>
-
-      {/* Map — top-right */}
-      <TouchableOpacity style={styles.hudTR} onPress={() => navigation.navigate('Map')}>
-        <Image source={UI_IMAGES.mapicon} style={styles.hudImg} resizeMode="contain" />
-      </TouchableOpacity>
-
-      {/* Inventory — bottom-left */}
-      <TouchableOpacity style={styles.hudBL} onPress={() => setInvOpen(true)}>
-        <Image source={UI_IMAGES.inventorybtn} style={styles.hudImg} resizeMode="contain" />
-      </TouchableOpacity>
+      {/* Standard HUD — settings (TL) + map (TR) + inventory (BL) */}
+      <ScreenHud
+        sw={sw} sh={sh}
+        onSettings={() => navigation.navigate('Room')}
+        onMap={() => navigation.navigate('Map')}
+        onInventory={() => setInvOpen(true)}
+      />
 
       {/* Toast */}
       {toast && (

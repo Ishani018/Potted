@@ -17,6 +17,7 @@ import GardenScreen from './src/screens/GardenScreen';
 import NurseryScreen from './src/screens/NurseryScreen';
 import PetShopScreen from './src/screens/PetShopScreen';
 import TradeScreen from './src/screens/TradeScreen';
+import GalleryScreen from './src/screens/GalleryScreen';
 import RoomScreen from './src/screens/RoomScreen';
 
 const Stack = createStackNavigator();
@@ -53,6 +54,7 @@ export default function App() {
                   <Stack.Screen name="Nursery" component={NurseryScreen} />
                   <Stack.Screen name="PetShop" component={PetShopScreen} />
                   <Stack.Screen name="Trade" component={TradeScreen} />
+                  <Stack.Screen name="Gallery" component={GalleryScreen} />
                   <Stack.Screen name="Room" component={RoomScreen} />
                 </Stack.Navigator>
               </NavigationContainer>

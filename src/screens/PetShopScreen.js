@@ -6,6 +6,7 @@ import { useGame } from '../context/GameContext';
 import { PETSHOP_BG, PET_IMAGES, UI_IMAGES } from '../engine/assets';
 import { PETS } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
+import ScreenHud from '../components/ScreenHud';
 
 // Pets were laid out in Plopper on a 1376×768 canvas with the bg STRETCHED to
 // fill it. To match exactly, we render the bg stretched and position pets as
@@ -78,9 +79,6 @@ function AdoptModal({ petKey, onClose }) {
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function PetShopScreen({ navigation }) {
-  const { state } = useGame();
-  const ownedPets = state.player.ownedPets ?? [];
-
   const [selected, setSelected] = useState(null); // petKey of open adopt popup
   const [invOpen, setInvOpen] = useState(false);
   // Measure the actual rendered box so pets share the bg's exact coordinate space
@@ -99,7 +97,6 @@ export default function PetShopScreen({ navigation }) {
         const cy = (y / PLOPPER_H) * sh;
         const spriteW = (w / PLOPPER_W) * sw;
         const spriteH = (h / PLOPPER_H) * sh;
-        const owned = ownedPets.includes(key);
         return (
           <TouchableOpacity
             key={key}
@@ -111,7 +108,7 @@ export default function PetShopScreen({ navigation }) {
               height: spriteH,
               zIndex: z,
             }}
-            activeOpacity={0.75}
+            activeOpacity={0.85}
             onPress={() => setSelected(key)}
           >
             <Image
@@ -119,36 +116,21 @@ export default function PetShopScreen({ navigation }) {
               style={{
                 width: spriteW,
                 height: spriteH,
-                opacity: owned ? 0.55 : 1,
                 transform: flip ? [{ scaleX: -1 }] : undefined,
               }}
               resizeMode="contain"
             />
-            {/* Owned tick */}
-            {owned && (
-              <View style={styles.ownedTick}>
-                <Text style={styles.ownedTickTxt}>✓</Text>
-              </View>
-            )}
           </TouchableOpacity>
         );
       })}
 
-      {/* ── Standard HUD ────────────────────────────────────────────────── */}
-      {/* Settings — top-left */}
-      <TouchableOpacity style={styles.hudTL} onPress={() => navigation.navigate('Room')}>
-        <Image source={UI_IMAGES.settingsnobg} style={styles.hudImg} resizeMode="contain" />
-      </TouchableOpacity>
-
-      {/* Map — top-right */}
-      <TouchableOpacity style={styles.hudTR} onPress={() => navigation.navigate('Map')}>
-        <Image source={UI_IMAGES.mapicon} style={styles.hudImg} resizeMode="contain" />
-      </TouchableOpacity>
-
-      {/* Inventory — bottom-left */}
-      <TouchableOpacity style={styles.hudBL} onPress={() => setInvOpen(true)}>
-        <Image source={UI_IMAGES.inventorybtn} style={styles.hudImg} resizeMode="contain" />
-      </TouchableOpacity>
+      {/* Standard HUD — settings (TL) + map (TR) + inventory (BL) */}
+      <ScreenHud
+        sw={sw} sh={sh}
+        onSettings={() => navigation.navigate('Room')}
+        onMap={() => navigation.navigate('Map')}
+        onInventory={() => setInvOpen(true)}
+      />
 
       {/* ── Modals ──────────────────────────────────────────────────────── */}
       {selected && <AdoptModal petKey={selected} onClose={() => setSelected(null)} />}
@@ -170,16 +152,6 @@ const styles = StyleSheet.create({
   hudTR: { position: 'absolute', top: 10, right: 14, width: 48, height: 48, zIndex: 30 },
   hudBL: { position: 'absolute', bottom: 14, left: 14, width: 48, height: 48, zIndex: 30 },
   hudImg: { width: '100%', height: '100%' },
-
-  // Owned indicator on top of sprite
-  ownedTick: {
-    position: 'absolute', top: -4, right: -4,
-    width: 18, height: 18, borderRadius: 9,
-    backgroundColor: '#2a6010',
-    borderWidth: 1.5, borderColor: '#88dd40',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  ownedTickTxt: { color: '#d0ff80', fontSize: 10, fontWeight: 'bold' },
 
   // Adopt modal
   modalOverlay: {

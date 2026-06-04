@@ -12,6 +12,7 @@ import { projectSize, projectPoint } from '../engine/project';
 
 import PlantSlot from '../components/PlantSlot';
 import RoomPets from '../components/RoomPets';
+import ScreenHud from '../components/ScreenHud';
 import WateringCan from '../components/WateringCan';
 import PlantPopup from '../components/PlantPopup';
 import InventoryOverlay from '../components/InventoryOverlay';
@@ -214,20 +215,13 @@ export default function Room1Screen({ navigation }) {
           baseCanSize={200}
         />
 
-        {/* Settings — top-left */}
-        <TouchableOpacity style={styles.hudTL} onPress={() => navigation.navigate('Room')}>
-          <Image source={UI_IMAGES.settingsnobg} style={styles.hudImg} resizeMode="contain" />
-        </TouchableOpacity>
-
-        {/* Map — top-right */}
-        <TouchableOpacity style={styles.hudTR} onPress={() => navigation.navigate('Map')}>
-          <Image source={UI_IMAGES.mapicon} style={styles.hudImg} resizeMode="contain" />
-        </TouchableOpacity>
-
-        {/* Inventory — bottom-left */}
-        <TouchableOpacity style={styles.hudBL} onPress={() => setInvOpen(true)}>
-          <Image source={UI_IMAGES.inventorybtn} style={styles.hudImg} resizeMode="contain" />
-        </TouchableOpacity>
+        {/* Standard HUD — settings (TL) + map (TR) + inventory (BL) */}
+        <ScreenHud
+          sw={sw} sh={sh}
+          onSettings={() => navigation.navigate('Room')}
+          onMap={() => navigation.navigate('Map')}
+          onInventory={() => setInvOpen(true)}
+        />
 
 
 

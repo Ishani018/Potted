@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { HOME_BG, UI_IMAGES } from '../engine/assets';
+import { HOME_BG } from '../engine/assets';
 import InventoryOverlay from '../components/InventoryOverlay';
+import ScreenHud from '../components/ScreenHud';
 
 // Entry buttons laid out in Plopper (1376×768 base, sprite CENTER anchor).
 // Render bg stretched + position against the measured box → exact placement.
@@ -49,20 +50,13 @@ export default function HomeScreen({ navigation }) {
         );
       })}
 
-      {/* Settings (top-left) */}
-      <TouchableOpacity style={styles.settingsBtn} onPress={() => navigation.navigate('Room')}>
-        <Image source={UI_IMAGES.settingsnobg} style={styles.cornerImg} resizeMode="contain" />
-      </TouchableOpacity>
-
-      {/* Map (top-right) */}
-      <TouchableOpacity style={styles.mapBtn} onPress={() => navigation.navigate('Map')}>
-        <Image source={UI_IMAGES.mapicon} style={styles.cornerImg} resizeMode="contain" />
-      </TouchableOpacity>
-
-      {/* Inventory (bottom-left) — view-only here */}
-      <TouchableOpacity style={styles.inventoryBtn} onPress={() => setInvOpen(true)}>
-        <Image source={UI_IMAGES.inventorybtn} style={styles.cornerImg} resizeMode="contain" />
-      </TouchableOpacity>
+      {/* Standard HUD — settings (TL) + map (TR) + inventory (BL) */}
+      <ScreenHud
+        sw={sw} sh={sh}
+        onSettings={() => navigation.navigate('Room')}
+        onMap={() => navigation.navigate('Map')}
+        onInventory={() => setInvOpen(true)}
+      />
 
       {invOpen && (
         <InventoryOverlay onClose={() => setInvOpen(false)} onPick={() => setInvOpen(false)} />

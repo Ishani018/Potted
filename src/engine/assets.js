@@ -83,6 +83,8 @@ export const PAINTING_IMAGES = {
   tabbycatpainting:      require('../../assets/walldecor/tabbycatpainting.png'),
   weddingpainting:       require('../../assets/walldecor/weddingpainting.png'),
   womanportraitpainting: require('../../assets/walldecor/womanportraitpainting.png'),
+  newbaby:               require('../../assets/walldecor/newbaby.jpeg'),
+  picnic:                require('../../assets/walldecor/picnic.jpeg'),
 };
 
 // ─── Pets ────────────────────────────────────────────────────────────────────
@@ -129,6 +131,7 @@ export const UI_IMAGES = {
   nurserybtn:   require('../../assets/ui_comps/nurserybutton.png'),
   adoptbtn:     require('../../assets/ui_comps/adoptbutton.png'),
   marketbtn:    require('../../assets/ui_comps/marketbutton.png'),
+  gallerybtn:   require('../../assets/ui_comps/gallerybutton.png'),
   tradebtn:     require('../../assets/ui_comps/tradebutton.png'),
   trashclosed:  require('../../assets/ui_comps/trashclosed.png'),
   trashopen:    require('../../assets/ui_comps/trashopen.png'),
@@ -145,3 +148,4 @@ export const MAP_BG = require('../../assets/ui_comps/mapoftown.png');
 export const HOME_BG = require('../../assets/homeinsidescreen.png');
 export const PETSHOP_BG = require('../../assets/petshop.png');
 export const TRADE_BG = require('../../assets/flowertradeshop.png');
+export const GALLERY_BG = require('../../assets/gallery.png');

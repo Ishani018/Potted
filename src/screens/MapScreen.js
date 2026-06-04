@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { MAP_BG, UI_IMAGES } from '../engine/assets';
+import ScreenHud from '../components/ScreenHud';
 
 // Town buttons laid out in Plopper (1376×768 base, sprite CENTER anchor).
 // Render the bg stretched + position buttons against the measured box, so they
@@ -12,6 +13,7 @@ const BUTTONS = [
   { img: 'nurserybtn', dest: 'Nursery', x: 474,  y: 319, w: 192, h: 82, flip: false, z: 2 },
   { img: 'homebutton', dest: 'Home',    x: 111,  y: 516, w: 140, h: 81, flip: false, z: 3 },
   { img: 'adoptbtn',   dest: 'PetShop', x: 855,  y: 200, w: 144, h: 86, flip: false, z: 4 },
+  { img: 'gallerybtn', dest: 'Gallery', x: 761,  y: 587, w: 192, h: 73, flip: false, z: 5 },
 ];
 
 export default function MapScreen({ navigation }) {
@@ -42,8 +44,8 @@ export default function MapScreen({ navigation }) {
         );
       })}
 
-      {/* Settings gear (painted top-left in the art) — tap zone over it */}
-      <TouchableOpacity style={styles.settingsZone} onPress={() => navigation.navigate('Room')} />
+      {/* Standard HUD — settings (top-left). Map has no inventory button. */}
+      <ScreenHud sw={sw} sh={sh} onSettings={() => navigation.navigate('Room')} />
     </View>
   );
 }
@@ -51,5 +53,4 @@ export default function MapScreen({ navigation }) {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000' },
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
-  settingsZone: { position: 'absolute', top: 8, left: 8, width: 60, height: 60, zIndex: 20 },
 });

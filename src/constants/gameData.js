@@ -49,6 +49,8 @@ export const PAINTINGS = {
   tabbycatpainting:     { key: 'tabbycatpainting',     name: 'Tabby Cat',      price: 50 },
   weddingpainting:      { key: 'weddingpainting',      name: 'Wedding',        price: 50 },
   womanportraitpainting:{ key: 'womanportraitpainting',name: 'Woman Portrait', price: 50 },
+  newbaby:              { key: 'newbaby',              name: 'New Baby',       price: 50 },
+  picnic:               { key: 'picnic',               name: 'Picnic',         price: 50 },
 };
 
 export const PETS = {

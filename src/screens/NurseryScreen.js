@@ -4,6 +4,7 @@ import { useGame } from '../context/GameContext';
 import { NURSERY_BG, SEED_IMAGES, UI_IMAGES } from '../engine/assets';
 import { POTTED_FLOWERS, HANGING_PLANTS } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
+import ScreenHud from '../components/ScreenHud';
 
 // All buyable seeds keyed by flowerKey → { name, price }.
 const SEED_INFO = {};
@@ -64,20 +65,13 @@ export default function NurseryScreen({ navigation }) {
         resizeMode="stretch"
       />
 
-      {/* Settings — top-left */}
-      <TouchableOpacity style={styles.hudTL} onPress={() => navigation.navigate('Room')}>
-        <Image source={UI_IMAGES.settingsnobg} style={styles.hudImg} resizeMode="contain" />
-      </TouchableOpacity>
-
-      {/* Map — top-right */}
-      <TouchableOpacity style={styles.hudTR} onPress={() => navigation.navigate('Map')}>
-        <Image source={UI_IMAGES.mapicon} style={styles.hudImg} resizeMode="contain" />
-      </TouchableOpacity>
-
-      {/* Inventory — bottom-left (view-only; you buy here, not plant) */}
-      <TouchableOpacity style={styles.hudBL} onPress={() => setInvOpen(true)}>
-        <Image source={UI_IMAGES.inventorybtn} style={styles.hudImg} resizeMode="contain" />
-      </TouchableOpacity>
+      {/* Standard HUD — settings (TL) + map (TR) + inventory (BL) */}
+      <ScreenHud
+        sw={sw} sh={sh}
+        onSettings={() => navigation.navigate('Room')}
+        onMap={() => navigation.navigate('Map')}
+        onInventory={() => setInvOpen(true)}
+      />
 
       {/* Coins — bottom-right */}
       <View style={styles.coinBox}>
