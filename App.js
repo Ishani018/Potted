@@ -10,6 +10,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { GameProvider } from './src/context/GameContext';
 import { LayoutContext } from './src/context/LayoutContext';
+import LoadingScreen from './src/screens/LoadingScreen';
 import MainScreen from './src/screens/MainScreen';
 import MapScreen from './src/screens/MapScreen';
 import HomeScreen from './src/screens/HomeScreen';
@@ -47,6 +48,7 @@ export default function App() {
                     cardStyle: { backgroundColor: '#000' },
                   }}
                 >
+                  <Stack.Screen name="Loading" component={LoadingScreen} />
                   <Stack.Screen name="Main" component={MainScreen} />
                   <Stack.Screen name="Map" component={MapScreen} />
                   <Stack.Screen name="Home" component={HomeScreen} />

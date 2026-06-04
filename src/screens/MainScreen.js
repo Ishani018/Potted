@@ -59,7 +59,7 @@ export default function MainScreen({ navigation }) {
   // TODO: play a short click SFX here once a click sound asset is added.
   const handlePlay = async () => {
     await ensureMusic();             // guarantees music is running (user gesture)
-    navigation.replace('Map');
+    navigation.replace('Loading');
   };
 
   return (

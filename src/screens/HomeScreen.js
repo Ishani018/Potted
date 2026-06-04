@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { HOME_BG } from '../engine/assets';
+import { HOME_BG, UI_IMAGES } from '../engine/assets';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
 
@@ -68,8 +68,4 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000' },
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
-  settingsBtn:  { position: 'absolute', top: 12, left: 14,   width: 48, height: 48, zIndex: 20 },
-  mapBtn:        { position: 'absolute', top: 12, right: 14,  width: 48, height: 48, zIndex: 20 },
-  inventoryBtn:  { position: 'absolute', bottom: 14, left: 14, width: 48, height: 48, zIndex: 20 },
-  cornerImg: { width: '100%', height: '100%' },
 });
