@@ -1,28 +1,33 @@
 import React, { useState } from 'react';
 import {
-  View, Image, TouchableOpacity, StyleSheet,
-  Text, useWindowDimensions,
+  View, Image, TouchableOpacity, StyleSheet, Text,
 } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { PETSHOP_BG, PET_IMAGES, UI_IMAGES } from '../engine/assets';
 import { PETS } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 
-// ── Pet positions in petshop.png ─────────────────────────────────────────────
-// x/y = sprite CENTER as fraction of screen. w = width fraction of screen width.
-// Estimated from reference art; tune per pet after seeing first render.
-// ebony + ivory share the ebonyandivory.png sprite (two sleeping cats).
+// Pets were laid out in Plopper on a 1376×768 canvas with the bg STRETCHED to
+// fill it. To match exactly, we render the bg stretched and position pets as
+// fractions of the full screen (x/1376, y/768) — no cover-crop.
+const PLOPPER_W = 1376;
+const PLOPPER_H = 768;
+
+// ── Pet positions in petshop.png — base 1376×768 coords, sprite CENTER anchor ─
+// Laid out visually in Plopper. x/y = center, w = width (base px), flip = mirror,
+// z = stack order (low = back). Projected to screen via projectPoint/projectSize.
 const SHOP_PETS = [
-  { key: 'martin',  x: 0.10, y: 0.47, w: 0.09 },   // old tabby, left bench
-  { key: 'george',  x: 0.17, y: 0.43, w: 0.10 },   // tabby cat, left bench
-  { key: 'ebony',   x: 0.34, y: 0.47, w: 0.14 },   // sleeping pair (ebonyandivory), center bench
-  { key: 'ivory',   x: 0.53, y: 0.45, w: 0.08 },   // white cat on cat-tree (shared sprite)
-  { key: 'tiger',   x: 0.54, y: 0.22, w: 0.08 },   // calico, top of cat-tree
-  { key: 'aki',     x: 0.22, y: 0.70, w: 0.11 },   // akita, blue dog bed
-  { key: 'koazy',   x: 0.09, y: 0.81, w: 0.11 },   // ragdoll sleeping, bottom-left mat
-  { key: 'brownie', x: 0.65, y: 0.59, w: 0.09 },   // pomeranian
-  { key: 'storm',   x: 0.78, y: 0.60, w: 0.11 },   // husky
-  { key: 'cherry',  x: 0.78, y: 0.80, w: 0.10 },   // golden puppy, pink bed
+  { key: 'tiger',         x: 870,  y: 181, w: 108, h: 141, flip: false, z: 1 },
+  { key: 'koazy',         x: 261,  y: 621, w: 148, h: 85,  flip: false, z: 2 },
+  { key: 'brownie',       x: 978,  y: 488, w: 137, h: 149, flip: false, z: 3 },
+  { key: 'aki',           x: 421,  y: 487, w: 136, h: 161, flip: false, z: 4 },
+  { key: 'cherry',        x: 1263, y: 609, w: 126, h: 70,  flip: false, z: 5 },
+  { key: 'oreo',          x: 1152, y: 723, w: 170, h: 76,  flip: false, z: 6 },
+  { key: 'ebonyandivory', x: 531,  y: 359, w: 142, h: 88,  flip: false, z: 7 },
+  { key: 'george',        x: 319,  y: 366, w: 96,  h: 108, flip: false, z: 8 },
+  { key: 'martin',        x: 241,  y: 369, w: 114, h: 165, flip: true,  z: 9 },
+  { key: 'milk',          x: 780,  y: 332, w: 94,  h: 129, flip: true,  z: 10 },
+  { key: 'storm',         x: 1198, y: 483, w: 108, h: 144, flip: false, z: 11 },
 ];
 
 // ── Adoption modal ────────────────────────────────────────────────────────────
@@ -73,39 +78,50 @@ function AdoptModal({ petKey, onClose }) {
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function PetShopScreen({ navigation }) {
-  const { width: sw, height: sh } = useWindowDimensions();
   const { state } = useGame();
   const ownedPets = state.player.ownedPets ?? [];
 
   const [selected, setSelected] = useState(null); // petKey of open adopt popup
   const [invOpen, setInvOpen] = useState(false);
+  // Measure the actual rendered box so pets share the bg's exact coordinate space
+  // (window dimensions can include status-bar/safe-area insets the bg doesn't).
+  const [box, setBox] = useState({ w: 0, h: 0 });
+  const sw = box.w, sh = box.h;
 
+  // Match Plopper: bg fills the whole frame (stretch), pets placed by fraction.
   return (
-    <View style={styles.root}>
-      <Image source={PETSHOP_BG} style={styles.bg} resizeMode="cover" />
+    <View style={styles.root} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
+      <Image source={PETSHOP_BG} style={styles.bg} resizeMode="stretch" />
 
-      {/* ── Pet sprites ─────────────────────────────────────────────────── */}
-      {SHOP_PETS.map(({ key, x, y, w: wFrac }) => {
-        const spriteW = sw * wFrac;
-        const spriteH = spriteW; // assume ~square; tune aspect per pet if needed
+      {/* ── Pet sprites — Plopper base-px (1376×768) → screen fraction ─────── */}
+      {SHOP_PETS.map(({ key, x, y, w, h, flip, z }) => {
+        const cx = (x / PLOPPER_W) * sw;
+        const cy = (y / PLOPPER_H) * sh;
+        const spriteW = (w / PLOPPER_W) * sw;
+        const spriteH = (h / PLOPPER_H) * sh;
         const owned = ownedPets.includes(key);
         return (
           <TouchableOpacity
             key={key}
             style={{
               position: 'absolute',
-              left: sw * x - spriteW / 2,
-              top: sh * y - spriteH / 2,
+              left: cx - spriteW / 2,
+              top: cy - spriteH / 2,
               width: spriteW,
               height: spriteH,
-              zIndex: 10,
+              zIndex: z,
             }}
             activeOpacity={0.75}
             onPress={() => setSelected(key)}
           >
             <Image
               source={PET_IMAGES[key]}
-              style={{ width: spriteW, height: spriteH, opacity: owned ? 0.55 : 1 }}
+              style={{
+                width: spriteW,
+                height: spriteH,
+                opacity: owned ? 0.55 : 1,
+                transform: flip ? [{ scaleX: -1 }] : undefined,
+              }}
               resizeMode="contain"
             />
             {/* Owned tick */}

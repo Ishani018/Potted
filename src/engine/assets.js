@@ -86,21 +86,21 @@ export const PAINTING_IMAGES = {
 };
 
 // ─── Pets ────────────────────────────────────────────────────────────────────
-// NOTE: sprite files don't 1:1 match the roster. Mapped where clear; see PETS in
-// gameData.js. ebony/ivory share ebonyandivory.png; koazy = koazysleeping.png.
-// Unmapped sprite files present: milk.png, oreo.png (no roster entry yet).
+// ebonyandivory = the always-together sleeping PAIR (one purchasable unit).
+// milk (white cat) and oreo (black cat) are separate single pets.
+// koazy = koazysleeping.png.
 export const PET_IMAGES = {
-  george:  require('../../assets/pets/george.png'),
-  storm:   require('../../assets/pets/storm.png'),
-  koazy:   require('../../assets/pets/koazysleeping.png'),
-  brownie: require('../../assets/pets/brownie.png'),
-  aki:     require('../../assets/pets/aki.png'),
-  cherry:  require('../../assets/pets/cherry.png'),
-  martin:  require('../../assets/pets/martin.png'),
-  tiger:   require('../../assets/pets/tiger.png'),
-  // ebony + ivory share one sprite for now:
-  ebony:   require('../../assets/pets/ebonyandivory.png'),
-  ivory:   require('../../assets/pets/ebonyandivory.png'),
+  george:        require('../../assets/pets/george.png'),
+  storm:         require('../../assets/pets/storm.png'),
+  koazy:         require('../../assets/pets/koazysleeping.png'),
+  brownie:       require('../../assets/pets/brownie.png'),
+  aki:           require('../../assets/pets/aki.png'),
+  cherry:        require('../../assets/pets/cherry.png'),
+  martin:        require('../../assets/pets/martin.png'),
+  tiger:         require('../../assets/pets/tiger.png'),
+  ebonyandivory: require('../../assets/pets/ebonyandivory.png'),
+  milk:          require('../../assets/pets/milk.png'),
+  oreo:          require('../../assets/pets/oreo.png'),
 };
 
 // ─── UI ──────────────────────────────────────────────────────────────────────

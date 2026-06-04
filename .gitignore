@@ -5,6 +5,9 @@ dist/
 .env
 .claude/
 
+# Plopper layout tool — lives in its own repo; local copy kept for convenience
+layout-editor.html
+
 # Asset directory (large image/media files) — all assets now live under assets/
 assets/
 *.png

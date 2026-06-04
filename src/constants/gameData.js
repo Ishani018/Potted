@@ -52,16 +52,18 @@ export const PAINTINGS = {
 };
 
 export const PETS = {
-  george:  { key: 'george',  name: 'George',  price: 150, breed: 'Tabby Cat' },
-  storm:   { key: 'storm',   name: 'Storm',   price: 200, breed: 'Husky' },
-  koazy:   { key: 'koazy',   name: 'Koazy',   price: 180, breed: 'Ragdoll Cat' },
-  brownie: { key: 'brownie', name: 'Brownie', price: 160, breed: 'Pomeranian' },
-  aki:     { key: 'aki',     name: 'Aki',     price: 220, breed: 'Akita' },
-  cherry:  { key: 'cherry',  name: 'Cherry',  price: 140, breed: 'Golden Puppy' },
-  martin:  { key: 'martin',  name: 'Martin',  price: 130, breed: 'Old Tabby' },
-  ebony:   { key: 'ebony',   name: 'Ebony',   price: 170, breed: 'Black Cat' },
-  ivory:   { key: 'ivory',   name: 'Ivory',   price: 170, breed: 'White Cat' },
-  tiger:   { key: 'tiger',   name: 'Tiger',   price: 190, breed: 'Calico Cat' },
+  george:        { key: 'george',        name: 'George',          price: 150, breed: 'Tabby Cat' },
+  storm:         { key: 'storm',         name: 'Storm',           price: 200, breed: 'Husky' },
+  koazy:         { key: 'koazy',         name: 'Koazy',           price: 180, breed: 'Ragdoll Cat' },
+  brownie:       { key: 'brownie',       name: 'Brownie',         price: 160, breed: 'Pomeranian' },
+  aki:           { key: 'aki',           name: 'Aki',             price: 220, breed: 'Akita' },
+  cherry:        { key: 'cherry',        name: 'Cherry',          price: 140, breed: 'Golden Puppy' },
+  martin:        { key: 'martin',        name: 'Martin',          price: 130, breed: 'Old Tabby' },
+  tiger:         { key: 'tiger',         name: 'Tiger',           price: 190, breed: 'Calico Cat' },
+  milk:          { key: 'milk',          name: 'Milk',            price: 170, breed: 'White Cat' },
+  oreo:          { key: 'oreo',          name: 'Oreo',            price: 170, breed: 'Black Cat' },
+  // Always-together pair — one purchase, two cats.
+  ebonyandivory: { key: 'ebonyandivory', name: 'Ebony & Ivory',   price: 300, breed: 'Bonded Pair' },
 };
 
 // ── Pre-determined pet positions per room (fractions of screen, 0–1) ──────────
@@ -70,41 +72,45 @@ export const PETS = {
 // tune x/y per pet. baseW = display width as a fraction of screen width.
 export const PET_BASE_W = 0.10; // default sprite width fraction
 export const PET_POSITIONS = {
+  // NOTE: placeholder fractions — redo per-room visually in Plopper (base px).
   1: {
-    storm:   { x: 0.07, y: 0.88 },  // husky, floor far left
-    george:  { x: 0.14, y: 0.82 },  // tabby, floor left
-    aki:     { x: 0.30, y: 0.90 },  // shiba puppy, floor
-    ivory:   { x: 0.40, y: 0.80 },  // white cat reaching, center
-    koazy:   { x: 0.52, y: 0.90 },  // ragdoll sleeping, rug
-    brownie: { x: 0.64, y: 0.88 },  // pomeranian, rug right
-    martin:  { x: 0.47, y: 0.62 },  // calico, on potting bench
-    cherry:  { x: 0.80, y: 0.90 },  // golden puppy, floor right
-    ebony:   { x: 0.92, y: 0.88 },  // black cat, floor far right
-    tiger:   { x: 0.85, y: 0.20 },  // orange tabby, right shelf top
+    storm:         { x: 0.07, y: 0.88 },
+    george:        { x: 0.14, y: 0.82 },
+    aki:           { x: 0.30, y: 0.90 },
+    milk:          { x: 0.40, y: 0.80 },
+    koazy:         { x: 0.52, y: 0.90 },
+    brownie:       { x: 0.64, y: 0.88 },
+    martin:        { x: 0.47, y: 0.62 },
+    cherry:        { x: 0.80, y: 0.90 },
+    oreo:          { x: 0.92, y: 0.88 },
+    tiger:         { x: 0.85, y: 0.20 },
+    ebonyandivory: { x: 0.22, y: 0.90 },
   },
   2: {
-    storm:   { x: 0.06, y: 0.86 },
-    george:  { x: 0.14, y: 0.80 },
-    ebony:   { x: 0.24, y: 0.90 },  // black cat lying, floor
-    aki:     { x: 0.34, y: 0.84 },
-    brownie: { x: 0.45, y: 0.86 },
-    martin:  { x: 0.56, y: 0.82 },  // tabby kitten
-    ivory:   { x: 0.44, y: 0.34 },  // white cat reaching, wall
-    koazy:   { x: 0.74, y: 0.84 },  // ragdoll sleeping
-    cherry:  { x: 0.66, y: 0.90 },  // golden puppy
-    tiger:   { x: 0.93, y: 0.92 },  // calico, bottom right
+    storm:         { x: 0.06, y: 0.86 },
+    george:        { x: 0.14, y: 0.80 },
+    oreo:          { x: 0.24, y: 0.90 },
+    aki:           { x: 0.34, y: 0.84 },
+    brownie:       { x: 0.45, y: 0.86 },
+    martin:        { x: 0.56, y: 0.82 },
+    milk:          { x: 0.44, y: 0.34 },
+    koazy:         { x: 0.74, y: 0.84 },
+    cherry:        { x: 0.66, y: 0.90 },
+    tiger:         { x: 0.93, y: 0.92 },
+    ebonyandivory: { x: 0.85, y: 0.88 },
   },
   3: {
-    martin:  { x: 0.13, y: 0.30 },  // calico, windowsill left
-    koazy:   { x: 0.27, y: 0.28 },  // ragdoll, windowsill
-    george:  { x: 0.42, y: 0.20 },  // tabby, windowsill center
-    ebony:   { x: 0.56, y: 0.28 },  // black cat, windowsill
-    ivory:   { x: 0.66, y: 0.24 },  // white cat reaching, windowsill
-    tiger:   { x: 0.13, y: 0.50 },  // tabby kitten, mid-shelf
-    aki:     { x: 0.40, y: 0.92 },  // shiba, floor
-    cherry:  { x: 0.28, y: 0.90 },  // golden puppy sleeping, floor
-    storm:   { x: 0.66, y: 0.84 },  // husky, floor
-    brownie: { x: 0.86, y: 0.84 },  // pomeranian, floor right
+    martin:        { x: 0.13, y: 0.30 },
+    koazy:         { x: 0.27, y: 0.28 },
+    george:        { x: 0.42, y: 0.20 },
+    oreo:          { x: 0.56, y: 0.28 },
+    milk:          { x: 0.66, y: 0.24 },
+    tiger:         { x: 0.13, y: 0.50 },
+    aki:           { x: 0.40, y: 0.92 },
+    cherry:        { x: 0.28, y: 0.90 },
+    storm:         { x: 0.66, y: 0.84 },
+    brownie:       { x: 0.86, y: 0.84 },
+    ebonyandivory: { x: 0.50, y: 0.90 },
   },
 };
 
