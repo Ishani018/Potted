@@ -66,51 +66,51 @@ export const PETS = {
   ebonyandivory: { key: 'ebonyandivory', name: 'Ebony & Ivory',   price: 300, breed: 'Bonded Pair' },
 };
 
-// ── Pre-determined pet positions per room (fractions of screen, 0–1) ──────────
-// A pet shows at its room's spot only when the player has PLACED it in that room
-// (player.petPlacements[petKey] === roomNumber). Estimated from reference art;
-// tune x/y per pet. baseW = display width as a fraction of screen width.
-export const PET_BASE_W = 0.10; // default sprite width fraction
+// ── Pre-determined pet positions per room ─────────────────────────────────────
+// Laid out in Plopper (1376×768 base, sprite CENTER anchor). A pet shows at its
+// room's spot only when the player has PLACED it there (petPlacements[key]===room).
+// Each entry: { x, y, w, h, flip, z } in base px. Projected like the hub screens
+// (fraction of measured box). Rooms without a real layout yet are empty {}.
+export const PET_BASE = { w: 1376, h: 768 };
 export const PET_POSITIONS = {
-  // NOTE: placeholder fractions — redo per-room visually in Plopper (base px).
   1: {
-    storm:         { x: 0.07, y: 0.88 },
-    george:        { x: 0.14, y: 0.82 },
-    aki:           { x: 0.30, y: 0.90 },
-    milk:          { x: 0.40, y: 0.80 },
-    koazy:         { x: 0.52, y: 0.90 },
-    brownie:       { x: 0.64, y: 0.88 },
-    martin:        { x: 0.47, y: 0.62 },
-    cherry:        { x: 0.80, y: 0.90 },
-    oreo:          { x: 0.92, y: 0.88 },
-    tiger:         { x: 0.85, y: 0.20 },
-    ebonyandivory: { x: 0.22, y: 0.90 },
+    george:        { x: 222,  y: 336, w: 120, h: 135, flip: false, z: 3 },
+    tiger:         { x: 121,  y: 152, w: 111, h: 145, flip: false, z: 5 },
+    koazy:         { x: 422,  y: 153, w: 133, h: 76,  flip: true,  z: 4 },
+    martin:        { x: 542,  y: 112, w: 112, h: 162, flip: false, z: 6 },
+    ebonyandivory: { x: 201,  y: 548, w: 123, h: 77,  flip: false, z: 2 },
+    cherry:        { x: 561,  y: 693, w: 153, h: 85,  flip: false, z: 1 },
+    aki:           { x: 184,  y: 653, w: 133, h: 158, flip: false, z: 8 },
+    oreo:          { x: 891,  y: 162, w: 140, h: 62,  flip: false, z: 10 },
+    milk:          { x: 968,  y: 96,  w: 86,  h: 118, flip: false, z: 9 },
+    brownie:       { x: 1249, y: 589, w: 115, h: 125, flip: false, z: 7 },
+    storm:         { x: 925,  y: 649, w: 123, h: 165, flip: false, z: 11 },
   },
   2: {
-    storm:         { x: 0.06, y: 0.86 },
-    george:        { x: 0.14, y: 0.80 },
-    oreo:          { x: 0.24, y: 0.90 },
-    aki:           { x: 0.34, y: 0.84 },
-    brownie:       { x: 0.45, y: 0.86 },
-    martin:        { x: 0.56, y: 0.82 },
-    milk:          { x: 0.44, y: 0.34 },
-    koazy:         { x: 0.74, y: 0.84 },
-    cherry:        { x: 0.66, y: 0.90 },
-    tiger:         { x: 0.93, y: 0.92 },
-    ebonyandivory: { x: 0.85, y: 0.88 },
+    george:        { x: 40,   y: 422, w: 89,  h: 100, flip: false, z: 3 },
+    martin:        { x: 181,  y: 620, w: 112, h: 162, flip: true,  z: 6 },
+    tiger:         { x: 253,  y: 642, w: 99,  h: 129, flip: false, z: 5 },
+    aki:           { x: 87,   y: 691, w: 133, h: 158, flip: false, z: 8 },
+    oreo:          { x: 447,  y: 705, w: 140, h: 62,  flip: false, z: 10 },
+    brownie:       { x: 627,  y: 685, w: 115, h: 125, flip: false, z: 7 },
+    milk:          { x: 712,  y: 293, w: 88,  h: 121, flip: false, z: 9 },
+    storm:         { x: 772,  y: 604, w: 113, h: 152, flip: false, z: 11 },
+    cherry:        { x: 916,  y: 691, w: 152, h: 84,  flip: false, z: 1 },
+    koazy:         { x: 1052, y: 629, w: 134, h: 77,  flip: true,  z: 4 },
+    ebonyandivory: { x: 1300, y: 719, w: 136, h: 85,  flip: false, z: 2 },
   },
   3: {
-    martin:        { x: 0.13, y: 0.30 },
-    koazy:         { x: 0.27, y: 0.28 },
-    george:        { x: 0.42, y: 0.20 },
-    oreo:          { x: 0.56, y: 0.28 },
-    milk:          { x: 0.66, y: 0.24 },
-    tiger:         { x: 0.13, y: 0.50 },
-    aki:           { x: 0.40, y: 0.92 },
-    cherry:        { x: 0.28, y: 0.90 },
-    storm:         { x: 0.66, y: 0.84 },
-    brownie:       { x: 0.86, y: 0.84 },
-    ebonyandivory: { x: 0.50, y: 0.90 },
+    tiger:         { x: 1054, y: 359, w: 103, h: 135, flip: true,  z: 1 },
+    koazy:         { x: 1214, y: 367, w: 127, h: 73,  flip: false, z: 2 },
+    brownie:       { x: 1177, y: 691, w: 105, h: 114, flip: false, z: 3 },
+    aki:           { x: 539,  y: 634, w: 105, h: 125, flip: false, z: 4 },
+    cherry:        { x: 811,  y: 658, w: 128, h: 71,  flip: false, z: 5 },
+    oreo:          { x: 1104, y: 214, w: 140, h: 62,  flip: false, z: 6 },
+    ebonyandivory: { x: 362,  y: 662, w: 135, h: 84,  flip: false, z: 7 },
+    martin:        { x: 162,  y: 639, w: 124, h: 179, flip: true,  z: 8 },
+    george:        { x: 368,  y: 199, w: 102, h: 114, flip: false, z: 9 },
+    milk:          { x: 1233, y: 182, w: 89,  h: 122, flip: true,  z: 10 },
+    storm:         { x: 905,  y: 640, w: 116, h: 155, flip: false, z: 11 },
   },
 };
 

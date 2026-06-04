@@ -2,11 +2,16 @@ import React from 'react';
 import { Image } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { PET_IMAGES } from '../engine/assets';
-import { PET_POSITIONS, PET_BASE_W } from '../constants/gameData';
+import { PET_POSITIONS, PET_BASE } from '../constants/gameData';
 
-// Renders every owned pet that the player has placed in THIS room, at its
-// pre-determined spot (PET_POSITIONS[room][petKey]). Position x/y are fractions
-// of screen; the sprite is anchored bottom-center so pets "stand" on the spot.
+// Renders every owned pet the player has PLACED in this room, at its Plopper
+// position (PET_POSITIONS[room][petKey] in 1376×768 base px, center anchor).
+// sw/sh = the room's measured container size; positions map by fraction so they
+// match the layout authored in Plopper.
+// TEMP: set true to show ALL owned pets in every room (ignore placement) for
+// verifying Plopper layouts. Revert to false before release.
+const DEBUG_SHOW_ALL = true;
+
 export default function RoomPets({ room, sw, sh }) {
   const { state } = useGame();
   const { ownedPets = [], petPlacements = {} } = state.player;
@@ -15,23 +20,26 @@ export default function RoomPets({ room, sw, sh }) {
   return (
     <>
       {ownedPets.map((petKey) => {
-        if (petPlacements[petKey] !== room) return null;
-        const pos = spots[petKey];
+        if (!DEBUG_SHOW_ALL && petPlacements[petKey] !== room) return null;
+        const p = spots[petKey];
         const img = PET_IMAGES[petKey];
-        if (!pos || !img) return null;
-        const w = Math.round(sw * PET_BASE_W);
-        const h = w; // sprites are roughly square
+        if (!p || !img) return null;
+        const cx = (p.x / PET_BASE.w) * sw;
+        const cy = (p.y / PET_BASE.h) * sh;
+        const w = (p.w / PET_BASE.w) * sw;
+        const h = (p.h / PET_BASE.h) * sh;
         return (
           <Image
             key={petKey}
             source={img}
             style={{
               position: 'absolute',
-              left: sw * pos.x - w / 2,
-              top: sh * pos.y - h,        // bottom-center anchor
+              left: cx - w / 2,
+              top: cy - h / 2,
               width: w,
               height: h,
-              zIndex: 7,
+              zIndex: 6 + (p.z ?? 0),  // above bg/plants; relative order from Plopper
+              transform: p.flip ? [{ scaleX: -1 }] : undefined,
             }}
             resizeMode="contain"
           />

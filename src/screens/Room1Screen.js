@@ -229,19 +229,6 @@ export default function Room1Screen({ navigation }) {
           <Image source={UI_IMAGES.inventorybtn} style={styles.hudImg} resizeMode="contain" />
         </TouchableOpacity>
 
-        {player.unlockedRooms.length > 1 && (
-          <View style={styles.roomBar}>
-            {player.unlockedRooms.map((r) => (
-              <TouchableOpacity
-                key={r}
-                style={[styles.roomBtn, player.currentRoom === r && styles.roomBtnActive]}
-                onPress={() => dispatch({ type: 'SET_ROOM', room: r })}
-              >
-                <Text style={styles.roomBtnText}>{r}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
 
 
         {popup && (
@@ -281,15 +268,6 @@ const styles = StyleSheet.create({
   hudTR: { position: 'absolute', top: 10, right: 14,  width: 48, height: 48, zIndex: 20 },
   hudBL: { position: 'absolute', bottom: 14, left: 14, width: 48, height: 48, zIndex: 20 },
   hudImg: { width: '100%', height: '100%' },
-  roomBar: { position: 'absolute', bottom: 14, right: 14, flexDirection: 'row', gap: 6, zIndex: 20 },
-  roomBtn: {
-    width: 30, height: 30,
-    backgroundColor: 'rgba(30,15,0,0.72)',
-    borderRadius: 6, alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: '#7a4a18',
-  },
-  roomBtnActive: { backgroundColor: '#3d2009', borderColor: '#c8873a' },
-  roomBtnText: { color: '#ffe8a0', fontSize: 13, fontWeight: 'bold' },
   heldBanner: {
     position: 'absolute', top: 10, alignSelf: 'center',
     flexDirection: 'row', alignItems: 'center', gap: 8,
