@@ -1,23 +1,24 @@
 import React, { useState } from 'react';
-import { View, Image, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { HOME_BG, UI_IMAGES } from '../engine/assets';
 import InventoryOverlay from '../components/InventoryOverlay';
 
-// Entry buttons — positions solved via HomeScreen-specific empirical model:
-//   visual_x = 2 × code_x − 0.13
-//   visual_y = 1.55 × code_y − 0.034
-// (derived from 2 screenshot data points; different from MapScreen due to image crop)
+// Entry buttons laid out in Plopper (1376×768 base, sprite CENTER anchor).
+// Render bg stretched + position against the measured box → exact placement.
+const PLOPPER_W = 1376;
+const PLOPPER_H = 768;
 const ENTRIES = [
-  { key: 'greenhouse', img: 'greenhousebtn', room: 1, x: 0.12, y: 0.16, w: 0.16, aspect: 368 / 1147 },
-  { key: 'sunroom',    img: 'sunroombtn',    room: 3, x: 0.22, y: 0.08, w: 0.12, aspect: 348 / 821  },
-  { key: 'balcony',    img: 'balconybtn',    room: 2, x: 0.34, y: 0.10, w: 0.12, aspect: 348 / 820  },
+  { img: 'greenhousebtn', room: 1, x: 163,  y: 170, w: 203, h: 65, z: 1 },
+  { img: 'sunroombtn',    room: 3, x: 613,  y: 100, w: 157, h: 67, z: 2 },
+  { img: 'balconybtn',    room: 2, x: 1001, y: 220, w: 163, h: 69, z: 3 },
 ];
 
 export default function HomeScreen({ navigation }) {
   const { dispatch } = useGame();
-  const { width: sw, height: sh } = useWindowDimensions();
   const [invOpen, setInvOpen] = useState(false);
+  const [box, setBox] = useState({ w: 0, h: 0 });
+  const sw = box.w, sh = box.h;
 
   const go = (entry) => {
     dispatch({ type: 'SET_ROOM', room: entry.room });
@@ -25,25 +26,23 @@ export default function HomeScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.root}>
-      <Image source={HOME_BG} style={styles.bg} resizeMode="cover" />
+    <View
+      style={styles.root}
+      onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
+    >
+      <Image source={HOME_BG} style={styles.bg} resizeMode="stretch" />
 
       {ENTRIES.map((e) => {
-        const w = sw * e.w;
-        const h = w * e.aspect;
+        const cx = (e.x / PLOPPER_W) * sw;
+        const cy = (e.y / PLOPPER_H) * sh;
+        const w = (e.w / PLOPPER_W) * sw;
+        const h = (e.h / PLOPPER_H) * sh;
         return (
           <TouchableOpacity
-            key={e.key}
+            key={e.img}
             activeOpacity={0.75}
             onPress={() => go(e)}
-            style={{
-              position: 'absolute',
-              left: sw * e.x - w / 2,
-              top: sh * e.y - h / 2,
-              width: w,
-              height: h,
-              zIndex: 10,
-            }}
+            style={{ position: 'absolute', left: cx - w / 2, top: cy - h / 2, width: w, height: h, zIndex: e.z }}
           >
             <Image source={UI_IMAGES[e.img]} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
           </TouchableOpacity>

@@ -1,42 +1,44 @@
 import React, { useState } from 'react';
 import {
-  View, Image, TouchableOpacity, StyleSheet,
-  Text, useWindowDimensions,
+  View, Image, TouchableOpacity, StyleSheet, Text,
 } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { TRADE_BG, UI_IMAGES } from '../engine/assets';
 import InventoryOverlay from '../components/InventoryOverlay';
 
-// TRADE_BTN: center coords as fraction of SCREEN, not image.
-// Background (flowertradeshop.png) has aspect ~16:9 matching device,
-// so image x/y fractions ≈ screen x/y fractions (minimal cover-crop).
-// Scale center post ≈ x:0.48; RIGHT pan ≈ x:0.67 y:0.68.
-// Button center placed just above the right pan.
-const TRADE_BTN = { x: 0.61, y: 0.54, w: 0.12, aspect: 1.0 }; // aspect ~1:1 from actual PNG
+// TRADE button laid out in Plopper (1376×768 base, sprite CENTER anchor).
+// Render bg stretched + position against the measured box → exact placement.
+const PLOPPER_W = 1376;
+const PLOPPER_H = 768;
+const TRADE_BTN = { x: 890, y: 450, w: 264, h: 218 };
 
 export default function TradeScreen({ navigation }) {
-  const { width: sw, height: sh } = useWindowDimensions();
   const [invOpen, setInvOpen] = useState(false);
   const [toast, setToast] = useState(null);
+  const [box, setBox] = useState({ w: 0, h: 0 });
+  const sw = box.w, sh = box.h;
 
   const showToast = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(null), 1400);
   };
 
-  const tradeBtnW = sw * TRADE_BTN.w;
-  const tradeBtnH = tradeBtnW * TRADE_BTN.aspect;
+  const tradeBtnW = (TRADE_BTN.w / PLOPPER_W) * sw;
+  const tradeBtnH = (TRADE_BTN.h / PLOPPER_H) * sh;
 
   return (
-    <View style={styles.root}>
-      <Image source={TRADE_BG} style={styles.bg} resizeMode="cover" />
+    <View
+      style={styles.root}
+      onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
+    >
+      <Image source={TRADE_BG} style={styles.bg} resizeMode="stretch" />
 
       {/* ── TRADE button above the scale ─────────────────────────────── */}
       <TouchableOpacity
         style={{
           position: 'absolute',
-          left: sw * TRADE_BTN.x - tradeBtnW / 2,
-          top:  sh * TRADE_BTN.y - tradeBtnH / 2,
+          left: (TRADE_BTN.x / PLOPPER_W) * sw - tradeBtnW / 2,
+          top:  (TRADE_BTN.y / PLOPPER_H) * sh - tradeBtnH / 2,
           width: tradeBtnW,
           height: tradeBtnH,
           zIndex: 10,
