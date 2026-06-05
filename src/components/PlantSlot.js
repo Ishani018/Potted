@@ -29,17 +29,20 @@ function getPlantImage(slot) {
   if (!slot.flowerKey) return null;
 
   if (slot.type === 'potted') {
-    if (slot.stage === 0) return POTTED_PLANT_IMAGES._seedVisible;
+    if (slot.stage <= 0) return POTTED_PLANT_IMAGES._seedVisible;
     const imgs = POTTED_PLANT_IMAGES[slot.flowerKey];
-    if (!imgs) return POTTED_PLANT_IMAGES._seed;
-    return imgs[slot.stage - 1] ?? imgs[0];
+    if (!imgs || !imgs.length) return POTTED_PLANT_IMAGES._seed;
+    // Clamp (old saves may have stage 4 from the previous death model).
+    const idx = Math.min(slot.stage - 1, imgs.length - 1);
+    return imgs[idx] ?? imgs[0];
   }
 
   // hanging
-  if (slot.stage === 0) return HANGING_PLANT_IMAGES._seedVisible;
+  if (slot.stage <= 0) return HANGING_PLANT_IMAGES._seedVisible;
   const imgs = HANGING_PLANT_IMAGES[slot.flowerKey];
-  if (!imgs) return HANGING_PLANT_IMAGES._seed;
-  return imgs[slot.stage - 1] ?? imgs[0];
+  if (!imgs || !imgs.length) return HANGING_PLANT_IMAGES._seed;
+  const idx = Math.min(slot.stage - 1, imgs.length - 1);
+  return imgs[idx] ?? imgs[0];
 }
 
 export default function PlantSlot({ slot, position, onPress, baseWidthOverride, aspectOverride }) {

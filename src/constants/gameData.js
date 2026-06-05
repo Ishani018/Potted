@@ -146,15 +146,20 @@ export const BONUS_COIN_MULTIPLIER = 1.2;
 // Stage 0 (seed) uses the shared pot image, so it's not listed here.
 // Indexed [flowerKey][stage]. Missing entries default to 1.0.
 export const FLOWER_STAGE_SCALE = {
-  // Potted (stages 1=bud, 2=slight bloom, 3=full bloom)
-  daisy:      { 1: 1.0, 2: 1.0, 3: 1.0 },
-  snapdragon: { 1: 1.0, 2: 1.0, 3: 1.0 },
-  poppy:      { 1: 1.0, 2: 1.0, 3: 1.0 },
-  marigold:   { 1: 1.0, 2: 1.0, 3: 1.0 },
-  peony:      { 1: 1.0, 2: 1.0, 3: 1.0 },
-  hydrenga:   { 1: 1.0, 2: 1.0, 3: 1.0 },
-  rose:       { 1: 1.0, 2: 1.0, 3: 1.0 },
-  // Hanging (stages 1=bud, 2=full)
+  // Potted (stages 1=bud, 2=slight bloom, 3=full bloom). Bumped up so the
+  // flower+pot matches an empty pot's size despite each PNG's tight crop.
+  // Scales measured PER STAGE per PNG (pot-rim width ÷ image width vs the empty
+  // pot) so every flower's pot renders the same size as an empty pot. Each stage's
+  // image is cropped differently, so each gets its own scale.
+  daisy:      { 1: 2.75, 2: 2.75, 3: 2.76 },
+  snapdragon: { 1: 0.93, 2: 2.74, 3: 1.11 },
+  poppy:      { 1: 0.93, 2: 0.93, 3: 2.74 },
+  marigold:   { 1: 0.93, 2: 2.73, 3: 2.29 },
+  peony:      { 1: 0.93, 2: 0.95, 3: 0.93 },
+  hydrenga:   { 1: 0.95, 2: 1.43, 3: 1.21 },
+  rose:       { 1: 0.93, 2: 2.74, 3: 0.94 },
+  // Hanging (stages 1=bud, 2=full). Room 2 sizes via baseWidthOverride; these are
+  // gentle per-plant nudges. Tune by eye if a hanging plant looks off.
   stringofpearls: { 1: 1.0, 2: 1.0 },
   Philodendron:   { 1: 1.0, 2: 1.0 },
   jasmine:        { 1: 1.0, 2: 1.0 },
@@ -225,7 +230,9 @@ export const INITIAL_PLAYER_STATE = {
   },
   achievements: [],
   harvestCount: 0,
-  harvestedFlowers: {}, // flowerKey → count, harvested flowers awaiting trade for coins
+  // flowerKey → count, harvested flowers awaiting trade for coins.
+  // TEMP: seeded with test flowers so trading is testable — clear to {} before release.
+  harvestedFlowers: { daisy: 8, rose: 5, marigold: 6, jasmine: 4, peony: 3, poppy: 7, hydrenga: 5, snapdragon: 6 },
   ownedPaintings: [],
   ownedPets: [],
   petPlacements: {}, // petKey → room number where the owned pet is currently placed
