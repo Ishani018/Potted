@@ -2,6 +2,7 @@ import './imports';
 import 'react-native-gesture-handler';
 import React, { useState, useCallback } from 'react';
 import { View } from 'react-native';
+import { useFonts } from 'expo-font';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
@@ -26,6 +27,11 @@ const Stack = createStackNavigator();
 
 export default function App() {
   const [layout, setLayout] = useState({ width: 854, height: 480 });
+  // Load the pixel font used by the trade screen; render once ready.
+  const [fontsLoaded] = useFonts({
+    PressStart2P: require('./assets/fonts/PressStart2P-Regular.ttf'),
+  });
+  if (!fontsLoaded) return null;
 
   const onLayout = useCallback((e) => {
     const { width, height } = e.nativeEvent.layout;
