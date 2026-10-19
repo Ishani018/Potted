@@ -69,14 +69,14 @@ export function PixelToast({ message }) {
 }
 
 const styles = StyleSheet.create({
+  // One border per box: a single dark edge, flat fill. Nested cream panels get a
+  // soft edge only (no second dark frame) so boxes inside boxes don't stack borders.
   panel: {
-    backgroundColor: COLORS.wood, borderWidth: 4, borderColor: COLORS.woodEdge, borderRadius: 6, padding: 4,
+    backgroundColor: COLORS.wood, borderWidth: 3, borderColor: COLORS.woodEdge, borderRadius: 4, padding: 2,
   },
-  panelCream: { backgroundColor: COLORS.cream, borderColor: COLORS.creamEdge },
-  panelInner: {
-    borderWidth: 2, borderColor: '#c98a3c', borderRadius: 3, padding: 12,
-  },
-  panelInnerCream: { borderColor: '#e0a860' },
+  panelCream: { backgroundColor: COLORS.cream, borderWidth: 2, borderColor: COLORS.creamEdge },
+  panelInner: { padding: 12 },
+  panelInnerCream: {},
   btn: {
     borderWidth: 3, borderRadius: 4, paddingHorizontal: 14, paddingVertical: 10,
     alignItems: 'center', justifyContent: 'center',
