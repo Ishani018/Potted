@@ -5,7 +5,7 @@ import { NURSERY_BG, SEED_IMAGES, UI_IMAGES } from '../engine/assets';
 import { POTTED_FLOWERS, HANGING_PLANTS } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
-import { PixelToast } from '../components/Pixel';
+import { PixelToast, PixelText, COLORS } from '../components/Pixel';
 
 // All buyable seeds keyed by flowerKey → { name, price }.
 const SEED_INFO = {};
@@ -77,7 +77,7 @@ export default function NurseryScreen({ navigation }) {
       {/* Coins — bottom-right */}
       <View style={styles.coinBox}>
         <Image source={UI_IMAGES.goldcoins} style={styles.coinIcon} resizeMode="contain" />
-        <Text style={styles.coinText}>{coins}</Text>
+        <PixelText size={11}>{coins}</PixelText>
       </View>
 
       {/* Seed bags on the painted shelves (Plopper base-px coords) — tap to buy */}
@@ -104,7 +104,7 @@ export default function NurseryScreen({ navigation }) {
             {/* Price tag under the bag */}
             <View style={styles.priceTag}>
               <Image source={UI_IMAGES.goldcoins} style={styles.priceIcon} resizeMode="contain" />
-              <Text style={[styles.priceText, !affordable && styles.priceBroke]}>{info.price}</Text>
+              <PixelText size={8} color={affordable ? '#fff' : '#ff8a8a'}>{info.price}</PixelText>
             </View>
           </TouchableOpacity>
         );
@@ -129,20 +129,17 @@ const styles = StyleSheet.create({
   hudImg: { width: '100%', height: '100%' },
 
   coinBox: {
-    position: 'absolute', bottom: 14, right: 14,
-    flexDirection: 'row', alignItems: 'center', gap: 5, zIndex: 50,
+    position: 'absolute', bottom: 14, right: 14, zIndex: 50,
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: COLORS.woodDark, borderWidth: 3, borderColor: COLORS.woodEdge, borderRadius: 4,
+    paddingHorizontal: 8, paddingVertical: 4,
   },
-  coinIcon: { width: 26, height: 26 },
-  coinText: {
-    color: '#ffd060', fontSize: 15, fontWeight: 'bold',
-    textShadowColor: 'rgba(0,0,0,0.8)', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3,
-  },
+  coinIcon: { width: 22, height: 22 },
 
   priceTag: {
-    flexDirection: 'row', alignItems: 'center', gap: 2,
-    backgroundColor: 'rgba(18,8,0,0.8)',
-    borderRadius: 6, paddingHorizontal: 5, paddingVertical: 1,
-    marginTop: -4,
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+    backgroundColor: COLORS.woodDark, borderWidth: 2, borderColor: COLORS.woodEdge,
+    borderRadius: 3, paddingHorizontal: 5, paddingVertical: 2, marginTop: -4,
   },
   priceIcon: { width: 13, height: 13 },
   priceText: { color: '#ffd060', fontSize: 11, fontWeight: 'bold' },

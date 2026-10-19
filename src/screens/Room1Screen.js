@@ -11,6 +11,7 @@ import { getCurrentSeason } from '../constants/gameData';
 import { projectSize, projectPoint } from '../engine/project';
 
 import PlantSlot from '../components/PlantSlot';
+import HeldSeedBanner from '../components/HeldSeedBanner';
 import RoomPets from '../components/RoomPets';
 import ScreenHud from '../components/ScreenHud';
 import WateringCan from '../components/WateringCan';
@@ -237,14 +238,7 @@ export default function Room1Screen({ navigation }) {
 
         {/* Held-seed banner — tap a pot to plant, or tap to cancel */}
         {heldSeed && !invOpen && (
-          <TouchableOpacity
-            style={styles.heldBanner}
-            onPress={() => dispatch({ type: 'CLEAR_HELD' })}
-            activeOpacity={0.85}
-          >
-            <Image source={SEED_IMAGES[heldSeed.flowerKey]} style={styles.heldImg} resizeMode="contain" />
-            <Text style={styles.heldText}>Tap an empty pot to plant · tap here to cancel</Text>
-          </TouchableOpacity>
+          <HeldSeedBanner flowerKey={heldSeed.flowerKey} onCancel={() => dispatch({ type: 'CLEAR_HELD' })} />
         )}
 
         {invOpen && (
@@ -262,13 +256,4 @@ const styles = StyleSheet.create({
   hudTR: { position: 'absolute', top: 10, right: 14,  width: 48, height: 48, zIndex: 20 },
   hudBL: { position: 'absolute', bottom: 14, left: 14, width: 48, height: 48, zIndex: 20 },
   hudImg: { width: '100%', height: '100%' },
-  heldBanner: {
-    position: 'absolute', top: 10, alignSelf: 'center',
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: 'rgba(20,40,8,0.92)',
-    borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6,
-    borderWidth: 1.5, borderColor: '#70a840', zIndex: 120,
-  },
-  heldImg: { width: 28, height: 28 },
-  heldText: { color: '#d8ffa0', fontSize: 12, fontWeight: 'bold' },
 });

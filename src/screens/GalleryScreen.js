@@ -4,6 +4,7 @@ import { useGame } from '../context/GameContext';
 import { GALLERY_BG, PAINTING_IMAGES, UI_IMAGES } from '../engine/assets';
 import { PAINTINGS } from '../constants/gameData';
 import ScreenHud from '../components/ScreenHud';
+import { PixelPanel, PixelText, PixelButton } from '../components/Pixel';
 import InventoryOverlay from '../components/InventoryOverlay';
 
 // Paintings on the gallery wall, laid out in Plopper (1376×768 base, CENTER
@@ -35,30 +36,25 @@ function BuyModal({ paintingKey, onClose }) {
 
   return (
     <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
-      <TouchableOpacity style={styles.modal} activeOpacity={1} onPress={() => {}}>
-        <TouchableOpacity style={styles.modalClose} onPress={onClose}>
-          <Text style={styles.modalCloseTxt}>✕</Text>
-        </TouchableOpacity>
-
-        <Image source={PAINTING_IMAGES[paintingKey]} style={styles.modalImg} resizeMode="contain" />
-        <Text style={styles.modalName}>{p.name}</Text>
-
-        {owned ? (
-          <View style={styles.ownedBadge}>
-            <Text style={styles.ownedTxt}>In your collection</Text>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={[styles.buyBtn, !canAfford && styles.buyBtnDim]}
-            onPress={canAfford ? handleBuy : undefined}
-            activeOpacity={0.8}
-          >
-            <Image source={UI_IMAGES.goldcoins} style={{ width: 18, height: 18 }} resizeMode="contain" />
-            <Text style={styles.buyBtnTxt}>
-              {canAfford ? `Buy  ·  ${p.price}` : `Need ${p.price - state.player.coins} more`}
-            </Text>
+      <TouchableOpacity activeOpacity={1} onPress={() => {}}>
+        <PixelPanel style={{ alignItems: 'center', minWidth: 260, paddingTop: 16 }}>
+          <TouchableOpacity style={{ position: 'absolute', top: 6, right: 6, width: 34, height: 34, zIndex: 5 }} onPress={onClose} activeOpacity={0.8}>
+            <Image source={UI_IMAGES.cancelbutton} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
           </TouchableOpacity>
-        )}
+          <PixelPanel cream>
+            <Image source={PAINTING_IMAGES[paintingKey]} style={styles.modalImg} resizeMode="contain" />
+          </PixelPanel>
+          <PixelText size={13} style={{ marginTop: 14, marginBottom: 14, textAlign: 'center' }}>{p.name.toUpperCase()}</PixelText>
+          {owned ? (
+            <PixelText size={9} color="#e8c890">IN YOUR COLLECTION</PixelText>
+          ) : (
+            <PixelButton
+              onPress={canAfford ? handleBuy : undefined}
+              disabled={!canAfford}
+              label={canAfford ? `BUY  ${p.price}` : `NEED ${p.price - state.player.coins} MORE`}
+            />
+          )}
+        </PixelPanel>
       </TouchableOpacity>
     </TouchableOpacity>
   );

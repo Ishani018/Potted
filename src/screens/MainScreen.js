@@ -66,14 +66,14 @@ export default function MainScreen({ navigation }) {
     <View style={styles.root}>
       <Image source={MAIN_BG} style={styles.bg} resizeMode="cover" />
 
-      {/* Top-left: settings (placeholder) */}
-      <TouchableOpacity style={styles.settingsBtn} activeOpacity={0.8} onPress={() => { }}>
+      {/* Top-left: settings */}
+      <TouchableOpacity style={styles.settingsBtn} activeOpacity={0.8} onPress={() => navigation.navigate('Room')}>
         <Image source={UI_IMAGES.settings} style={styles.cornerImg} resizeMode="contain" />
       </TouchableOpacity>
 
       {/* Top-right: info + sound (placeholders) */}
       <View style={styles.topRight}>
-        <TouchableOpacity style={styles.cornerBtn} activeOpacity={0.8} onPress={() => { }}>
+        <TouchableOpacity style={styles.cornerBtn} activeOpacity={0.8} onPress={() => navigation.navigate('Room')}>
           <Image source={UI_IMAGES.info} style={styles.cornerImg} resizeMode="contain" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.cornerBtn} activeOpacity={0.8} onPress={toggleMute}>

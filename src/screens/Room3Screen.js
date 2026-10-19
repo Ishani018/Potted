@@ -11,6 +11,7 @@ import { projectSize } from '../engine/project';
 
 import CoinHUD from '../components/CoinHUD';
 import PlantSlot from '../components/PlantSlot';
+import HeldSeedBanner from '../components/HeldSeedBanner';
 import RoomPets from '../components/RoomPets';
 import ScreenHud from '../components/ScreenHud';
 import WateringCan from '../components/WateringCan';
@@ -140,14 +141,7 @@ export default function Room3Screen({ navigation }) {
         )}
 
         {heldSeed && !invOpen && (
-          <TouchableOpacity
-            style={styles.heldBanner}
-            onPress={() => dispatch({ type: 'CLEAR_HELD' })}
-            activeOpacity={0.85}
-          >
-            <Image source={SEED_IMAGES[heldSeed.flowerKey]} style={styles.heldImg} resizeMode="contain" />
-            <Text style={styles.heldText}>Tap an empty pot to plant · tap here to cancel</Text>
-          </TouchableOpacity>
+          <HeldSeedBanner flowerKey={heldSeed.flowerKey} onCancel={() => dispatch({ type: 'CLEAR_HELD' })} />
         )}
 
         {invOpen && (
@@ -164,13 +158,4 @@ const styles = StyleSheet.create({
   nurseryImg: { width: 52, height: 52 },
   inventoryBtn: { position: 'absolute', top: 10, left: 14, width: 52, height: 52, zIndex: 20 },
   inventoryImg: { width: 52, height: 52 },
-  heldBanner: {
-    position: 'absolute', top: 10, alignSelf: 'center',
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: 'rgba(20,40,8,0.92)',
-    borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6,
-    borderWidth: 1.5, borderColor: '#70a840', zIndex: 120,
-  },
-  heldImg: { width: 28, height: 28 },
-  heldText: { color: '#d8ffa0', fontSize: 12, fontWeight: 'bold' },
 });
