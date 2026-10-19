@@ -10,7 +10,7 @@ import { PET_POSITIONS, PET_BASE } from '../constants/gameData';
 // match the layout authored in Plopper.
 // TEMP: set true to show ALL owned pets in every room (ignore placement) for
 // verifying Plopper layouts. Revert to false before release.
-const DEBUG_SHOW_ALL = true;
+const DEBUG_SHOW_ALL = false;
 
 export default function RoomPets({ room, sw, sh }) {
   const { state } = useGame();

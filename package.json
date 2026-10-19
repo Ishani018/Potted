@@ -5,7 +5,8 @@
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
-    "ios": "expo start --ios"
+    "ios": "expo start --ios",
+    "web": "expo start --web"
   },
   "dependencies": {
     "@expo/metro-runtime": "~3.2.3",
@@ -27,5 +28,8 @@
   "devDependencies": {
     "@babel/core": "^7.25.2"
   },
-  "private": true
+  "private": true,
+  "optionalDependencies": {
+    "lightningcss-darwin-arm64": "^1.19.0"
+  }
 }

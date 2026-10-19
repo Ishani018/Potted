@@ -152,7 +152,7 @@ export const FLOWER_STAGE_SCALE = {
   // pot) so every flower's pot renders the same size as an empty pot. Each stage's
   // image is cropped differently, so each gets its own scale.
   daisy:      { 1: 2.75, 2: 2.75, 3: 2.76 },
-  snapdragon: { 1: 0.93, 2: 2.74, 3: 1.11 },
+  snapdragon: { 1: 1.00, 2: 2.96, 3: 1.20 },
   poppy:      { 1: 0.93, 2: 0.93, 3: 2.74 },
   marigold:   { 1: 0.93, 2: 2.73, 3: 2.29 },
   peony:      { 1: 0.93, 2: 0.95, 3: 0.93 },

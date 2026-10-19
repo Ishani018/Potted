@@ -27,11 +27,12 @@ const Stack = createStackNavigator();
 
 export default function App() {
   const [layout, setLayout] = useState({ width: 854, height: 480 });
-  // Load the pixel font used by the trade screen; render once ready.
-  const [fontsLoaded] = useFonts({
+  // Load the pixel font used by the trade screen. Don't block the whole app on
+  // it — if loading hangs or errors, render anyway (the font applies once ready,
+  // and falls back to system font otherwise) instead of showing a black screen.
+  useFonts({
     PressStart2P: require('./assets/fonts/PressStart2P-Regular.ttf'),
   });
-  if (!fontsLoaded) return null;
 
   const onLayout = useCallback((e) => {
     const { width, height } = e.nativeEvent.layout;

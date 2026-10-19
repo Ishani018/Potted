@@ -320,6 +320,19 @@ export function GameProvider({ children }) {
               }
             });
           }
+          // Migrate legacy pet keys: old saves split the duo as separate
+          // `ebony`/`ivory` pets (and could list duplicates), which rendered the
+          // pair twice in the balcony. Fold them into `ebonyandivory` and dedupe.
+          if (saved.player?.ownedPets) {
+            const seen = new Set();
+            saved.player.ownedPets = saved.player.ownedPets
+              .map((k) => (k === 'ebony' || k === 'ivory' ? 'ebonyandivory' : k))
+              .filter((k) => (seen.has(k) ? false : (seen.add(k), true)));
+          }
+          if (saved.player?.petPlacements) {
+            delete saved.player.petPlacements.ebony;
+            delete saved.player.petPlacements.ivory;
+          }
           // TEMP TESTING: force coins on every load so we don't have to clear
           // storage. REMOVE this line when done testing.
           saved.player = { ...saved.player, coins: 50000 };

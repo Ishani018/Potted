@@ -112,10 +112,13 @@ export default function Room2Screen({ navigation }) {
   const rawCan = WATERING_CAN_POSITIONS[2];
   const canPos = scalePoint(rawCan.x, rawCan.y, sw, sh);
 
-  const hangingPotH = Math.round(projectSize(100, sw, sh) * 0.93);
+  // Hanging plants hang DOWN from the rod snap point; the waterable point must
+  // sit at the plant's visual center (~half the displayed plant height below the
+  // rod) so the watering-can spout actually hovers over the plant.
+  const hangingDisplayH = projectSize(235, sw, sh);
   const plantedHangingPoints = hangingPoints
     .filter((pt) => { const s = slots[pt.id]; return s && s.flowerKey; })
-    .map((pt) => ({ ...pt, y: pt.y + hangingPotH * 0.5 }));
+    .map((pt) => ({ ...pt, y: pt.y + hangingDisplayH * 0.45 }));
 
   const handleSlotPress = useCallback((slot, position) => {
     if (canDragging.current) return;
@@ -239,9 +242,10 @@ export default function Room2Screen({ navigation }) {
         {plantedSlots.map((slot) => {
           const pt = allSnapPoints.find((p) => p.id === slot.slotId);
           if (!pt) return null;
-          // Stage 0 image (hangingpotwithseedvisible, 367×891) is tall & narrow,
-          // unlike the square empty pot (1024×1024). Give stage 0 its own width so
-          // the visible POT matches the empty pot's pot, not the frame.
+          // Stage 0 (hangingpotwithseedvisible 367×891) = tall narrow frame.
+          // Grown stages (1024×1024) have a lot of transparent padding around the
+          // plant, so the VISIBLE plant is smaller than the canvas width suggests.
+          // ~200 makes the bloom's pot match the empty hanging pot's size.
           const isSeedVisible = slot.stage === 0;
           return (
             <PlantSlot
@@ -249,7 +253,7 @@ export default function Room2Screen({ navigation }) {
               slot={slot}
               position={pt}
               onPress={handleSlotPress}
-              baseWidthOverride={isSeedVisible ? 85 : 235}
+              baseWidthOverride={isSeedVisible ? 85 : 200}
             />
           );
         })}
@@ -311,4 +315,13 @@ const styles = StyleSheet.create({
   hudTR: { position: 'absolute', top: 10, right: 14,  width: 48, height: 48, zIndex: 20 },
   hudBL: { position: 'absolute', bottom: 14, left: 14, width: 48, height: 48, zIndex: 20 },
   hudImg: { width: '100%', height: '100%' },
+  heldBanner: {
+    position: 'absolute', top: 10, alignSelf: 'center',
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: 'rgba(20,40,8,0.92)',
+    borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6,
+    borderWidth: 1.5, borderColor: '#70a840', zIndex: 120,
+  },
+  heldImg: { width: 28, height: 28 },
+  heldText: { color: '#d8ffa0', fontSize: 12, fontWeight: 'bold' },
 });
