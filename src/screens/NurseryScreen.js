@@ -5,6 +5,7 @@ import { NURSERY_BG, SEED_IMAGES, UI_IMAGES } from '../engine/assets';
 import { POTTED_FLOWERS, HANGING_PLANTS } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
+import { PixelToast } from '../components/Pixel';
 
 // All buyable seeds keyed by flowerKey → { name, price }.
 const SEED_INFO = {};
@@ -109,11 +110,7 @@ export default function NurseryScreen({ navigation }) {
         );
       })}
 
-      {toast && (
-        <View style={styles.toast}>
-          <Text style={styles.toastText}>{toast}</Text>
-        </View>
-      )}
+      <PixelToast message={toast} />
 
       {invOpen && (
         <InventoryOverlay onClose={() => setInvOpen(false)} onPick={() => setInvOpen(false)} />
@@ -151,11 +148,4 @@ const styles = StyleSheet.create({
   priceText: { color: '#ffd060', fontSize: 11, fontWeight: 'bold' },
   priceBroke: { color: '#c06060' },
 
-  toast: {
-    position: 'absolute', bottom: 22, alignSelf: 'center',
-    backgroundColor: 'rgba(18,8,0,0.94)',
-    borderRadius: 10, paddingHorizontal: 18, paddingVertical: 9,
-    borderWidth: 1.5, borderColor: '#c8873a', zIndex: 50,
-  },
-  toastText: { color: '#ffe8a0', fontSize: 13, fontWeight: 'bold' },
 });

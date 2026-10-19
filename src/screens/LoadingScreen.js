@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Image, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { LOADING_BG } from '../engine/assets';
+import { PixelPanel, PixelText } from '../components/Pixel';
 
 // Shown after PLAY — a brief themed transition into the world (fixed 3s),
 // then on to the town map.
@@ -33,11 +34,11 @@ export default function LoadingScreen({ navigation }) {
   return (
     <View style={styles.root}>
       <Image source={LOADING_BG} style={styles.bg} resizeMode="cover" />
-      <View style={styles.banner}>
-        <Animated.Text style={[styles.text, { opacity: pulse }]}>
-          Heading to town…
-        </Animated.Text>
-      </View>
+      <Animated.View style={[styles.banner, { opacity: pulse }]}>
+        <PixelPanel>
+          <PixelText size={14} style={styles.text}>HEADING TO TOWN{'.'.repeat(((COUNT_FROM - count) % 3) + 1)}</PixelText>
+        </PixelPanel>
+      </Animated.View>
     </View>
   );
 }
@@ -45,11 +46,6 @@ export default function LoadingScreen({ navigation }) {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#1a140c' },
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
-  banner: {
-    position: 'absolute', bottom: 28, alignSelf: 'center',
-    backgroundColor: 'rgba(18,8,0,0.7)',
-    borderRadius: 12, paddingHorizontal: 22, paddingVertical: 8,
-    borderWidth: 1.5, borderColor: '#c8873a',
-  },
-  text: { color: '#ffe8a0', fontSize: 15, fontWeight: 'bold', letterSpacing: 2 },
+  banner: { position: 'absolute', bottom: 28, alignSelf: 'center' },
+  text: { textAlign: 'center', minWidth: 300 },
 });

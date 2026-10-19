@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Image, TouchableOpacity, StyleSheet, Text, useWindowDimensions } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { INVENTORY_BG, SEED_IMAGES, POTTED_PLANT_IMAGES } from '../engine/assets';
+import { INVENTORY_BG, SEED_IMAGES, POTTED_PLANT_IMAGES, UI_IMAGES } from '../engine/assets';
 
 // inventory.png is a 7×5 wooden grid (1226×912 native).
 const GRID_COLS = 7;
@@ -28,8 +28,8 @@ export default function InventoryOverlay({ onClose, onPick }) {
 
   // Show the grid as a centered panel (not full-screen). Lower these fractions
   // to make the panel smaller. Aspect ratio is preserved.
-  const maxW = winW * 0.42;
-  const maxH = winH * 0.52;
+  const maxW = winW * 0.6;
+  const maxH = winH * 0.78;
   const scale = Math.min(maxW / IMG_W, maxH / IMG_H);
   const dispW = IMG_W * scale;
   const dispH = IMG_H * scale;
@@ -53,8 +53,8 @@ export default function InventoryOverlay({ onClose, onPick }) {
         <View style={{ width: dispW, height: dispH }}>
 
           {/* ✕ close button — top-right of panel */}
-          <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-            <Text style={styles.closeTxt}>✕</Text>
+          <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.8}>
+            <Image source={UI_IMAGES.cancelbutton} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
           </TouchableOpacity>
           <Image source={INVENTORY_BG} style={{ width: dispW, height: dispH }} resizeMode="contain" />
 
@@ -87,17 +87,10 @@ const styles = StyleSheet.create({
   },
   closeBtn: {
     position: 'absolute',
-    top: -14,
-    right: -14,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#3d1800',
-    borderWidth: 2,
-    borderColor: '#c8873a',
-    alignItems: 'center',
-    justifyContent: 'center',
+    top: 4,
+    right: 4,
+    width: 34,
+    height: 34,
     zIndex: 10,
   },
-  closeTxt: { color: '#ffe8a0', fontSize: 15, fontWeight: 'bold', lineHeight: 18 },
 });
