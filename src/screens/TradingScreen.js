@@ -92,7 +92,7 @@ export default function TradingScreen({ navigation }) {
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => select(offer.key)}
-              style={{ position: 'absolute', left: fx(s.x) - fx(60), top: fy(s.y) - fy(52), width: fx(120), height: fy(104), alignItems: 'center', justifyContent: 'center', zIndex: 10 }}
+              style={[{ position: 'absolute', left: fx(s.x) - fx(60), top: fy(s.y) - fy(52), width: fx(120), height: fy(104), alignItems: 'center', justifyContent: 'center', zIndex: 10 }, active?.key === offer.key && styles.tileOn]}
             >
               <Image source={TRADE_IMAGES[offer.img]} style={{ width: iw, height: ih }} resizeMode="contain" />
               {owned > 0 && (
@@ -120,24 +120,30 @@ export default function TradingScreen({ navigation }) {
             </View>
           ) : (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <View style={{ alignItems: 'center', width: fx(190) }}>
+              {/* 1. What you're selling */}
+              <View style={{ alignItems: 'center', width: fx(170) }}>
                 <Image source={TRADE_IMAGES[active.img]} style={{ width: fx(110), height: fy(110) }} resizeMode="contain" />
                 <PixelText size={Math.max(8, fx(12))} color="#5a3410" style={styles.dark}>{active.name.toUpperCase()}</PixelText>
-                <PixelText size={Math.max(7, fx(10))} color="#8a5a24" style={[styles.dark, { marginTop: fy(6) }]}>{active.price} EACH</PixelText>
+                <PixelText size={Math.max(7, fx(9))} color="#8a5a24" style={[styles.dark, { marginTop: fy(6) }]}>YOU HAVE {have}</PixelText>
               </View>
+
+              {/* 2. How many + confirm */}
               <View style={{ flex: 1, alignItems: 'center' }}>
+                <PixelText size={Math.max(7, fx(10))} color="#8a5a24" style={[styles.dark, { marginBottom: fy(8) }]}>HOW MANY?</PixelText>
                 <View style={styles.qtyRow}>
                   <PixelButton label="-" tone="wood" onPress={() => setQty((q) => Math.max(1, q - 1))} style={styles.qtyBtn} size={14} />
-                  <PixelText size={Math.max(12, fx(20))} color="#5a3410" style={[styles.dark, { minWidth: fx(60), textAlign: 'center' }]}>{qty}</PixelText>
+                  <View style={styles.qtyBox}>
+                    <PixelText size={Math.max(14, fx(22))} color="#5a3410" style={styles.qtyNum}>{qty}</PixelText>
+                  </View>
                   <PixelButton label="+" tone="wood" onPress={() => setQty((q) => Math.min(have, q + 1))} style={styles.qtyBtn} size={14} />
-                  <PixelButton label={`ALL ${have}`} tone="wood" onPress={() => setQty(have)} size={9} style={{ marginLeft: 6 }} />
+                  <PixelButton label="ALL" tone="wood" onPress={() => setQty(have)} size={9} />
                 </View>
                 <View style={styles.actionRow}>
                   <TouchableOpacity onPress={confirmTrade} activeOpacity={0.8}>
-                    <Image source={UI_IMAGES.tradebtn} style={{ width: fx(140), height: fy(88) }} resizeMode="contain" />
+                    <Image source={UI_IMAGES.tradebtn} style={{ width: fx(150), height: fy(92) }} resizeMode="contain" />
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => setActive(null)} activeOpacity={0.8}>
-                    <Image source={UI_IMAGES.cancelbutton} style={{ width: fx(70), height: fy(70) }} resizeMode="contain" />
+                    <Image source={UI_IMAGES.cancelbutton} style={{ width: fx(52), height: fy(52) }} resizeMode="contain" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -146,11 +152,16 @@ export default function TradingScreen({ navigation }) {
         </View>
       </View>
 
-      {/* Total earned, printed on the coin stack */}
+      {/* 3. What you get — printed around the coin stack */}
       {active && (
-        <View pointerEvents="none" style={{ position: 'absolute', left: fx(COIN_STACK.x) - coinW / 2, top: fy(COIN_STACK.y) + coinH / 2 - fy(6), width: coinW, alignItems: 'center', zIndex: 13 }}>
-          <PixelText size={Math.max(10, fx(18))}>+{total}</PixelText>
-        </View>
+        <>
+          <View pointerEvents="none" style={{ position: 'absolute', left: fx(COIN_STACK.x) - coinW / 2, top: fy(COIN_STACK.y) - coinH / 2 - fy(26), width: coinW, alignItems: 'center', zIndex: 13 }}>
+            <PixelText size={Math.max(7, fx(10))} color="#5a3410" style={styles.dark}>YOU GET</PixelText>
+          </View>
+          <View pointerEvents="none" style={[styles.totalPlate, { left: fx(COIN_STACK.x) - fx(52), top: fy(COIN_STACK.y) + coinH / 2 - fy(2), width: fx(104) }]}>
+            <PixelText size={Math.max(10, fx(16))} color={COLORS.gold}>{total}</PixelText>
+          </View>
+        </>
       )}
 
       <PixelButton label="MY FLOWERS" onPress={() => setInvOpen(true)} style={styles.sellBtn} />
@@ -215,9 +226,19 @@ const styles = StyleSheet.create({
   },
 
   dark: { textShadowColor: 'rgba(255,240,200,0.7)', textShadowRadius: 0, textShadowOffset: { width: 1, height: 1 } },
-  qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  tileOn: { borderWidth: 3, borderColor: '#3d7a2a', borderRadius: 4, backgroundColor: 'rgba(61,122,42,0.18)' },
+  qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  qtyBox: {
+    minWidth: 64, paddingVertical: 6, alignItems: 'center',
+    backgroundColor: '#fff3d6', borderWidth: 3, borderColor: '#b8793a', borderRadius: 4,
+  },
+  qtyNum: { textShadowColor: 'transparent', textShadowRadius: 0 },
+  totalPlate: {
+    position: 'absolute', zIndex: 13, alignItems: 'center', paddingVertical: 4,
+    backgroundColor: COLORS.woodDark, borderWidth: 3, borderColor: COLORS.woodEdge, borderRadius: 4,
+  },
   qtyBtn: { paddingHorizontal: 12, paddingVertical: 6 },
-  actionRow: { flexDirection: 'row', alignItems: 'center', gap: 18 },
+  actionRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
 
   sellBtn: { position: 'absolute', bottom: 16, alignSelf: 'center', zIndex: 25 },
 
