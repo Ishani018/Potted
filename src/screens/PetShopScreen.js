@@ -95,13 +95,23 @@ function AdoptModal({ petKey, onClose }) {
     <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
       <TouchableOpacity activeOpacity={1} onPress={() => {}}>
         <PixelPanel style={styles.modal}>
-          <TouchableOpacity style={styles.modalClose} onPress={onClose} activeOpacity={0.8}>
-            <Image source={UI_IMAGES.cancelbutton} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
-          </TouchableOpacity>
+          {/* Header: pet name + breed on the left, red X on the right (clear of the portrait) */}
+          <View style={styles.header}>
+            <View style={{ flex: 1 }}>
+              <PixelText size={13}>{title}</PixelText>
+              <PixelText size={7} color="#e8c890" style={{ marginTop: 6 }}>
+                {pet.breed.toUpperCase()}{savedName ? `  -  ${pet.name.toUpperCase()}` : ''}
+              </PixelText>
+            </View>
+            <TouchableOpacity style={styles.modalClose} onPress={onClose} activeOpacity={0.8}>
+              <Image source={UI_IMAGES.cancelbutton} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+            </TouchableOpacity>
+          </View>
 
           <PixelPanel cream style={styles.portrait}>
-            <View style={{ width: 120, height: 120 }}>
-              <PetSprite petKey={petKey} w={120} h={120} />
+            <View style={{ width: 150, height: 130, justifyContent: 'flex-end', alignItems: 'center' }}>
+              <View style={styles.floorShadow} />
+              <PetSprite petKey={petKey} w={130} h={120} />
             </View>
           </PixelPanel>
 
@@ -136,17 +146,20 @@ function AdoptModal({ petKey, onClose }) {
             </>
           ) : (
             <>
-              <PixelText size={14} style={{ marginTop: 14, textAlign: 'center' }}>{title}</PixelText>
-              <PixelText size={8} color="#e8c890" style={{ marginTop: 6, marginBottom: 14, textAlign: 'center' }}>
-                {pet.breed.toUpperCase()}{savedName ? `  -  ${pet.name.toUpperCase()}` : ''}
-              </PixelText>
-
+              <View style={{ height: 14 }} />
               {!owned ? (
-                <PixelButton
-                  onPress={canAfford ? handleAdopt : undefined}
-                  disabled={!canAfford}
-                  label={canAfford ? `ADOPT  ${pet.price}` : `NEED ${pet.price - state.player.coins} MORE`}
-                />
+                <>
+                  <View style={styles.priceRow}>
+                    <Image source={UI_IMAGES.goldcoins} style={{ width: 22, height: 22 }} resizeMode="contain" />
+                    <PixelText size={13} color={COLORS.gold}>{pet.price}</PixelText>
+                  </View>
+                  <PixelButton
+                    onPress={canAfford ? handleAdopt : undefined}
+                    disabled={!canAfford}
+                    label={canAfford ? 'ADOPT' : `NEED ${pet.price - state.player.coins} MORE`}
+                    style={{ minWidth: 180 }}
+                  />
+                </>
               ) : (
                 <>
                   <PixelText size={8} color="#e8c890" style={{ marginBottom: 8 }}>LIVES IN</PixelText>
@@ -234,8 +247,11 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.65)',
     alignItems: 'center', justifyContent: 'center', zIndex: 200,
   },
-  modal: { alignItems: 'center', minWidth: 280, maxWidth: 340, paddingTop: 18 },
-  modalClose: { position: 'absolute', top: 6, right: 6, width: 34, height: 34, zIndex: 5 },
+  modal: { alignItems: 'center', minWidth: 290, maxWidth: 340 },
+  header: { flexDirection: 'row', alignItems: 'center', alignSelf: 'stretch', marginBottom: 12, gap: 10 },
+  modalClose: { width: 34, height: 34 },
+  floorShadow: { position: 'absolute', bottom: 2, width: 100, height: 12, borderRadius: 50, backgroundColor: 'rgba(90,52,16,0.28)' },
+  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   portrait: { alignItems: 'center', justifyContent: 'center' },
   btnRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap' },
   chip: { paddingHorizontal: 12 },
