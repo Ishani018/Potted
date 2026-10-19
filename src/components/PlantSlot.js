@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Image, View, StyleSheet } from 'react-native';
 import { POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES } from '../engine/assets';
 import { projectSize } from '../engine/project';
@@ -17,6 +17,10 @@ const BASE_POT_W = 90;       // ← Room 1 potted pot width — CHANGE THIS
 const BASE_HANGING_W = 75;  // ← Room 2 hanging pot width — CHANGE THIS
 // ────────────────────────────────────────────────────────────────────────────
 
+// Fallback aspect ratios (h/w), used only until the real image size is known.
+// Each flower's PNGs have different dimensions, so useImageAspect() reads the
+// actual size per image — a hardcoded aspect makes resizeMode="contain" shrink
+// the image and float the pot above the shelf.
 // Natural aspect ratio (h/w) per stage — potted (0=seed,1=bud,2=slight,3=bloom)
 const POTTED_ASPECT = { 0: 344 / 347, 1: 673 / 351, 2: 1, 3: 1 };
 
@@ -24,6 +28,44 @@ const POTTED_ASPECT = { 0: 344 / 347, 1: 673 / 351, 2: 1, 3: 1 };
 // Stage 0: emptyhangingpotwithseed 1024×1024 = 1:1; 1-2 assumed square.
 const HANGING_ASPECT = { 0: 891 / 367, 1: 1, 2: 1 };
 // ────────────────────────────────────────────────────────────────────────────
+
+// Real h/w of a bundled image. Native: resolveAssetSource is synchronous.
+// Web: the require() result may carry width/height, else fall back to getSize.
+const aspectCache = new Map();
+function readAspectSync(img) {
+  if (!img) return null;
+  if (aspectCache.has(img)) return aspectCache.get(img);
+  const src = Image.resolveAssetSource ? Image.resolveAssetSource(img) : img;
+  if (src && src.width && src.height) {
+    const a = src.height / src.width;
+    aspectCache.set(img, a);
+    return a;
+  }
+  return null;
+}
+function imageUri(img) {
+  if (typeof img === 'string') return img;
+  if (img && typeof img === 'object') return img.uri || img.default || null;
+  return null;
+}
+function useImageAspect(img) {
+  const [aspect, setAspect] = useState(() => readAspectSync(img));
+  useEffect(() => {
+    const sync = readAspectSync(img);
+    if (sync) { setAspect(sync); return; }
+    setAspect(null);
+    const uri = imageUri(img);
+    if (!uri) return;
+    let alive = true;
+    Image.getSize(uri, (w, h) => {
+      if (!w || !h) return;
+      aspectCache.set(img, h / w);
+      if (alive) setAspect(h / w);
+    }, () => {});
+    return () => { alive = false; };
+  }, [img]);
+  return aspect;
+}
 
 function getPlantImage(slot) {
   if (!slot.flowerKey) return null;
@@ -57,15 +99,14 @@ export default function PlantSlot({ slot, position, onPress, baseWidthOverride, 
     ? (FLOWER_STAGE_SCALE[slot.flowerKey]?.[slot.stage] ?? 1)
     : 1;
   const imgW = Math.round(projectSize(baseW, sw, sh) * stageScale);
-  // aspectOverride lets a room force its own h/w ratio (room 2 keeps stage 0 square
-  // to match emptyhangingpotwithseed) without touching the shared aspect tables.
-  const aspect = aspectOverride ?? (isPotted
+  const img = getPlantImage(slot);
+  const realAspect = useImageAspect(img);
+  // Box matches the image's real proportions so nothing is letterboxed: the pot
+  // stays on the shelf and each stage grows upward. aspectOverride still wins.
+  const aspect = aspectOverride ?? realAspect ?? (isPotted
     ? (POTTED_ASPECT[slot.stage] ?? 1)
     : (HANGING_ASPECT[slot.stage] ?? 1));
   const imgH = Math.round(imgW * aspect);
-
-  const img = getPlantImage(slot);
-  if (!img) return null;
 
   const left = position.x - imgW / 2;
   const top = isPotted ? position.y - imgH : position.y;
@@ -76,6 +117,7 @@ export default function PlantSlot({ slot, position, onPress, baseWidthOverride, 
   // Use raw responder instead of TouchableOpacity so the watering can's pan
   // gesture always wins — TouchableOpacity intercepts drags and causes a jump.
   const pressStart = useRef(null);
+  if (!img) return null;
   return (
     <View
       style={[styles.container, { left, top, width: imgW, height: imgH }]}
