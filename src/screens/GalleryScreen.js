@@ -44,14 +44,20 @@ function BuyModal({ paintingKey, onClose }) {
           <PixelPanel cream>
             <Image source={PAINTING_IMAGES[paintingKey]} style={styles.modalImg} resizeMode="contain" />
           </PixelPanel>
-          <PixelText size={13} style={{ marginTop: 14, marginBottom: 14, textAlign: 'center' }}>{p.name.toUpperCase()}</PixelText>
+          <PixelText size={13} style={{ marginTop: 14, marginBottom: 8, textAlign: 'center' }}>{p.name.toUpperCase()}</PixelText>
+          {!owned && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 14 }}>
+              <Image source={UI_IMAGES.goldcoins} style={{ width: 20, height: 20 }} resizeMode="contain" />
+              <PixelText size={11} color="#ffd060">{p.price}</PixelText>
+            </View>
+          )}
           {owned ? (
             <PixelText size={9} color="#e8c890">IN YOUR COLLECTION</PixelText>
           ) : (
             <PixelButton
               onPress={canAfford ? handleBuy : undefined}
               disabled={!canAfford}
-              label={canAfford ? `BUY  ${p.price}` : `NEED ${p.price - state.player.coins} MORE`}
+              label={canAfford ? 'BUY' : `NEED ${p.price - state.player.coins} MORE`}
             />
           )}
         </PixelPanel>
@@ -116,34 +122,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.72)',
     alignItems: 'center', justifyContent: 'center', zIndex: 200,
   },
-  modal: {
-    backgroundColor: '#2a1608', borderRadius: 16,
-    borderWidth: 2, borderColor: '#c8873a',
-    padding: 22, alignItems: 'center', minWidth: 220, maxWidth: 300,
-  },
-  modalClose: {
-    position: 'absolute', top: 8, right: 10,
-    width: 28, height: 28, borderRadius: 14,
-    backgroundColor: '#3d1800', borderWidth: 1.5, borderColor: '#c8873a',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  modalCloseTxt: { color: '#ffe8a0', fontSize: 13, fontWeight: 'bold' },
-  modalImg: { width: 130, height: 120, marginBottom: 10, borderRadius: 4 },
-  modalName: { color: '#ffe8a0', fontSize: 20, fontWeight: 'bold', letterSpacing: 1, marginBottom: 14 },
+  modalImg: { width: 170, height: 150 },
 
-  ownedBadge: {
-    backgroundColor: '#1e4a10', borderRadius: 8,
-    paddingHorizontal: 14, paddingVertical: 7,
-    borderWidth: 1, borderColor: '#5aaa3a',
-  },
-  ownedTxt: { color: '#c0ffa0', fontSize: 13, fontWeight: 'bold' },
-
-  buyBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: '#3d6020', borderRadius: 10,
-    paddingHorizontal: 18, paddingVertical: 10,
-    borderWidth: 1.5, borderColor: '#70a840',
-  },
-  buyBtnDim: { backgroundColor: '#2a2a1a', borderColor: '#555' },
-  buyBtnTxt: { color: '#e0ffc0', fontSize: 14, fontWeight: 'bold' },
 });
