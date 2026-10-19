@@ -1,7 +1,8 @@
 import React from 'react';
-import { Image } from 'react-native';
+import { View } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { PET_IMAGES } from '../engine/assets';
+import PetSprite from './PetSprite';
 import { PET_POSITIONS, PET_BASE } from '../constants/gameData';
 
 // Renders every owned pet the player has PLACED in this room, at its Plopper
@@ -29,20 +30,13 @@ export default function RoomPets({ room, sw, sh }) {
         const w = (p.w / PET_BASE.w) * sw;
         const h = (p.h / PET_BASE.h) * sh;
         return (
-          <Image
+          <View
             key={petKey}
-            source={img}
-            style={{
-              position: 'absolute',
-              left: cx - w / 2,
-              top: cy - h / 2,
-              width: w,
-              height: h,
-              zIndex: 6 + (p.z ?? 0),  // above bg/plants; relative order from Plopper
-              transform: p.flip ? [{ scaleX: -1 }] : undefined,
-            }}
-            resizeMode="contain"
-          />
+            pointerEvents="none"
+            style={{ position: 'absolute', left: cx - w / 2, top: cy - h / 2, width: w, height: h, zIndex: 6 + (p.z ?? 0) }}
+          >
+            <PetSprite petKey={petKey} w={w} h={h} flip={p.flip} />
+          </View>
         );
       })}
     </>

@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
-  View, Image, TouchableOpacity, StyleSheet, Text,
+  View, Image, TouchableOpacity, StyleSheet, TextInput, Animated, Easing,
 } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { PETSHOP_BG, PET_IMAGES, UI_IMAGES } from '../engine/assets';
 import { PETS } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
+import PetSprite from '../components/PetSprite';
+import { PixelText, PixelPanel, PixelButton, COLORS, PIXEL_FONT } from '../components/Pixel';
 
 // Pets were laid out in Plopper on a 1376×768 canvas with the bg STRETCHED to
 // fill it. To match exactly, we render the bg stretched and position pets as
@@ -33,18 +35,51 @@ const SHOP_PETS = [
 
 const REFUND_FRACTION = 0.5; // coins returned when giving a pet up for adoption
 
-// ── Pet modal — adopt (unowned) or manage (owned) ─────────────────────────────
+// Floating sign over each pet. Every pet bobs on its own rhythm (random delay +
+// duration) so the signs ripple around the shop instead of moving together.
+function PetTag({ label, adopted }) {
+  const bob = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const dur = 700 + Math.random() * 500;
+    let loop;
+    const t = setTimeout(() => {
+      loop = Animated.loop(Animated.sequence([
+        Animated.timing(bob, { toValue: 1, duration: dur, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(bob, { toValue: 0, duration: dur, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      ]));
+      loop.start();
+    }, Math.random() * 1500);
+    return () => { clearTimeout(t); loop && loop.stop(); };
+  }, []);
+  const y = bob.interpolate({ inputRange: [0, 1], outputRange: [0, -5] });
+  return (
+    <Animated.View pointerEvents="none" style={[styles.tag, adopted && styles.tagOwned, { transform: [{ translateY: y }] }]}>
+      <PixelText size={8}>{label}</PixelText>
+    </Animated.View>
+  );
+}
+
+// ── Pet popup — adopt (unowned), then name it; or manage (owned) ──────────────
 function AdoptModal({ petKey, onClose }) {
   const { state, dispatch } = useGame();
   const pet = PETS[petKey];
   const owned = (state.player.ownedPets ?? []).includes(petKey);
   const placedRoom = state.player.petPlacements?.[petKey] ?? null;
+  const savedName = state.player.petNames?.[petKey];
   const canAfford = state.player.coins >= pet.price;
   const refund = Math.floor(pet.price * REFUND_FRACTION);
 
+  const [step, setStep] = useState(null); // null | 'greet' (just adopted) | 'rename'
+  const [name, setName] = useState(savedName ?? pet.name);
+
   const handleAdopt = () => {
     dispatch({ type: 'BUY_PET', petKey, price: pet.price });
-    onClose();
+    setName(pet.name);
+    setStep('greet'); // introduce the pet's name, offer to rename
+  };
+  const saveName = () => {
+    dispatch({ type: 'NAME_PET', petKey, name });
+    setStep(null);
   };
   const handlePlace = (room) => dispatch({ type: 'PLACE_PET', petKey, room });
   const handleGiveUp = () => {
@@ -52,56 +87,84 @@ function AdoptModal({ petKey, onClose }) {
     onClose();
   };
 
+  const title = (savedName ?? pet.name).toUpperCase();
+  const greeting = step === 'greet' && owned;
+  const showNaming = step === 'rename' && owned;
+
   return (
     <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
-      <TouchableOpacity style={styles.modal} activeOpacity={1} onPress={() => {}}>
-        <TouchableOpacity style={styles.modalClose} onPress={onClose}>
-          <Text style={styles.modalCloseTxt}>✕</Text>
-        </TouchableOpacity>
-
-        <Image source={PET_IMAGES[petKey]} style={styles.modalPetImg} resizeMode="contain" />
-        <Text style={styles.modalName}>{pet.name}</Text>
-        <Text style={styles.modalBreed}>{pet.breed}</Text>
-
-        {!owned ? (
-          <TouchableOpacity
-            style={[styles.adoptBtn, !canAfford && styles.adoptBtnDim]}
-            onPress={canAfford ? handleAdopt : undefined}
-            activeOpacity={0.8}
-          >
-            <Image source={UI_IMAGES.goldcoins} style={{ width: 18, height: 18 }} resizeMode="contain" />
-            <Text style={styles.adoptBtnTxt}>
-              {canAfford ? `Adopt  ·  ${pet.price}` : `Need ${pet.price - state.player.coins} more`}
-            </Text>
+      <TouchableOpacity activeOpacity={1} onPress={() => {}}>
+        <PixelPanel style={styles.modal}>
+          <TouchableOpacity style={styles.modalClose} onPress={onClose} activeOpacity={0.8}>
+            <Image source={UI_IMAGES.cancelbutton} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
           </TouchableOpacity>
-        ) : (
-          <>
-            {/* Re-home: choose a room (or tuck away) */}
-            <Text style={styles.sectionLabel}>Lives in</Text>
-            <View style={styles.roomRow}>
-              {[1, 2, 3].map((r) => (
-                <TouchableOpacity
-                  key={r}
-                  style={[styles.roomChip, placedRoom === r && styles.roomChipActive]}
-                  onPress={() => handlePlace(r)}
-                >
-                  <Text style={styles.roomChipTxt}>{r}</Text>
-                </TouchableOpacity>
-              ))}
-              <TouchableOpacity
-                style={[styles.tuckChip, placedRoom == null && styles.roomChipActive]}
-                onPress={() => handlePlace(null)}
-              >
-                <Text style={styles.roomChipTxt}>Tuck away</Text>
-              </TouchableOpacity>
-            </View>
 
-            {/* Give up for adoption (partial refund) */}
-            <TouchableOpacity style={styles.giveUpBtn} onPress={handleGiveUp} activeOpacity={0.8}>
-              <Text style={styles.giveUpTxt}>Put up for adoption  ·  +{refund}</Text>
-            </TouchableOpacity>
-          </>
-        )}
+          <PixelPanel cream style={styles.portrait}>
+            <View style={{ width: 120, height: 120 }}>
+              <PetSprite petKey={petKey} w={120} h={120} />
+            </View>
+          </PixelPanel>
+
+          {greeting ? (
+            <>
+              <PixelText size={9} color="#e8c890" style={{ marginTop: 14, textAlign: 'center' }}>YOU ADOPTED</PixelText>
+              <PixelText size={16} style={{ marginTop: 8, textAlign: 'center' }}>{pet.name.toUpperCase()}!</PixelText>
+              <PixelText size={9} color="#e8c890" style={{ marginTop: 12, marginBottom: 14, textAlign: 'center' }}>WANT TO RENAME THEM?</PixelText>
+              <View style={styles.btnRow}>
+                <PixelButton label="RENAME" onPress={() => { setName(pet.name); setStep('rename'); }} />
+                <PixelButton label="KEEP NAME" tone="wood" onPress={() => setStep(null)} />
+              </View>
+            </>
+          ) : showNaming ? (
+            <>
+              <PixelText size={11} style={{ marginTop: 14, textAlign: 'center' }}>NEW NAME</PixelText>
+              <TextInput
+                value={name}
+                onChangeText={(t) => setName(t.slice(0, 12))}
+                maxLength={12}
+                autoFocus
+                selectTextOnFocus
+                placeholder={pet.name}
+                placeholderTextColor="#b8793a"
+                onSubmitEditing={saveName}
+                style={styles.input}
+              />
+              <View style={styles.btnRow}>
+                <PixelButton label="SAVE" onPress={saveName} />
+                <PixelButton label="CANCEL" tone="wood" onPress={() => setStep(null)} />
+              </View>
+            </>
+          ) : (
+            <>
+              <PixelText size={14} style={{ marginTop: 14, textAlign: 'center' }}>{title}</PixelText>
+              <PixelText size={8} color="#e8c890" style={{ marginTop: 6, marginBottom: 14, textAlign: 'center' }}>
+                {pet.breed.toUpperCase()}{savedName ? `  -  ${pet.name.toUpperCase()}` : ''}
+              </PixelText>
+
+              {!owned ? (
+                <PixelButton
+                  onPress={canAfford ? handleAdopt : undefined}
+                  disabled={!canAfford}
+                  label={canAfford ? `ADOPT  ${pet.price}` : `NEED ${pet.price - state.player.coins} MORE`}
+                />
+              ) : (
+                <>
+                  <PixelText size={8} color="#e8c890" style={{ marginBottom: 8 }}>LIVES IN</PixelText>
+                  <View style={styles.btnRow}>
+                    {[1, 2, 3].map((r) => (
+                      <PixelButton key={r} label={`${r}`} size={10} tone={placedRoom === r ? 'green' : 'wood'} onPress={() => handlePlace(r)} style={styles.chip} />
+                    ))}
+                    <PixelButton label="TUCK AWAY" size={8} tone={placedRoom == null ? 'green' : 'wood'} onPress={() => handlePlace(null)} />
+                  </View>
+                  <View style={[styles.btnRow, { marginTop: 12 }]}>
+                    <PixelButton label="RENAME" size={9} tone="wood" onPress={() => { setName(savedName ?? pet.name); setStep('rename'); }} />
+                    <PixelButton label={`REHOME  +${refund}`} size={9} tone="wood" onPress={handleGiveUp} />
+                  </View>
+                </>
+              )}
+            </>
+          )}
+        </PixelPanel>
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -109,52 +172,39 @@ function AdoptModal({ petKey, onClose }) {
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function PetShopScreen({ navigation }) {
-  const [selected, setSelected] = useState(null); // petKey of open adopt popup
+  const { state } = useGame();
+  const [selected, setSelected] = useState(null); // petKey of open popup
   const [invOpen, setInvOpen] = useState(false);
-  // Measure the actual rendered box so pets share the bg's exact coordinate space
-  // (window dimensions can include status-bar/safe-area insets the bg doesn't).
   const [box, setBox] = useState({ w: 0, h: 0 });
   const sw = box.w, sh = box.h;
+  const ownedPets = state.player.ownedPets ?? [];
+  const petNames = state.player.petNames ?? {};
 
-  // Match Plopper: bg fills the whole frame (stretch), pets placed by fraction.
   return (
     <View style={styles.root} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
       <Image source={PETSHOP_BG} style={styles.bg} resizeMode="stretch" />
 
-      {/* ── Pet sprites — Plopper base-px (1376×768) → screen fraction ─────── */}
       {SHOP_PETS.map(({ key, x, y, w, h, flip, z }) => {
         const cx = (x / PLOPPER_W) * sw;
         const cy = (y / PLOPPER_H) * sh;
         const spriteW = (w / PLOPPER_W) * sw;
         const spriteH = (h / PLOPPER_H) * sh;
+        const adopted = ownedPets.includes(key);
         return (
           <TouchableOpacity
             key={key}
-            style={{
-              position: 'absolute',
-              left: cx - spriteW / 2,
-              top: cy - spriteH / 2,
-              width: spriteW,
-              height: spriteH,
-              zIndex: z,
-            }}
+            style={{ position: 'absolute', left: cx - spriteW / 2, top: cy - spriteH / 2, width: spriteW, height: spriteH, zIndex: z }}
             activeOpacity={0.85}
             onPress={() => setSelected(key)}
           >
-            <Image
-              source={PET_IMAGES[key]}
-              style={{
-                width: spriteW,
-                height: spriteH,
-                transform: flip ? [{ scaleX: -1 }] : undefined,
-              }}
-              resizeMode="contain"
-            />
+            <PetSprite petKey={key} w={spriteW} h={spriteH} flip={flip} />
+            <View style={styles.tagWrap} pointerEvents="none">
+              <PetTag adopted={adopted} label={adopted ? (petNames[key] ?? PETS[key].name).toUpperCase() : 'ADOPT'} />
+            </View>
           </TouchableOpacity>
         );
       })}
 
-      {/* Standard HUD — settings (TL) + map (TR) + inventory (BL) */}
       <ScreenHud
         sw={sw} sh={sh}
         onSettings={() => navigation.navigate('Room')}
@@ -162,7 +212,6 @@ export default function PetShopScreen({ navigation }) {
         onInventory={() => setInvOpen(true)}
       />
 
-      {/* ── Modals ──────────────────────────────────────────────────────── */}
       {selected && <AdoptModal petKey={selected} onClose={() => setSelected(null)} />}
 
       {invOpen && (
@@ -172,80 +221,32 @@ export default function PetShopScreen({ navigation }) {
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#1a1200' },
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
 
-  // Standard HUD corners
-  hudTL: { position: 'absolute', top: 10, left: 14, width: 48, height: 48, zIndex: 30 },
-  hudTR: { position: 'absolute', top: 10, right: 14, width: 48, height: 48, zIndex: 30 },
-  hudBL: { position: 'absolute', bottom: 14, left: 14, width: 48, height: 48, zIndex: 30 },
-  hudImg: { width: '100%', height: '100%' },
+  // Sign floating above each pet (centred, overflowing the sprite box upward)
+  tagWrap: { position: 'absolute', left: -40, right: -40, top: -26, alignItems: 'center', zIndex: 50 },
+  tag: {
+    backgroundColor: COLORS.green, borderWidth: 3, borderColor: COLORS.greenEdge, borderRadius: 4,
+    paddingHorizontal: 8, paddingVertical: 5,
+  },
+  tagOwned: { backgroundColor: COLORS.woodDark, borderColor: COLORS.woodEdge },
 
-  // Adopt modal
   modalOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.72)',
-    alignItems: 'center', justifyContent: 'center',
-    zIndex: 200,
+    ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.65)',
+    alignItems: 'center', justifyContent: 'center', zIndex: 200,
   },
-  modal: {
-    backgroundColor: '#2a1608',
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: '#c8873a',
-    padding: 22,
-    alignItems: 'center',
-    minWidth: 220,
-    maxWidth: 300,
+  modal: { alignItems: 'center', minWidth: 280, maxWidth: 340, paddingTop: 18 },
+  modalClose: { position: 'absolute', top: 6, right: 6, width: 34, height: 34, zIndex: 5 },
+  portrait: { alignItems: 'center', justifyContent: 'center' },
+  btnRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap' },
+  chip: { paddingHorizontal: 12 },
+  input: {
+    marginTop: 12, marginBottom: 14, minWidth: 220, textAlign: 'center',
+    fontFamily: PIXEL_FONT, fontSize: 13, color: '#5a3410',
+    backgroundColor: COLORS.cream, borderWidth: 3, borderColor: COLORS.creamEdge, borderRadius: 4,
+    paddingVertical: 10, paddingHorizontal: 12,
+    outlineStyle: 'none',
   },
-  modalClose: {
-    position: 'absolute', top: 8, right: 10,
-    width: 28, height: 28, borderRadius: 14,
-    backgroundColor: '#3d1800',
-    borderWidth: 1.5, borderColor: '#c8873a',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  modalCloseTxt: { color: '#ffe8a0', fontSize: 13, fontWeight: 'bold' },
-  modalPetImg: { width: 110, height: 110, marginBottom: 10 },
-  modalName: {
-    color: '#ffe8a0', fontSize: 20, fontWeight: 'bold',
-    letterSpacing: 1, marginBottom: 2,
-  },
-  modalBreed: {
-    color: '#c8873a', fontSize: 12, marginBottom: 14,
-    fontStyle: 'italic',
-  },
-
-  adoptBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: '#3d6020',
-    borderRadius: 10, paddingHorizontal: 18, paddingVertical: 10,
-    borderWidth: 1.5, borderColor: '#70a840',
-  },
-  adoptBtnDim: { backgroundColor: '#2a2a1a', borderColor: '#555' },
-  adoptBtnTxt: { color: '#e0ffc0', fontSize: 14, fontWeight: 'bold' },
-
-  // ── Manage (owned) ──────────────────────────────────────────────
-  sectionLabel: { color: '#b89a6a', fontSize: 11, letterSpacing: 1, marginBottom: 6, textTransform: 'uppercase' },
-  roomRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 14 },
-  roomChip: {
-    width: 34, height: 34, borderRadius: 8,
-    backgroundColor: '#3d2810', borderWidth: 1.5, borderColor: '#7a4a18',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  tuckChip: {
-    height: 34, borderRadius: 8, paddingHorizontal: 10,
-    backgroundColor: '#3d2810', borderWidth: 1.5, borderColor: '#7a4a18',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  roomChipActive: { backgroundColor: '#3d6020', borderColor: '#70a840' },
-  roomChipTxt: { color: '#ffe8a0', fontSize: 12, fontWeight: 'bold' },
-  giveUpBtn: {
-    backgroundColor: '#5c2a1e', borderRadius: 10,
-    paddingHorizontal: 16, paddingVertical: 9,
-    borderWidth: 1.5, borderColor: '#aa5a3a',
-  },
-  giveUpTxt: { color: '#ffd0b0', fontSize: 13, fontWeight: 'bold' },
 });

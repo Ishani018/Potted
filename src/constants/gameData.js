@@ -235,6 +235,7 @@ export const INITIAL_PLAYER_STATE = {
   harvestedFlowers: { daisy: 8, rose: 5, marigold: 6, jasmine: 4, peony: 3, poppy: 7, hydrenga: 5, snapdragon: 6 },
   ownedPaintings: [],
   ownedPets: [],
+  petNames: {},      // petKey → custom name chosen at adoption
   petPlacements: {}, // petKey → room number where the owned pet is currently placed
 };
 

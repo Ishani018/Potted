@@ -212,6 +212,16 @@ function reducer(state, action) {
       };
     }
 
+    // Give an owned pet a custom name (empty = back to its default name).
+    case 'NAME_PET': {
+      const { petKey, name } = action;
+      if (!(state.player.ownedPets ?? []).includes(petKey)) return state;
+      const names = { ...(state.player.petNames ?? {}) };
+      const clean = (name ?? '').trim().slice(0, 12);
+      if (clean) names[petKey] = clean; else delete names[petKey];
+      return { ...state, player: { ...state.player, petNames: names } };
+    }
+
     // Assign an owned pet to a room (room = number, or null to hide it).
     case 'PLACE_PET': {
       const { petKey, room } = action;
@@ -231,6 +241,8 @@ function reducer(state, action) {
       if (!(state.player.ownedPets ?? []).includes(petKey)) return state;
       const placements = { ...(state.player.petPlacements ?? {}) };
       delete placements[petKey];
+      const petNames = { ...(state.player.petNames ?? {}) };
+      delete petNames[petKey];
       return {
         ...state,
         player: {
@@ -238,6 +250,7 @@ function reducer(state, action) {
           coins: state.player.coins + refund,
           ownedPets: state.player.ownedPets.filter((k) => k !== petKey),
           petPlacements: placements,
+          petNames,
         },
       };
     }
