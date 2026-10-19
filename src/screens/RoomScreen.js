@@ -2,15 +2,29 @@ import React from 'react';
 import { View, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { WALL_COLORS, ROOM_UNLOCK_COSTS } from '../constants/gameData';
-import { PAINTING_IMAGES, PET_IMAGES, MAP_BG, UI_IMAGES } from '../engine/assets';
+import { PAINTING_IMAGES, PET_IMAGES, MAP_BG, UI_IMAGES, BACKGROUNDS } from '../engine/assets';
 import { PixelText, PixelPanel, PixelButton, PixelToast, COLORS } from '../components/Pixel';
 
 const COLOR_SWATCH = { green: '#4a8a3a', pink: '#d07090', white: '#e8e0d0' };
-const ROOM_NAMES = { 2: 'BALCONY', 3: 'SUNROOM' };
-const ROOM_DESC = {
-  2: 'HANGING RODS, PHOTO FRAME & A PET',
-  3: 'GLASS CONSERVATORY & TIERED STAND',
+const ROOM_NAMES = { 1: 'GREENHOUSE', 2: 'BALCONY', 3: 'SUNROOM' };
+const ROOM_SHOT = {
+  1: BACKGROUNDS.room1.white.summer,
+  2: BACKGROUNDS.room2.white.summer,
+  3: BACKGROUNDS.room3.white.summer,
 };
+
+// Little pixel padlock built from blocks (no asset needed).
+function Padlock({ size = 34 }) {
+  const u = size / 10;
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center' }}>
+      <View style={{ width: u * 6, height: u * 5, borderWidth: u * 1.2, borderBottomWidth: 0, borderColor: '#e8e0d0', borderTopLeftRadius: u * 3, borderTopRightRadius: u * 3 }} />
+      <View style={{ width: u * 9, height: u * 5.5, marginTop: -u * 0.5, backgroundColor: COLORS.gold, borderWidth: u * 0.9, borderColor: COLORS.woodEdge, borderRadius: u, alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ width: u * 1.6, height: u * 2.4, backgroundColor: COLORS.woodEdge, borderRadius: u * 0.4 }} />
+      </View>
+    </View>
+  );
+}
 
 // Section label in the same pixel style as the map signs.
 function Label({ children }) {
@@ -99,24 +113,36 @@ export default function RoomScreen({ navigation }) {
                 </>
               )}
 
-              <Label>UNLOCK ROOMS</Label>
-              {[2, 3].map((r) => {
-                const unlocked = player.unlockedRooms.includes(r);
-                const cost = ROOM_UNLOCK_COSTS[r];
-                return (
-                  <View key={r} style={styles.unlockRow}>
-                    <View style={{ flex: 1 }}>
-                      <PixelText size={11} color="#5a3410" style={styles.dark}>{ROOM_NAMES[r]}</PixelText>
-                      <PixelText size={7} color="#8a5a24" style={[styles.dark, { marginTop: 6 }]}>{ROOM_DESC[r]}</PixelText>
-                    </View>
-                    {unlocked ? (
-                      <PixelText size={9} color="#2a6a1a" style={styles.dark}>UNLOCKED</PixelText>
-                    ) : (
-                      <PixelButton label={`${cost} COINS`} size={9} onPress={() => handleUnlock(r)} disabled={player.coins < cost} />
-                    )}
-                  </View>
-                );
-              })}
+              <Label>MY ROOMS</Label>
+              <View style={styles.roomGrid}>
+                {[1, 2, 3].map((r) => {
+                  const unlocked = r === 1 || player.unlockedRooms.includes(r);
+                  const cost = ROOM_UNLOCK_COSTS[r];
+                  const afford = player.coins >= cost;
+                  return (
+                    <TouchableOpacity
+                      key={r}
+                      activeOpacity={unlocked ? 1 : 0.8}
+                      onPress={() => { if (!unlocked) handleUnlock(r); }}
+                      style={[styles.roomCard, unlocked && styles.roomCardOpen]}
+                    >
+                      <Image source={ROOM_SHOT[r]} style={styles.roomShot} resizeMode="cover" />
+                      {!unlocked && (
+                        <View style={styles.lockVeil}>
+                          <Padlock />
+                          <View style={styles.costRow}>
+                            <Image source={UI_IMAGES.goldcoins} style={{ width: 16, height: 16 }} resizeMode="contain" />
+                            <PixelText size={9} color={afford ? COLORS.gold : '#ff8a8a'}>{cost}</PixelText>
+                          </View>
+                        </View>
+                      )}
+                      <View style={[styles.roomName, unlocked && { backgroundColor: COLORS.green, borderColor: COLORS.greenEdge }]}>
+                        <PixelText size={8}>{unlocked ? ROOM_NAMES[r] : `${ROOM_NAMES[r]} - LOCKED`}</PixelText>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
 
               {currentRoom === 2 && (
                 <>
@@ -161,9 +187,21 @@ const styles = StyleSheet.create({
   slotActive: { borderColor: COLORS.woodEdge, borderWidth: 4 },
   thumb: { width: 52, height: 52 },
   swatch: { width: 44, height: 44, borderRadius: 4, borderWidth: 3, borderColor: COLORS.creamEdge },
-  unlockRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#f8dfae',
-    borderWidth: 3, borderColor: COLORS.creamEdge, borderRadius: 4, padding: 12, marginBottom: 8,
+  roomGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  roomCard: {
+    width: 170, height: 110, borderRadius: 4, overflow: 'hidden',
+    borderWidth: 4, borderColor: COLORS.woodEdge, backgroundColor: '#000',
+  },
+  roomCardOpen: { borderColor: COLORS.greenEdge },
+  roomShot: { width: '100%', height: '100%' },
+  lockVeil: {
+    ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(20,10,0,0.62)',
+    alignItems: 'center', justifyContent: 'center', gap: 6,
+  },
+  costRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  roomName: {
+    position: 'absolute', left: 0, right: 0, bottom: 0, alignItems: 'center', paddingVertical: 5,
+    backgroundColor: COLORS.woodDark, borderTopWidth: 3, borderColor: COLORS.woodEdge,
   },
   dark: { textShadowColor: 'rgba(255,240,200,0.7)', textShadowRadius: 0, textShadowOffset: { width: 1, height: 1 } },
 });
