@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  View, Image, TouchableOpacity, StyleSheet, TextInput, Animated, Easing,
+  View, Image, TouchableOpacity, Pressable, StyleSheet, TextInput, Animated, Easing,
 } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { PETSHOP_BG, PET_IMAGES, UI_IMAGES } from '../engine/assets';
@@ -35,26 +35,26 @@ const SHOP_PETS = [
 
 const REFUND_FRACTION = 0.5; // coins returned when giving a pet up for adoption
 
-// Floating sign over each pet. Every pet bobs on its own rhythm (random delay +
-// duration) so the signs ripple around the shop instead of moving together.
-function PetTag({ label, adopted }) {
+// Label over a pet — plain white outlined pixel text (like the map signs), shown
+// only while hovering that pet. It fades in and bobs gently.
+function PetTag({ label, show }) {
+  const fade = useRef(new Animated.Value(0)).current;
   const bob = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    const dur = 700 + Math.random() * 500;
-    let loop;
-    const t = setTimeout(() => {
-      loop = Animated.loop(Animated.sequence([
-        Animated.timing(bob, { toValue: 1, duration: dur, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-        Animated.timing(bob, { toValue: 0, duration: dur, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-      ]));
-      loop.start();
-    }, Math.random() * 1500);
-    return () => { clearTimeout(t); loop && loop.stop(); };
+    Animated.timing(fade, { toValue: show ? 1 : 0, duration: 160, useNativeDriver: true }).start();
+  }, [show]);
+  useEffect(() => {
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(bob, { toValue: 1, duration: 800, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      Animated.timing(bob, { toValue: 0, duration: 800, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+    ]));
+    loop.start();
+    return () => loop.stop();
   }, []);
-  const y = bob.interpolate({ inputRange: [0, 1], outputRange: [0, -5] });
+  const y = bob.interpolate({ inputRange: [0, 1], outputRange: [0, -4] });
   return (
-    <Animated.View pointerEvents="none" style={[styles.tag, adopted && styles.tagOwned, { transform: [{ translateY: y }] }]}>
-      <PixelText size={8}>{label}</PixelText>
+    <Animated.View pointerEvents="none" style={{ opacity: fade, transform: [{ translateY: y }] }}>
+      <PixelText size={10}>{label}</PixelText>
     </Animated.View>
   );
 }
@@ -173,6 +173,7 @@ function AdoptModal({ petKey, onClose }) {
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function PetShopScreen({ navigation }) {
   const { state } = useGame();
+  const [hovered, setHovered] = useState(null);
   const [selected, setSelected] = useState(null); // petKey of open popup
   const [invOpen, setInvOpen] = useState(false);
   const [box, setBox] = useState({ w: 0, h: 0 });
@@ -191,17 +192,18 @@ export default function PetShopScreen({ navigation }) {
         const spriteH = (h / PLOPPER_H) * sh;
         const adopted = ownedPets.includes(key);
         return (
-          <TouchableOpacity
+          <Pressable
             key={key}
-            style={{ position: 'absolute', left: cx - spriteW / 2, top: cy - spriteH / 2, width: spriteW, height: spriteH, zIndex: z }}
-            activeOpacity={0.85}
+            style={{ position: 'absolute', left: cx - spriteW / 2, top: cy - spriteH / 2, width: spriteW, height: spriteH, zIndex: hovered === key ? 99 : z }}
+            onHoverIn={() => setHovered(key)}
+            onHoverOut={() => setHovered((h) => (h === key ? null : h))}
             onPress={() => setSelected(key)}
           >
             <PetSprite petKey={key} w={spriteW} h={spriteH} flip={flip} />
             <View style={styles.tagWrap} pointerEvents="none">
-              <PetTag adopted={adopted} label={adopted ? (petNames[key] ?? PETS[key].name).toUpperCase() : 'ADOPT'} />
+              <PetTag show={hovered === key} label={adopted ? (petNames[key] ?? PETS[key].name).toUpperCase() : 'ADOPT'} />
             </View>
-          </TouchableOpacity>
+          </Pressable>
         );
       })}
 
@@ -226,12 +228,7 @@ const styles = StyleSheet.create({
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
 
   // Sign floating above each pet (centred, overflowing the sprite box upward)
-  tagWrap: { position: 'absolute', left: -40, right: -40, top: -26, alignItems: 'center', zIndex: 50 },
-  tag: {
-    backgroundColor: COLORS.green, borderWidth: 3, borderColor: COLORS.greenEdge, borderRadius: 4,
-    paddingHorizontal: 8, paddingVertical: 5,
-  },
-  tagOwned: { backgroundColor: COLORS.woodDark, borderColor: COLORS.woodEdge },
+  tagWrap: { position: 'absolute', left: -40, right: -40, top: -22, alignItems: 'center', zIndex: 50 },
 
   modalOverlay: {
     ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.65)',
