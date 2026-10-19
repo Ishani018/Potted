@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Image, TouchableOpacity, StyleSheet, Text, useWindowDimensions } from 'react-native';
+import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { useLayout } from '../context/LayoutContext';
 import { useGame } from '../context/GameContext';
 import { INVENTORY_BG, SEED_IMAGES, POTTED_PLANT_IMAGES, UI_IMAGES } from '../engine/assets';
 
@@ -24,12 +25,13 @@ function seedImg(flowerKey) { return SEED_IMAGES[flowerKey] ?? POTTED_PLANT_IMAG
 export default function InventoryOverlay({ onClose, onPick }) {
   const { state } = useGame();
   const inventory = state.inventory ?? [];
-  const { width: winW, height: winH } = useWindowDimensions();
+  // Size against the game frame (not the browser window) so the tray always fits.
+  const { width: winW, height: winH } = useLayout();
 
   // Show the grid as a centered panel (not full-screen). Lower these fractions
   // to make the panel smaller. Aspect ratio is preserved.
   const maxW = winW * 0.6;
-  const maxH = winH * 0.78;
+  const maxH = winH * 0.8;
   const scale = Math.min(maxW / IMG_W, maxH / IMG_H);
   const dispW = IMG_W * scale;
   const dispH = IMG_H * scale;
