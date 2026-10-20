@@ -3,7 +3,7 @@ import {
   View, Image, TouchableOpacity, Pressable, StyleSheet, TextInput, Animated, Easing,
 } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { PETSHOP_BG, PET_IMAGES, UI_IMAGES } from '../engine/assets';
+import { PETSHOP_BG, PET_IMAGES, UI_IMAGES, BACKGROUNDS } from '../engine/assets';
 import { PETS, ROOM_NAMES } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
@@ -146,38 +146,59 @@ function AdoptModal({ petKey, onClose }) {
             </>
           ) : (
             <>
+              {/* Perk: plain text with a gold bar — not another box */}
               {pet.effect && (
-                <View style={styles.effectBox}>
-                  <PixelText size={9} color={COLORS.gold}>{pet.effect.title.toUpperCase()}</PixelText>
-                  <PixelText size={7} color="#e8c890" style={{ marginTop: 6, textAlign: 'center', lineHeight: 12 }}>{pet.effect.desc.toUpperCase()}</PixelText>
+                <View style={styles.perk}>
+                  <PixelText size={7} color={COLORS.gold}>PERK</PixelText>
+                  <PixelText size={10} style={{ marginTop: 5 }}>{pet.effect.title.toUpperCase()}</PixelText>
+                  <PixelText size={7} color="#f6e2b8" style={{ marginTop: 6, lineHeight: 12 }}>{pet.effect.desc.toUpperCase()}</PixelText>
                 </View>
               )}
-              <View style={{ height: 10 }} />
+
               {!owned ? (
-                <>
+                /* Adopt: price on the left, one big green button on the right */
+                <View style={styles.buyRow}>
                   <View style={styles.priceRow}>
-                    <Image source={UI_IMAGES.goldcoins} style={{ width: 22, height: 22 }} resizeMode="contain" />
-                    <PixelText size={13} color={COLORS.gold}>{pet.price}</PixelText>
+                    <Image source={UI_IMAGES.goldcoins} style={{ width: 26, height: 26 }} resizeMode="contain" />
+                    <PixelText size={14} color={COLORS.gold}>{pet.price}</PixelText>
                   </View>
                   <PixelButton
                     onPress={canAfford ? handleAdopt : undefined}
                     disabled={!canAfford}
                     label={canAfford ? 'ADOPT' : `NEED ${pet.price - state.player.coins} MORE`}
-                    style={{ minWidth: 180 }}
+                    style={{ flex: 1 }}
                   />
-                </>
+                </View>
               ) : (
                 <>
-                  <PixelText size={8} color="#e8c890" style={{ marginBottom: 8 }}>LIVES IN</PixelText>
-                  <View style={styles.btnRow}>
+                  <PixelText size={8} color="#f6e2b8" style={styles.sectionLabel}>
+                    {placedRoom == null ? 'RESTING - NOT IN A ROOM' : `LIVES IN THE ${(ROOM_NAMES[placedRoom] ?? '').toUpperCase()}`}
+                  </PixelText>
+                  <View style={styles.roomRow}>
                     {[1, 2, 3].map((r) => (
-                      <PixelButton key={r} label={(ROOM_NAMES[r] ?? `${r}`).toUpperCase()} size={8} tone={placedRoom === r ? 'green' : 'wood'} onPress={() => handlePlace(r)} style={styles.chip} />
+                      <TouchableOpacity key={r} activeOpacity={0.85} onPress={() => handlePlace(r)} style={styles.roomCard}>
+                        <View style={[styles.roomThumbWrap, placedRoom === r && styles.roomOn]}>
+                          <Image source={BACKGROUNDS[`room${r}`].white.summer} style={styles.roomThumb} resizeMode="cover" />
+                        </View>
+                        <PixelText size={6} style={{ marginTop: 4 }}>{(ROOM_NAMES[r] ?? '').toUpperCase()}</PixelText>
+                      </TouchableOpacity>
                     ))}
-                    <PixelButton label="TUCK AWAY" size={8} tone={placedRoom == null ? 'green' : 'wood'} onPress={() => handlePlace(null)} />
+                    <TouchableOpacity activeOpacity={0.85} onPress={() => handlePlace(null)} style={styles.roomCard}>
+                      <View style={[styles.roomThumbWrap, styles.tuck, placedRoom == null && styles.roomOn]}>
+                        <PixelText size={9}>ZZZ</PixelText>
+                      </View>
+                      <PixelText size={6} style={{ marginTop: 4 }}>TUCK AWAY</PixelText>
+                    </TouchableOpacity>
                   </View>
-                  <View style={[styles.btnRow, { marginTop: 12 }]}>
-                    <PixelButton label="RENAME" size={9} tone="wood" onPress={() => { setName(savedName ?? pet.name); setStep('rename'); }} />
-                    <PixelButton label={`REHOME  +${refund}`} size={9} tone="wood" onPress={handleGiveUp} />
+
+                  {/* Quiet secondary actions */}
+                  <View style={styles.linkRow}>
+                    <TouchableOpacity onPress={() => { setName(savedName ?? pet.name); setStep('rename'); }}>
+                      <PixelText size={8} color="#f6e2b8">RENAME</PixelText>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={handleGiveUp}>
+                      <PixelText size={8} color="#ffb0a0">REHOME  +{refund}</PixelText>
+                    </TouchableOpacity>
                   </View>
                 </>
               )}
@@ -253,15 +274,24 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.65)',
     alignItems: 'center', justifyContent: 'center', zIndex: 200,
   },
-  modal: { alignItems: 'center', minWidth: 290, maxWidth: 340 },
+  modal: { alignItems: 'center', width: 320 },
   header: { flexDirection: 'row', alignItems: 'center', alignSelf: 'stretch', marginBottom: 12, gap: 10 },
   modalClose: { width: 34, height: 34 },
   floorShadow: { position: 'absolute', bottom: 2, width: 100, height: 12, borderRadius: 50, backgroundColor: 'rgba(90,52,16,0.28)' },
-  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   portrait: { alignItems: 'center', justifyContent: 'center' },
   btnRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap' },
   chip: { paddingHorizontal: 10 },
-  effectBox: { alignSelf: 'stretch', alignItems: 'center', backgroundColor: COLORS.woodDark, borderWidth: 2, borderColor: COLORS.woodEdge, borderRadius: 4, paddingHorizontal: 10, paddingVertical: 8, marginTop: 4 },
+  perk: { alignSelf: 'stretch', marginTop: 12, paddingLeft: 10, paddingVertical: 4, borderLeftWidth: 4, borderLeftColor: COLORS.gold },
+  buyRow: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 14 },
+  sectionLabel: { alignSelf: 'stretch', marginTop: 14, marginBottom: 8 },
+  roomRow: { alignSelf: 'stretch', flexDirection: 'row', justifyContent: 'space-between' },
+  roomCard: { alignItems: 'center', width: 66 },
+  roomThumbWrap: { width: 62, height: 44, borderRadius: 4, overflow: 'hidden', borderWidth: 3, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
+  roomThumb: { width: '100%', height: '100%' },
+  tuck: { backgroundColor: 'rgba(90,52,16,0.55)' },
+  roomOn: { borderColor: COLORS.green, backgroundColor: COLORS.green },
+  linkRow: { alignSelf: 'stretch', flexDirection: 'row', justifyContent: 'space-between', marginTop: 16, paddingHorizontal: 4 },
   input: {
     marginTop: 12, marginBottom: 14, minWidth: 220, textAlign: 'center',
     fontFamily: PIXEL_FONT, fontSize: 13, color: '#5a3410',
