@@ -193,4 +193,4 @@ export const TRADING_BG = require('../../assets/tradingscreen.png');    // the 6
 export const BOUQUET_BG = require('../../assets/bouquetshop.png');   // bouquet table screen
 export const PETROOM_BG = require('../../assets/petroom.png');       // pet lounge (beds)
 export const GALLERY_BG = require('../../assets/gallery.png');
-export const LOADING_BG = require('../../assets/loadingscreen.jpeg');
+export const LOADING_BG = require('../../assets/loadingshop.png');
