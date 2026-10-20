@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, TextInput, ScrollView, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { useLayout } from '../context/LayoutContext';
-import { UI_IMAGES, BACKGROUNDS } from '../engine/assets';
+import { UI_IMAGES, BACKGROUNDS, PERK_ICONS } from '../engine/assets';
 import { PETS, ROOM_NAMES } from '../constants/gameData';
 import PetSprite from './PetSprite';
 import { Skinned } from './NineSlice';
@@ -155,7 +155,7 @@ export function AdoptModal({ petKey, onClose }) {
               <>
                 {pet.effect && (
                   <Box k="green" style={s.perk}>
-                    <Image source={UI_IMAGES.pcPerk} style={{ width: 34, height: 38 }} resizeMode="contain" />
+                    <Image source={PERK_ICONS[petKey] ?? UI_IMAGES.pcPerk} style={{ width: 60, height: 56 }} resizeMode="contain" />
                     <View style={{ flex: 1 }}>
                       <Text style={s.perkTitle}>{pet.effect.title}</Text>
                       <Text style={s.perkTxt}>{pet.effect.desc}</Text>

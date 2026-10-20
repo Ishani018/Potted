@@ -179,6 +179,20 @@ export const UI_IMAGES = {
   bouquetfancy:  require('../../assets/ui_comps/bouquetfancy.png'),
 };
 
+export const PERK_ICONS = {
+  george: require('../../assets/ui_comps/pc_perk_george.png'),
+  storm: require('../../assets/ui_comps/pc_perk_storm.png'),
+  koazy: require('../../assets/ui_comps/pc_perk_koazy.png'),
+  brownie: require('../../assets/ui_comps/pc_perk_brownie.png'),
+  aki: require('../../assets/ui_comps/pc_perk_aki.png'),
+  cherry: require('../../assets/ui_comps/pc_perk_cherry.png'),
+  martin: require('../../assets/ui_comps/pc_perk_martin.png'),
+  tiger: require('../../assets/ui_comps/pc_perk_tiger.png'),
+  milk: require('../../assets/ui_comps/pc_perk_milk.png'),
+  oreo: require('../../assets/ui_comps/pc_perk_oreo.png'),
+  ebonyandivory: require('../../assets/ui_comps/pc_perk_ebonyandivory.png'),
+};
+
 // ─── Trade flower images (market) ─────────────────────────────────────────────
 export const TRADE_IMAGES = {
   daisytrade:          require('../../assets/ui_comps/daisytrade.png'),

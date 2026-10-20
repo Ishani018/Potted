@@ -83,3 +83,44 @@ save(im,'pc_perk.png')
 # zzz tuck tile & room thumb frames
 box('pc_thumb.png',28,20,3,'#b9cf92','#d6e4b4','#f4f8e4')
 box('pc_thumb_on.png',28,20,3,'#1d4a14','#3f8a35','#e6f2cc')
+
+# ---- per-pet perk icons: a tiny plant + a badge that shows the perk ----
+def plant(d, ox=0, oy=0):
+    leaf(d,8+ox,9+oy,-2.5,9,5); leaf(d,16+ox,9+oy,-0.6,9,5); leaf(d,12+ox,5+oy,-1.57,8,4)
+    d.polygon([(7+ox,13+oy),(17+ox,13+oy),(15+ox,22+oy),(9+ox,22+oy)],fill=rgb('#b8643a'),outline=rgb('#6a3414'))
+    d.rectangle([6+ox,12+oy,18+ox,14+oy],fill=rgb('#cf7a44'),outline=rgb('#6a3414'))
+def heart(d,cx,cy,c='#e0507a',e='#8a2040'):
+    d.ellipse([cx-3,cy-3,cx,cy],fill=rgb(c),outline=rgb(e)); d.ellipse([cx,cy-3,cx+3,cy],fill=rgb(c),outline=rgb(e))
+    d.polygon([(cx-3,cy-1),(cx+3,cy-1),(cx,cy+3)],fill=rgb(c),outline=rgb(e)); d.ellipse([cx-2,cy-2,cx+2,cy],fill=rgb(c))
+def coin(d,cx,cy,r=3):
+    d.ellipse([cx-r,cy-r,cx+r,cy+r],fill=rgb('#f4c542'),outline=rgb('#8a5a10')); d.ellipse([cx-1,cy-1,cx+1,cy+1],fill=rgb('#c8901c'))
+def bug(d,cx,cy,body='#d8402c',dark='#2a1608'):
+    d.ellipse([cx-3,cy-3,cx+3,cy+3],fill=rgb(body),outline=rgb(dark)); d.line([(cx,cy-3),(cx,cy+3)],fill=rgb(dark))
+    d.point((cx-1,cy-1),fill=rgb(dark)); d.point((cx+1,cy+1),fill=rgb(dark)); d.ellipse([cx-1,cy-5,cx+1,cy-3],fill=rgb(dark))
+
+def perk(key,badge):
+    im,d=new(28,26); plant(d,2,3); badge(d); save(im,f'pc_perk_{key}.png')
+
+def b_shield(d):
+    d.polygon([(2,2),(11,2),(11,9),(6,14),(2,9)],fill=rgb('#5b8fd0'),outline=rgb('#1e3c70')); d.line([(6,4),(6,10)],fill=rgb('#e8f0ff')); d.line([(4,7),(8,7)],fill=rgb('#e8f0ff'))
+def b_seed(d):
+    d.polygon([(19,3),(26,3),(25,11),(20,11)],fill=rgb('#d9b27a'),outline=rgb('#7a5320')); d.ellipse([21,5,24,8],fill=rgb('#6aa04a'))
+    d.line([(20,1),(25,1)],fill=rgb('#7a5320'))
+def b_moon(d):
+    d.ellipse([18,2,26,10],fill=rgb('#f7e38a'),outline=rgb('#a8862a')); d.ellipse([21,1,28,8],fill=rgb('#fbefd2'))
+    d.point((4,4),fill=rgb('#f7e38a')); d.point((7,2),fill=rgb('#f7e38a'))
+def b_coins(d): coin(d,5,5); coin(d,22,4); coin(d,5,13)
+def b_coin(d): coin(d,22,6,4); coin(d,5,6,3)
+def b_heartbook(d): heart(d,22,6); heart(d,6,5,'#f08ab0','#8a2040')
+def b_hour(d):
+    d.polygon([(18,2),(26,2),(22,8)],fill=rgb('#f7e0a0'),outline=rgb('#8a5a24')); d.polygon([(18,15),(26,15),(22,9)],fill=rgb('#e6b660'),outline=rgb('#8a5a24'))
+    d.line([(17,1),(27,1)],fill=rgb('#6a3f1a')); d.line([(17,16),(27,16)],fill=rgb('#6a3f1a'))
+def b_ladybug(d): bug(d,22,6)
+def b_clover(d):
+    for dx,dy in [(-3,-3),(3,-3),(-3,3),(3,3)]: d.ellipse([22+dx-3,6+dy-3,22+dx+3,6+dy+3],fill=rgb('#4fae4a'),outline=rgb('#24541f'))
+    d.rectangle([21,6,22,12],fill=rgb('#24541f'))
+def b_beetle(d): bug(d,22,6,'#3a3a4a','#10101a'); d.ellipse([5,2,12,9],fill=rgb('#f7e38a'),outline=rgb('#a8862a')); d.ellipse([8,1,14,7],fill=rgb('#fbefd2'))
+def b_pair(d): heart(d,6,5); heart(d,22,5,'#f0f0f0','#6a6a7a')
+
+perk('george',b_shield); perk('storm',b_seed); perk('koazy',b_moon); perk('brownie',b_coins); perk('aki',b_coin)
+perk('cherry',b_heartbook); perk('martin',b_hour); perk('tiger',b_ladybug); perk('milk',b_clover); perk('oreo',b_beetle); perk('ebonyandivory',b_pair)
