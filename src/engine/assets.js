@@ -158,6 +158,8 @@ export const UI_IMAGES = {
   logo:          require('../../assets/ui_comps/logo.png'),
   ornateFrame:   require('../../assets/ui_comps/ornate_frame.png'),
   pcPicFrame:    require('../../assets/ui_comps/pc_pic_frame.png'),
+  petFrame:      require('../../assets/ui_comps/pet_frame.png'),
+  petFrameNoCoin: require('../../assets/ui_comps/pet_frame_nocoin.png'),
   settingsPanel: require('../../assets/ui_comps/settings_panel.png'),
   plantBanner:   require('../../assets/ui_comps/plant_banner.png'),
   settingsBoard: require('../../assets/ui_comps/settings_board.png'),

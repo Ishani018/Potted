@@ -1,50 +1,29 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, TextInput, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { useLayout } from '../context/LayoutContext';
 import { UI_IMAGES, BACKGROUNDS, PERK_ICONS } from '../engine/assets';
 import { PETS, ROOM_NAMES } from '../constants/gameData';
 import PetSprite from './PetSprite';
-import { Skinned } from './NineSlice';
 import { PIXEL_FONT, pixelText } from './Pixel';
 
-// Pet card — adopt (unowned), welcome + rename (just adopted) or manage (owned).
-// Every frame/button is a generated pixel PNG (tools/pet_art.py) drawn 9-sliced.
+// Pet card — the painted "Pixel-Art Pet Adoption Frame" (pet_frame.png, 599×656)
+// with live content laid over its painted slots: banner (title), big window (pet,
+// perk, room picker), name plate, coin box (price / refund) and green button.
+// The window text/buttons were wiped from the art so all text is live.
 const REFUND_FRACTION = 0.5; // coins returned when giving a pet up for adoption
-const INK = '#5a3410', INK_SOFT = '#8a5a24', GREEN = '#3f8a35';
+const INK = '#5a3410', SOFT = '#8a5a24', GREEN = '#2f6a22';
+const IMG_W = 599, IMG_H = 656;
 
-// image px size + corner inset for each piece
-const SK = {
-  card:     ['pcCard', 160, 160, 24],
-  banner:   ['pcBanner', 128, 64, 20],
-  portrait: ['pcPortrait', 128, 128, 22],
-  plate:    ['pcPlate', 128, 88, 18],
-  green:    ['pcGreen', 128, 96, 18],
-  price:    ['pcPrice', 128, 88, 18],
-  green_b:  ['pcBtnGreen', 112, 80, 18],
-  tan_b:    ['pcBtnTan', 112, 80, 18],
-  red_b:    ['pcBtnRed', 112, 80, 18],
-  thumb:    ['pcThumb', 112, 80, 14],
-  thumbOn:  ['pcThumbOn', 112, 80, 14],
+// slot rectangles as fractions of the image
+const F = {
+  banner:   { l: 0.19, t: 0.075, w: 0.60, h: 0.085 },
+  close:    { l: 0.862, t: 0.085, w: 0.09, h: 0.085 },
+  window:   { l: 0.105, t: 0.2, w: 0.79, h: 0.425 },
+  plate:    { l: 0.105, t: 0.645, w: 0.79, h: 0.105 },
+  coinBox:  { l: 0.088, t: 0.785, w: 0.36, h: 0.125 },
+  button:   { l: 0.475, t: 0.785, w: 0.43, h: 0.125 },
 };
-function Box({ k, style, children, onPress, disabled }) {
-  const [name, sw, sh, inset] = SK[k];
-  return <Skinned src={UI_IMAGES[name]} sw={sw} sh={sh} inset={inset} scale={0.5} style={style} onPress={onPress} disabled={disabled}>{children}</Skinned>;
-}
-
-function Btn({ label, tone = 'green', onPress, disabled, style, leaves }) {
-  const k = tone === 'green' ? 'green_b' : tone === 'red' ? 'red_b' : 'tan_b';
-  const txt = tone === 'tan' ? INK : '#fff';
-  return (
-    <View style={style}>
-      <Box k={k} onPress={onPress} disabled={disabled} style={s.btn}>
-        {leaves && <Image source={UI_IMAGES.pcLeaf} style={[s.leaf, { transform: [{ scaleX: -1 }] }]} resizeMode="contain" />}
-        <Text style={[pixelText(10, txt), tone === 'tan' && { textShadowColor: 'transparent' }, { marginHorizontal: 8 }]}>{label}</Text>
-        {leaves && <Image source={UI_IMAGES.pcLeaf} style={s.leaf} resizeMode="contain" />}
-      </Box>
-    </View>
-  );
-}
 
 export function AdoptModal({ petKey, onClose }) {
   const { state, dispatch } = useGame();
@@ -69,147 +48,152 @@ export function AdoptModal({ petKey, onClose }) {
   const handlePlace = (room) => dispatch({ type: 'PLACE_PET', petKey, room });
   const handleGiveUp = () => { dispatch({ type: 'GIVE_UP_PET', petKey, refund }); onClose(); };
 
-  const display = (savedName ?? pet.name).toUpperCase();
   const greeting = step === 'greet' && owned;
   const renaming = step === 'rename' && owned;
-  const compact = owned && !greeting && !renaming;
+  const manage = owned && !greeting && !renaming;
+  const showCoin = !greeting && !renaming;           // coin art only on price/refund views
+
+  const W = Math.min(430, Math.max(260, (frameH - 6) * (IMG_W / IMG_H)));
+  const H = W * (IMG_H / IMG_W);
+  const R = (r) => ({ position: 'absolute', left: W * r.l, top: H * r.t, width: W * r.w, height: H * r.h });
+  const fz = (n) => Math.max(7, Math.round(W * n));
+
   const bannerText = greeting ? 'WELCOME HOME!' : renaming ? 'PICK A NEW NAME' : owned ? 'YOUR PET' : 'MEET YOUR NEW FRIEND';
+  const display = (savedName ?? pet.name).toUpperCase();
+
+  // bottom row actions
+  let left = null, right = null;
+  if (greeting) {
+    left = { label: 'KEEP NAME', onPress: () => setStep(null), tone: 'tan' };
+    right = { label: 'RENAME', onPress: () => { setName(pet.name); setStep('rename'); } };
+  } else if (renaming) {
+    left = { label: 'CANCEL', onPress: () => setStep(null), tone: 'tan' };
+    right = { label: 'SAVE', onPress: saveName };
+  } else if (owned) {
+    left = { label: `+${refund}`, sub: 'REHOME', onPress: handleGiveUp, tone: 'coin' };
+    right = { label: 'RENAME', onPress: () => { setName(savedName ?? pet.name); setStep('rename'); } };
+  } else {
+    left = { label: String(pet.price), tone: 'coin', static: true };
+    right = { label: canAfford ? (isPair ? 'ADOPT PAIR' : 'ADOPT') : `NEED ${pet.price - state.player.coins} MORE`, onPress: canAfford ? handleAdopt : undefined, disabled: !canAfford };
+  }
+
+  const Slot = ({ r, onPress, children, style }) => (
+    <TouchableOpacity activeOpacity={onPress ? 0.8 : 1} onPress={onPress} disabled={!onPress} style={[R(r), { alignItems: 'center', justifyContent: 'center' }, style]}>
+      {children}
+    </TouchableOpacity>
+  );
+
+  const winW = W * F.window.w, winH = H * F.window.h;
 
   return (
     <TouchableOpacity style={s.overlay} activeOpacity={1} onPress={onClose}>
-      <TouchableOpacity activeOpacity={1} onPress={() => {}} style={{ width: 372, maxHeight: Math.max(280, frameH - 8) }}>
-        <Box k="card" style={{ padding: 18 }}>
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-            {/* banner + close */}
-            <View style={s.topRow}>
-              <View style={{ flex: 1, marginRight: 4 }}>
-                <Box k="banner" style={s.banner}>
-                  <Image source={UI_IMAGES.pcBlossom} style={[s.deco, { left: -8, top: -6 }]} resizeMode="contain" />
-                  <Image source={UI_IMAGES.pcLeaf} style={[s.deco, { left: 8, top: -9, width: 22, height: 14 }]} resizeMode="contain" />
-                  <Image source={UI_IMAGES.pcBlossom} style={[s.deco, { right: -8, top: -6 }]} resizeMode="contain" />
-                  <Image source={UI_IMAGES.pcLeaf} style={[s.deco, { right: 8, top: -9, width: 22, height: 14, transform: [{ scaleX: -1 }] }]} resizeMode="contain" />
-                  <Text numberOfLines={1} style={[pixelText(10), { textAlign: 'center' }]}>{bannerText}</Text>
-                </Box>
-              </View>
-              <TouchableOpacity style={s.close} onPress={onClose} activeOpacity={0.85}>
-                <Image source={UI_IMAGES.cancelbutton} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
-              </TouchableOpacity>
-            </View>
+      <TouchableOpacity activeOpacity={1} onPress={() => {}} style={{ width: W, height: H }}>
+        <Image source={showCoin ? UI_IMAGES.petFrame : UI_IMAGES.petFrameNoCoin} style={{ position: 'absolute', left: 0, top: 0, width: W, height: H }} resizeMode="stretch" />
 
-            {/* portrait */}
-            <Box k="portrait" style={s.portrait}>
-              {!compact && (
-                <View style={s.sprouts} pointerEvents="none">
-                  <Image source={UI_IMAGES.pcSprout} style={s.sprout} resizeMode="contain" />
-                  <Image source={UI_IMAGES.pcSprout} style={[s.sprout, { transform: [{ scaleX: -1 }] }]} resizeMode="contain" />
+        {/* banner title */}
+        <View pointerEvents="none" style={[R(F.banner), { alignItems: 'center', justifyContent: 'center' }]}>
+          <Text numberOfLines={1} style={pixelText(fz(bannerText.length > 16 ? 0.0245 : 0.03))}>{bannerText}</Text>
+        </View>
+
+        {/* painted red X */}
+        <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={R(F.close)} />
+
+        {/* ── window ── */}
+        <View style={[R(F.window), { paddingHorizontal: winW * 0.03, paddingTop: winH * 0.03 }]} pointerEvents="box-none">
+          {renaming ? (
+            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: winH * 0.06 }}>
+              <View style={{ width: winW * 0.45, height: winH * 0.45 }}>
+                <PetSprite petKey={petKey} w={winW * 0.45} h={winH * 0.45} />
+              </View>
+              <TextInput
+                value={name}
+                onChangeText={(t) => setName(t.slice(0, 12))}
+                maxLength={12}
+                autoFocus
+                selectTextOnFocus
+                placeholder={pet.name}
+                placeholderTextColor="#b8793a"
+                onSubmitEditing={saveName}
+                style={[s.input, { fontSize: fz(0.034), width: winW * 0.75 }]}
+              />
+            </View>
+          ) : greeting ? (
+            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: winH * 0.05 }}>
+              <View style={{ width: winW * 0.5, height: winH * 0.5 }}>
+                <PetSprite petKey={petKey} w={winW * 0.5} h={winH * 0.5} />
+              </View>
+              <Text style={[s.body, { fontSize: fz(0.036), lineHeight: fz(0.05), textAlign: 'center' }]}>
+                You adopted {pet.name}! They already have a name, but you can give them a new one if you like.
+              </Text>
+            </View>
+          ) : manage ? (
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                <View style={{ width: winW * 0.36, height: winH * 0.5 }}>
+                  <PetSprite petKey={petKey} w={winW * 0.36} h={winH * 0.5} />
+                </View>
+                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: winW * 0.02 }}>
+                  <Image source={PERK_ICONS[petKey]} style={{ width: winW * 0.15, height: winW * 0.14 }} resizeMode="contain" />
+                  <View style={{ flex: 1 }}>
+                    <Text style={[s.perkTitle, { fontSize: fz(0.034) }]}>{pet.effect.title}</Text>
+                    <Text style={[s.body, { fontSize: fz(0.029), lineHeight: fz(0.04) }]}>{pet.effect.desc}</Text>
+                  </View>
+                </View>
+              </View>
+              <Text style={[s.body, { fontSize: fz(0.03), textAlign: 'center', marginBottom: 2 }]}>
+                {placedRoom == null ? 'Resting - not in a room' : `Lives in the ${ROOM_NAMES[placedRoom] ?? 'room'}`}
+              </Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingBottom: winH * 0.03 }}>
+                {[1, 2, 3].map((r) => (
+                  <TouchableOpacity key={r} activeOpacity={0.85} onPress={() => handlePlace(r)} style={{ alignItems: 'center', width: winW * 0.22 }}>
+                    <Image source={BACKGROUNDS[`room${r}`].white.summer} style={[s.thumb, { width: winW * 0.2, height: winH * 0.17 }, placedRoom === r && s.thumbOn]} resizeMode="cover" />
+                    <Text style={[s.body, { fontSize: fz(0.024) }]}>{ROOM_NAMES[r]}</Text>
+                  </TouchableOpacity>
+                ))}
+                <TouchableOpacity activeOpacity={0.85} onPress={() => handlePlace(null)} style={{ alignItems: 'center', width: winW * 0.22 }}>
+                  <View style={[s.thumb, s.tuck, { width: winW * 0.2, height: winH * 0.17, alignItems: 'center', justifyContent: 'center' }, placedRoom == null && s.thumbOn]}>
+                    <Text style={pixelText(fz(0.03), '#fff')}>ZZZ</Text>
+                  </View>
+                  <Text style={[s.body, { fontSize: fz(0.024) }]}>Tuck away</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <View style={{ flex: 1, alignItems: 'center' }}>
+              <View style={{ width: winW * 0.58, height: winH * 0.62 }}>
+                <PetSprite petKey={petKey} w={winW * 0.58} h={winH * 0.62} />
+              </View>
+              {pet.effect && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: winW * 0.025, marginTop: winH * 0.02, paddingHorizontal: winW * 0.02 }}>
+                  <Image source={PERK_ICONS[petKey]} style={{ width: winW * 0.16, height: winW * 0.15 }} resizeMode="contain" />
+                  <View style={{ flex: 1 }}>
+                    <Text style={[s.perkTitle, { fontSize: fz(0.034) }]}>{pet.effect.title}</Text>
+                    <Text style={[s.body, { fontSize: fz(0.029), lineHeight: fz(0.04) }]}>{pet.effect.desc}</Text>
+                  </View>
                 </View>
               )}
-              <View style={{ width: compact ? 110 : 190, height: compact ? 78 : 140, alignItems: 'center', justifyContent: 'flex-end' }}>
-                <PetSprite petKey={petKey} w={compact ? 100 : 170} h={compact ? 74 : 132} />
-              </View>
-            </Box>
+            </View>
+          )}
+        </View>
 
-            {/* name plate */}
-            <Box k="plate" style={s.plate}>
-              <Image source={UI_IMAGES.pcPaw} style={s.paw} resizeMode="contain" />
-              <View style={{ alignItems: 'center', flex: 1 }}>
-                <Text style={pixelText(13, INK)} numberOfLines={1}>{display}</Text>
-                <Text style={[pixelText(7, INK_SOFT), { marginTop: 5 }]}>
-                  {'- '}{pet.breed.toUpperCase()}{savedName ? ` / ${pet.name.toUpperCase()}` : ''}{' -'}
-                </Text>
-              </View>
-              <Image source={UI_IMAGES.pcPaw} style={s.paw} resizeMode="contain" />
-            </Box>
+        {/* name plate */}
+        <View pointerEvents="none" style={[R(F.plate), { alignItems: 'center', justifyContent: 'center' }]}>
+          <Text numberOfLines={1} style={pixelText(fz(0.042), INK)}>{display}</Text>
+          <Text style={[pixelText(fz(0.02), SOFT), { marginTop: 3 }]}>
+            {'- '}{pet.breed.toUpperCase()}{savedName ? ` / ${pet.name.toUpperCase()}` : ''}{' -'}
+          </Text>
+        </View>
 
-            {greeting ? (
-              <>
-                <Box k="green" style={s.note}>
-                  <Text style={s.noteTxt}>You adopted {pet.name}! They already have a name, but you can give them a new one if you like.</Text>
-                </Box>
-                <View style={s.row}>
-                  <Btn label="RENAME" onPress={() => { setName(pet.name); setStep('rename'); }} style={{ flex: 1 }} leaves />
-                  <Btn label="KEEP NAME" tone="tan" onPress={() => setStep(null)} style={{ flex: 1 }} />
-                </View>
-              </>
-            ) : renaming ? (
-              <>
-                <Box k="price" style={{ padding: 4 }}>
-                  <TextInput
-                    value={name}
-                    onChangeText={(t) => setName(t.slice(0, 12))}
-                    maxLength={12}
-                    autoFocus
-                    selectTextOnFocus
-                    placeholder={pet.name}
-                    placeholderTextColor="#b8793a"
-                    onSubmitEditing={saveName}
-                    style={s.input}
-                  />
-                </Box>
-                <View style={s.row}>
-                  <Btn label="SAVE" onPress={saveName} style={{ flex: 1 }} leaves />
-                  <Btn label="CANCEL" tone="tan" onPress={() => setStep(null)} style={{ flex: 1 }} />
-                </View>
-              </>
-            ) : (
-              <>
-                {pet.effect && (
-                  <Box k="green" style={s.perk}>
-                    <Image source={PERK_ICONS[petKey] ?? UI_IMAGES.pcPerk} style={{ width: 60, height: 56 }} resizeMode="contain" />
-                    <View style={{ flex: 1 }}>
-                      <Text style={s.perkTitle}>{pet.effect.title}</Text>
-                      <Text style={s.perkTxt}>{pet.effect.desc}</Text>
-                    </View>
-                  </Box>
-                )}
+        {/* bottom-left (coin box) */}
+        <Slot r={F.coinBox} onPress={left.onPress} style={showCoin ? { paddingLeft: W * 0.16 } : null}>
+          <Text style={[pixelText(fz(left.static ? 0.05 : left.sub ? 0.036 : 0.026), INK), { textShadowColor: 'transparent' }]} numberOfLines={1}>{left.label}</Text>
+          {left.sub && <Text style={[pixelText(fz(0.02), '#8a2a1a'), { textShadowColor: 'transparent', marginTop: 2 }]}>{left.sub}</Text>}
+        </Slot>
 
-                {!owned ? (
-                  <View style={s.row}>
-                    <Box k="price" style={s.price}>
-                      <Image source={UI_IMAGES.goldcoins} style={{ width: 28, height: 28 }} resizeMode="contain" />
-                      <Text style={pixelText(14, INK)}>{pet.price}</Text>
-                    </Box>
-                    <Btn
-                      label={canAfford ? (isPair ? 'ADOPT PAIR' : 'ADOPT') : `NEED ${pet.price - state.player.coins} MORE`}
-                      onPress={handleAdopt}
-                      disabled={!canAfford}
-                      style={{ flex: 1 }}
-                      leaves={canAfford}
-                    />
-                  </View>
-                ) : (
-                  <>
-                    <Box k="green" style={s.homeBox}>
-                      <Text style={s.homeLabel}>
-                        {placedRoom == null ? 'Resting - not in a room' : `Lives in the ${ROOM_NAMES[placedRoom] ?? 'room'}`}
-                      </Text>
-                      <View style={s.rooms}>
-                        {[1, 2, 3].map((r) => (
-                          <TouchableOpacity key={r} activeOpacity={0.85} onPress={() => handlePlace(r)} style={s.room}>
-                            <Box k={placedRoom === r ? 'thumbOn' : 'thumb'} style={{ padding: 3 }}>
-                              <Image source={BACKGROUNDS[`room${r}`].white.summer} style={s.thumbImg} resizeMode="cover" />
-                            </Box>
-                            <Text style={s.roomName}>{ROOM_NAMES[r]}</Text>
-                          </TouchableOpacity>
-                        ))}
-                        <TouchableOpacity activeOpacity={0.85} onPress={() => handlePlace(null)} style={s.room}>
-                          <Box k={placedRoom == null ? 'thumbOn' : 'thumb'} style={{ padding: 3 }}>
-                            <View style={[s.thumbImg, s.tuck]}><Text style={pixelText(9, '#fff')}>ZZZ</Text></View>
-                          </Box>
-                          <Text style={s.roomName}>Tuck away</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </Box>
-                    <View style={s.row}>
-                      <Btn label="RENAME" tone="tan" onPress={() => { setName(savedName ?? pet.name); setStep('rename'); }} style={{ flex: 1 }} />
-                      <Btn label={`REHOME +${refund}`} tone="red" onPress={handleGiveUp} style={{ flex: 1 }} />
-                    </View>
-                  </>
-                )}
-              </>
-            )}
-          </ScrollView>
-        </Box>
+        {/* bottom-right (green button) */}
+        <Slot r={F.button} onPress={right.onPress} style={right.disabled ? { opacity: 0.6 } : null}>
+          <Text style={pixelText(fz(0.034))} numberOfLines={1}>{right.label}</Text>
+        </Slot>
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -220,40 +204,13 @@ const s = StyleSheet.create({
     ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(20,12,0,0.55)',
     alignItems: 'center', justifyContent: 'center', zIndex: 200,
   },
-  topRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingTop: 6 },
-  close: { width: 32, height: 32 },
-  banner: { paddingVertical: 10, paddingHorizontal: 18, justifyContent: 'center' },
-  deco: { position: 'absolute', width: 18, height: 18, zIndex: 3 },
-
-  portrait: { alignItems: 'center', justifyContent: 'center', paddingVertical: 8, paddingHorizontal: 10 },
-  sprouts: { position: 'absolute', left: 14, right: 14, top: 44, flexDirection: 'row', justifyContent: 'space-between' },
-  sprout: { width: 24, height: 34 },
-
-  plate: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 14 },
-  paw: { width: 18, height: 18 },
-
-  note: { padding: 14 },
-  noteTxt: { color: INK, fontSize: 13, lineHeight: 18 },
-
-  perk: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 14 },
-  perkTitle: { color: GREEN, fontSize: 13, fontWeight: 'bold', marginBottom: 2 },
-  perkTxt: { color: INK, fontSize: 13, lineHeight: 17 },
-
-  row: { flexDirection: 'row', alignItems: 'stretch', gap: 10 },
-  price: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minWidth: 112, paddingHorizontal: 12, paddingVertical: 10 },
-  btn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, paddingHorizontal: 10 },
-  leaf: { width: 18, height: 12 },
-
-  homeBox: { paddingVertical: 10, paddingHorizontal: 12 },
-  homeLabel: { color: INK, fontSize: 12, marginBottom: 6, textAlign: 'center' },
-  rooms: { flexDirection: 'row', justifyContent: 'space-between' },
-  room: { alignItems: 'center', width: 70 },
-  thumbImg: { width: 58, height: 36, borderRadius: 2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  body: { color: INK },
+  perkTitle: { color: GREEN, fontWeight: 'bold', marginBottom: 2 },
+  thumb: { borderRadius: 4, borderWidth: 3, borderColor: 'transparent' },
+  thumbOn: { borderColor: '#3f8a35' },
   tuck: { backgroundColor: '#8a7a58' },
-  roomName: { color: INK, fontSize: 10, marginTop: 4 },
-
   input: {
-    textAlign: 'center', fontFamily: PIXEL_FONT, fontSize: 14, color: INK,
-    paddingVertical: 10, paddingHorizontal: 12, outlineStyle: 'none',
+    textAlign: 'center', fontFamily: PIXEL_FONT, color: INK, backgroundColor: '#fff6df',
+    borderWidth: 3, borderColor: '#c99555', borderRadius: 8, paddingVertical: 10, outlineStyle: 'none',
   },
 });
