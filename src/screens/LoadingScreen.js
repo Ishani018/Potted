@@ -10,8 +10,8 @@ const DURATION = 3000;
 const IMG_W = 1480;
 const IMG_H = 798;
 // painted bar track, in image px
-const TRACK = { x0: 706, x1: 1328, y0: 584, y1: 614 };
-const PCT_Y = 658, PCT_X = 1007;
+const TRACK = { x0: 706, x1: 1328, y0: 540, y1: 570 };
+const PCT_Y = 614, PCT_X = 1007;
 const INK = '#4a2a10';
 const LOGO_W = 1068, LOGO_H = 350;   // logo.png size
 
