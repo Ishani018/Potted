@@ -22,7 +22,7 @@ export default function RoomPets({ room, sw, sh, onPetPress }) {
   return (
     <>
       {ownedPets.map((petKey) => {
-        if (!DEBUG_SHOW_ALL && petPlacements[petKey] !== room) return null;
+        if (!DEBUG_SHOW_ALL && petPlacements[petKey] !== room && petPlacements[petKey] !== 'all') return null;
         const p = spots[petKey];
         const img = PET_IMAGES[petKey];
         if (!p || !img) return null;

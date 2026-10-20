@@ -395,7 +395,7 @@ function reducer(state, action) {
           ...state.player,
           coins: state.player.coins - price,
           ownedPets: [...(state.player.ownedPets ?? []), petKey],
-          petPlacements: { ...(state.player.petPlacements ?? {}), [petKey]: state.player.currentRoom },
+          petPlacements: { ...(state.player.petPlacements ?? {}), [petKey]: 'all' },
         },
       };
     }

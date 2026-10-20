@@ -14,7 +14,9 @@ export function placedPets(player) {
   const placements = player.petPlacements ?? {};
   return (player.ownedPets ?? [])
     .filter((k) => placements[k] != null && PETS[k])
-    .map((k) => ({ key: k, room: placements[k], effect: PETS[k].effect ?? {} }));
+    // 'all' = the pet appears (and helps) in every room
+    .flatMap((k) => (placements[k] === 'all' ? [1, 2, 3] : [placements[k]])
+      .map((room) => ({ key: k, room, effect: PETS[k].effect ?? {} })));
 }
 
 // { [room]: effects } for rooms 1–3, defaults where no pet helps.

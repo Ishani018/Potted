@@ -30,7 +30,7 @@ export function AdoptModal({ petKey, onClose }) {
   const { height: frameH } = useLayout();
   const pet = PETS[petKey];
   const owned = (state.player.ownedPets ?? []).includes(petKey);
-  const placedRoom = state.player.petPlacements?.[petKey] ?? null;
+  const placedRoom = state.player.petPlacements?.[petKey] ?? null;   // 'all' | room number (older saves) | null
   const savedName = state.player.petNames?.[petKey];
   const canAfford = state.player.coins >= pet.price;
   const refund = Math.floor(pet.price * REFUND_FRACTION);
@@ -140,22 +140,17 @@ export function AdoptModal({ petKey, onClose }) {
                   </View>
                 </View>
               </View>
-              <Text style={[s.body, { fontSize: fz(0.03), textAlign: 'center', marginBottom: 2 }]}>
-                {placedRoom == null ? 'Resting - not in a room' : `Lives in the ${ROOM_NAMES[placedRoom] ?? 'room'}`}
-              </Text>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingBottom: winH * 0.03 }}>
-                {[1, 2, 3].map((r) => (
-                  <TouchableOpacity key={r} activeOpacity={0.85} onPress={() => handlePlace(r)} style={{ alignItems: 'center', width: winW * 0.22 }}>
-                    <Image source={BACKGROUNDS[`room${r}`].white.summer} style={[s.thumb, { width: winW * 0.2, height: winH * 0.17 }, placedRoom === r && s.thumbOn]} resizeMode="cover" />
-                    <Text style={[s.body, { fontSize: fz(0.024) }]}>{ROOM_NAMES[r]}</Text>
-                  </TouchableOpacity>
-                ))}
-                <TouchableOpacity activeOpacity={0.85} onPress={() => handlePlace(null)} style={{ alignItems: 'center', width: winW * 0.22 }}>
-                  <View style={[s.thumb, s.tuck, { width: winW * 0.2, height: winH * 0.17, alignItems: 'center', justifyContent: 'center' }, placedRoom == null && s.thumbOn]}>
-                    <Text style={pixelText(fz(0.03), '#fff')}>ZZZ</Text>
-                  </View>
-                  <Text style={[s.body, { fontSize: fz(0.024) }]}>Tuck away</Text>
-                </TouchableOpacity>
+              {/* two big choices — no cramped room picker */}
+              <View style={{ flexDirection: 'row', gap: winW * 0.04, paddingBottom: winH * 0.04 }}>
+                {[['all', 'EVERY ROOM', 'Appears and helps everywhere'], [null, 'TUCK AWAY', 'Resting - no perk']].map(([val, label, sub]) => {
+                  const on = (placedRoom === 'all' || (typeof placedRoom === 'number')) ? val === 'all' : val === null;
+                  return (
+                    <TouchableOpacity key={label} activeOpacity={0.85} onPress={() => handlePlace(val)} style={[s.choice, { flex: 1, paddingVertical: winH * 0.035 }, on && s.choiceOn]}>
+                      <Text style={pixelText(fz(0.03), on ? '#fff' : INK)}>{label}</Text>
+                      <Text style={[s.body, { fontSize: fz(0.022), marginTop: 3, color: on ? '#e9f5d8' : SOFT, textAlign: 'center' }]}>{sub}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </View>
           ) : (
@@ -208,7 +203,8 @@ const s = StyleSheet.create({
   perkTitle: { color: GREEN, fontWeight: 'bold', marginBottom: 2 },
   thumb: { borderRadius: 4, borderWidth: 3, borderColor: 'transparent' },
   thumbOn: { borderColor: '#3f8a35' },
-  tuck: { backgroundColor: '#8a7a58' },
+  choice: { alignItems: 'center', borderRadius: 8, borderWidth: 3, borderColor: '#c99555', backgroundColor: '#fde9b8' },
+  choiceOn: { borderColor: '#1d4a14', backgroundColor: '#3f8a35' },
   input: {
     textAlign: 'center', fontFamily: PIXEL_FONT, color: INK, backgroundColor: '#fff6df',
     borderWidth: 3, borderColor: '#c99555', borderRadius: 8, paddingVertical: 10, outlineStyle: 'none',

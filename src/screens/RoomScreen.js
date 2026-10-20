@@ -160,12 +160,12 @@ export default function RoomScreen({ navigation }) {
             none: () => place('photoFrame', null), noneOn: !decor.photoFrame,
             isOn: (key) => decor.photoFrame === key, pick: (key) => place('photoFrame', key),
           })}
-          {/* Pets: tap to move a pet into / out of the Balcony; NONE sends them all back */}
+          {/* Pets: tap to have a pet appear in every room (tap again to rest it); NONE rests them all */}
           {row('pet', PET_NONE, PET_TILES, pets, petPage, setPetPage, PET_ARROW, PET_IMAGES, {
-            none: () => pets.forEach((k) => { if (placements[k] === 2) dispatch({ type: 'PLACE_PET', petKey: k, room: null }); }),
-            noneOn: !pets.some((k) => placements[k] === 2),
-            isOn: (key) => placements[key] === 2,
-            pick: (key) => dispatch({ type: 'PLACE_PET', petKey: key, room: placements[key] === 2 ? null : 2 }),
+            none: () => pets.forEach((k) => { if (placements[k] === 'all') dispatch({ type: 'PLACE_PET', petKey: k, room: null }); }),
+            noneOn: !pets.some((k) => placements[k] === 'all'),
+            isOn: (key) => placements[key] === 'all',
+            pick: (key) => dispatch({ type: 'PLACE_PET', petKey: key, room: placements[key] === 'all' ? null : 'all' }),
           })}
 
           {/* coins (top-right) */}
