@@ -155,6 +155,7 @@ export const UI_IMAGES = {
   pcPerk: require('../../assets/ui_comps/pc_perk.png'),
   pcThumb: require('../../assets/ui_comps/pc_thumb.png'),
   pcThumbOn: require('../../assets/ui_comps/pc_thumb_on.png'),
+  logo:          require('../../assets/ui_comps/logo.png'),
   settingsPanel: require('../../assets/ui_comps/settings_panel.png'),
   plantBanner:   require('../../assets/ui_comps/plant_banner.png'),
   settingsBoard: require('../../assets/ui_comps/settings_board.png'),
