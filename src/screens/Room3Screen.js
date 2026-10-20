@@ -26,7 +26,7 @@ import InventoryOverlay from '../components/InventoryOverlay';
 const ROOM_TYPES = ['potted', 'hanging'];
 
 // Sunroom pots/can are drawn a bit smaller than the Greenhouse's (90 / 200).
-const SUN_POT_W = 72;
+const SUN_POT_W = 62;
 const SUN_CAN = 120;
 const SUN_HANG_W = 260;   // hanging plant/pot canvas width (image has lots of padding)
 
