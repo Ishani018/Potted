@@ -63,7 +63,7 @@ export default function Room3Screen({ navigation }) {
   const potH = Math.round(projectSize(90, sw, sh) * (344 / 347));
   // Watering targets: shelf pots grow upward from pt.y, hanging pots hang below
   // the hook (same offset the Balcony uses).
-  const hangingPotH = Math.round(projectSize(100, sw, sh) * 0.93);
+  const hangingPotH = Math.round(projectSize(200, sw, sh) * 0.9);
   const plantedPottedPoints = allSnapPoints
     .filter((pt) => { const s = slots[pt.id]; return s && s.flowerKey; })
     .map((pt) => (pt.id.includes('_h')
@@ -96,7 +96,7 @@ export default function Room3Screen({ navigation }) {
   // drag/ghost/placed pots share the (square) hanging pot image.
   const hookPotW = Math.round(projectSize(100, sw, sh));
   const hookPotH = Math.round(hookPotW * 0.93);
-  const hookDragW = Math.round(projectSize(235, sw, sh));
+  const hookDragW = Math.round(projectSize(200, sw, sh));
   const rawHookSrc = HANGING_POT_SOURCE_POSITIONS[3];
   const hookSrcPos = projectPoint(rawHookSrc.x, rawHookSrc.y, sw, sh);
 
@@ -229,7 +229,7 @@ export default function Room3Screen({ navigation }) {
           if (!pt) return null;
           // Hanging pots use the Balcony's sizing (stage 0 image is tall & narrow).
           const hangingSize = slot.type === 'hanging'
-            ? { baseWidthOverride: slot.stage === 0 ? 85 : 235 }
+            ? { baseWidthOverride: slot.stage === 0 ? 85 : 200 }
             : {};
           return <PlantSlot key={slot.slotId} slot={slot} position={pt} onPress={handleSlotPress} onPestPress={handlePestPress} {...hangingSize} />;
         })}

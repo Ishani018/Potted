@@ -65,19 +65,40 @@ const RAW_SNAP_POINTS = {
     ],
   },
   3: {
+    // Laid out on summer/spring/winter.jpeg (1376×768). Pot anchor = bottom-centre,
+    // y = the shelf/table surface the pot stands on.
     potted: [
-      { id: 'r3_p1', x: 215, y: 584 },
-      { id: 'r3_p2', x: 334, y: 584 },
-      { id: 'r3_p3', x: 470, y: 584 },
-      { id: 'r3_p4', x: 579, y: 584 },
-      { id: 'r3_p5', x: 695, y: 584 },
-      { id: 'r3_p6', x: 975, y: 412 },
+      // Left rack — top board (y≈488) and bottom board (y≈612)
+      { id: 'r3_p1', x: 325, y: 488 },
+      { id: 'r3_p2', x: 440, y: 488 },
+      { id: 'r3_p3', x: 330, y: 612 },
+      { id: 'r3_p4', x: 440, y: 612 },
+      // Table top (y≈536)
+      { id: 'r3_p5', x: 650, y: 536 },
+      { id: 'r3_p6', x: 758, y: 536 },
+      { id: 'r3_p7', x: 866, y: 536 },
+      // Right rack — top (y≈404), middle (y≈536), bottom (y≈666)
+      { id: 'r3_p8',  x: 1070, y: 404 },
+      { id: 'r3_p9',  x: 1170, y: 404 },
+      { id: 'r3_p10', x: 1265, y: 404 },
+      { id: 'r3_p11', x: 1070, y: 536 },
+      { id: 'r3_p12', x: 1170, y: 536 },
+      { id: 'r3_p13', x: 1265, y: 536 },
+      { id: 'r3_p14', x: 1070, y: 666 },
+      { id: 'r3_p15', x: 1170, y: 666 },
+      { id: 'r3_p16', x: 1265, y: 666 },
+      // Wall shelves (y≈272 left, y≈266 right)
+      { id: 'r3_p17', x: 345, y: 272 },
+      { id: 'r3_p18', x: 455, y: 272 },
+      { id: 'r3_p19', x: 1085, y: 266 },
+      { id: 'r3_p20', x: 1195, y: 266 },
     ],
+    // Hooks along the top rod (rod spans x≈470–1250; the painted vines sit at the ends)
     hanging: [
-      { id: 'r3_h1', x: 379, y: 72 },
-      { id: 'r3_h2', x: 544, y: 72 },
-      { id: 'r3_h3', x: 706, y: 72 },
-      { id: 'r3_h4', x: 852, y: 72 },
+      { id: 'r3_h1', x: 590, y: 88 },
+      { id: 'r3_h2', x: 770, y: 88 },
+      { id: 'r3_h3', x: 950, y: 88 },
+      { id: 'r3_h4', x: 1130, y: 88 },
     ],
   },
 };
@@ -96,7 +117,7 @@ const RAW_SNAP_POINTS = {
 export const WATERING_CAN_POSITIONS = {
   1: { x: 1135, y: 130 },  // ← Room 1: on window sill right side
   2: { x: 1255, y: 405 },  // ← Room 2: on stool, left of pot — CHANGE THIS
-  3: { x: 1118, y: 420 },  // ← Room 3
+  3: { x: 1140, y: 210 },  // ← Room 3: on the right wall shelf
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -142,13 +163,13 @@ export const DECOR_POSITIONS = {
 export const POT_SOURCE_POSITIONS = {
   1: { x: 222, y: 190 },   // ← Room 1 window sill pot — CHANGE THIS
   2: { x: 105, y: 440 },    // ← Room 2 railing pot — CHANGE THIS
-  3: { x: 120, y: 600 },
+  3: { x: 330, y: 742 },   // ← Room 3: on the floor, left of centre
 };
 
 // Hanging-pot source (stool) for rooms with hooks AND a separate shelf pot
 // source. Room 2 uses POT_SOURCE_POSITIONS[2] for its only (hanging) pot.
 export const HANGING_POT_SOURCE_POSITIONS = {
-  3: { x: 1250, y: 690 },  // ← Room 3 hook-pot stool — CHANGE THIS
+  3: { x: 470, y: 742 },   // ← Room 3 hook-pot stool, on the floor next to the pot — CHANGE THIS
 };
 
 export const SNAP_RADIUS = 40;
