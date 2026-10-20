@@ -9,17 +9,27 @@ import { PixelText } from '../components/Pixel';
 import { AdoptModal } from '../components/PetCard';
 import { SHOP_PETS } from './PetShopScreen';
 
-// Pet lounge — every pet you've adopted curled up in its own bed, so you can check
-// in on them one by one. Tap a pet to see its perk, rename it, move it between
-// rooms or rehome it. Beds are painted into petroom.png (1376×768 base);
-// BEDS are the bed centres in the same coordinates.
+// Pet lounge — every pet you've adopted, hanging out on the big mat, so you can
+// check in on them one by one. Tap a pet to see its perk, rename it, move it between
+// rooms or rehome it. Background: petroom.png (1376×768 base).
 const PLOPPER_W = 1376;
 const PLOPPER_H = 768;
-const BEDS = [
-  { x: 192,  y: 488 }, { x: 464,  y: 488 }, { x: 736,  y: 488 }, { x: 1008, y: 488 }, { x: 1280, y: 488 },
-  { x: 120,  y: 664 }, { x: 352,  y: 664 }, { x: 584,  y: 664 }, { x: 816,  y: 664 }, { x: 1048, y: 664 }, { x: 1272, y: 664 },
-];
-const ORDER = Object.keys(PETS); // bed i belongs to pet i
+// Where each pet sits on the big mat (feet position, base px). Tall pets go on the
+// back row so the smaller ones in front aren't hidden.
+const SPOTS = {
+  martin:        { x: 330,  y: 596 },
+  storm:         { x: 525,  y: 592 },
+  tiger:         { x: 720,  y: 596 },
+  milk:          { x: 915,  y: 592 },
+  aki:           { x: 1105, y: 598 },
+  george:        { x: 250,  y: 692 },
+  brownie:       { x: 450,  y: 696 },
+  cherry:        { x: 650,  y: 700 },
+  koazy:         { x: 855,  y: 696 },
+  oreo:          { x: 1050, y: 700 },
+  ebonyandivory: { x: 1225, y: 686 },
+};
+const ORDER = Object.keys(PETS);
 
 export default function PetRoomScreen({ navigation }) {
   const { state } = useGame();
@@ -42,23 +52,22 @@ export default function PetRoomScreen({ navigation }) {
             {owned.length}/{ORDER.length} PETS HOME
           </PixelText>
 
-          {ORDER.map((key, i) => {
-            const bed = BEDS[i];
-            if (!bed || !owned.includes(key)) return null;
-            const shop = SHOP_PETS.find((s) => s.key === key) ?? { w: 120, h: 120, flip: false };
-            const k = Math.min(1, 170 / shop.w, 130 / shop.h);
-            const w = fx(shop.w * k), h = fx(shop.h * k);
-            const row = bed.y < 600 ? 1 : 2;
+          {ORDER.map((key) => {
+            const spot = SPOTS[key];
+            if (!spot || !owned.includes(key)) return null;
+            const shop = SHOP_PETS.find((p) => p.key === key) ?? { w: 120, h: 120, flip: false };
+            const w = fx(shop.w * 1.1), h = fx(shop.h * 1.1);
+            const z = Math.round(spot.y);
             return (
               <React.Fragment key={key}>
                 <TouchableOpacity
                   activeOpacity={0.85}
                   onPress={() => setSelected(key)}
-                  style={{ position: 'absolute', left: fx(bed.x) - w / 2, top: fy(bed.y + 8) - h, width: w, height: h, zIndex: row * 10 }}
+                  style={{ position: 'absolute', left: fx(spot.x) - w / 2, top: fy(spot.y) - h, width: w, height: h, zIndex: z }}
                 >
                   <PetSprite petKey={key} w={w} h={h} flip={shop.flip} />
                 </TouchableOpacity>
-                <View pointerEvents="none" style={[styles.nameWrap, { left: fx(bed.x) - fx(110), width: fx(220), top: fy(bed.y + 38), zIndex: row * 10 + 1 }]}>
+                <View pointerEvents="none" style={[styles.nameWrap, { left: fx(spot.x) - fx(110), width: fx(220), top: fy(spot.y + 6), zIndex: 900 }]}>
                   <PixelText size={Math.max(8, fx(12))}>{(names[key] ?? PETS[key].name).toUpperCase()}</PixelText>
                 </View>
               </React.Fragment>
