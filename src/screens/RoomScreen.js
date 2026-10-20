@@ -64,6 +64,7 @@ export default function RoomScreen({ navigation }) {
   const decor = player.placedDecor?.room2 ?? {};
   const paintings = player.ownedPaintings ?? [];
   const pets = player.ownedPets ?? [];
+  const placements = player.petPlacements ?? {};
 
   const handleUnlock = (room) => {
     const cost = ROOM_UNLOCK_COSTS[room];
@@ -82,20 +83,20 @@ export default function RoomScreen({ navigation }) {
   );
 
   // One row of slots: NONE + a page of items.
-  const row = (slot, none, tiles, items, page, setPage, arrow, images) => {
+  const row = (slot, none, tiles, items, page, setPage, arrow, images, h) => {
     const perPage = tiles.length;
     const pages = Math.max(1, Math.ceil(items.length / perPage));
     const shown = items.slice(page * perPage, page * perPage + perPage);
     return (
       <>
-        <TouchableOpacity activeOpacity={0.8} onPress={() => place(slot, null)} style={R(none)} />
-        {!decor[slot] && <Sel r={none} />}
+        <TouchableOpacity activeOpacity={0.8} onPress={h.none} style={R(none)} />
+        {h.noneOn && <Sel r={none} />}
         {shown.map((key, i) => {
           const t = tiles[i];
-          const on = decor[slot] === key;
+          const on = h.isOn(key);
           return (
             <React.Fragment key={key}>
-              <TouchableOpacity activeOpacity={0.8} onPress={() => place(slot, key)} style={[R(t), { alignItems: 'center', justifyContent: 'center' }]}>
+              <TouchableOpacity activeOpacity={0.8} onPress={() => h.pick(key)} style={[R(t), { alignItems: 'center', justifyContent: 'center' }]}>
                 <Image source={images[key]} style={{ width: '78%', height: '78%' }} resizeMode="contain" />
               </TouchableOpacity>
               {on && <Sel r={t} />}
@@ -155,8 +156,17 @@ export default function RoomScreen({ navigation }) {
             );
           })}
 
-          {row('photoFrame', PHOTO_NONE, PHOTO_TILES, paintings, photoPage, setPhotoPage, PHOTO_ARROW, PAINTING_IMAGES)}
-          {row('pet', PET_NONE, PET_TILES, pets, petPage, setPetPage, PET_ARROW, PET_IMAGES)}
+          {row('photoFrame', PHOTO_NONE, PHOTO_TILES, paintings, photoPage, setPhotoPage, PHOTO_ARROW, PAINTING_IMAGES, {
+            none: () => place('photoFrame', null), noneOn: !decor.photoFrame,
+            isOn: (key) => decor.photoFrame === key, pick: (key) => place('photoFrame', key),
+          })}
+          {/* Pets: tap to move a pet into / out of the Balcony; NONE sends them all back */}
+          {row('pet', PET_NONE, PET_TILES, pets, petPage, setPetPage, PET_ARROW, PET_IMAGES, {
+            none: () => pets.forEach((k) => { if (placements[k] === 2) dispatch({ type: 'PLACE_PET', petKey: k, room: null }); }),
+            noneOn: !pets.some((k) => placements[k] === 2),
+            isOn: (key) => placements[key] === 2,
+            pick: (key) => dispatch({ type: 'PLACE_PET', petKey: key, room: placements[key] === 2 ? null : 2 }),
+          })}
 
           {/* coins (top-right) */}
           <View style={{ position: 'absolute', right: 14, top: 10, width: Math.max(120, sw * 0.17), height: Math.max(40, sw * 0.17 / 3) }}>
