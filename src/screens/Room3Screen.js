@@ -25,6 +25,10 @@ import InventoryOverlay from '../components/InventoryOverlay';
 // Pot types in this room — seeds of any other type can't be planted here.
 const ROOM_TYPES = ['potted', 'hanging'];
 
+// Sunroom pots/can are drawn a bit smaller than the Greenhouse's (90 / 200).
+const SUN_POT_W = 72;
+const SUN_CAN = 120;
+
 export default function Room3Screen({ navigation }) {
   const { width: sw, height: sh } = useLayout();
   const { state, dispatch } = useGame();
@@ -60,7 +64,7 @@ export default function Room3Screen({ navigation }) {
   const rawCan = WATERING_CAN_POSITIONS[3] ?? WATERING_CAN_POSITIONS[1];
   const canPos = scalePoint(rawCan.x, rawCan.y, sw, sh);
 
-  const potH = Math.round(projectSize(90, sw, sh) * (344 / 347));
+  const potH = Math.round(projectSize(SUN_POT_W, sw, sh) * (344 / 347));
   // Watering targets: shelf pots grow upward from pt.y, hanging pots hang below
   // the hook (same offset the Balcony uses).
   const hangingPotH = Math.round(projectSize(200, sw, sh) * 0.9);
@@ -128,7 +132,7 @@ export default function Room3Screen({ navigation }) {
       : 'Shelf flower · plant it in a shelf pot');
   }, [showToast]);
 
-  const potW = Math.round(projectSize(90, sw, sh));
+  const potW = Math.round(projectSize(SUN_POT_W, sw, sh));
   const potHSrc = Math.round(potW * (344 / 347));
   const rawPotSrc = POT_SOURCE_POSITIONS[3];
   const potSrcPos = projectPoint(rawPotSrc.x, rawPotSrc.y, sw, sh);
@@ -230,7 +234,7 @@ export default function Room3Screen({ navigation }) {
           // Hanging pots use the Balcony's sizing (stage 0 image is tall & narrow).
           const hangingSize = slot.type === 'hanging'
             ? { baseWidthOverride: slot.stage === 0 ? 85 : 200 }
-            : {};
+            : { baseWidthOverride: SUN_POT_W };
           return <PlantSlot key={slot.slotId} slot={slot} position={pt} onPress={handleSlotPress} onPestPress={handlePestPress} {...hangingSize} />;
         })}
 
@@ -240,7 +244,7 @@ export default function Room3Screen({ navigation }) {
           onWater={handleWater}
           onDragStart={() => { canDragging.current = true; }}
           onDragEnd={() => { canDragging.current = false; }}
-          baseCanSize={200}
+          baseCanSize={SUN_CAN}
         />
 
         <CoinHUD />

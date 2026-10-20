@@ -117,7 +117,7 @@ const RAW_SNAP_POINTS = {
 export const WATERING_CAN_POSITIONS = {
   1: { x: 1135, y: 130 },  // ← Room 1: on window sill right side
   2: { x: 1255, y: 405 },  // ← Room 2: on stool, left of pot — CHANGE THIS
-  3: { x: 1140, y: 210 },  // ← Room 3: on the right wall shelf
+  3: { x: 1140, y: 220 },  // ← Room 3: on the right wall shelf (centre anchor; shelf surface y≈262)
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
