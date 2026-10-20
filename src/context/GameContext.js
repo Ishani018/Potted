@@ -320,7 +320,7 @@ function reducer(state, action) {
     // Tie BOUQUET_SIZE harvested flowers into a bouquet and sell it at once.
     // action: { flowers: [flowerKey, ...] }
     case 'SELL_BOUQUET': {
-      const { flowers } = action;
+      const { flowers, paper = 'plain' } = action;
       if (!Array.isArray(flowers) || flowers.length !== BOUQUET_SIZE) return state;
       const harvested = { ...(state.player.harvestedFlowers ?? {}) };
       for (const k of flowers) {
@@ -328,7 +328,7 @@ function reducer(state, action) {
         harvested[k] -= 1;
       }
       for (const k of Object.keys(harvested)) if (harvested[k] <= 0) delete harvested[k];
-      const { recipe, value } = evaluateBouquet(flowers, globalPetEffects(state.player).bouquetMult);
+      const { recipe, value } = evaluateBouquet(flowers, globalPetEffects(state.player).bouquetMult, paper);
       const bouquetBook = { ...(state.player.bouquetBook ?? {}) };
       if (recipe) {
         const prev = bouquetBook[recipe.id];

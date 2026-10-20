@@ -23,6 +23,7 @@ import TradingScreen from './src/screens/TradingScreen';
 import GalleryScreen from './src/screens/GalleryScreen';
 import RoomScreen from './src/screens/RoomScreen';
 import FlowerBookScreen from './src/screens/FlowerBookScreen';
+import BouquetScreen from './src/screens/BouquetScreen';
 import CatchUpSummary from './src/components/CatchUpSummary';
 import NoticeToast from './src/components/NoticeToast';
 
@@ -73,6 +74,7 @@ export default function App() {
                   <Stack.Screen name="Gallery" component={GalleryScreen} />
                   <Stack.Screen name="Room" component={RoomScreen} />
                   <Stack.Screen name="FlowerBook" component={FlowerBookScreen} />
+                  <Stack.Screen name="Bouquet" component={BouquetScreen} />
                 </Stack.Navigator>
               </NavigationContainer>
               <CatchUpSummary hidden={route === 'Main' || route === 'Loading'} />

@@ -347,6 +347,13 @@ export const BOUQUET_RECIPES = [
   { id: 'wedding',    name: 'Wedding Day',    flowers: ['rose', 'peony', 'hydrenga'],      multiplier: 2.0, hint: 'The grandest flowers for the biggest day.' },
 ];
 
+// Wrapping papers — each fancier than the last, with a small value bonus.
+export const BOUQUET_PAPERS = {
+  plain:   { id: 'plain',   name: 'Kraft',   bonus: 1.0 },
+  layered: { id: 'layered', name: 'Layered', bonus: 1.1 },
+  fancy:   { id: 'fancy',   name: 'Fancy',   bonus: 1.2 },
+};
+
 function sameFlowers(a, b) {
   if (a.length !== b.length) return false;
   const x = [...a].sort(), y = [...b].sort();
@@ -355,7 +362,7 @@ function sameFlowers(a, b) {
 
 // keys: array of BOUQUET_SIZE flower keys → { recipe, name, multiplier, value }.
 // bonus: extra multiplier from pets (see globalPetEffects).
-export function evaluateBouquet(keys, bonus = 1) {
+export function evaluateBouquet(keys, bonus = 1, paper = 'plain') {
   const base = keys.reduce((sum, k) => sum + (TRADE_FLOWERS[k]?.base ?? 0), 0);
   const recipe = BOUQUET_RECIPES.find((r) => sameFlowers(r.flowers, keys)) ?? null;
   let name = BOUQUET_MIXED.name;
@@ -367,5 +374,6 @@ export function evaluateBouquet(keys, bonus = 1) {
     name = `${TRADE_FLOWERS[keys[0]]?.name ?? keys[0]} Bouquet`;
     multiplier = BOUQUET_TRIO.multiplier;
   }
-  return { recipe, name, multiplier, value: Math.round(base * multiplier * bonus) };
+  const paperBonus = BOUQUET_PAPERS[paper]?.bonus ?? 1;
+  return { recipe, name, multiplier, paperBonus, value: Math.round(base * multiplier * paperBonus * bonus) };
 }

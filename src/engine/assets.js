@@ -171,5 +171,6 @@ export const HOME_BG = require('../../assets/homeinsidescreen.png');
 export const PETSHOP_BG = require('../../assets/petshop.png');
 export const TRADE_BG = require('../../assets/flowertradeshop.png');   // market exterior (scales)
 export const TRADING_BG = require('../../assets/tradingscreen.png');    // the 6-slot trade page
+export const BOUQUET_BG = require('../../assets/bouquetshop.png');   // bouquet table screen
 export const GALLERY_BG = require('../../assets/gallery.png');
 export const LOADING_BG = require('../../assets/loadingscreen.jpeg');
