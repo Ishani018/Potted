@@ -24,6 +24,7 @@ import GalleryScreen from './src/screens/GalleryScreen';
 import RoomScreen from './src/screens/RoomScreen';
 import FlowerBookScreen from './src/screens/FlowerBookScreen';
 import CatchUpSummary from './src/components/CatchUpSummary';
+import NoticeToast from './src/components/NoticeToast';
 
 const Stack = createStackNavigator();
 
@@ -76,6 +77,8 @@ export default function App() {
                 </Stack.Navigator>
               </NavigationContainer>
               <CatchUpSummary hidden={route === 'Main' || route === 'Loading'} />
+              {/* Pet notices wait until the welcome-back card is closed */}
+              <NoticeToast hidden={route === 'Main' || route === 'Loading'} />
             </View>
           </LayoutContext.Provider>
         </GameProvider>

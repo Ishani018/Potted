@@ -2,9 +2,11 @@ import { createContext, useContext, useReducer, useEffect, useRef } from 'react'
 import { AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
-  INITIAL_PLAYER_STATE, ROOM_UNLOCK_COSTS, PEST_CONFIG, CATCH_UP, BOUQUET_SIZE,
+  INITIAL_PLAYER_STATE, ROOM_UNLOCK_COSTS, CATCH_UP, BOUQUET_SIZE,
+  POTTED_FLOWERS, HANGING_PLANTS, PETS, ROOM_NAMES,
   seedType, evaluateBouquet,
 } from '../constants/gameData';
+import { roomPetEffects, globalPetEffects, pestRewardFor, placedPets, dayKey } from '../engine/petEffects';
 import {
   tickAllSlots,
   harvestPlant,
@@ -52,7 +54,42 @@ const initialState = {
   lastPassiveTick: Date.now(),
   lastSeen: Date.now(),  // last time the game was running (saved) — for catch-up
   awaySummary: null,     // "while you were away" report, shown until dismissed
+  notices: [],           // pet messages ({ id, text }) shown one at a time, not saved
 };
+
+// Pets' once-a-day gifts (Storm digs up a seed, Aki fetches coins).
+// Returns { player, inventory, notices } with the gifts applied.
+function givePetGifts(player, inventory, now, rand) {
+  const today = dayKey(now);
+  const gifts = { ...(player.petGifts ?? {}) };
+  let coins = player.coins;
+  let inv = inventory;
+  const notices = [];
+  for (const { key, effect } of placedPets(player)) {
+    const daily = effect.daily;
+    if (!daily || gifts[key] === today) continue;
+    gifts[key] = today;
+    const name = PETS[key].name;
+    if (daily.coins) {
+      const [lo, hi] = daily.coins;
+      const n = lo + Math.floor(rand() * (hi - lo + 1));
+      coins += n;
+      notices.push(`${name} fetched ${n} coins for you!`);
+    }
+    if (daily.seed) {
+      if (inv.length >= INVENTORY_CAP) {
+        notices.push(`${name} dug up a seed, but your inventory is full.`);
+      } else {
+        const keys = [...Object.keys(POTTED_FLOWERS), ...Object.keys(HANGING_PLANTS)];
+        const flowerKey = keys[Math.floor(rand() * keys.length)];
+        const seedName = POTTED_FLOWERS[flowerKey]?.name ?? HANGING_PLANTS[flowerKey]?.name;
+        inv = [...inv, { id: `inv_${now}_${key}`, flowerKey }];
+        notices.push(`${name} dug up a ${seedName} seed!`);
+      }
+    }
+  }
+  return { player: { ...player, coins, petGifts: gifts }, inventory: inv, notices };
+}
 
 // What changed / needs attention after time away, per room. null = nothing to say.
 function buildAwaySummary(before, after, awayMs, coins) {
@@ -85,26 +122,52 @@ function reducer(state, action) {
     case 'TICK': {
       const now = action.now;
       const rand = action.seed != null ? makeRand(action.seed) : null;
+      const eff = roomPetEffects(state.player);
       const gap = now - (state.lastSeen ?? state.lastPassiveTick ?? now);
-      let updatedSlots = tickAllSlots(state.slots, now, rand);
+      let updatedSlots = tickAllSlots(state.slots, now, rand, eff);
       const gapMinutes = Math.min(Math.floor(gap / 60000) - 1, CATCH_UP.maxPestMinutes);
-      if (rand && gapMinutes > 0) updatedSlots = spawnPestsOffline(updatedSlots, gapMinutes, rand);
-      const { coins, nextTick } = calcHangingPassiveCoins(state.slots, state.lastPassiveTick ?? now, now);
+      if (rand && gapMinutes > 0) updatedSlots = spawnPestsOffline(updatedSlots, gapMinutes, rand, eff);
+      const { coins, nextTick } = calcHangingPassiveCoins(state.slots, state.lastPassiveTick ?? now, now, eff);
       const summary = gap >= CATCH_UP.minAwayMs
         ? buildAwaySummary(state.slots, updatedSlots, gap, coins)
         : null;
+
+      let player = { ...state.player, coins: state.player.coins + coins };
+      let inventory = state.inventory;
+      const notices = [];
+      if (rand) {
+        // Bug-catching pets (Tiger) sometimes clear a bug in their room.
+        for (const [id, slot] of Object.entries(updatedSlots)) {
+          if (!slot.pest || !(eff[slot.room]?.autoCatch > 0) || rand() >= eff[slot.room].autoCatch) continue;
+          updatedSlots[id] = { ...slot, pest: null };
+          const reward = pestRewardFor(player, slot.room);
+          player = { ...player, coins: player.coins + reward, pestsCleared: (player.pestsCleared ?? 0) + 1 };
+          const catcher = placedPets(player).find((p) => p.room === slot.room && p.effect.room?.autoCatch);
+          notices.push(`${PETS[catcher?.key]?.name ?? 'Your pet'} caught a bug in the ${ROOM_NAMES[slot.room]}! +${reward}`);
+        }
+        const gifts = givePetGifts(player, inventory, now, rand);
+        player = gifts.player;
+        inventory = gifts.inventory;
+        notices.push(...gifts.notices);
+      }
       return {
         ...state,
         slots: updatedSlots,
+        inventory,
         lastPassiveTick: nextTick,
         lastSeen: now,
         awaySummary: summary ?? state.awaySummary,
-        player: { ...state.player, coins: state.player.coins + coins },
+        player,
+        notices: [...state.notices, ...notices.map((text, i) => ({ id: `${now}_${i}`, text }))],
       };
     }
 
     case 'DISMISS_SUMMARY': {
       return { ...state, awaySummary: null };
+    }
+
+    case 'SHIFT_NOTICE': {
+      return { ...state, notices: state.notices.slice(1) };
     }
 
     case 'INIT_SLOTS': {
@@ -186,7 +249,7 @@ function reducer(state, action) {
       const { slotId } = action;
       const slot = state.slots[slotId];
       if (!slot || !slot.flowerKey) return state;
-      const watered = waterPlant(slot);
+      const watered = waterPlant(slot, roomPetEffects(state.player)[slot.room]);
       // First time reaching full bloom fills that flower's page in the book.
       const max = maxStageFor(slot.type);
       let player = state.player;
@@ -212,7 +275,7 @@ function reducer(state, action) {
         slots: { ...state.slots, [slotId]: { ...slot, pest: null } },
         player: {
           ...state.player,
-          coins: state.player.coins + PEST_CONFIG.reward,
+          coins: state.player.coins + pestRewardFor(state.player, slot.room),
           pestsCleared: (state.player.pestsCleared ?? 0) + 1,
         },
       };
@@ -222,12 +285,21 @@ function reducer(state, action) {
       const { slotId } = action;
       const slot = state.slots[slotId];
       if (!slot) return state;
-      const { flowerKey, amount, slot: clearedSlot } = harvestPlant(slot);
-      if (!flowerKey || amount <= 0) return state; // not harvestable
+      const { flowerKey, amount: baseAmount, slot: clearedSlot } = harvestPlant(slot);
+      if (!flowerKey || baseAmount <= 0) return state; // not harvestable
+      // Lucky pets (Milk): chance of one extra flower. Roll seeded by the plant
+      // so the same harvest always gives the same result.
+      const luck = roomPetEffects(state.player)[slot.room]?.harvestLuck ?? 0;
+      const lucky = luck > 0 && makeRand(((slot.plantedAt ?? 0) % 1e6) / 1e6)() < luck;
+      const amount = baseAmount + (lucky ? 1 : 0);
       const harvested = { ...(state.player.harvestedFlowers ?? {}) };
       harvested[flowerKey] = (harvested[flowerKey] ?? 0) + amount;
+      const luckyPet = lucky && placedPets(state.player).find((p) => p.room === slot.room && p.effect.room?.harvestLuck);
       return {
         ...state,
+        notices: lucky
+          ? [...state.notices, { id: `harvest_${Date.now()}`, text: `${PETS[luckyPet?.key]?.name ?? 'Your pet'} found an extra flower!` }]
+          : state.notices,
         slots: { ...state.slots, [slotId]: { ...clearedSlot, hasPot: slot.hasPot } },
         player: {
           ...state.player,
@@ -268,7 +340,7 @@ function reducer(state, action) {
         harvested[k] -= 1;
       }
       for (const k of Object.keys(harvested)) if (harvested[k] <= 0) delete harvested[k];
-      const { recipe, value } = evaluateBouquet(flowers);
+      const { recipe, value } = evaluateBouquet(flowers, globalPetEffects(state.player).bouquetMult);
       const bouquetBook = { ...(state.player.bouquetBook ?? {}) };
       if (recipe) {
         const prev = bouquetBook[recipe.id];

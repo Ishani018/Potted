@@ -4,6 +4,7 @@ import { useGame } from '../context/GameContext';
 import { TRADE_IMAGES, UI_IMAGES } from '../engine/assets';
 import { TRADE_FLOWERS, BOUQUET_SIZE, BOUQUET_RECIPES, evaluateBouquet } from '../constants/gameData';
 import BouquetArt from './BouquetArt';
+import { globalPetEffects } from '../engine/petEffects';
 
 // Bouquet table (market). Pick BOUQUET_SIZE harvested flowers, see the bouquet
 // and its price, then tie & sell. Secret recipes pay more; unfound ones show a
@@ -19,7 +20,7 @@ export default function BouquetMaker({ onClose, onSold }) {
   const owned = Object.keys(harvested).filter((k) => harvested[k] > 0 && TRADE_FLOWERS[k]);
 
   const full = picks.length === BOUQUET_SIZE;
-  const result = full ? evaluateBouquet(picks) : null;
+  const result = full ? evaluateBouquet(picks, globalPetEffects(state.player).bouquetMult) : null;
   // Recipes stay secret until you've tied one at least once.
   const isNewRecipe = result?.recipe && !found[result.recipe.id];
   const previewName = !result ? 'Pick 3 flowers' : isNewRecipe ? 'Something special…' : result.name;

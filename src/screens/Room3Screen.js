@@ -6,7 +6,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useGame } from '../context/GameContext';
 import { BACKGROUNDS, SEED_IMAGES } from '../engine/assets';
 import { getSnapPoints, WATERING_CAN_POSITIONS, scalePoint } from '../engine/snapPoints';
-import { getCurrentSeason, seedType, heldSeedHint, PEST_CONFIG } from '../constants/gameData';
+import { getCurrentSeason, seedType, heldSeedHint, PETS } from '../constants/gameData';
+import { pestRewardFor } from '../engine/petEffects';
 import { useToast } from '../components/Toast';
 import { projectSize } from '../engine/project';
 
@@ -85,9 +86,16 @@ export default function Room3Screen({ navigation }) {
   }, [dispatch, slots, showToast]);
 
   const handlePestPress = useCallback((slot) => {
+    const reward = pestRewardFor(player, slot.room);
     dispatch({ type: 'REMOVE_PEST', slotId: slot.slotId });
-    showToast(`Bug shooed! +${PEST_CONFIG.reward} coins`);
-  }, [dispatch, showToast]);
+    showToast(`Bug shooed! +${reward} coins`);
+  }, [dispatch, showToast, player]);
+
+  // Tap a pet → what it does for this room.
+  const handlePetPress = useCallback((petKey) => {
+    const pet = PETS[petKey];
+    if (pet?.effect) showToast(`${pet.name} · ${pet.effect.title}: ${pet.effect.desc}`, 3500);
+  }, [showToast]);
 
   const handleBlockedSeed = useCallback((item) => {
     showToast(seedType(item.flowerKey) === 'hanging'
@@ -108,7 +116,7 @@ export default function Room3Screen({ navigation }) {
         />
 
         {/* Placed pets */}
-        <RoomPets room={3} sw={sw} sh={sh} />
+        <RoomPets room={3} sw={sw} sh={sh} onPetPress={handlePetPress} />
 
         {/* Empty snap points become tappable plant targets while holding a seed */}
         {heldSeed && emptySnapPoints.map((pt) => {

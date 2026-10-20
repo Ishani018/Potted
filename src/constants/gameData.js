@@ -85,19 +85,35 @@ export const PAINTINGS = {
   picnic:               { key: 'picnic',               name: 'Picnic',         price: 50 },
 };
 
+// Each pet has an effect. `room` effects apply to the room the pet is placed in
+// (several pets in one room stack). `daily` gifts and `global` effects apply
+// while the pet is placed in any room (not tucked away).
+//   pestChance ×, cooldownMult ×, wiltMult ×, pestRewardMult ×, hangingCoinMult ×,
+//   autoCatch (chance per tick to catch a bug), harvestLuck (chance of +1 flower)
 export const PETS = {
-  george:        { key: 'george',        name: 'George',          price: 150, breed: 'Tabby Cat' },
-  storm:         { key: 'storm',         name: 'Storm',           price: 200, breed: 'Husky' },
-  koazy:         { key: 'koazy',         name: 'Koazy',           price: 180, breed: 'Ragdoll Cat' },
-  brownie:       { key: 'brownie',       name: 'Brownie',         price: 160, breed: 'Pomeranian' },
-  aki:           { key: 'aki',           name: 'Aki',             price: 220, breed: 'Akita' },
-  cherry:        { key: 'cherry',        name: 'Cherry',          price: 140, breed: 'Golden Puppy' },
-  martin:        { key: 'martin',        name: 'Martin',          price: 130, breed: 'Old Tabby' },
-  tiger:         { key: 'tiger',         name: 'Tiger',           price: 190, breed: 'Calico Cat' },
-  milk:          { key: 'milk',          name: 'Milk',            price: 170, breed: 'White Cat' },
-  oreo:          { key: 'oreo',          name: 'Oreo',            price: 170, breed: 'Black Cat' },
+  george:        { key: 'george',        name: 'George',          price: 150, breed: 'Tabby Cat',
+    effect: { title: 'Pest Patrol',      desc: 'Bugs are half as likely in its room.',                          room: { pestChance: 0.5 } } },
+  storm:         { key: 'storm',         name: 'Storm',           price: 200, breed: 'Husky',
+    effect: { title: 'Digger',           desc: 'Digs up a free seed bag once a day.',                           daily: { seed: true } } },
+  koazy:         { key: 'koazy',         name: 'Koazy',           price: 180, breed: 'Ragdoll Cat',
+    effect: { title: 'Cozy Nap',         desc: 'Plants in its room are ready to water 20% sooner.',             room: { cooldownMult: 0.8 } } },
+  brownie:       { key: 'brownie',       name: 'Brownie',         price: 160, breed: 'Pomeranian',
+    effect: { title: 'Show-Off',         desc: 'Hanging plants in its room earn double coins.',                 room: { hangingCoinMult: 2 } } },
+  aki:           { key: 'aki',           name: 'Aki',             price: 220, breed: 'Akita',
+    effect: { title: 'Fetch!',           desc: 'Brings you 10–25 coins once a day.',                            daily: { coins: [10, 25] } } },
+  cherry:        { key: 'cherry',        name: 'Cherry',          price: 140, breed: 'Golden Puppy',
+    effect: { title: 'Good Pup',         desc: 'Bouquets sell for 15% more.',                                   global: { bouquetMult: 1.15 } } },
+  martin:        { key: 'martin',        name: 'Martin',          price: 130, breed: 'Old Tabby',
+    effect: { title: 'Wise Old Watcher', desc: 'Plants in its room take twice as long to wilt.',                room: { wiltMult: 2 } } },
+  tiger:         { key: 'tiger',         name: 'Tiger',           price: 190, breed: 'Calico Cat',
+    effect: { title: 'Bug Snacker',      desc: 'Sometimes catches bugs in its room for you (you keep the coins).', room: { autoCatch: 0.2 } } },
+  milk:          { key: 'milk',          name: 'Milk',            price: 170, breed: 'White Cat',
+    effect: { title: 'Lucky Paws',       desc: 'Harvests in its room have a 25% chance of an extra flower.',    room: { harvestLuck: 0.25 } } },
+  oreo:          { key: 'oreo',          name: 'Oreo',            price: 170, breed: 'Black Cat',
+    effect: { title: 'Midnight Hunter',  desc: 'Shooing bugs in its room pays double.',                         room: { pestRewardMult: 2 } } },
   // Always-together pair — one purchase, two cats.
-  ebonyandivory: { key: 'ebonyandivory', name: 'Ebony & Ivory',   price: 300, breed: 'Bonded Pair' },
+  ebonyandivory: { key: 'ebonyandivory', name: 'Ebony & Ivory',   price: 300, breed: 'Bonded Pair',
+    effect: { title: 'Bonded Pair',      desc: 'Plants in its room are ready to water 15% sooner and get 25% fewer bugs.', room: { cooldownMult: 0.85, pestChance: 0.75 } } },
 };
 
 // ── Pre-determined pet positions per room ─────────────────────────────────────
@@ -282,6 +298,7 @@ export const INITIAL_PLAYER_STATE = {
   pestsCleared: 0,
   bouquetBook: {},   // recipeId → { made, firstAt } — secret bouquet recipes found
   bouquetsSold: 0,
+  petGifts: {},      // petKey → day key of the last daily gift
 };
 
 // ── Flower book ───────────────────────────────────────────────────────────────
@@ -336,7 +353,8 @@ function sameFlowers(a, b) {
 }
 
 // keys: array of BOUQUET_SIZE flower keys → { recipe, name, multiplier, value }.
-export function evaluateBouquet(keys) {
+// bonus: extra multiplier from pets (see globalPetEffects).
+export function evaluateBouquet(keys, bonus = 1) {
   const base = keys.reduce((sum, k) => sum + (TRADE_FLOWERS[k]?.base ?? 0), 0);
   const recipe = BOUQUET_RECIPES.find((r) => sameFlowers(r.flowers, keys)) ?? null;
   let name = BOUQUET_MIXED.name;
@@ -348,5 +366,5 @@ export function evaluateBouquet(keys) {
     name = `${TRADE_FLOWERS[keys[0]]?.name ?? keys[0]} Bouquet`;
     multiplier = BOUQUET_TRIO.multiplier;
   }
-  return { recipe, name, multiplier, value: Math.round(base * multiplier) };
+  return { recipe, name, multiplier, value: Math.round(base * multiplier * bonus) };
 }

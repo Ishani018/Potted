@@ -6,10 +6,10 @@ import { View, Text, StyleSheet } from 'react-native';
 export function useToast(duration = 1600) {
   const [msg, setMsg] = useState(null);
   const timer = useRef(null);
-  const show = useCallback((m) => {
+  const show = useCallback((m, ms = duration) => {
     setMsg(m);
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => setMsg(null), duration);
+    timer.current = setTimeout(() => setMsg(null), ms);
   }, [duration]);
   useEffect(() => () => timer.current && clearTimeout(timer.current), []);
   const el = msg ? (

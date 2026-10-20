@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { PETSHOP_BG, PET_IMAGES, UI_IMAGES } from '../engine/assets';
-import { PETS } from '../constants/gameData';
+import { PETS, ROOM_NAMES } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
 
@@ -63,6 +63,14 @@ function AdoptModal({ petKey, onClose }) {
         <Text style={styles.modalName}>{pet.name}</Text>
         <Text style={styles.modalBreed}>{pet.breed}</Text>
 
+        {/* What this pet does once it lives in a room */}
+        {pet.effect && (
+          <View style={styles.effectBox}>
+            <Text style={styles.effectTitle}>{pet.effect.title}</Text>
+            <Text style={styles.effectDesc}>{pet.effect.desc}</Text>
+          </View>
+        )}
+
         {!owned ? (
           <TouchableOpacity
             style={[styles.adoptBtn, !canAfford && styles.adoptBtnDim]}
@@ -85,7 +93,7 @@ function AdoptModal({ petKey, onClose }) {
                   style={[styles.roomChip, placedRoom === r && styles.roomChipActive]}
                   onPress={() => handlePlace(r)}
                 >
-                  <Text style={styles.roomChipTxt}>{r}</Text>
+                  <Text style={styles.roomChipTxt}>{ROOM_NAMES[r]}</Text>
                 </TouchableOpacity>
               ))}
               <TouchableOpacity
@@ -229,9 +237,16 @@ const styles = StyleSheet.create({
 
   // ── Manage (owned) ──────────────────────────────────────────────
   sectionLabel: { color: '#b89a6a', fontSize: 11, letterSpacing: 1, marginBottom: 6, textTransform: 'uppercase' },
-  roomRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 14 },
+  roomRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 7, marginBottom: 14, maxWidth: 300 },
+  effectBox: {
+    alignSelf: 'stretch', alignItems: 'center',
+    backgroundColor: '#3d2810', borderRadius: 10, borderWidth: 1, borderColor: '#7a4a18',
+    paddingHorizontal: 12, paddingVertical: 7, marginBottom: 12, maxWidth: 260,
+  },
+  effectTitle: { color: '#ffd060', fontSize: 13, fontWeight: 'bold', marginBottom: 2 },
+  effectDesc: { color: '#e8d4a8', fontSize: 11, textAlign: 'center' },
   roomChip: {
-    width: 34, height: 34, borderRadius: 8,
+    height: 34, paddingHorizontal: 8, borderRadius: 8,
     backgroundColor: '#3d2810', borderWidth: 1.5, borderColor: '#7a4a18',
     alignItems: 'center', justifyContent: 'center',
   },

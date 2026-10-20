@@ -7,7 +7,8 @@ import ReAnimated, { useSharedValue, useAnimatedStyle, runOnJS } from 'react-nat
 import { useGame } from '../context/GameContext';
 import { BACKGROUNDS, UI_IMAGES, POTTED_PLANT_IMAGES, SEED_IMAGES } from '../engine/assets';
 import { getSnapPoints, WATERING_CAN_POSITIONS, POT_SOURCE_POSITIONS, scalePoint } from '../engine/snapPoints';
-import { getCurrentSeason, seedType, heldSeedHint, PEST_CONFIG } from '../constants/gameData';
+import { getCurrentSeason, seedType, heldSeedHint, PETS } from '../constants/gameData';
+import { pestRewardFor } from '../engine/petEffects';
 import { useToast } from '../components/Toast';
 import { projectSize, projectPoint } from '../engine/project';
 
@@ -152,9 +153,16 @@ export default function Room1Screen({ navigation }) {
   }, [dispatch, slots, showToast]);
 
   const handlePestPress = useCallback((slot) => {
+    const reward = pestRewardFor(player, slot.room);
     dispatch({ type: 'REMOVE_PEST', slotId: slot.slotId });
-    showToast(`Bug shooed! +${PEST_CONFIG.reward} coins`);
-  }, [dispatch, showToast]);
+    showToast(`Bug shooed! +${reward} coins`);
+  }, [dispatch, showToast, player]);
+
+  // Tap a pet → what it does for this room.
+  const handlePetPress = useCallback((petKey) => {
+    const pet = PETS[petKey];
+    if (pet?.effect) showToast(`${pet.name} · ${pet.effect.title}: ${pet.effect.desc}`, 3500);
+  }, [showToast]);
 
   const handleBlockedSeed = useCallback((item) => {
     showToast(seedType(item.flowerKey) === 'hanging'
@@ -180,7 +188,7 @@ export default function Room1Screen({ navigation }) {
         />
 
         {/* Placed pets */}
-        <RoomPets room={1} sw={sw} sh={sh} />
+        <RoomPets room={1} sw={sw} sh={sh} onPetPress={handlePetPress} />
 
         {/* Pot source on window sill */}
         <Image
