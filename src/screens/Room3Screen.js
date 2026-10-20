@@ -6,7 +6,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useGame } from '../context/GameContext';
 import { BACKGROUNDS, SEED_IMAGES } from '../engine/assets';
 import { getSnapPoints, WATERING_CAN_POSITIONS, scalePoint } from '../engine/snapPoints';
-import { getCurrentSeason } from '../constants/gameData';
+import { getCurrentSeason, seedType, heldSeedHint, PEST_CONFIG } from '../constants/gameData';
+import { useToast } from '../components/Toast';
 import { projectSize } from '../engine/project';
 
 import CoinHUD from '../components/CoinHUD';
@@ -17,6 +18,9 @@ import WateringCan from '../components/WateringCan';
 import PlantPopup from '../components/PlantPopup';
 import InventoryOverlay from '../components/InventoryOverlay';
 
+// Pot types in this room — seeds of any other type can't be planted here.
+const ROOM_TYPES = ['potted', 'hanging'];
+
 export default function Room3Screen({ navigation }) {
   const { width: sw, height: sh } = useLayout();
   const { state, dispatch } = useGame();
@@ -25,6 +29,7 @@ export default function Room3Screen({ navigation }) {
   const [popup, setPopup] = useState(null);
   const [invOpen, setInvOpen] = useState(false);
   const canDragging = useRef(false);
+  const [toast, showToast] = useToast();
   const season = getCurrentSeason();
 
   useEffect(() => {
@@ -42,9 +47,13 @@ export default function Room3Screen({ navigation }) {
 
   const plantedSlots = Object.values(slots).filter((s) => s.room === 3 && s.flowerKey);
 
+  // Spots the held seed can go: empty, and the right pot type (shelf vs hook).
+  // Shelf spots have no draggable pot here, so their slot may not exist yet.
+  const heldType = heldSeed ? seedType(heldSeed.flowerKey) : null;
   const emptySnapPoints = allSnapPoints.filter((pt) => {
     const s = slots[pt.id];
-    return s && !s.flowerKey;
+    const ptType = pt.id.includes('_h') ? 'hanging' : 'potted';
+    return (!s || !s.flowerKey) && ptType === heldType;
   });
 
   const rawCan = WATERING_CAN_POSITIONS[3] ?? WATERING_CAN_POSITIONS[1];
@@ -71,8 +80,20 @@ export default function Room3Screen({ navigation }) {
   }, [dispatch]);
 
   const handleWater = useCallback((slotId) => {
+    if (slots[slotId]?.pest) { showToast('Shoo the bug away first!'); return; }
     dispatch({ type: 'WATER_PLANT', slotId });
-  }, [dispatch]);
+  }, [dispatch, slots, showToast]);
+
+  const handlePestPress = useCallback((slot) => {
+    dispatch({ type: 'REMOVE_PEST', slotId: slot.slotId });
+    showToast(`Bug shooed! +${PEST_CONFIG.reward} coins`);
+  }, [dispatch, showToast]);
+
+  const handleBlockedSeed = useCallback((item) => {
+    showToast(seedType(item.flowerKey) === 'hanging'
+      ? 'Hanging plant · plant it in a hanging pot'
+      : 'Shelf flower · plant it in a shelf pot');
+  }, [showToast]);
 
   const handlePopupHarvest = () => { if (popup) dispatch({ type: 'HARVEST_PLANT', slotId: popup.slot.slotId }); setPopup(null); };
   const handlePopupRemove = () => { if (popup) dispatch({ type: 'REMOVE_PLANT', slotId: popup.slot.slotId }); setPopup(null); };
@@ -95,7 +116,14 @@ export default function Room3Screen({ navigation }) {
           return (
             <TouchableOpacity
               key={`plant_${pt.id}`}
-              style={{ position: 'absolute', left: pt.x - size / 2, top: pt.y - size / 2, width: size, height: size, zIndex: 6 }}
+              style={{
+                position: 'absolute', left: pt.x - size / 2, width: size, height: size, zIndex: 6,
+                // shelf spots anchor at the shelf (ring sits above it); hooks anchor at the rod
+                top: heldType === 'potted' ? pt.y - size : pt.y,
+                // faint ring so you can see where the held seed fits
+                borderRadius: size / 2, borderWidth: 2, borderStyle: 'dashed',
+                borderColor: 'rgba(216,255,160,0.85)', backgroundColor: 'rgba(216,255,160,0.18)',
+              }}
               activeOpacity={0.6}
               onPress={() => handleEmptyPress(pt.id)}
             />
@@ -106,7 +134,7 @@ export default function Room3Screen({ navigation }) {
         {plantedSlots.map((slot) => {
           const pt = allSnapPoints.find((p) => p.id === slot.slotId);
           if (!pt) return null;
-          return <PlantSlot key={slot.slotId} slot={slot} position={pt} onPress={handleSlotPress} />;
+          return <PlantSlot key={slot.slotId} slot={slot} position={pt} onPress={handleSlotPress} onPestPress={handlePestPress} />;
         })}
 
         <WateringCan
@@ -126,6 +154,7 @@ export default function Room3Screen({ navigation }) {
           onSettings={() => navigation.navigate('Room')}
           onMap={() => navigation.navigate('Map')}
           onInventory={() => setInvOpen(true)}
+          onBook={() => navigation.navigate('FlowerBook')}
         />
 
 
@@ -146,12 +175,14 @@ export default function Room3Screen({ navigation }) {
             activeOpacity={0.85}
           >
             <Image source={SEED_IMAGES[heldSeed.flowerKey]} style={styles.heldImg} resizeMode="contain" />
-            <Text style={styles.heldText}>Tap an empty pot to plant · tap here to cancel</Text>
+            <Text style={styles.heldText}>{heldSeedHint(heldSeed.flowerKey, ROOM_TYPES)}</Text>
           </TouchableOpacity>
         )}
 
+        {toast}
+
         {invOpen && (
-          <InventoryOverlay onClose={() => setInvOpen(false)} onPick={handlePickSeed} />
+          <InventoryOverlay onClose={() => setInvOpen(false)} onPick={handlePickSeed} roomTypes={ROOM_TYPES} onBlocked={handleBlockedSeed} />
         )}
       </View>
     </GestureHandlerRootView>

@@ -1,4 +1,4 @@
-import { GROWTH_TIMERS } from '../constants/gameData';
+import { GROWTH_TIMERS, PEST_CONFIG } from '../constants/gameData';
 
 // ─── Slot factory ─────────────────────────────────────────────────────────────
 export function createEmptySlot(slotId, room, type, hasPot = false) {
@@ -12,6 +12,7 @@ export function createEmptySlot(slotId, room, type, hasPot = false) {
     lastWatered: null,
     wilting: false,
     _budWatered: false,
+    pest: null, // 'aphid' | 'beetle' while a pest is on the plant
     hasPot, // true only when explicitly placed by user via PLACE_POT
   };
 }
@@ -26,10 +27,11 @@ export function plantSeed(slot, flowerKey) {
     lastWatered: null, // null = thirsty now, so a fresh seed can be watered immediately
     wilting: false,
     _budWatered: false,
+    pest: null,
   };
 }
 
-function maxStageFor(type) {
+export function maxStageFor(type) {
   return GROWTH_TIMERS.maxStage[type] ?? 3;
 }
 
@@ -47,6 +49,7 @@ export function isThirsty(slot, now = Date.now()) {
 export function waterPlant(slot) {
   const now = Date.now();
   if (!slot.flowerKey) return slot;
+  if (slot.pest) return slot; // pest blocks growth until it's shooed away
   // Watering a wilting plant always revives it (and advances if it was thirsty).
   if (!isThirsty(slot, now) && !slot.wilting) return slot; // not ready yet — no-op
 
@@ -105,11 +108,25 @@ export function calcHangingPassiveCoins(slots, lastTickTime, now) {
   return total;
 }
 
+// ─── Pests ────────────────────────────────────────────────────────────────────
+// Growing plants (bud or later, not full bloom) can pick up a pest each tick.
+function canGetPest(slot) {
+  return !!slot.flowerKey && !slot.pest && slot.stage >= 1 && slot.stage < maxStageFor(slot.type);
+}
+
+function maybeSpawnPest(slot, rand) {
+  if (!canGetPest(slot) || rand() >= PEST_CONFIG.chancePerTick) return slot;
+  const types = PEST_CONFIG.types;
+  return { ...slot, pest: types[Math.floor(rand() * types.length)] };
+}
+
 // ─── Tick all slots ───────────────────────────────────────────────────────────
-export function tickAllSlots(slots, now) {
+// rand: () => [0,1). Passed in so the reducer stays deterministic per action.
+export function tickAllSlots(slots, now, rand) {
   const updated = {};
   for (const [id, slot] of Object.entries(slots)) {
-    updated[id] = tickSlot(slot, now);
+    const ticked = tickSlot(slot, now);
+    updated[id] = rand ? maybeSpawnPest(ticked, rand) : ticked;
   }
   return updated;
 }

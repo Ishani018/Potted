@@ -7,7 +7,8 @@ import ReAnimated, { useSharedValue, useAnimatedStyle, runOnJS } from 'react-nat
 import { useGame } from '../context/GameContext';
 import { BACKGROUNDS, UI_IMAGES, PAINTING_IMAGES, PET_IMAGES, HANGING_PLANT_IMAGES, POTTED_PLANT_IMAGES, SEED_IMAGES } from '../engine/assets';
 import { getSnapPoints, WATERING_CAN_POSITIONS, DECOR_POSITIONS, POT_SOURCE_POSITIONS, scalePoint } from '../engine/snapPoints';
-import { getCurrentSeason } from '../constants/gameData';
+import { getCurrentSeason, seedType, heldSeedHint, PEST_CONFIG } from '../constants/gameData';
+import { useToast } from '../components/Toast';
 import { projectSize, projectPoint } from '../engine/project';
 
 import CoinHUD from '../components/CoinHUD';
@@ -84,6 +85,9 @@ function DraggableHangingPot({ startX, startY, potW, potH, dragW, dragH, ghostW,
   );
 }
 
+// Pot types in this room — seeds of any other type can't be planted here.
+const ROOM_TYPES = ['hanging'];
+
 export default function Room2Screen({ navigation }) {
   const { width: sw, height: sh } = useLayout();
   const { state, dispatch } = useGame();
@@ -92,6 +96,7 @@ export default function Room2Screen({ navigation }) {
   const [popup, setPopup] = useState(null);
   const [invOpen, setInvOpen] = useState(false);
   const canDragging = useRef(false);
+  const [toast, showToast] = useToast();
   const season = getCurrentSeason();
 
   useEffect(() => {
@@ -125,11 +130,15 @@ export default function Room2Screen({ navigation }) {
   // Tap an empty hanging pot: plant the held seed, or open the popup.
   const handleEmptyPotPress = useCallback((slotId, slotObj, position) => {
     if (heldSeed) {
+      if (seedType(heldSeed.flowerKey) !== slotObj.type) {
+        showToast(slotObj.type === 'hanging' ? 'Only hanging plants grow here' : 'Only shelf flowers grow here');
+        return;
+      }
       dispatch({ type: 'PLANT_HELD', slotId });
     } else {
       setPopup({ slot: slotObj, position });
     }
-  }, [heldSeed, dispatch]);
+  }, [heldSeed, dispatch, showToast]);
 
   const handlePickSeed = useCallback((item) => {
     dispatch({ type: 'HOLD_SEED', invItemId: item.id, flowerKey: item.flowerKey });
@@ -141,8 +150,20 @@ export default function Room2Screen({ navigation }) {
   }, [dispatch]);
 
   const handleWater = useCallback((slotId) => {
+    if (slots[slotId]?.pest) { showToast('Shoo the bug away first!'); return; }
     dispatch({ type: 'WATER_PLANT', slotId });
-  }, [dispatch]);
+  }, [dispatch, slots, showToast]);
+
+  const handlePestPress = useCallback((slot) => {
+    dispatch({ type: 'REMOVE_PEST', slotId: slot.slotId });
+    showToast(`Bug shooed! +${PEST_CONFIG.reward} coins`);
+  }, [dispatch, showToast]);
+
+  const handleBlockedSeed = useCallback((item) => {
+    showToast(seedType(item.flowerKey) === 'hanging'
+      ? 'Hanging plant · plant it in a hanging pot'
+      : 'Shelf flower · plant it in a shelf pot');
+  }, [showToast]);
 
   const handlePopupHarvest = () => { if (popup) dispatch({ type: 'HARVEST_PLANT', slotId: popup.slot.slotId }); setPopup(null); };
   const handlePopupRemove = () => { if (popup) dispatch({ type: 'REMOVE_PLANT', slotId: popup.slot.slotId, deletePot: true }); setPopup(null); };
@@ -249,6 +270,7 @@ export default function Room2Screen({ navigation }) {
               slot={slot}
               position={pt}
               onPress={handleSlotPress}
+              onPestPress={handlePestPress}
               baseWidthOverride={isSeedVisible ? 85 : 235}
             />
           );
@@ -271,6 +293,7 @@ export default function Room2Screen({ navigation }) {
           onSettings={() => navigation.navigate('Room')}
           onMap={() => navigation.navigate('Map')}
           onInventory={() => setInvOpen(true)}
+          onBook={() => navigation.navigate('FlowerBook')}
         />
 
 
@@ -292,12 +315,14 @@ export default function Room2Screen({ navigation }) {
             activeOpacity={0.85}
           >
             <Image source={SEED_IMAGES[heldSeed.flowerKey]} style={styles.heldImg} resizeMode="contain" />
-            <Text style={styles.heldText}>Tap an empty pot to plant · tap here to cancel</Text>
+            <Text style={styles.heldText}>{heldSeedHint(heldSeed.flowerKey, ROOM_TYPES)}</Text>
           </TouchableOpacity>
         )}
 
+        {toast}
+
         {invOpen && (
-          <InventoryOverlay onClose={() => setInvOpen(false)} onPick={handlePickSeed} />
+          <InventoryOverlay onClose={() => setInvOpen(false)} onPick={handlePickSeed} roomTypes={ROOM_TYPES} onBlocked={handleBlockedSeed} />
         )}
       </View>
     </GestureHandlerRootView>
@@ -311,4 +336,13 @@ const styles = StyleSheet.create({
   hudTR: { position: 'absolute', top: 10, right: 14,  width: 48, height: 48, zIndex: 20 },
   hudBL: { position: 'absolute', bottom: 14, left: 14, width: 48, height: 48, zIndex: 20 },
   hudImg: { width: '100%', height: '100%' },
+  heldBanner: {
+    position: 'absolute', top: 10, alignSelf: 'center',
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: 'rgba(20,40,8,0.92)',
+    borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6,
+    borderWidth: 1.5, borderColor: '#70a840', zIndex: 120,
+  },
+  heldImg: { width: 28, height: 28 },
+  heldText: { color: '#d8ffa0', fontSize: 12, fontWeight: 'bold' },
 });

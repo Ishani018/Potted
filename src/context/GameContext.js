@@ -1,6 +1,6 @@
 import { createContext, useContext, useReducer, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { INITIAL_PLAYER_STATE, ROOM_UNLOCK_COSTS } from '../constants/gameData';
+import { INITIAL_PLAYER_STATE, ROOM_UNLOCK_COSTS, PEST_CONFIG, seedType } from '../constants/gameData';
 import {
   tickAllSlots,
   harvestPlant,
@@ -8,6 +8,7 @@ import {
   plantSeed,
   createEmptySlot,
   calcHangingPassiveCoins,
+  maxStageFor,
 } from '../engine/gameEngine';
 import { getSnapPoints } from '../engine/snapPoints';
 
@@ -17,6 +18,24 @@ const TICK_INTERVAL_MS = 60_000;
 // slot: { slotId, room, type, flowerKey, stage, plantedAt, lastWatered, wilting, _budWatered }
 
 const INVENTORY_CAP = 35; // 7×5 grid
+
+// Small seeded PRNG (mulberry32) so TICK's pest rolls come from the action.
+function makeRand(seed) {
+  let t = Math.floor(seed * 4294967296) >>> 0;
+  return () => {
+    t += 0x6D2B79F5;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Slot ids encode room + type: r3_p1 → room 3 potted, r2_h4 → room 2 hanging.
+function slotInfoFromId(slotId) {
+  const m = /^r(\d+)_([ph])/.exec(slotId);
+  if (!m) return null;
+  return { room: Number(m[1]), type: m[2] === 'h' ? 'hanging' : 'potted' };
+}
 
 const initialState = {
   player: INITIAL_PLAYER_STATE,
@@ -36,7 +55,8 @@ function reducer(state, action) {
 
     case 'TICK': {
       const now = action.now;
-      const updatedSlots = tickAllSlots(state.slots, now);
+      const rand = action.seed != null ? makeRand(action.seed) : null;
+      const updatedSlots = tickAllSlots(state.slots, now, rand);
       const passiveCoins = calcHangingPassiveCoins(state.slots, state.lastPassiveTick, now);
       return {
         ...state,
@@ -88,11 +108,20 @@ function reducer(state, action) {
     }
 
     // Tap an empty pot while holding a seed → plant it, consume from inventory.
+    // The seed must match the pot: shelf flowers → potted, hanging plants → hanging.
     case 'PLANT_HELD': {
       const { slotId } = action;
       const held = state.heldSeed;
-      const slot = state.slots[slotId];
-      if (!held || !slot || slot.flowerKey) return state;
+      if (!held) return state;
+      // Sunroom shelf spots have no draggable pot, so their slot may not exist yet.
+      let slot = state.slots[slotId];
+      if (!slot) {
+        const info = slotInfoFromId(slotId);
+        if (!info) return state;
+        slot = createEmptySlot(slotId, info.room, info.type, true);
+      }
+      if (slot.flowerKey) return state;
+      if (seedType(held.flowerKey) !== slot.type) return state; // wrong pot type
       return {
         ...state,
         slots: { ...state.slots, [slotId]: plantSeed(slot, held.flowerKey) },
@@ -116,7 +145,36 @@ function reducer(state, action) {
       const { slotId } = action;
       const slot = state.slots[slotId];
       if (!slot || !slot.flowerKey) return state;
-      return { ...state, slots: { ...state.slots, [slotId]: waterPlant(slot) } };
+      const watered = waterPlant(slot);
+      // First time reaching full bloom fills that flower's page in the book.
+      const max = maxStageFor(slot.type);
+      let player = state.player;
+      if (watered.stage === max && slot.stage < max) {
+        const book = { ...(player.flowerBook ?? {}) };
+        const prev = book[slot.flowerKey];
+        book[slot.flowerKey] = {
+          grown: (prev?.grown ?? 0) + 1,
+          firstAt: prev?.firstAt ?? Date.now(),
+        };
+        player = { ...player, flowerBook: book };
+      }
+      return { ...state, player, slots: { ...state.slots, [slotId]: watered } };
+    }
+
+    // Tap a pest off a plant → it can grow again, and you get a small reward.
+    case 'REMOVE_PEST': {
+      const { slotId } = action;
+      const slot = state.slots[slotId];
+      if (!slot?.pest) return state;
+      return {
+        ...state,
+        slots: { ...state.slots, [slotId]: { ...slot, pest: null } },
+        player: {
+          ...state.player,
+          coins: state.player.coins + PEST_CONFIG.reward,
+          pestsCleared: (state.player.pestsCleared ?? 0) + 1,
+        },
+      };
     }
 
     case 'HARVEST_PLANT': {
@@ -342,7 +400,7 @@ export function GameProvider({ children }) {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      dispatch({ type: 'TICK', now: Date.now() });
+      dispatch({ type: 'TICK', now: Date.now(), seed: Math.random() });
       saveState(stateRef.current);
     }, TICK_INTERVAL_MS);
     return () => clearInterval(interval);

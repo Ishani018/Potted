@@ -31,6 +31,38 @@ export const HANGING_PLANTS = {
   Bougainvillea:  { key: 'Bougainvillea',  name: 'Bougainvillea',    seedPrice: 22 },
 };
 
+// ── Seed → pot type ───────────────────────────────────────────────────────────
+// Potted flowers only grow in shelf pots, hanging plants only in hanging pots.
+// Returns 'potted' | 'hanging' | null.
+export function seedType(flowerKey) {
+  if (POTTED_FLOWERS[flowerKey]) return 'potted';
+  if (HANGING_PLANTS[flowerKey]) return 'hanging';
+  return null;
+}
+
+// Banner text while holding a seed in a room whose pots are `roomTypes`.
+export function heldSeedHint(flowerKey, roomTypes) {
+  const type = seedType(flowerKey);
+  if (type && !roomTypes.includes(type)) {
+    return type === 'hanging'
+      ? 'Hanging plant · needs a hanging pot (Balcony or Sunroom hooks) · tap to cancel'
+      : 'Shelf flower · needs a shelf pot (Greenhouse or Sunroom shelves) · tap to cancel';
+  }
+  return type === 'hanging'
+    ? 'Tap an empty hanging pot to plant · tap here to cancel'
+    : 'Tap an empty shelf pot to plant · tap here to cancel';
+}
+
+// ── Pests ─────────────────────────────────────────────────────────────────────
+// Every growth tick (1 min) each growing plant (bud or later, not yet full bloom)
+// has `chancePerTick` of getting a pest. A plant with a pest can't be watered to
+// the next stage until the pest is tapped away, which pays `reward` coins.
+export const PEST_CONFIG = {
+  chancePerTick: 0.012,   // ≈ one pest per plant every ~80 min of play
+  reward: 3,
+  types: ['aphid', 'beetle'],
+};
+
 export const WALL_COLORS = {
   room1: ['white'],
   room2: ['white'],
@@ -236,7 +268,27 @@ export const INITIAL_PLAYER_STATE = {
   ownedPaintings: [],
   ownedPets: [],
   petPlacements: {}, // petKey → room number where the owned pet is currently placed
+  flowerBook: {},    // flowerKey → { grown, firstAt } — page unlocks on first full bloom
+  pestsCleared: 0,
 };
+
+// ── Flower book ───────────────────────────────────────────────────────────────
+// One page per flower. A page unlocks the first time that flower reaches full
+// bloom. season = the flower's natural bloom season (flavour for now).
+export const FLOWER_BOOK = [
+  { key: 'daisy',          season: 'spring', blurb: 'A cheerful little bloom that opens with the sun and closes at dusk.',                tip: 'The easiest flower to grow — a great first harvest.' },
+  { key: 'snapdragon',     season: 'spring', blurb: 'Squeeze a blossom and it opens like a tiny dragon\'s mouth.',                       tip: 'Tall stems — give it a spot with headroom on the shelf.' },
+  { key: 'poppy',          season: 'summer', blurb: 'Papery petals that flutter in the slightest breeze.',                               tip: 'Poppies sell well when the market is short on red.' },
+  { key: 'marigold',       season: 'autumn', blurb: 'Warm golden pom-poms. Gardeners say pests dislike their scent.',                    tip: 'Keep an eye out for bugs — shoo them to keep it growing.' },
+  { key: 'peony',          season: 'spring', blurb: 'Big, ruffled, and fragrant. A peony bloom is worth the wait.',                      tip: 'A valuable flower — check the market for a good day to sell.' },
+  { key: 'hydrenga',       season: 'summer', blurb: 'Clusters of tiny flowers form one big puffy bloom.',                                tip: 'One of the priciest potted flowers at the market.' },
+  { key: 'rose',           season: 'summer', blurb: 'The classic. Every gardener\'s pride and joy.',                                    tip: 'The most valuable shelf flower — save the best price days for roses.' },
+  { key: 'stringofpearls', season: 'summer', blurb: 'Trailing strands of round, bead-like leaves.',                                     tip: 'Grows in hanging pots only.' },
+  { key: 'Philodendron',   season: 'autumn', blurb: 'Glossy heart-shaped leaves that tumble over the pot\'s edge.',                     tip: 'Grows in hanging pots only.' },
+  { key: 'jasmine',        season: 'summer', blurb: 'Tiny white stars with a sweet evening scent.',                                     tip: 'Grows in hanging pots only.' },
+  { key: 'petunia',        season: 'spring', blurb: 'Trumpet-shaped blooms that spill down in a colourful cascade.',                     tip: 'Grows in hanging pots only.' },
+  { key: 'Bougainvillea',  season: 'summer', blurb: 'Bright paper-like bracts in hot pink — a burst of colour.',                         tip: 'Grows in hanging pots only.' },
+];
 
 export const ACHIEVEMENTS = [
   { id: 'first_bloom',    title: 'First Bloom',       desc: 'Harvest your first flower.',          check: (s) => s.harvestCount >= 1 },

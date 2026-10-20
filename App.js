@@ -22,6 +22,7 @@ import TradeScreen from './src/screens/TradeScreen';
 import TradingScreen from './src/screens/TradingScreen';
 import GalleryScreen from './src/screens/GalleryScreen';
 import RoomScreen from './src/screens/RoomScreen';
+import FlowerBookScreen from './src/screens/FlowerBookScreen';
 
 const Stack = createStackNavigator();
 
@@ -66,6 +67,7 @@ export default function App() {
                   <Stack.Screen name="Trading" component={TradingScreen} />
                   <Stack.Screen name="Gallery" component={GalleryScreen} />
                   <Stack.Screen name="Room" component={RoomScreen} />
+                  <Stack.Screen name="FlowerBook" component={FlowerBookScreen} />
                 </Stack.Navigator>
               </NavigationContainer>
             </View>

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Image, TouchableOpacity, StyleSheet, Text, useWindowDimensions } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { INVENTORY_BG, SEED_IMAGES, POTTED_PLANT_IMAGES } from '../engine/assets';
+import { seedType } from '../constants/gameData';
 
 // inventory.png is a 7×5 wooden grid (1226×912 native).
 const GRID_COLS = 7;
@@ -21,7 +22,9 @@ const SHIFT_Y = 0.009;      // uniform vertical nudge (+ = down)
 function seedImg(flowerKey) { return SEED_IMAGES[flowerKey] ?? POTTED_PLANT_IMAGES._seed; }
 
 // Full-screen inventory. Tap a seed bag → onPick(item) (parent holds it & closes).
-export default function InventoryOverlay({ onClose, onPick }) {
+// roomTypes (optional): pot types in the current room, e.g. ['potted']. Seeds
+// that don't fit any of them are dimmed and tapping one calls onBlocked(item).
+export default function InventoryOverlay({ onClose, onPick, roomTypes, onBlocked }) {
   const { state } = useGame();
   const inventory = state.inventory ?? [];
   const { width: winW, height: winH } = useWindowDimensions();
@@ -60,14 +63,15 @@ export default function InventoryOverlay({ onClose, onPick }) {
 
           {inventory.slice(0, GRID_COLS * GRID_ROWS).map((item, i) => {
             const c = cellCenter(i);
+            const fits = !roomTypes || roomTypes.includes(seedType(item.flowerKey));
             return (
               <TouchableOpacity
                 key={item.id}
                 style={{ position: 'absolute', left: c.x - bag / 2, top: c.y - bag / 2, width: bag, height: bag }}
                 activeOpacity={0.7}
-                onPress={() => onPick(item)}
+                onPress={() => (fits ? onPick(item) : onBlocked && onBlocked(item))}
               >
-                <Image source={seedImg(item.flowerKey)} style={{ width: bag, height: bag }} resizeMode="contain" />
+                <Image source={seedImg(item.flowerKey)} style={{ width: bag, height: bag, opacity: fits ? 1 : 0.35 }} resizeMode="contain" />
               </TouchableOpacity>
             );
           })}
