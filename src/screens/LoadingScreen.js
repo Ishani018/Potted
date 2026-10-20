@@ -6,8 +6,7 @@ import { PixelText } from '../components/Pixel';
 
 // Shown after PLAY: the florist-stall scene (loadingshop.png, 1480×798) with its
 // painted progress bar. The green fill, the % and a different full-bloom flower
-// are drawn live. The flower stands on top of the bar and grows as
-// loading fills. Then on to the town map.
+// are drawn live. The flower sits above the bar at a fixed size. Then on to the town map.
 const DURATION = 3000;
 const IMG_W = 1480;
 const IMG_H = 798;
@@ -48,12 +47,8 @@ export default function LoadingScreen({ navigation }) {
   const trackW = (TRACK.x1 - TRACK.x0) * sc;
   const trackH = (TRACK.y1 - TRACK.y0) * sc;
   const fillW = progress.interpolate({ inputRange: [0, 1], outputRange: [0, trackW] });
-  const grow = progress.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] });
 
   const ph = 300 * sc, pw = ph / plant.aspect;   // flower height ~300 image px
-  // scaling is about the centre; slide down so the pot stays put while it grows
-  const sink = progress.interpolate({ inputRange: [0, 1], outputRange: [ph * 0.2, 0] });
-
   return (
     <View style={styles.root} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
       <Image source={LOADING_BG} style={styles.bg} resizeMode="cover" />
@@ -66,10 +61,9 @@ export default function LoadingScreen({ navigation }) {
             backgroundColor: '#7aa83a', borderRadius: 3 * sc, borderTopWidth: 3 * sc, borderTopColor: '#a6cd5e', borderBottomWidth: 3 * sc, borderBottomColor: '#5d8a28',
           }} />
 
-          {/* the flower stands on top of the bar (centred) and grows as it loads */}
+          {/* the flower floats a little above the bar (centred), fixed size */}
           <Animated.View style={{
-            position: 'absolute', left: X((TRACK.x0 + TRACK.x1) / 2) - pw / 2, top: Y(TRACK.y0) - ph + 62 * sc, width: pw, height: ph,
-            transform: [{ translateY: sink }, { scale: grow }],
+            position: 'absolute', left: X((TRACK.x0 + TRACK.x1) / 2) - pw / 2, top: Y(TRACK.y0) - ph - 50 * sc, width: pw, height: ph,
           }}>
             <Image source={plant.img} style={{ width: pw, height: ph }} resizeMode="contain" />
           </Animated.View>

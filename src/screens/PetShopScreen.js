@@ -74,7 +74,7 @@ export default function PetShopScreen({ navigation }) {
     <View style={styles.root} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
       <Image source={PETSHOP_BG} style={styles.bg} resizeMode="stretch" />
 
-      {SHOP_PETS.map(({ key, x, y, w, h, flip, z }) => {
+      {SHOP_PETS.filter((p) => !ownedPets.includes(p.key)).map(({ key, x, y, w, h, flip, z }) => {
         const cx = (x / PLOPPER_W) * sw;
         const cy = (y / PLOPPER_H) * sh;
         const spriteW = (w / PLOPPER_W) * sw;
