@@ -3,9 +3,11 @@ import { View, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-nat
 import { useGame } from '../context/GameContext';
 import { ROOM_UNLOCK_COSTS } from '../constants/gameData';
 import { PAINTING_IMAGES, PET_IMAGES, MAP_BG, UI_IMAGES, BACKGROUNDS } from '../engine/assets';
-import { PixelText, PixelToast, COLORS } from '../components/Pixel';
+import { PixelText, COLORS } from '../components/Pixel';
+import { useNotice } from '../components/PurchaseNotice';
 
 const ROOM_NAMES = { 1: 'GREENHOUSE', 2: 'BALCONY', 3: 'SUNROOM' };
+const nice = (r) => ROOM_NAMES[r][0] + ROOM_NAMES[r].slice(1).toLowerCase();
 const ROOM_SHOT = {
   1: BACKGROUNDS.room1.white.summer,
   2: BACKGROUNDS.room2.white.summer,
@@ -46,16 +48,16 @@ function Slot({ active, onPress, children }) {
 export default function RoomScreen({ navigation }) {
   const { state, dispatch } = useGame();
   const { player } = state;
-  const [toast, setToast] = React.useState(null);
-  const showToast = (m) => { setToast(m); setTimeout(() => setToast(null), 1600); };
+  const [notice, notify] = useNotice();
 
   const currentRoom = player.currentRoom;
   const decor = player.placedDecor?.room2 ?? {};
 
   const handleUnlock = (room) => {
     const cost = ROOM_UNLOCK_COSTS[room];
-    if (player.coins < cost) { showToast(`NEED ${cost} COINS`); return; }
+    if (player.coins < cost) { notify({ icon: UI_IMAGES.goldcoins, title: 'Not enough coins', subtitle: `You need ${cost - player.coins} more for the ${nice(room)}.` }); return; }
     dispatch({ type: 'UNLOCK_ROOM', room });
+    notify({ icon: ROOM_SHOT[room], title: `Unlocked the ${nice(room)}!`, subtitle: 'Find it from the Home screen.' });
   };
   const place = (slot, value) => dispatch({ type: 'PLACE_DECOR', room: 2, slot, value });
 
@@ -132,7 +134,7 @@ export default function RoomScreen({ navigation }) {
         )}
       </ScrollView>
 
-      <PixelToast message={toast} />
+      {notice}
     </View>
   );
 }

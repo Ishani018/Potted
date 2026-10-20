@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { HOME_BG, UI_IMAGES } from '../engine/assets';
+import { HOME_BG } from '../engine/assets';
+import { MapTagButton } from '../components/MapTag';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
 
@@ -9,11 +10,14 @@ import ScreenHud from '../components/ScreenHud';
 // Render bg stretched + position against the measured box → exact placement.
 const PLOPPER_W = 1376;
 const PLOPPER_H = 768;
+// label = sign text; x/y = centre of the sign (text + arrow).
 const ENTRIES = [
-  { img: 'greenhousebtn', room: 1, x: 163,  y: 170, w: 203, h: 65, z: 1 },
-  { img: 'sunroombtn',    room: 3, x: 613,  y: 100, w: 157, h: 67, z: 2 },
-  { img: 'balconybtn',    room: 2, x: 1001, y: 220, w: 163, h: 69, z: 3 },
+  { label: 'GREENHOUSE', room: 1, x: 163,  y: 170 },
+  { label: 'SUNROOM',    room: 3, x: 613,  y: 100 },
+  { label: 'BALCONY',    room: 2, x: 1001, y: 220 },
 ];
+// The pet bowls by the stairs → the pet lounge.
+const PET_TAG = { label: 'PETS', x: 445, y: 566 };
 
 export default function HomeScreen({ navigation }) {
   const { dispatch } = useGame();
@@ -33,22 +37,10 @@ export default function HomeScreen({ navigation }) {
     >
       <Image source={HOME_BG} style={styles.bg} resizeMode="stretch" />
 
-      {ENTRIES.map((e) => {
-        const cx = (e.x / PLOPPER_W) * sw;
-        const cy = (e.y / PLOPPER_H) * sh;
-        const w = (e.w / PLOPPER_W) * sw;
-        const h = (e.h / PLOPPER_H) * sh;
-        return (
-          <TouchableOpacity
-            key={e.img}
-            activeOpacity={0.75}
-            onPress={() => go(e)}
-            style={{ position: 'absolute', left: cx - w / 2, top: cy - h / 2, width: w, height: h, zIndex: e.z }}
-          >
-            <Image source={UI_IMAGES[e.img]} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
-          </TouchableOpacity>
-        );
-      })}
+      {ENTRIES.map((e, i) => (
+        <MapTagButton key={e.label} label={e.label} x={e.x} y={e.y} box={box} z={10 + i} delay={i * 180} onPress={() => go(e)} />
+      ))}
+      <MapTagButton label={PET_TAG.label} x={PET_TAG.x} y={PET_TAG.y} box={box} z={14} delay={600} onPress={() => navigation.navigate('PetRoom')} />
 
       {/* Standard HUD — settings (TL) + map (TR) + inventory (BL) */}
       <ScreenHud

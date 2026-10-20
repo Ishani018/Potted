@@ -5,6 +5,7 @@ import { GALLERY_BG, PAINTING_IMAGES, UI_IMAGES } from '../engine/assets';
 import { PAINTINGS } from '../constants/gameData';
 import ScreenHud from '../components/ScreenHud';
 import { PixelPanel, PixelText, PixelButton } from '../components/Pixel';
+import { useNotice } from '../components/PurchaseNotice';
 import InventoryOverlay from '../components/InventoryOverlay';
 
 // Paintings on the gallery wall, laid out in Plopper (1376×768 base, CENTER
@@ -23,7 +24,7 @@ const WALL_ITEMS = [
 ];
 
 // ── Buy modal ─────────────────────────────────────────────────────────────────
-function BuyModal({ paintingKey, onClose }) {
+function BuyModal({ paintingKey, onClose, onBought }) {
   const { state, dispatch } = useGame();
   const p = PAINTINGS[paintingKey];
   const owned = (state.player.ownedPaintings ?? []).includes(paintingKey);
@@ -31,6 +32,7 @@ function BuyModal({ paintingKey, onClose }) {
 
   const handleBuy = () => {
     dispatch({ type: 'BUY_PAINTING', paintingKey, price: p.price });
+    onBought && onBought(p);
     onClose();
   };
 
@@ -70,6 +72,7 @@ function BuyModal({ paintingKey, onClose }) {
 export default function GalleryScreen({ navigation }) {
   const [selected, setSelected] = useState(null);
   const [invOpen, setInvOpen] = useState(false);
+  const [notice, notify] = useNotice();
   const [box, setBox] = useState({ w: 0, h: 0 });
   const sw = box.w, sh = box.h;
 
@@ -106,7 +109,14 @@ export default function GalleryScreen({ navigation }) {
         onInventory={() => setInvOpen(true)}
       />
 
-      {selected && <BuyModal paintingKey={selected} onClose={() => setSelected(null)} />}
+      {selected && (
+        <BuyModal
+          paintingKey={selected}
+          onClose={() => setSelected(null)}
+          onBought={(p) => notify({ icon: PAINTING_IMAGES[selected], title: `Bought ${p.name}!`, subtitle: 'Hang it in your Balcony photo frame.' })}
+        />
+      )}
+      {notice}
       {invOpen && <InventoryOverlay onClose={() => setInvOpen(false)} onPick={() => setInvOpen(false)} />}
     </View>
   );

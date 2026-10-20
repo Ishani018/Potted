@@ -8,7 +8,8 @@ import {
 import { globalPetEffects } from '../engine/petEffects';
 import BouquetArt from '../components/BouquetArt';
 import ScreenHud from '../components/ScreenHud';
-import { PixelText, PixelButton, PixelToast, COLORS } from '../components/Pixel';
+import { PixelText, PixelButton, COLORS } from '../components/Pixel';
+import { useNotice } from '../components/PurchaseNotice';
 
 // Bouquet table — you work ON the workshop table (cosy florist bg, 1376×768 base):
 //   • three paper sheets laid out on the left of the table — tap one to choose
@@ -28,8 +29,7 @@ export default function BouquetScreen({ navigation }) {
   const [box, setBox] = useState({ w: 0, h: 0 });
   const [picks, setPicks] = useState([]);
   const [paper, setPaper] = useState('plain');
-  const [toast, setToast] = useState(null);
-  const showToast = (m) => { setToast(m); setTimeout(() => setToast(null), 2200); };
+  const [notice, notify] = useNotice(3000);
 
   const sw = box.w, sh = box.h;
   const fx = (v) => (v / PLOPPER_W) * sw;
@@ -50,9 +50,11 @@ export default function BouquetScreen({ navigation }) {
   const sell = () => {
     if (!result) return;
     dispatch({ type: 'SELL_BOUQUET', flowers: picks, paper });
-    showToast(isNewRecipe
-      ? `NEW RECIPE: ${result.name.toUpperCase()}! +${result.value}`
-      : `SOLD ${result.name.toUpperCase()} +${result.value}`);
+    notify({
+      icon: UI_IMAGES[PAPER_IMG[paper]],
+      title: isNewRecipe ? `New recipe: ${result.name}!` : `Sold ${result.name}!`,
+      subtitle: isNewRecipe ? `Saved to your flower book. You earned ${result.value} coins.` : `You earned ${result.value} coins.`,
+    });
     setPicks([]);
   };
 
@@ -163,7 +165,7 @@ export default function BouquetScreen({ navigation }) {
         onSettings={() => navigation.navigate('Room')}
         onMap={() => navigation.navigate('Map')}
       />
-      <PixelToast message={toast} />
+      {notice}
     </View>
   );
 }

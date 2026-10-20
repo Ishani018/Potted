@@ -21,6 +21,9 @@ import WateringCan from '../components/WateringCan';
 import PlantPopup from '../components/PlantPopup';
 import InventoryOverlay from '../components/InventoryOverlay';
 
+// Pot types in this room (Balcony: hanging pots only) — seeds of another type can't be planted here.
+const ROOM_TYPES = ['hanging'];
+
 export default function Room2Screen({ navigation }) {
   const { width: sw, height: sh } = useLayout();
   const { state, dispatch } = useGame();

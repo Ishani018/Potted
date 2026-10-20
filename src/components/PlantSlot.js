@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Image, View, StyleSheet } from 'react-native';
-import { POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES } from '../engine/assets';
+import { POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES, UI_IMAGES } from '../engine/assets';
 import { projectSize } from '../engine/project';
 import { useLayout } from '../context/LayoutContext';
 import { isThirsty } from '../engine/gameEngine';
@@ -114,7 +114,7 @@ export default function PlantSlot({ slot, position, onPress, onPestPress, baseWi
 
   // A pest replaces the thirsty hint — it has to go before the plant can grow.
   const thirsty = isThirsty(slot) && !slot.pest;
-  const drop = Math.round(imgW * 0.22); // water-drop badge size
+  const drop = Math.round(Math.max(imgW * 0.26, 18)); // water-drop badge size
   // Pest sits on the foliage: size from the un-scaled pot width so it's the same
   // on every flower; PEST_X/PEST_Y are fractions of the plant box.
   const pestSize = Math.round(projectSize(isPotted ? 30 : 34, sw, sh));
@@ -144,9 +144,13 @@ export default function PlantSlot({ slot, position, onPress, onPestPress, baseWi
       />
       {/* Wilting tint — washed-out, never a "dead" red */}
       {slot.wilting && <View style={styles.wiltOverlay} />}
-      {/* Thirsty water-drop hint (CSS droplet — no asset needed) */}
+      {/* Thirsty water-drop hint (pixel droplet sprite) */}
       {thirsty && (
-        <View style={[styles.drop, { width: drop, height: drop, left: imgW / 2 - drop / 2, top: -drop * 0.6 }]} />
+        <Image
+          source={UI_IMAGES.waterdrop}
+          style={{ position: 'absolute', width: drop, height: drop * (14 / 12), left: imgW / 2 - drop / 2, top: -drop * 1.1, zIndex: 9 }}
+          resizeMode="contain"
+        />
       )}
       {slot.pest && (
         <Pest
@@ -168,18 +172,5 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(90,80,40,0.28)',
     borderRadius: 4,
-  },
-  // Droplet shape: a rounded square rounded extra on 3 corners, rotated 45°.
-  drop: {
-    position: 'absolute',
-    backgroundColor: '#5bc0f0',
-    borderColor: '#2a90c8',
-    borderWidth: 1.5,
-    borderTopLeftRadius: 999,
-    borderTopRightRadius: 999,
-    borderBottomRightRadius: 999,
-    borderBottomLeftRadius: 3,
-    transform: [{ rotate: '45deg' }],
-    zIndex: 9,
   },
 });

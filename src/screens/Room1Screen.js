@@ -20,6 +20,9 @@ import WateringCan from '../components/WateringCan';
 import PlantPopup from '../components/PlantPopup';
 import InventoryOverlay from '../components/InventoryOverlay';
 
+// Pot types in this room (Greenhouse: shelf pots only) — seeds of another type can't be planted here.
+const ROOM_TYPES = ['potted'];
+
 export default function Room1Screen({ navigation }) {
   const { width: sw, height: sh } = useLayout();
   const { state, dispatch } = useGame();

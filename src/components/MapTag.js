@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, Animated, Easing } from 'react-native';
+import { View, Text, Animated, Easing, TouchableOpacity } from 'react-native';
 import { PIXEL_FONT } from './Pixel';
 
 // Map location sign: chunky pixel lettering (cream fill, dark outline, bottom
@@ -63,5 +63,25 @@ export default function MapTag({ label, u, delay = 0 }) {
         </View>
       </Animated.View>
     </View>
+  );
+}
+
+// Tappable MapTag placed by its centre in 1376×768 base coords. `box` is the
+// measured screen size { w, h }.
+export function MapTagButton({ label, x, y, box, onPress, z = 10, delay = 0 }) {
+  if (!box.w || !box.h) return null;
+  const u = box.w / 1376;
+  const bw = (label.length * 28 + 40) * u, bh = 90 * u;
+  return (
+    <TouchableOpacity
+      activeOpacity={0.75}
+      onPress={onPress}
+      style={{
+        position: 'absolute', left: x * u - bw / 2, top: (y / 768) * box.h - bh / 2,
+        width: bw, height: bh, alignItems: 'center', justifyContent: 'center', zIndex: z,
+      }}
+    >
+      <MapTag label={label} u={u} delay={delay} />
+    </TouchableOpacity>
   );
 }

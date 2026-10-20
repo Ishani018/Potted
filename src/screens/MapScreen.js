@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { MAP_BG } from '../engine/assets';
-import MapTag from '../components/MapTag';
+import { MapTagButton } from '../components/MapTag';
 import ScreenHud from '../components/ScreenHud';
 
 // Town buttons laid out in Plopper (1376×768 base, sprite CENTER anchor).
@@ -30,23 +30,12 @@ export default function MapScreen({ navigation }) {
     >
       <Image source={MAP_BG} style={styles.bg} resizeMode="stretch" />
 
-      {sw > 0 && BUTTONS.map((b, i) => {
-        const u = sw / PLOPPER_W;
-        const bw = 230 * u, bh = 90 * u;
-        return (
-          <TouchableOpacity
-            key={b.label}
-            activeOpacity={0.75}
-            onPress={() => navigation.navigate(b.dest)}
-            style={{
-              position: 'absolute', left: b.x * u - bw / 2, top: (b.y / PLOPPER_H) * sh - bh / 2,
-              width: bw, height: bh, alignItems: 'center', justifyContent: 'center', zIndex: 10 + i,
-            }}
-          >
-            <MapTag label={b.label} u={u} delay={i * 180} />
-          </TouchableOpacity>
-        );
-      })}
+      {BUTTONS.map((b, i) => (
+        <MapTagButton
+          key={b.label} label={b.label} x={b.x} y={b.y} box={box} z={10 + i} delay={i * 180}
+          onPress={() => navigation.navigate(b.dest)}
+        />
+      ))}
 
       {/* Standard HUD — settings (top-left). Map has no inventory button. */}
       <ScreenHud sw={sw} sh={sh} onSettings={() => navigation.navigate('Room')} onBook={() => navigation.navigate('FlowerBook')} />

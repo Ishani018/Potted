@@ -137,6 +137,7 @@ export const UI_IMAGES = {
   trashclosed:  require('../../assets/ui_comps/trashclosed.png'),
   trashopen:    require('../../assets/ui_comps/trashopen.png'),
   // Flower book + bouquet wrappers
+  waterdrop:     require('../../assets/ui_comps/waterdrop.png'),
   flowerbook:    require('../../assets/ui_comps/flowerbook.png'),
   bouquetempty:  require('../../assets/ui_comps/bouquetempty.png'),
   bouquetmixed:  require('../../assets/ui_comps/bouquetmixed.png'),
@@ -172,5 +173,6 @@ export const PETSHOP_BG = require('../../assets/petshop.png');
 export const TRADE_BG = require('../../assets/flowertradeshop.png');   // market exterior (scales)
 export const TRADING_BG = require('../../assets/tradingscreen.png');    // the 6-slot trade page
 export const BOUQUET_BG = require('../../assets/bouquetshop.png');   // bouquet table screen
+export const PETROOM_BG = require('../../assets/petroom.png');       // pet lounge (beds)
 export const GALLERY_BG = require('../../assets/gallery.png');
 export const LOADING_BG = require('../../assets/loadingscreen.jpeg');

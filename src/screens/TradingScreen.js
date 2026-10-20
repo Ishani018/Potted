@@ -5,6 +5,7 @@ import { TRADING_BG, TRADE_IMAGES, UI_IMAGES } from '../engine/assets';
 import { getDailyTrades, TRADE_FLOWERS } from '../constants/gameData';
 import ScreenHud from '../components/ScreenHud';
 import { PixelText, PixelButton, PixelPanel, PixelToast, COLORS, PIXEL_FONT } from '../components/Pixel';
+import { useNotice } from '../components/PurchaseNotice';
 
 // Slot positions on tradingscreen.png — base 1376×768, CENTER anchor. The 6 daily
 // flowers fill these 6 boxes in order. (From Plopper; the two overlapping sets of
@@ -46,6 +47,7 @@ export default function TradingScreen({ navigation }) {
   const [invOpen, setInvOpen] = useState(false);
   const [active, setActive] = useState(null); // offer being traded
   const [qty, setQty] = useState(1);
+  const [notice, notify] = useNotice();
   const [toast, setToast] = useState(null);
   const showToast = (m) => { setToast(m); setTimeout(() => setToast(null), 1500); };
 
@@ -64,7 +66,7 @@ export default function TradingScreen({ navigation }) {
   const confirmTrade = () => {
     if (!active || have <= 0) return;
     dispatch({ type: 'TRADE_FLOWERS', flowerKey: active.key, qty, unitPrice: active.price });
-    showToast(`SOLD ${qty} ${active.name.toUpperCase()}`);
+    notify({ icon: TRADE_IMAGES[active.img], title: `Sold ${qty} ${active.name}!`, subtitle: `You earned ${total} coins.` });
     setActive(null);
   };
 
@@ -208,6 +210,7 @@ export default function TradingScreen({ navigation }) {
       )}
 
       <PixelToast message={toast} />
+      {notice}
     </View>
   );
 }

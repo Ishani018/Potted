@@ -5,7 +5,8 @@ import { NURSERY_BG, SEED_IMAGES, UI_IMAGES } from '../engine/assets';
 import { POTTED_FLOWERS, HANGING_PLANTS, seedType } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
-import { PixelToast, PixelText, COLORS } from '../components/Pixel';
+import { PixelText, COLORS } from '../components/Pixel';
+import { useNotice } from '../components/PurchaseNotice';
 
 // All buyable seeds keyed by flowerKey → { name, price }.
 const SEED_INFO = {};
@@ -36,23 +37,23 @@ export default function NurseryScreen({ navigation }) {
   const { state, dispatch } = useGame();
   const coins = state.player.coins;
 
-  const [toast, setToast] = useState(null);
+  const [notice, notify] = useNotice();
   const [invOpen, setInvOpen] = useState(false);
   const [box, setBox] = useState({ w: 0, h: 0 });
   const sw = box.w, sh = box.h;
-  const showToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 1400);
-  };
 
   const INVENTORY_CAP = 35;
   const invFull = (state.inventory?.length ?? 0) >= INVENTORY_CAP;
 
   const handleBuy = (flowerKey, price, name) => {
-    if (coins < price) { showToast('Not enough coins'); return; }
-    if (invFull) { showToast('Inventory full'); return; }
+    if (coins < price) { notify({ icon: UI_IMAGES.goldcoins, title: 'Not enough coins', subtitle: `You need ${price - coins} more for ${name}.` }); return; }
+    if (invFull) { notify({ icon: UI_IMAGES.inventorybtn, title: 'Inventory full', subtitle: 'Plant some seeds to make room.' }); return; }
     dispatch({ type: 'BUY_SEED', flowerKey, price });
-    showToast(`Bought ${name} · ${seedType(flowerKey) === 'hanging' ? 'grows in a hanging pot' : 'grows in a shelf pot'}`);
+    notify({
+      icon: SEED_IMAGES[flowerKey],
+      title: `Bought ${name}!`,
+      subtitle: seedType(flowerKey) === 'hanging' ? 'Grows in a hanging pot.' : 'Grows in a shelf pot.',
+    });
   };
 
   return (
@@ -111,7 +112,7 @@ export default function NurseryScreen({ navigation }) {
         );
       })}
 
-      <PixelToast message={toast} />
+      {notice}
 
       {invOpen && (
         <InventoryOverlay onClose={() => setInvOpen(false)} onPick={() => setInvOpen(false)} />
