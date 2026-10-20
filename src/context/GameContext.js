@@ -1,6 +1,10 @@
 import { createContext, useContext, useReducer, useEffect, useRef } from 'react';
+import { AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { INITIAL_PLAYER_STATE, ROOM_UNLOCK_COSTS, PEST_CONFIG, seedType } from '../constants/gameData';
+import {
+  INITIAL_PLAYER_STATE, ROOM_UNLOCK_COSTS, PEST_CONFIG, CATCH_UP, BOUQUET_SIZE,
+  seedType, evaluateBouquet,
+} from '../constants/gameData';
 import {
   tickAllSlots,
   harvestPlant,
@@ -8,6 +12,8 @@ import {
   plantSeed,
   createEmptySlot,
   calcHangingPassiveCoins,
+  spawnPestsOffline,
+  isThirsty,
   maxStageFor,
 } from '../engine/gameEngine';
 import { getSnapPoints } from '../engine/snapPoints';
@@ -44,7 +50,27 @@ const initialState = {
   heldSeed: null,      // { invItemId, flowerKey } picked from inventory, awaiting a pot tap
   initialized: false,
   lastPassiveTick: Date.now(),
+  lastSeen: Date.now(),  // last time the game was running (saved) — for catch-up
+  awaySummary: null,     // "while you were away" report, shown until dismissed
 };
+
+// What changed / needs attention after time away, per room. null = nothing to say.
+function buildAwaySummary(before, after, awayMs, coins) {
+  const rooms = {};
+  let total = 0;
+  for (const slot of Object.values(after)) {
+    if (!slot.flowerKey) continue;
+    const r = (rooms[slot.room] ??= { ready: 0, thirsty: 0, wilting: 0, pests: 0 });
+    if (slot.type === 'potted' && slot.stage >= maxStageFor('potted')) r.ready++;
+    else if (slot.pest) r.pests++;
+    else if (slot.wilting) r.wilting++;
+    else if (isThirsty(slot)) r.thirsty++;
+  }
+  for (const r of Object.values(rooms)) total += r.ready + r.thirsty + r.wilting + r.pests;
+  const newPests = Object.values(after).filter((s) => s.pest && !before[s.slotId]?.pest).length;
+  if (total === 0 && coins === 0) return null;
+  return { awayMs, rooms, newPests, coins };
+}
 
 function reducer(state, action) {
   switch (action.type) {
@@ -53,17 +79,32 @@ function reducer(state, action) {
       return { ...state, ...action.payload, initialized: true };
     }
 
+    // Runs every minute, on load, and when the app comes back to the foreground.
+    // A long gap since lastSeen means the game was closed: simulate the pests
+    // that arrived meanwhile and prepare the "while you were away" summary.
     case 'TICK': {
       const now = action.now;
       const rand = action.seed != null ? makeRand(action.seed) : null;
-      const updatedSlots = tickAllSlots(state.slots, now, rand);
-      const passiveCoins = calcHangingPassiveCoins(state.slots, state.lastPassiveTick, now);
+      const gap = now - (state.lastSeen ?? state.lastPassiveTick ?? now);
+      let updatedSlots = tickAllSlots(state.slots, now, rand);
+      const gapMinutes = Math.min(Math.floor(gap / 60000) - 1, CATCH_UP.maxPestMinutes);
+      if (rand && gapMinutes > 0) updatedSlots = spawnPestsOffline(updatedSlots, gapMinutes, rand);
+      const { coins, nextTick } = calcHangingPassiveCoins(state.slots, state.lastPassiveTick ?? now, now);
+      const summary = gap >= CATCH_UP.minAwayMs
+        ? buildAwaySummary(state.slots, updatedSlots, gap, coins)
+        : null;
       return {
         ...state,
         slots: updatedSlots,
-        lastPassiveTick: now,
-        player: { ...state.player, coins: state.player.coins + passiveCoins },
+        lastPassiveTick: nextTick,
+        lastSeen: now,
+        awaySummary: summary ?? state.awaySummary,
+        player: { ...state.player, coins: state.player.coins + coins },
       };
+    }
+
+    case 'DISMISS_SUMMARY': {
+      return { ...state, awaySummary: null };
     }
 
     case 'INIT_SLOTS': {
@@ -212,6 +253,35 @@ function reducer(state, action) {
           ...state.player,
           coins: state.player.coins + n * unitPrice,
           harvestedFlowers: harvested,
+        },
+      };
+    }
+
+    // Tie BOUQUET_SIZE harvested flowers into a bouquet and sell it at once.
+    // action: { flowers: [flowerKey, ...] }
+    case 'SELL_BOUQUET': {
+      const { flowers } = action;
+      if (!Array.isArray(flowers) || flowers.length !== BOUQUET_SIZE) return state;
+      const harvested = { ...(state.player.harvestedFlowers ?? {}) };
+      for (const k of flowers) {
+        if (!(harvested[k] > 0)) return state; // don't have enough of this flower
+        harvested[k] -= 1;
+      }
+      for (const k of Object.keys(harvested)) if (harvested[k] <= 0) delete harvested[k];
+      const { recipe, value } = evaluateBouquet(flowers);
+      const bouquetBook = { ...(state.player.bouquetBook ?? {}) };
+      if (recipe) {
+        const prev = bouquetBook[recipe.id];
+        bouquetBook[recipe.id] = { made: (prev?.made ?? 0) + 1, firstAt: prev?.firstAt ?? Date.now() };
+      }
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          coins: state.player.coins + value,
+          harvestedFlowers: harvested,
+          bouquetBook,
+          bouquetsSold: (state.player.bouquetsSold ?? 0) + 1,
         },
       };
     }
@@ -381,7 +451,11 @@ export function GameProvider({ children }) {
           // TEMP TESTING: force coins on every load so we don't have to clear
           // storage. REMOVE this line when done testing.
           saved.player = { ...saved.player, coins: 50000 };
+          // Saves from before catch-up existed: lastPassiveTick was the last tick time.
+          saved.lastSeen = saved.lastSeen ?? saved.lastPassiveTick ?? Date.now();
           dispatch({ type: 'LOAD', payload: { ...initialState, ...saved, initialized: true } });
+          // Catch up on the time the game was closed (pests, coins, summary).
+          dispatch({ type: 'TICK', now: Date.now(), seed: Math.random() });
         } else {
           dispatch({ type: 'LOAD', payload: { ...initialState, initialized: true } });
         }
@@ -393,7 +467,10 @@ export function GameProvider({ children }) {
 
   const saveState = async (s) => {
     try {
-      const toSave = { player: s.player, slots: s.slots, inventory: s.inventory, lastPassiveTick: s.lastPassiveTick };
+      const toSave = {
+        player: s.player, slots: s.slots, inventory: s.inventory,
+        lastPassiveTick: s.lastPassiveTick, lastSeen: Date.now(),
+      };
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
     } catch {}
   };
@@ -404,6 +481,16 @@ export function GameProvider({ children }) {
       saveState(stateRef.current);
     }, TICK_INTERVAL_MS);
     return () => clearInterval(interval);
+  }, []);
+
+  // Back in the foreground → tick now (catches up if timers were paused), and
+  // save when leaving so lastSeen marks when the player went away.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      if (next === 'active') dispatch({ type: 'TICK', now: Date.now(), seed: Math.random() });
+      else saveState(stateRef.current);
+    });
+    return () => sub.remove();
   }, []);
 
   useEffect(() => {

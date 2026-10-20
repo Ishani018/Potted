@@ -23,21 +23,26 @@ import TradingScreen from './src/screens/TradingScreen';
 import GalleryScreen from './src/screens/GalleryScreen';
 import RoomScreen from './src/screens/RoomScreen';
 import FlowerBookScreen from './src/screens/FlowerBookScreen';
+import CatchUpSummary from './src/components/CatchUpSummary';
 
 const Stack = createStackNavigator();
 
 export default function App() {
   const [layout, setLayout] = useState({ width: 854, height: 480 });
+  // Current screen — the catch-up summary waits until you're past the title.
+  const [route, setRoute] = useState('Main');
   // Load the pixel font used by the trade screen; render once ready.
   const [fontsLoaded] = useFonts({
     PressStart2P: require('./assets/fonts/PressStart2P-Regular.ttf'),
   });
-  if (!fontsLoaded) return null;
 
+  // Hooks must run before the early return below (same count every render).
   const onLayout = useCallback((e) => {
     const { width, height } = e.nativeEvent.layout;
     if (width > 0 && height > 0) setLayout({ width, height });
   }, []);
+
+  if (!fontsLoaded) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1, overflow: 'hidden' }}>
@@ -45,7 +50,7 @@ export default function App() {
         <GameProvider>
           <LayoutContext.Provider value={layout}>
             <View style={{ flex: 1 }} onLayout={onLayout}>
-              <NavigationContainer>
+              <NavigationContainer onStateChange={(nav) => nav && setRoute(nav.routes[nav.index]?.name)}>
                 <StatusBar hidden />
                 <Stack.Navigator
                   initialRouteName="Main"
@@ -70,6 +75,7 @@ export default function App() {
                   <Stack.Screen name="FlowerBook" component={FlowerBookScreen} />
                 </Stack.Navigator>
               </NavigationContainer>
+              <CatchUpSummary hidden={route === 'Main' || route === 'Loading'} />
             </View>
           </LayoutContext.Provider>
         </GameProvider>

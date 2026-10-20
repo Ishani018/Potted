@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES, UI_IMAGES } from '../engine/assets';
-import { FLOWER_BOOK, POTTED_FLOWERS, HANGING_PLANTS, seedType } from '../constants/gameData';
+import { POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES, UI_IMAGES, TRADE_IMAGES } from '../engine/assets';
+import {
+  FLOWER_BOOK, POTTED_FLOWERS, HANGING_PLANTS, BOUQUET_RECIPES, TRADE_FLOWERS, seedType,
+} from '../constants/gameData';
+import BouquetArt from '../components/BouquetArt';
 
-// Flower book — an open two-page journal. Left page: every flower (silhouettes
-// until discovered). Right page: the selected flower's stages, notes and stats.
-// A page unlocks the first time that flower reaches full bloom (see WATER_PLANT).
+// Flower book — an open two-page journal with two tabs.
+// Flowers: every flower (silhouettes until discovered); a page unlocks the first
+// time that flower reaches full bloom (see WATER_PLANT).
+// Bouquets: the secret bouquet recipes; one unlocks the first time it's tied
+// and sold at the market (see SELL_BOUQUET). Locked ones show only a hint.
 
 const PIXEL_FONT = 'PressStart2P';
 
@@ -43,7 +48,10 @@ function bloomImage(key) {
 export default function FlowerBookScreen({ navigation }) {
   const { state } = useGame();
   const book = state.player.flowerBook ?? {};
+  const bouquetBook = state.player.bouquetBook ?? {};
+  const [tab, setTab] = useState('flowers');
   const [selected, setSelected] = useState(FLOWER_BOOK[0].key);
+  const [selectedRecipe, setSelectedRecipe] = useState(BOUQUET_RECIPES[0].id);
 
   const found = FLOWER_BOOK.filter((f) => book[f.key]).length;
   const entry = FLOWER_BOOK.find((f) => f.key === selected);
@@ -57,9 +65,18 @@ export default function FlowerBookScreen({ navigation }) {
         <Image source={UI_IMAGES.back} style={styles.backImg} resizeMode="contain" />
       </TouchableOpacity>
 
+      {tab === 'bouquets' ? (
+        <BouquetPages
+          found={bouquetBook}
+          selected={selectedRecipe}
+          onSelect={setSelectedRecipe}
+          tabs={<Tabs tab={tab} setTab={setTab} />}
+        />
+      ) : (
       <View style={styles.book}>
         {/* ── Left page: index of every flower ─────────────────────────── */}
         <View style={[styles.page, styles.pageLeft]}>
+          <Tabs tab={tab} setTab={setTab} />
           <Text style={styles.title}>Flower Book</Text>
           <Text style={styles.progress}>{found} / {FLOWER_BOOK.length} discovered</Text>
           <View style={styles.grid}>
@@ -130,6 +147,82 @@ export default function FlowerBookScreen({ navigation }) {
           </ScrollView>
         </View>
       </View>
+      )}
+    </View>
+  );
+}
+
+function Tabs({ tab, setTab }) {
+  return (
+    <View style={styles.tabs}>
+      {[['flowers', 'Flowers'], ['bouquets', 'Bouquets']].map(([key, label]) => (
+        <TouchableOpacity key={key} style={[styles.tab, tab === key && styles.tabOn]} onPress={() => setTab(key)}>
+          <Text style={[styles.tabTxt, tab === key && styles.tabTxtOn]}>{label}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+}
+
+// Bouquet tab: left page lists the recipes, right page shows the selected one.
+function BouquetPages({ found, selected, onSelect, tabs }) {
+  const recipe = BOUQUET_RECIPES.find((r) => r.id === selected);
+  const record = found[selected];
+  const count = BOUQUET_RECIPES.filter((r) => found[r.id]).length;
+  return (
+    <View style={styles.book}>
+      <View style={[styles.page, styles.pageLeft]}>
+        {tabs}
+        <Text style={styles.title}>Bouquets</Text>
+        <Text style={styles.progress}>{count} / {BOUQUET_RECIPES.length} recipes found</Text>
+        <View style={styles.grid}>
+          {BOUQUET_RECIPES.map((r) => {
+            const got = !!found[r.id];
+            return (
+              <TouchableOpacity
+                key={r.id}
+                style={[styles.tile, styles.recipeTile, r.id === selected && styles.tileSel]}
+                onPress={() => onSelect(r.id)}
+                activeOpacity={0.75}
+              >
+                {got ? <BouquetArt flowers={r.flowers} size={54} /> : <Text style={styles.recipeQ}>?</Text>}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={styles.spine} />
+
+      <View style={[styles.page, styles.pageRight]}>
+        <ScrollView contentContainerStyle={styles.detail} showsVerticalScrollIndicator={false}>
+          <Text style={styles.name}>{record ? recipe.name : '???'}</Text>
+          {record ? (
+            <>
+              <BouquetArt flowers={recipe.flowers} size={110} />
+              <View style={styles.stageRow}>
+                {recipe.flowers.map((k, i) => (
+                  <View key={i} style={styles.stage}>
+                    <Image source={TRADE_IMAGES[TRADE_FLOWERS[k].img]} style={styles.recipeImg} resizeMode="contain" />
+                    <Text style={styles.stageLabel}>{TRADE_FLOWERS[k].name}</Text>
+                  </View>
+                ))}
+              </View>
+              <Text style={styles.tip}>Sells for ×{recipe.multiplier} the flowers' value</Text>
+              <View style={styles.stats}>
+                <Text style={styles.stat}>Bouquets made: {record.made}</Text>
+                <Text style={styles.stat}>First made: {new Date(record.firstAt).toLocaleDateString()}</Text>
+              </View>
+            </>
+          ) : (
+            <>
+              <Text style={styles.recipeBigQ}>?</Text>
+              <Text style={styles.blurb}>Hint: {recipe.hint}</Text>
+              <Text style={styles.lockedHint}>Tie the right 3 flowers at the market's bouquet table to find this recipe.</Text>
+            </>
+          )}
+        </ScrollView>
+      </View>
     </View>
   );
 }
@@ -152,6 +245,15 @@ const styles = StyleSheet.create({
   pageRight: { borderTopRightRadius: 8, borderBottomRightRadius: 8 },
   spine: { width: 4, backgroundColor: '#c9b48a' },
 
+  tabs: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginBottom: 6 },
+  tab: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 8, borderWidth: 1, borderColor: '#c9a86a' },
+  tabOn: { backgroundColor: '#7a3e1a', borderColor: '#7a3e1a' },
+  tabTxt: { color: '#8a6a40', fontSize: 10, fontWeight: 'bold' },
+  tabTxtOn: { color: PAPER },
+  recipeTile: { width: '30%' },
+  recipeQ: { fontFamily: PIXEL_FONT, fontSize: 16, color: '#b89a6a' },
+  recipeBigQ: { fontFamily: PIXEL_FONT, fontSize: 40, color: '#c9a86a', marginVertical: 14 },
+  recipeImg: { width: 40, height: 40 },
   title: { fontFamily: PIXEL_FONT, fontSize: 13, color: INK, textAlign: 'center', marginBottom: 4 },
   progress: { color: '#8a6a40', fontSize: 11, textAlign: 'center', marginBottom: 8 },
   grid: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignContent: 'center', gap: 6 },

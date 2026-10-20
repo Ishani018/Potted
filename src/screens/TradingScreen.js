@@ -4,6 +4,7 @@ import { useGame } from '../context/GameContext';
 import { TRADING_BG, TRADE_IMAGES, UI_IMAGES } from '../engine/assets';
 import { getDailyTrades, TRADE_FLOWERS } from '../constants/gameData';
 import ScreenHud from '../components/ScreenHud';
+import BouquetMaker from '../components/BouquetMaker';
 
 // Slot positions on tradingscreen.png — base 1376×768, CENTER anchor. The 6 daily
 // flowers fill these 6 boxes in order. (From Plopper; the two overlapping sets of
@@ -49,6 +50,7 @@ export default function TradingScreen({ navigation }) {
   }, [offers]);
 
   const [invOpen, setInvOpen] = useState(false);
+  const [bouquetOpen, setBouquetOpen] = useState(false);
   const [active, setActive] = useState(null); // offer being traded
   const [qty, setQty] = useState(1);
   const [toast, setToast] = useState(null);
@@ -106,10 +108,15 @@ export default function TradingScreen({ navigation }) {
         );
       })}
 
-      {/* Open harvested-flower inventory to trade from */}
-      <TouchableOpacity style={styles.sellBtn} onPress={() => setInvOpen(true)} activeOpacity={0.85}>
-        <Text style={styles.sellBtnTxt}>My Flowers</Text>
-      </TouchableOpacity>
+      {/* Sell single flowers (featured today) or tie any 3 into a bouquet */}
+      <View style={styles.btnRow}>
+        <TouchableOpacity style={styles.sellBtn} onPress={() => setInvOpen(true)} activeOpacity={0.85}>
+          <Text style={styles.sellBtnTxt}>My Flowers</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.sellBtn, styles.bouquetBtn]} onPress={() => setBouquetOpen(true)} activeOpacity={0.85}>
+          <Text style={styles.sellBtnTxt}>Make Bouquet</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Standard HUD — settings (TL) + map (TR) */}
       <ScreenHud
@@ -158,6 +165,10 @@ export default function TradingScreen({ navigation }) {
             )}
           </View>
         </View>
+      )}
+
+      {bouquetOpen && (
+        <BouquetMaker onClose={() => setBouquetOpen(false)} onSold={showToast} />
       )}
 
       {toast && (
@@ -224,8 +235,12 @@ const styles = StyleSheet.create({
   rateCoin: { width: 12, height: 12 },
   rateTxt: { color: '#fff', fontSize: 11 },
 
-  sellBtn: {
+  btnRow: {
     position: 'absolute', bottom: 18, alignSelf: 'center',
+    flexDirection: 'row', gap: 12, zIndex: 25,
+  },
+  bouquetBtn: { backgroundColor: 'rgba(110,30,60,0.94)', borderColor: '#e8708a' },
+  sellBtn: {
     backgroundColor: 'rgba(30,60,10,0.94)', borderRadius: 12,
     paddingHorizontal: 26, paddingVertical: 11,
     borderWidth: 2, borderColor: '#70a840', zIndex: 25,
@@ -262,7 +277,7 @@ const styles = StyleSheet.create({
     position: 'absolute', bottom: 70, alignSelf: 'center',
     backgroundColor: 'rgba(10,6,0,0.94)', borderRadius: 10,
     paddingHorizontal: 18, paddingVertical: 9,
-    borderWidth: 1.5, borderColor: '#c8873a', zIndex: 60,
+    borderWidth: 1.5, borderColor: '#c8873a', zIndex: 300, // above the bouquet table
   },
   toastTxt: { color: '#ffe8a0', fontSize: 13, fontWeight: 'bold' },
 

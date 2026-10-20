@@ -96,16 +96,16 @@ export function harvestPlant(slot) {
 }
 
 // ─── Passive hanging coin trickle ─────────────────────────────────────────────
+// Each mature hanging plant pays `amount` per full `interval` since lastTickTime.
+// Returns the coins and the new lastTickTime — advanced only by the intervals
+// paid out, so partial progress carries over to the next tick.
 export function calcHangingPassiveCoins(slots, lastTickTime, now) {
   const { amount, interval } = GROWTH_TIMERS.hangingPassiveCoins;
-  let total = 0;
-  for (const slot of Object.values(slots)) {
-    if (slot.type !== 'hanging' || !slot.flowerKey) continue;
-    if (slot.stage < maxStageFor('hanging')) continue; // only mature hanging plants
-    const elapsed = now - lastTickTime;
-    total += Math.floor(elapsed / interval) * amount;
-  }
-  return total;
+  const intervals = Math.max(0, Math.floor((now - lastTickTime) / interval));
+  const mature = Object.values(slots).filter(
+    (s) => s.type === 'hanging' && s.flowerKey && s.stage >= maxStageFor('hanging')
+  ).length;
+  return { coins: intervals * amount * mature, nextTick: lastTickTime + intervals * interval };
 }
 
 // ─── Pests ────────────────────────────────────────────────────────────────────
@@ -118,6 +118,19 @@ function maybeSpawnPest(slot, rand) {
   if (!canGetPest(slot) || rand() >= PEST_CONFIG.chancePerTick) return slot;
   const types = PEST_CONFIG.types;
   return { ...slot, pest: types[Math.floor(rand() * types.length)] };
+}
+
+// Pests that arrived while the game was closed: each growing plant gets one
+// with probability 1 - (1 - p)^minutes.
+export function spawnPestsOffline(slots, minutes, rand) {
+  const p = 1 - Math.pow(1 - PEST_CONFIG.chancePerTick, minutes);
+  const updated = {};
+  for (const [id, slot] of Object.entries(slots)) {
+    updated[id] = canGetPest(slot) && rand() < p
+      ? { ...slot, pest: PEST_CONFIG.types[Math.floor(rand() * PEST_CONFIG.types.length)] }
+      : slot;
+  }
+  return updated;
 }
 
 // ─── Tick all slots ───────────────────────────────────────────────────────────

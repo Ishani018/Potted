@@ -199,6 +199,16 @@ export const FLOWER_STAGE_SCALE = {
   Bougainvillea:  { 1: 1.0, 2: 1.0 },
 };
 
+// ── Catch-up summary ──────────────────────────────────────────────────────────
+// Coming back after at least `minAwayMs` shows a "while you were away" summary.
+// Pests keep arriving while you're gone, simulated for up to `maxPestMinutes`.
+export const CATCH_UP = {
+  minAwayMs: 10 * 60 * 1000,
+  maxPestMinutes: 6 * 60,
+};
+
+export const ROOM_NAMES = { 1: 'Greenhouse', 2: 'Balcony', 3: 'Sunroom' };
+
 // ── Market trading ────────────────────────────────────────────────────────────
 // All 12 tradeable flowers, mapped to their trade-image key + a base value the
 // daily price varies around. Each day, 6 of these appear in the market's 6 slots
@@ -270,6 +280,8 @@ export const INITIAL_PLAYER_STATE = {
   petPlacements: {}, // petKey → room number where the owned pet is currently placed
   flowerBook: {},    // flowerKey → { grown, firstAt } — page unlocks on first full bloom
   pestsCleared: 0,
+  bouquetBook: {},   // recipeId → { made, firstAt } — secret bouquet recipes found
+  bouquetsSold: 0,
 };
 
 // ── Flower book ───────────────────────────────────────────────────────────────
@@ -298,3 +310,43 @@ export const ACHIEVEMENTS = [
   { id: 'room2_unlock',   title: 'Balcony Life',       desc: 'Unlock the Balcony.',                  check: (s) => s.unlockedRooms.includes(2) },
   { id: 'room3_unlock',   title: 'Sunroom Dreams',     desc: 'Unlock the Sunroom.',                  check: (s) => s.unlockedRooms.includes(3) },
 ];
+
+// ── Bouquets ──────────────────────────────────────────────────────────────────
+// Tie any 3 harvested flowers into a bouquet and sell it at the market. Unlike
+// single flowers (only sellable when featured that day), the market always buys
+// bouquets. Value = sum of the flowers' base values × the bouquet's multiplier.
+export const BOUQUET_SIZE = 3;
+export const BOUQUET_MIXED = { name: 'Mixed Bouquet', multiplier: 1.1 };
+export const BOUQUET_TRIO = { multiplier: 1.3 }; // 3 of the same flower
+// Secret recipes (order doesn't matter). Found ones are recorded in the book;
+// unfound ones show only their hint.
+export const BOUQUET_RECIPES = [
+  { id: 'sweetheart', name: 'Sweetheart',     flowers: ['rose', 'rose', 'peony'],          multiplier: 1.8, hint: 'Something for someone you love.' },
+  { id: 'sunshine',   name: 'Sunshine',       flowers: ['daisy', 'marigold', 'poppy'],     multiplier: 1.6, hint: 'Three flowers as warm as the sun.' },
+  { id: 'cottage',    name: 'Cottage Garden', flowers: ['snapdragon', 'daisy', 'peony'],   multiplier: 1.6, hint: 'Picked from a little garden by a country cottage.' },
+  { id: 'summer',     name: 'Summer Breeze',  flowers: ['hydrenga', 'poppy', 'rose'],      multiplier: 1.7, hint: 'Three summer bloomers together.' },
+  { id: 'harvest',    name: 'Harvest Moon',   flowers: ['marigold', 'marigold', 'snapdragon'], multiplier: 1.6, hint: 'Golden autumn colours under the moon.' },
+  { id: 'wedding',    name: 'Wedding Day',    flowers: ['rose', 'peony', 'hydrenga'],      multiplier: 2.0, hint: 'The grandest flowers for the biggest day.' },
+];
+
+function sameFlowers(a, b) {
+  if (a.length !== b.length) return false;
+  const x = [...a].sort(), y = [...b].sort();
+  return x.every((k, i) => k === y[i]);
+}
+
+// keys: array of BOUQUET_SIZE flower keys → { recipe, name, multiplier, value }.
+export function evaluateBouquet(keys) {
+  const base = keys.reduce((sum, k) => sum + (TRADE_FLOWERS[k]?.base ?? 0), 0);
+  const recipe = BOUQUET_RECIPES.find((r) => sameFlowers(r.flowers, keys)) ?? null;
+  let name = BOUQUET_MIXED.name;
+  let multiplier = BOUQUET_MIXED.multiplier;
+  if (recipe) {
+    name = recipe.name;
+    multiplier = recipe.multiplier;
+  } else if (keys.every((k) => k === keys[0])) {
+    name = `${TRADE_FLOWERS[keys[0]]?.name ?? keys[0]} Bouquet`;
+    multiplier = BOUQUET_TRIO.multiplier;
+  }
+  return { recipe, name, multiplier, value: Math.round(base * multiplier) };
+}
