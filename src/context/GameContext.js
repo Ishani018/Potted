@@ -38,13 +38,6 @@ function makeRand(seed) {
   };
 }
 
-// Slot ids encode room + type: r3_p1 → room 3 potted, r2_h4 → room 2 hanging.
-function slotInfoFromId(slotId) {
-  const m = /^r(\d+)_([ph])/.exec(slotId);
-  if (!m) return null;
-  return { room: Number(m[1]), type: m[2] === 'h' ? 'hanging' : 'potted' };
-}
-
 const initialState = {
   player: INITIAL_PLAYER_STATE,
   slots: {},
@@ -217,13 +210,8 @@ function reducer(state, action) {
       const { slotId } = action;
       const held = state.heldSeed;
       if (!held) return state;
-      // Sunroom shelf spots have no draggable pot, so their slot may not exist yet.
-      let slot = state.slots[slotId];
-      if (!slot) {
-        const info = slotInfoFromId(slotId);
-        if (!info) return state;
-        slot = createEmptySlot(slotId, info.room, info.type, true);
-      }
+      const slot = state.slots[slotId];
+      if (!slot) return state; // shelf spots need a pot placed first
       if (slot.flowerKey) return state;
       if (seedType(held.flowerKey) !== slot.type) return state; // wrong pot type
       return {
