@@ -6,6 +6,7 @@ import {
   FLOWER_BOOK, POTTED_FLOWERS, HANGING_PLANTS, BOUQUET_RECIPES, TRADE_FLOWERS, seedType,
 } from '../constants/gameData';
 import BouquetArt from '../components/BouquetArt';
+import BackSign from '../components/BackSign';
 
 // Flower book — an open two-page journal with two tabs.
 // Flowers: every flower (silhouettes until discovered); a page unlocks the first
@@ -61,9 +62,7 @@ export default function FlowerBookScreen({ navigation, route }) {
 
   return (
     <View style={styles.root}>
-      <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.8}>
-        <Image source={UI_IMAGES.back} style={styles.backImg} resizeMode="contain" />
-      </TouchableOpacity>
+      <BackSign onPress={() => navigation.goBack()} />
 
       {tab === 'bouquets' ? (
         <BouquetPages
@@ -232,7 +231,6 @@ const PAPER = '#f3e3c0';
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#2a1608', alignItems: 'center', justifyContent: 'center' },
-  backBtn: { position: 'absolute', top: 12, left: 14, width: 48, height: 48, zIndex: 20 },
   backImg: { width: '100%', height: '100%' },
 
   book: {

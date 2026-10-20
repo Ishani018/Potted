@@ -1,31 +1,19 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { useCallback } from 'react';
+import { useNotice } from './PurchaseNotice';
 
-// Short message pill at the bottom of the screen.
-// const [toast, showToast] = useToast(); ... {toast} ... showToast('Hi');
-export function useToast(duration = 1600) {
-  const [msg, setMsg] = useState(null);
-  const timer = useRef(null);
-  const show = useCallback((m, ms = duration) => {
-    setMsg(m);
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => setMsg(null), ms);
-  }, [duration]);
-  useEffect(() => () => timer.current && clearTimeout(timer.current), []);
-  const el = msg ? (
-    <View style={styles.toast} pointerEvents="none">
-      <Text style={styles.text}>{msg}</Text>
-    </View>
-  ) : null;
+// Short message card at the bottom of the screen (same look as purchase notices).
+// const [toast, showToast] = useToast(); ... {toast} ... showToast('Title · detail');
+// "A · B" or "A: B" is split into a bold title and a softer subtitle.
+export function useToast(duration = 2600) {
+  const [el, notify] = useNotice(duration, 96);
+  const show = useCallback((m, ms) => {
+    let title = String(m), subtitle;
+    const colon = title.indexOf(': ');
+    const dot = title.indexOf(' · ');
+    if (colon > 0) { subtitle = title.slice(colon + 2); title = title.slice(0, colon); }
+    else if (dot > 0) { subtitle = title.slice(dot + 3); title = title.slice(0, dot); }
+    if (subtitle) subtitle = subtitle[0].toUpperCase() + subtitle.slice(1) + (/[.!?]$/.test(subtitle) ? '' : '.');
+    notify({ title, subtitle });
+  }, [notify]);
   return [el, show];
 }
-
-const styles = StyleSheet.create({
-  toast: {
-    position: 'absolute', bottom: 22, alignSelf: 'center',
-    backgroundColor: 'rgba(18,8,0,0.94)',
-    borderRadius: 10, paddingHorizontal: 18, paddingVertical: 9,
-    borderWidth: 1.5, borderColor: '#c8873a', zIndex: 8000,
-  },
-  text: { color: '#ffe8a0', fontSize: 13, fontWeight: 'bold' },
-});

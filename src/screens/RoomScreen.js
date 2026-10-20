@@ -1,10 +1,11 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { View, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { ROOM_UNLOCK_COSTS } from '../constants/gameData';
 import { PAINTING_IMAGES, PET_IMAGES, MAP_BG, UI_IMAGES, BACKGROUNDS } from '../engine/assets';
 import { PixelText, COLORS } from '../components/Pixel';
 import { useNotice } from '../components/PurchaseNotice';
+import BackSign from '../components/BackSign';
 
 // Settings — built from the painted pieces in assets/ui_comps (board, hanging
 // title sign, back sign, ribbons, slot tiles, vines…), laid out on 1376×768 base.
@@ -37,8 +38,6 @@ export default function RoomScreen({ navigation }) {
   const { player } = state;
   const [notice, notify] = useNotice();
   const [box, setBox] = useState({ w: 0, h: 0 });
-  const photoRef = useRef(null);
-  const petRef = useRef(null);
   const sw = box.w, sh = box.h;
   const fx = (v) => (v / W) * sw;
   const fy = (v) => (v / H) * sh;
@@ -58,8 +57,8 @@ export default function RoomScreen({ navigation }) {
   };
   const place = (slot, value) => dispatch({ type: 'PLACE_DECOR', room: 2, slot, value });
 
-  const Ribbon = ({ label, top, w = 280 }) => (
-    <View style={{ position: 'absolute', left: fx(215), top: fy(top), width: fx(w), height: fx(w) * (22 / 100) }}>
+  const Ribbon = ({ label, top, w = 280, left = 215 }) => (
+    <View style={{ position: 'absolute', left: fx(left), top: fy(top), width: fx(w), height: fx(w) * (22 / 100) }}>
       <Image source={UI_IMAGES.ribbon} style={styles.fill} resizeMode="stretch" />
       <View style={{ ...StyleSheet.absoluteFillObject, paddingRight: fx(34), alignItems: 'center', justifyContent: 'center' }}>
         <PixelText size={fs(15, 8)} color={INK} style={styles.noShadow}>{label}</PixelText>
@@ -71,41 +70,29 @@ export default function RoomScreen({ navigation }) {
     <Image source={UI_IMAGES.dividerPaw} style={{ position: 'absolute', left: fx(215), top: fy(top), width: fx(946), height: fx(946) / 20 }} resizeMode="stretch" />
   );
 
-  // A row of selectable tiles: NONE + items, with a scroll arrow when it overflows.
-  const picker = (top, slot, items, images, scrollRef) => {
-    const tile = fx(62), gap = fx(10);
-    const rowW = fx(946) - fx(54);
-    const overflow = (items.length + 1) * (tile + gap) > rowW;
+  // A wrapped grid of selectable tiles (NONE + items) inside one column.
+  const picker = (left, top, slot, items, images) => {
+    const tile = fx(64), gap = fx(10);
     return (
-      <>
-        <ScrollView
-          ref={scrollRef}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={{ position: 'absolute', left: fx(215), top: fy(top), width: overflow ? rowW : fx(946), height: tile }}
-          contentContainerStyle={{ gap, alignItems: 'center' }}
-        >
-          <TouchableOpacity activeOpacity={0.85} onPress={() => place(slot, null)} style={{ width: tile, height: tile }}>
-            <Image source={!decor[slot] ? UI_IMAGES.slotTileOn : UI_IMAGES.slotNone} style={styles.fill} resizeMode="stretch" />
-            <View style={styles.noneLbl}><PixelText size={fs(8, 6)} color={INK} style={styles.noShadow}>NONE</PixelText></View>
+      <View style={{ position: 'absolute', left: fx(left), top: fy(top), width: fx(444), flexDirection: 'row', flexWrap: 'wrap', gap }}>
+        <TouchableOpacity activeOpacity={0.85} onPress={() => place(slot, null)} style={{ width: tile, height: tile }}>
+          <Image source={!decor[slot] ? UI_IMAGES.slotTileOn : UI_IMAGES.slotNone} style={styles.fill} resizeMode="stretch" />
+          <View style={styles.noneLbl}><PixelText size={fs(8, 6)} color={INK} style={styles.noShadow}>NONE</PixelText></View>
+        </TouchableOpacity>
+        {items.map((key) => (
+          <TouchableOpacity key={key} activeOpacity={0.85} onPress={() => place(slot, key)} style={{ width: tile, height: tile, alignItems: 'center', justifyContent: 'center' }}>
+            <Image source={decor[slot] === key ? UI_IMAGES.slotTileOn : UI_IMAGES.slotTile} style={styles.fill} resizeMode="stretch" />
+            <Image source={images[key]} style={{ width: tile * 0.78, height: tile * 0.78 }} resizeMode="contain" />
           </TouchableOpacity>
-          {items.map((key) => (
-            <TouchableOpacity key={key} activeOpacity={0.85} onPress={() => place(slot, key)} style={{ width: tile, height: tile, alignItems: 'center', justifyContent: 'center' }}>
-              <Image source={decor[slot] === key ? UI_IMAGES.slotTileOn : UI_IMAGES.slotTile} style={styles.fill} resizeMode="stretch" />
-              <Image source={images[key]} style={{ width: tile * 0.78, height: tile * 0.78 }} resizeMode="contain" />
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-        {overflow && (
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() => scrollRef.current && scrollRef.current.scrollToEnd({ animated: true })}
-            style={{ position: 'absolute', left: fx(215) + rowW + fx(10), top: fy(top) + (tile - fx(46)) / 2, width: fx(36), height: fx(46) }}
-          >
-            <Image source={UI_IMAGES.nextBtn} style={{ width: '100%', height: '100%' }} resizeMode="stretch" />
-          </TouchableOpacity>
+        ))}
+        {items.length === 0 && (
+          <View style={{ height: tile, justifyContent: 'center', flex: 1 }}>
+            <PixelText size={fs(8, 6)} color="#8a5a24" style={styles.noShadow}>
+              {slot === 'pet' ? 'ADOPT PETS AT THE PET SHOP' : 'BUY PAINTINGS AT THE GALLERY'}
+            </PixelText>
+          </View>
         )}
-      </>
+      </View>
     );
   };
 
@@ -117,7 +104,7 @@ export default function RoomScreen({ navigation }) {
       {sw > 0 && (
         <>
           {/* board + vines + corner decor */}
-          <Image source={UI_IMAGES.settingsBoard} style={{ position: 'absolute', left: fx(160), top: fy(120), width: fx(1056), height: fx(1056) * (160 / 292) }} resizeMode="stretch" />
+          <Image source={UI_IMAGES.settingsBoard} style={{ position: 'absolute', left: fx(140), top: fy(112), width: fx(1096), height: fx(1096) * (160 / 292) }} resizeMode="stretch" />
           <Image source={UI_IMAGES.vineLeft} style={{ position: 'absolute', left: fx(99), top: fy(100), width: fx(122), height: fx(122) * 5 }} resizeMode="stretch" />
           <Image source={UI_IMAGES.vineRight} style={{ position: 'absolute', left: fx(1155), top: fy(100), width: fx(122), height: fx(122) * 5 }} resizeMode="stretch" />
           <Image source={UI_IMAGES.decoPlant} style={{ position: 'absolute', left: fx(86), top: fy(584), width: fx(150), height: fx(180) }} resizeMode="stretch" />
@@ -131,17 +118,7 @@ export default function RoomScreen({ navigation }) {
             </View>
           </View>
 
-          {/* back sign (top-left) */}
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() => navigation.goBack()}
-            style={{ position: 'absolute', left: fx(34), top: fy(14), width: fx(190), height: fx(95) }}
-          >
-            <Image source={UI_IMAGES.backSign} style={styles.fill} resizeMode="stretch" />
-            <View style={{ ...StyleSheet.absoluteFillObject, top: '20%', paddingRight: '10%', alignItems: 'center', justifyContent: 'center' }}>
-              <PixelText size={fs(22, 10)}>{'< BACK'}</PixelText>
-            </View>
-          </TouchableOpacity>
+          <BackSign onPress={() => navigation.goBack()} />
 
           {/* coins (top-right) */}
           <View style={{ position: 'absolute', right: fx(40), top: fy(22), width: fx(240), height: fx(80) }}>
@@ -153,7 +130,7 @@ export default function RoomScreen({ navigation }) {
           </View>
 
           {/* ── MY ROOMS ── */}
-          <Ribbon label="MY ROOMS" top={150} w={260} />
+          <Ribbon label="MY ROOMS" top={146} w={270} />
           {[1, 2, 3].map((r, i) => {
             const unlocked = r === 1 || player.unlockedRooms.includes(r);
             const cost = ROOM_UNLOCK_COSTS[r];
@@ -164,7 +141,7 @@ export default function RoomScreen({ navigation }) {
                 key={r}
                 activeOpacity={unlocked ? 1 : 0.85}
                 onPress={() => { if (!unlocked) handleUnlock(r); }}
-                style={[styles.card, { left: fx(215 + i * 326), top: fy(220), width: fx(294), height: fy(125) }, cur && styles.cardOn]}
+                style={[styles.card, { left: fx(215 + i * 326), top: fy(214), width: fx(294), height: fy(172) }, cur && styles.cardOn]}
               >
                 <Image source={ROOM_SHOT[r]} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
                 {!unlocked && (
@@ -182,7 +159,7 @@ export default function RoomScreen({ navigation }) {
           {[1, 2, 3].map((r, i) => {
             const unlocked = r === 1 || player.unlockedRooms.includes(r);
             return (
-              <View key={`n${r}`} pointerEvents="none" style={{ position: 'absolute', left: fx(215 + i * 326) + fx(294) / 2 - fx(100), top: fy(220) + fy(125) - fx(30), width: fx(200), height: fx(200) / 6 }}>
+              <View key={`n${r}`} pointerEvents="none" style={{ position: 'absolute', left: fx(215 + i * 326) + fx(294) / 2 - fx(104), top: fy(214) + fy(172) - fx(32), width: fx(208), height: fx(208) / 6 }}>
                 <Image source={UI_IMAGES.roomRibbon} style={styles.fill} resizeMode="stretch" />
                 <View style={{ ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' }}>
                   <PixelText size={fs(10, 6)} color={INK} style={styles.noShadow}>{unlocked ? ROOM_NAMES[r] : `${ROOM_NAMES[r]} - LOCKED`}</PixelText>
@@ -191,17 +168,13 @@ export default function RoomScreen({ navigation }) {
             );
           })}
 
-          <Divider top={350} />
+          <Divider top={398} />
 
-          {/* ── PHOTO FRAME ── */}
-          <Ribbon label="PHOTO FRAME" top={392} w={270} />
-          {picker(458, 'photoFrame', player.ownedPaintings ?? [], PAINTING_IMAGES, photoRef)}
-
-          <Divider top={510} />
-
-          {/* ── PET ── */}
-          <Ribbon label="PET" top={552} w={190} />
-          {picker(600, 'pet', player.ownedPets ?? [], PET_IMAGES, petRef)}
+          {/* ── PHOTO FRAME | PET — side by side ── */}
+          <Ribbon label="PHOTO FRAME" top={444} w={270} left={215} />
+          {picker(215, 508, 'photoFrame', player.ownedPaintings ?? [], PAINTING_IMAGES)}
+          <Ribbon label="PET" top={444} w={200} left={717} />
+          {picker(717, 508, 'pet', player.ownedPets ?? [], PET_IMAGES)}
         </>
       )}
 

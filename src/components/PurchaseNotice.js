@@ -32,11 +32,13 @@ export function NoticeCard({ icon, title, subtitle }) {
       <Leaf rot="35deg" size={18} style={{ position: 'absolute', right: 6, bottom: -5 }} />
       <Leaf rot="-20deg" size={14} color="#86b862" style={{ position: 'absolute', right: 24, top: -4 }} />
 
-      <View style={s.iconPlate}>
-        {icon ? <Image source={icon} style={s.icon} resizeMode="contain" /> : null}
-        <Text style={[s.spark, { left: 4, top: 2 }]}>✦</Text>
-        <Text style={[s.spark, { right: 6, top: -2, fontSize: 11 }]}>✦</Text>
-      </View>
+      {icon ? (
+        <View style={s.iconPlate}>
+          <Image source={icon} style={s.icon} resizeMode="contain" />
+          <Text style={[s.spark, { left: 4, top: 2 }]}>✦</Text>
+          <Text style={[s.spark, { right: 6, top: -2, fontSize: 11 }]}>✦</Text>
+        </View>
+      ) : null}
       <View style={{ flex: 1 }}>
         <Text style={s.title} numberOfLines={1}>{title}</Text>
         {subtitle ? <Text style={s.sub} numberOfLines={2}>{subtitle}</Text> : null}
@@ -46,7 +48,7 @@ export function NoticeCard({ icon, title, subtitle }) {
 }
 
 // Slides up from the bottom, holds, fades out.
-export function useNotice(duration = 2600) {
+export function useNotice(duration = 2600, bottom = 34) {
   const [data, setData] = useState(null);
   const anim = useRef(new Animated.Value(0)).current;
   const timer = useRef(null);
@@ -65,7 +67,7 @@ export function useNotice(duration = 2600) {
   const el = data ? (
     <Animated.View
       pointerEvents="none"
-      style={[s.wrap, { opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [40, 0] }) }] }]}
+      style={[s.wrap, { bottom, opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [40, 0] }) }] }]}
     >
       <NoticeCard {...data} />
     </Animated.View>
