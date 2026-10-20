@@ -10,24 +10,27 @@ import { TRADE_FLOWERS } from '../constants/gameData';
 // flowers[i] → spot in the fan. Listed in draw order: the middle flower is
 // drawn last so it sits in front.
 const FAN = [
-  { i: 0, x: 0.31, y: 0.25, rot: '-18deg' }, // left
-  { i: 2, x: 0.69, y: 0.25, rot: '18deg' },  // right
-  { i: 1, x: 0.50, y: 0.17, rot: '0deg' },   // middle
+  { i: 0, x: 0.30, y: 0.30, rot: '-16deg' }, // left
+  { i: 2, x: 0.70, y: 0.30, rot: '16deg' },  // right
+  { i: 1, x: 0.50, y: 0.22, rot: '0deg' },   // middle
 ];
 
 
 const WRAP_ASPECT = 1199 / 1312; // w/h of the wrapper PNGs
+const WRAPS = { plain: 'bouquetempty', layered: 'bouquetmixed', fancy: 'bouquetfancy' };
 
-export default function BouquetArt({ flowers = [], size = 120, fancy = false }) {
-  const flowerSize = size * 0.42;
+// tier: 'plain' (mixed) | 'layered' (3 of a kind) | 'fancy' (secret recipe).
+// Each tier is a fancier paper. The flowers sit IN FRONT, blooming out of the
+// opening, with the wrapper below them.
+export default function BouquetArt({ flowers = [], size = 120, tier = 'plain', fancy }) {
+  const t = fancy ? 'fancy' : tier;
+  const flowerSize = size * 0.40;
   const wrapW = size * WRAP_ASPECT;
   const left0 = (size - wrapW) / 2;
-  const done = [0, 1, 2].every((i) => !!flowers[i]);
-  const wrap = !done ? UI_IMAGES.bouquetempty : fancy ? UI_IMAGES.bouquetfancy : UI_IMAGES.bouquetmixed;
 
   return (
     <View style={{ width: size, height: size }}>
-      {/* Flowers go behind the paper so their stems tuck into the wrap */}
+      <Image source={UI_IMAGES[WRAPS[t] ?? WRAPS.plain]} style={{ position: 'absolute', left: left0, top: size * 0.08, width: wrapW, height: size * 0.92 }} resizeMode="contain" />
       {FAN.map((slot) => {
         const fi = slot.i;
         const key = flowers[fi];
@@ -40,7 +43,7 @@ export default function BouquetArt({ flowers = [], size = 120, fancy = false }) 
               style={{
                 position: 'absolute', left, top, width: flowerSize, height: flowerSize,
                 borderRadius: flowerSize / 2, borderWidth: 2, borderStyle: 'dashed',
-                borderColor: 'rgba(200,135,58,0.6)',
+                borderColor: 'rgba(90,52,16,0.45)',
               }}
             />
           );
@@ -55,7 +58,6 @@ export default function BouquetArt({ flowers = [], size = 120, fancy = false }) 
           />
         );
       })}
-      <Image source={wrap} style={{ position: 'absolute', left: left0, top: 0, width: wrapW, height: size }} resizeMode="contain" />
     </View>
   );
 }

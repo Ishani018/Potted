@@ -15,7 +15,8 @@ const HUD = {
   settings:  { x: 58,   y: 47,  w: 70, h: 66 },
   map:       { x: 1310, y: 43,  w: 77, h: 58 },
   inventory: { x: 60,   y: 717, w: 87, h: 75 },
-  book:      { x: 1310, y: 120, w: 62, h: 62 },
+  book:      { x: 1310, y: 124, w: 72, h: 66 }, // under the map button
+  bookTop:   { x: 1310, y: 46,  w: 72, h: 66 }, // top-right when there's no map button
 };
 
 function place(slot, sw, sh) {
@@ -46,7 +47,7 @@ export default function ScreenHud({ sw, sh, onSettings, onMap, onInventory, onBo
         </TouchableOpacity>
       )}
       {onBook && (
-        <TouchableOpacity style={place(HUD.book, sw, sh)} onPress={onBook} activeOpacity={0.8}>
+        <TouchableOpacity style={place(onMap ? HUD.book : HUD.bookTop, sw, sh)} onPress={onBook} activeOpacity={0.8}>
           <Image source={UI_IMAGES.flowerbook} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
         </TouchableOpacity>
       )}
