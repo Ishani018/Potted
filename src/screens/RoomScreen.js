@@ -57,8 +57,9 @@ export default function RoomScreen({ navigation }) {
   };
   const place = (slot, value) => dispatch({ type: 'PLACE_DECOR', room: 2, slot, value });
 
-  const Ribbon = ({ label, top, w = 280, left = 215 }) => (
-    <View style={{ position: 'absolute', left: fx(left), top: fy(top), width: fx(w), height: fx(w) * (22 / 100) }}>
+  // Flow-layout pieces (the board's content scrolls, so nothing is crammed in).
+  const Ribbon = ({ label, w = 280 }) => (
+    <View style={{ width: fx(w), height: fx(w) * (22 / 100), marginTop: fy(30), marginBottom: fy(16) }}>
       <Image source={UI_IMAGES.ribbon} style={styles.fill} resizeMode="stretch" />
       <View style={{ ...StyleSheet.absoluteFillObject, paddingRight: fx(34), alignItems: 'center', justifyContent: 'center' }}>
         <PixelText size={fs(15, 8)} color={INK} style={styles.noShadow}>{label}</PixelText>
@@ -66,18 +67,18 @@ export default function RoomScreen({ navigation }) {
     </View>
   );
 
-  const Divider = ({ top }) => (
-    <Image source={UI_IMAGES.dividerPaw} style={{ position: 'absolute', left: fx(215), top: fy(top), width: fx(946), height: fx(946) / 20 }} resizeMode="stretch" />
+  const Divider = () => (
+    <Image source={UI_IMAGES.dividerPaw} style={{ width: fx(946), height: fx(946) / 20, marginTop: fy(26) }} resizeMode="stretch" />
   );
 
-  // A wrapped grid of selectable tiles (NONE + items) inside one column.
-  const picker = (left, top, slot, items, images) => {
-    const tile = fx(64), gap = fx(10);
+  // A wrapped grid of selectable tiles (NONE + items).
+  const picker = (slot, items, images) => {
+    const tile = fx(74), gap = fx(12);
     return (
-      <View style={{ position: 'absolute', left: fx(left), top: fy(top), width: fx(444), flexDirection: 'row', flexWrap: 'wrap', gap }}>
+      <View style={{ width: fx(946), flexDirection: 'row', flexWrap: 'wrap', gap }}>
         <TouchableOpacity activeOpacity={0.85} onPress={() => place(slot, null)} style={{ width: tile, height: tile }}>
           <Image source={!decor[slot] ? UI_IMAGES.slotTileOn : UI_IMAGES.slotNone} style={styles.fill} resizeMode="stretch" />
-          <View style={styles.noneLbl}><PixelText size={fs(8, 6)} color={INK} style={styles.noShadow}>NONE</PixelText></View>
+          <View style={styles.noneLbl}><PixelText size={fs(9, 6)} color={INK} style={styles.noShadow}>NONE</PixelText></View>
         </TouchableOpacity>
         {items.map((key) => (
           <TouchableOpacity key={key} activeOpacity={0.85} onPress={() => place(slot, key)} style={{ width: tile, height: tile, alignItems: 'center', justifyContent: 'center' }}>
@@ -86,8 +87,8 @@ export default function RoomScreen({ navigation }) {
           </TouchableOpacity>
         ))}
         {items.length === 0 && (
-          <View style={{ height: tile, justifyContent: 'center', flex: 1 }}>
-            <PixelText size={fs(8, 6)} color="#8a5a24" style={styles.noShadow}>
+          <View style={{ height: tile, justifyContent: 'center' }}>
+            <PixelText size={fs(9, 6)} color="#8a5a24" style={styles.noShadow}>
               {slot === 'pet' ? 'ADOPT PETS AT THE PET SHOP' : 'BUY PAINTINGS AT THE GALLERY'}
             </PixelText>
           </View>
@@ -129,52 +130,55 @@ export default function RoomScreen({ navigation }) {
             </View>
           </View>
 
-          {/* ── MY ROOMS ── */}
-          <Ribbon label="MY ROOMS" top={146} w={270} />
-          {[1, 2, 3].map((r, i) => {
-            const unlocked = r === 1 || player.unlockedRooms.includes(r);
-            const cost = ROOM_UNLOCK_COSTS[r];
-            const afford = player.coins >= cost;
-            const cur = unlocked && currentRoom === r;
-            return (
-              <TouchableOpacity
-                key={r}
-                activeOpacity={unlocked ? 1 : 0.85}
-                onPress={() => { if (!unlocked) handleUnlock(r); }}
-                style={[styles.card, { left: fx(215 + i * 326), top: fy(214), width: fx(294), height: fy(172) }, cur && styles.cardOn]}
-              >
-                <Image source={ROOM_SHOT[r]} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-                {!unlocked && (
-                  <View style={styles.veil}>
-                    <Padlock size={fx(40)} />
-                    <View style={styles.costRow}>
-                      <Image source={UI_IMAGES.goldcoins} style={{ width: fx(22), height: fx(22) }} resizeMode="contain" />
-                      <PixelText size={fs(14, 8)} color={afford ? COLORS.gold : '#ff8a8a'}>{cost}</PixelText>
+          {/* ── scrolling content inside the board ── */}
+          <ScrollView
+            style={{ position: 'absolute', left: fx(200), top: fy(148), width: fx(976), height: fy(540) }}
+            contentContainerStyle={{ paddingLeft: fx(15), paddingRight: fx(15), paddingBottom: fy(40) }}
+            showsVerticalScrollIndicator={false}
+          >
+            <Ribbon label="MY ROOMS" w={270} />
+            <View style={{ flexDirection: 'row', gap: fx(32) }}>
+              {[1, 2, 3].map((r) => {
+                const unlocked = r === 1 || player.unlockedRooms.includes(r);
+                const cost = ROOM_UNLOCK_COSTS[r];
+                const afford = player.coins >= cost;
+                const cur = unlocked && currentRoom === r;
+                return (
+                  <TouchableOpacity
+                    key={r}
+                    activeOpacity={unlocked ? 1 : 0.85}
+                    onPress={() => { if (!unlocked) handleUnlock(r); }}
+                    style={[styles.card, { width: fx(294), height: fy(190) }, cur && styles.cardOn]}
+                  >
+                    <Image source={ROOM_SHOT[r]} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                    {!unlocked && (
+                      <View style={styles.veil}>
+                        <Padlock size={fx(44)} />
+                        <View style={styles.costRow}>
+                          <Image source={UI_IMAGES.goldcoins} style={{ width: fx(24), height: fx(24) }} resizeMode="contain" />
+                          <PixelText size={fs(15, 8)} color={afford ? COLORS.gold : '#ff8a8a'}>{cost}</PixelText>
+                        </View>
+                      </View>
+                    )}
+                    <View pointerEvents="none" style={{ position: 'absolute', left: fx(294) / 2 - fx(104), bottom: fx(4), width: fx(208), height: fx(208) / 6 }}>
+                      <Image source={UI_IMAGES.roomRibbon} style={styles.fill} resizeMode="stretch" />
+                      <View style={{ ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' }}>
+                        <PixelText size={fs(10, 6)} color={INK} style={styles.noShadow}>{unlocked ? ROOM_NAMES[r] : `${ROOM_NAMES[r]} - LOCKED`}</PixelText>
+                      </View>
                     </View>
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          })}
-          {[1, 2, 3].map((r, i) => {
-            const unlocked = r === 1 || player.unlockedRooms.includes(r);
-            return (
-              <View key={`n${r}`} pointerEvents="none" style={{ position: 'absolute', left: fx(215 + i * 326) + fx(294) / 2 - fx(104), top: fy(214) + fy(172) - fx(32), width: fx(208), height: fx(208) / 6 }}>
-                <Image source={UI_IMAGES.roomRibbon} style={styles.fill} resizeMode="stretch" />
-                <View style={{ ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' }}>
-                  <PixelText size={fs(10, 6)} color={INK} style={styles.noShadow}>{unlocked ? ROOM_NAMES[r] : `${ROOM_NAMES[r]} - LOCKED`}</PixelText>
-                </View>
-              </View>
-            );
-          })}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
 
-          <Divider top={398} />
+            <Divider />
+            <Ribbon label="PHOTO FRAME" w={270} />
+            {picker('photoFrame', player.ownedPaintings ?? [], PAINTING_IMAGES)}
 
-          {/* ── PHOTO FRAME | PET — side by side ── */}
-          <Ribbon label="PHOTO FRAME" top={444} w={270} left={215} />
-          {picker(215, 508, 'photoFrame', player.ownedPaintings ?? [], PAINTING_IMAGES)}
-          <Ribbon label="PET" top={444} w={200} left={717} />
-          {picker(717, 508, 'pet', player.ownedPets ?? [], PET_IMAGES)}
+            <Divider />
+            <Ribbon label="PET" w={200} />
+            {picker('pet', player.ownedPets ?? [], PET_IMAGES)}
+          </ScrollView>
         </>
       )}
 
@@ -189,7 +193,7 @@ const styles = StyleSheet.create({
   dim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(15,8,0,0.7)' },
   fill: { position: 'absolute', left: 0, top: 0, width: '100%', height: '100%' },
   noShadow: { textShadowColor: 'transparent', textShadowRadius: 0 },
-  card: { position: 'absolute', borderRadius: 10, overflow: 'hidden', borderWidth: 3, borderColor: '#d3b27a', backgroundColor: '#000' },
+  card: { borderRadius: 10, overflow: 'hidden', borderWidth: 3, borderColor: '#d3b27a', backgroundColor: '#000' },
   cardOn: { borderColor: '#3f7a2e' },
   veil: {
     ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(20,10,0,0.62)',

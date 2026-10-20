@@ -57,7 +57,7 @@ export default function PetRoomScreen({ navigation }) {
             if (!spot || !owned.includes(key)) return null;
             const shop = SHOP_PETS.find((p) => p.key === key) ?? { w: 120, h: 120, flip: false };
             const w = fx(shop.w * 1.1), h = fx(shop.h * 1.1);
-            const z = Math.round(spot.y);
+            const z = Math.round(spot.y / 10);   // depth by row; stays below the pet card (z 200)
             return (
               <React.Fragment key={key}>
                 <TouchableOpacity
@@ -67,7 +67,7 @@ export default function PetRoomScreen({ navigation }) {
                 >
                   <PetSprite petKey={key} w={w} h={h} flip={shop.flip} />
                 </TouchableOpacity>
-                <View pointerEvents="none" style={[styles.nameWrap, { left: fx(spot.x) - fx(110), width: fx(220), top: fy(spot.y + 6), zIndex: 900 }]}>
+                <View pointerEvents="none" style={[styles.nameWrap, { left: fx(spot.x) - fx(110), width: fx(220), top: fy(spot.y + 6), zIndex: 90 }]}>
                   <PixelText size={Math.max(8, fx(12))}>{(names[key] ?? PETS[key].name).toUpperCase()}</PixelText>
                 </View>
               </React.Fragment>

@@ -112,8 +112,8 @@ export function AdoptModal({ petKey, onClose }) {
 
   return (
     <TouchableOpacity style={s.overlay} activeOpacity={1} onPress={onClose}>
-      <TouchableOpacity activeOpacity={1} onPress={() => {}} style={[s.card, { maxHeight: Math.max(280, frameH - 16) }]}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+      <TouchableOpacity activeOpacity={1} onPress={() => {}} style={[s.card, { maxHeight: Math.max(280, frameH - 8) }]}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
         {/* corner studs */}
         {[{ top: 5, left: 5 }, { top: 5, right: 5 }, { bottom: 5, left: 5 }, { bottom: 5, right: 5 }].map((p, i) => (
           <View key={i} style={[s.stud, p]} />
@@ -129,8 +129,8 @@ export function AdoptModal({ petKey, onClose }) {
         {/* portrait */}
         <View style={s.portrait}>
           {!compact && <View style={s.sprouts}><Sprout /><Sprout flip /></View>}
-          <View style={{ width: compact ? 130 : 190, height: compact ? 96 : 140, alignItems: 'center', justifyContent: 'flex-end' }}>
-            <PetSprite petKey={petKey} w={compact ? 118 : 170} h={compact ? 92 : 132} />
+          <View style={{ width: compact ? 110 : 190, height: compact ? 78 : 140, alignItems: 'center', justifyContent: 'flex-end' }}>
+            <PetSprite petKey={petKey} w={compact ? 100 : 170} h={compact ? 74 : 132} />
           </View>
         </View>
 
@@ -247,7 +247,7 @@ const s = StyleSheet.create({
   },
   card: {
     width: 360, backgroundColor: C.card, borderWidth: 4, borderColor: C.cardEdge, borderRadius: 10,
-    padding: 14,
+    padding: 12,
   },
   stud: { position: 'absolute', width: 5, height: 5, borderRadius: 3, backgroundColor: C.cardIn },
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -263,13 +263,13 @@ const s = StyleSheet.create({
 
   portrait: {
     backgroundColor: C.peach, borderWidth: 3, borderColor: C.peachEdge, borderRadius: 8,
-    alignItems: 'center', justifyContent: 'center', paddingVertical: 8,
+    alignItems: 'center', justifyContent: 'center', paddingVertical: 6,
   },
   sprouts: { position: 'absolute', left: 14, right: 14, top: 50, flexDirection: 'row', justifyContent: 'space-between' },
 
   plate: {
     flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.plate,
-    borderWidth: 3, borderColor: C.plateEdge, borderRadius: 8, paddingVertical: 8, paddingHorizontal: 12,
+    borderWidth: 3, borderColor: C.plateEdge, borderRadius: 8, paddingVertical: 6, paddingHorizontal: 12,
   },
 
   note: { backgroundColor: C.greenSoft, borderWidth: 2, borderColor: C.greenSoftEdge, borderRadius: 8, padding: 10 },
@@ -277,7 +277,7 @@ const s = StyleSheet.create({
 
   perk: {
     flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.greenSoft,
-    borderWidth: 2, borderColor: C.greenSoftEdge, borderRadius: 8, padding: 10,
+    borderWidth: 2, borderColor: C.greenSoftEdge, borderRadius: 8, padding: 8,
   },
   perkIcon: { alignItems: 'center', width: 36 },
   perkPot: { width: 22, height: 14, backgroundColor: '#c8743a', borderRadius: 3, borderTopWidth: 3, borderTopColor: '#a85a28' },
@@ -291,14 +291,14 @@ const s = StyleSheet.create({
   },
   btn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    borderWidth: 3, borderRadius: 8, paddingVertical: 14, paddingHorizontal: 10,
+    borderWidth: 3, borderRadius: 8, paddingVertical: 11, paddingHorizontal: 10,
   },
 
-  homeBox: { backgroundColor: C.greenSoft, borderWidth: 2, borderColor: C.greenSoftEdge, borderRadius: 8, padding: 10 },
-  homeLabel: { color: C.ink, fontSize: 13, marginBottom: 8, textAlign: 'center' },
+  homeBox: { backgroundColor: C.greenSoft, borderWidth: 2, borderColor: C.greenSoftEdge, borderRadius: 8, padding: 8 },
+  homeLabel: { color: C.ink, fontSize: 12, marginBottom: 6, textAlign: 'center' },
   rooms: { flexDirection: 'row', justifyContent: 'space-between' },
   room: { alignItems: 'center', width: 70 },
-  thumb: { width: 66, height: 46, borderRadius: 5, overflow: 'hidden', borderWidth: 3, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
+  thumb: { width: 62, height: 38, borderRadius: 5, overflow: 'hidden', borderWidth: 3, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
   thumbOn: { borderColor: C.green },
   tuck: { backgroundColor: 'rgba(90,52,16,0.55)' },
   roomName: { color: C.ink, fontSize: 10, marginTop: 4 },
