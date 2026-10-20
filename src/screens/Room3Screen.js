@@ -4,19 +4,26 @@ import { useLayout } from '../context/LayoutContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useGame } from '../context/GameContext';
-import { BACKGROUNDS, SEED_IMAGES } from '../engine/assets';
-import { getSnapPoints, WATERING_CAN_POSITIONS, scalePoint } from '../engine/snapPoints';
-import { getCurrentSeason } from '../constants/gameData';
-import { projectSize } from '../engine/project';
+import { BACKGROUNDS, SEED_IMAGES, POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES } from '../engine/assets';
+import { getSnapPoints, WATERING_CAN_POSITIONS, POT_SOURCE_POSITIONS, HANGING_POT_SOURCE_POSITIONS, scalePoint } from '../engine/snapPoints';
+import { getCurrentSeason, seedType, heldSeedHint, PETS } from '../constants/gameData';
+import { pestRewardFor } from '../engine/petEffects';
+import { useToast } from '../components/Toast';
+import { projectSize, projectPoint } from '../engine/project';
 
 import CoinHUD from '../components/CoinHUD';
 import PlantSlot from '../components/PlantSlot';
 import HeldSeedBanner from '../components/HeldSeedBanner';
+import DraggablePot from '../components/DraggablePot';
+import DraggableHangingPot from '../components/DraggableHangingPot';
 import RoomPets from '../components/RoomPets';
 import ScreenHud from '../components/ScreenHud';
 import WateringCan from '../components/WateringCan';
 import PlantPopup from '../components/PlantPopup';
 import InventoryOverlay from '../components/InventoryOverlay';
+
+// Pot types in this room — seeds of any other type can't be planted here.
+const ROOM_TYPES = ['potted', 'hanging'];
 
 export default function Room3Screen({ navigation }) {
   const { width: sw, height: sh } = useLayout();
@@ -26,6 +33,7 @@ export default function Room3Screen({ navigation }) {
   const [popup, setPopup] = useState(null);
   const [invOpen, setInvOpen] = useState(false);
   const canDragging = useRef(false);
+  const [toast, showToast] = useToast();
   const season = getCurrentSeason();
 
   useEffect(() => {
@@ -43,28 +51,54 @@ export default function Room3Screen({ navigation }) {
 
   const plantedSlots = Object.values(slots).filter((s) => s.room === 3 && s.flowerKey);
 
-  const emptySnapPoints = allSnapPoints.filter((pt) => {
-    const s = slots[pt.id];
-    return s && !s.flowerKey;
-  });
+  // Shelf pots are dragged onto free shelf spots (like the Greenhouse).
+  const emptyPotTargets = pottedPoints.filter((pt) => !slots[pt.id]);
+  // Hooks take a dragged hanging pot too (a hook's slot always exists; hasPot
+  // says whether a pot hangs there).
+  const emptyHookTargets = hangingPoints.filter((pt) => !slots[pt.id]?.hasPot);
 
   const rawCan = WATERING_CAN_POSITIONS[3] ?? WATERING_CAN_POSITIONS[1];
   const canPos = scalePoint(rawCan.x, rawCan.y, sw, sh);
 
   const potH = Math.round(projectSize(90, sw, sh) * (344 / 347));
+  // Watering targets: shelf pots grow upward from pt.y, hanging pots hang below
+  // the hook (same offset the Balcony uses).
+  const hangingPotH = Math.round(projectSize(100, sw, sh) * 0.93);
   const plantedPottedPoints = allSnapPoints
     .filter((pt) => { const s = slots[pt.id]; return s && s.flowerKey; })
-    .map((pt) => ({ ...pt, y: pt.y - potH * 0.5 }));
+    .map((pt) => (pt.id.includes('_h')
+      ? { ...pt, y: pt.y + hangingPotH * 0.5 }
+      : { ...pt, y: pt.y - potH * 0.5 }));
 
   const handleSlotPress = useCallback((slot, position) => {
     if (canDragging.current) return;
     if (slot.flowerKey) setPopup({ slot, position });
   }, []);
 
-  // Tap an empty snap point while holding a seed → plant it there.
-  const handleEmptyPress = useCallback((slotId) => {
-    if (heldSeed) dispatch({ type: 'PLANT_HELD', slotId });
-  }, [heldSeed, dispatch]);
+  // Tap an empty pot: plant the held seed (if it fits), else open the popup.
+  const handleEmptyPotPress = useCallback((slotId, slotObj, position) => {
+    if (heldSeed) {
+      if (seedType(heldSeed.flowerKey) !== slotObj.type) {
+        showToast(slotObj.type === 'hanging' ? 'Only hanging plants grow here' : 'Only shelf flowers grow here');
+        return;
+      }
+      dispatch({ type: 'PLANT_HELD', slotId });
+    } else {
+      setPopup({ slot: slotObj, position });
+    }
+  }, [heldSeed, dispatch, showToast]);
+
+  const handlePlacePot = useCallback((pt) => {
+    dispatch({ type: 'PLACE_POT', slotId: pt.id, room: 3 });
+  }, [dispatch]);
+
+  // Hanging pot sizes — same as the Balcony. Stool image sets the drag hitbox;
+  // drag/ghost/placed pots share the (square) hanging pot image.
+  const hookPotW = Math.round(projectSize(100, sw, sh));
+  const hookPotH = Math.round(hookPotW * 0.93);
+  const hookDragW = Math.round(projectSize(235, sw, sh));
+  const rawHookSrc = HANGING_POT_SOURCE_POSITIONS[3];
+  const hookSrcPos = projectPoint(rawHookSrc.x, rawHookSrc.y, sw, sh);
 
   const handlePickSeed = useCallback((item) => {
     dispatch({ type: 'HOLD_SEED', invItemId: item.id, flowerKey: item.flowerKey });
@@ -72,11 +106,35 @@ export default function Room3Screen({ navigation }) {
   }, [dispatch]);
 
   const handleWater = useCallback((slotId) => {
+    if (slots[slotId]?.pest) { showToast('Shoo the bug away first!'); return; }
     dispatch({ type: 'WATER_PLANT', slotId });
-  }, [dispatch]);
+  }, [dispatch, slots, showToast]);
+
+  const handlePestPress = useCallback((slot) => {
+    const reward = pestRewardFor(player, slot.room);
+    dispatch({ type: 'REMOVE_PEST', slotId: slot.slotId });
+    showToast(`Bug shooed! +${reward} coins`);
+  }, [dispatch, showToast, player]);
+
+  // Tap a pet → what it does for this room.
+  const handlePetPress = useCallback((petKey) => {
+    const pet = PETS[petKey];
+    if (pet?.effect) showToast(`${pet.name} · ${pet.effect.title}: ${pet.effect.desc}`, 3500);
+  }, [showToast]);
+
+  const handleBlockedSeed = useCallback((item) => {
+    showToast(seedType(item.flowerKey) === 'hanging'
+      ? 'Hanging plant · plant it in a hanging pot'
+      : 'Shelf flower · plant it in a shelf pot');
+  }, [showToast]);
+
+  const potW = Math.round(projectSize(90, sw, sh));
+  const potHSrc = Math.round(potW * (344 / 347));
+  const rawPotSrc = POT_SOURCE_POSITIONS[3];
+  const potSrcPos = projectPoint(rawPotSrc.x, rawPotSrc.y, sw, sh);
 
   const handlePopupHarvest = () => { if (popup) dispatch({ type: 'HARVEST_PLANT', slotId: popup.slot.slotId }); setPopup(null); };
-  const handlePopupRemove = () => { if (popup) dispatch({ type: 'REMOVE_PLANT', slotId: popup.slot.slotId }); setPopup(null); };
+  const handlePopupRemove = () => { if (popup) dispatch({ type: 'REMOVE_PLANT', slotId: popup.slot.slotId, deletePot: true }); setPopup(null); };
 
   return (
     <GestureHandlerRootView style={styles.root}>
@@ -88,18 +146,80 @@ export default function Room3Screen({ navigation }) {
         />
 
         {/* Placed pets */}
-        <RoomPets room={3} sw={sw} sh={sh} />
+        <RoomPets room={3} sw={sw} sh={sh} onPetPress={handlePetPress} />
 
-        {/* Empty snap points become tappable plant targets while holding a seed */}
-        {heldSeed && emptySnapPoints.map((pt) => {
-          const size = Math.round(projectSize(80, sw, sh));
+        {/* Pot source on the floor + drag handle (drag onto a shelf spot) */}
+        <Image
+          source={POTTED_PLANT_IMAGES._seed}
+          style={{ position: 'absolute', left: potSrcPos.x - potW / 2, top: potSrcPos.y - potHSrc, width: potW, height: potHSrc, zIndex: 598 }}
+          resizeMode="contain"
+        />
+        <DraggablePot
+          startX={potSrcPos.x}
+          startY={potSrcPos.y}
+          potW={potW}
+          potH={potHSrc}
+          targets={emptyPotTargets}
+          onPlace={handlePlacePot}
+          source={POTTED_PLANT_IMAGES._seed}
+          dragSource={POTTED_PLANT_IMAGES._seed}
+          ghostSource={POTTED_PLANT_IMAGES._seed}
+        />
+
+        {/* Empty placed shelf pots — tap to plant the held seed */}
+        {pottedPoints.filter((pt) => {
+          const s = slots[pt.id];
+          return s && s.hasPot === true && !s.flowerKey;
+        }).map((pt) => {
+          const s = slots[pt.id];
           return (
             <TouchableOpacity
-              key={`plant_${pt.id}`}
-              style={{ position: 'absolute', left: pt.x - size / 2, top: pt.y - size / 2, width: size, height: size, zIndex: 6 }}
-              activeOpacity={0.6}
-              onPress={() => handleEmptyPress(pt.id)}
-            />
+              key={`emptypot_${pt.id}`}
+              style={{ position: 'absolute', left: pt.x - potW / 2, top: pt.y - potHSrc, width: potW, height: potHSrc, zIndex: 5 }}
+              activeOpacity={0.85}
+              onPress={() => handleEmptyPotPress(pt.id, s, pt)}
+            >
+              <Image source={POTTED_PLANT_IMAGES._seed} style={{ width: potW, height: potHSrc }} resizeMode="contain" />
+            </TouchableOpacity>
+          );
+        })}
+
+        {/* Hook-pot source on a stool + drag handle (drag onto a free hook) */}
+        <Image
+          source={HANGING_PLANT_IMAGES._stool}
+          style={{ position: 'absolute', left: hookSrcPos.x - hookPotW / 2, top: hookSrcPos.y - hookPotH, width: hookPotW, height: hookPotH, zIndex: 2 }}
+          resizeMode="contain"
+        />
+        <DraggableHangingPot
+          startX={hookSrcPos.x}
+          startY={hookSrcPos.y - hookPotH}
+          potW={hookPotW}
+          potH={hookPotH}
+          dragW={hookDragW}
+          dragH={hookDragW}
+          ghostW={hookDragW}
+          ghostH={hookDragW}
+          targets={emptyHookTargets}
+          onPlace={handlePlacePot}
+          dragSource={HANGING_PLANT_IMAGES._seed}
+          ghostSource={HANGING_PLANT_IMAGES._seed}
+        />
+
+        {/* Empty hanging pots — tap to plant the held seed */}
+        {hangingPoints.filter((pt) => {
+          const s = slots[pt.id];
+          return s && s.hasPot === true && !s.flowerKey;
+        }).map((pt) => {
+          const s = slots[pt.id];
+          return (
+            <TouchableOpacity
+              key={`emptyhook_${pt.id}`}
+              style={{ position: 'absolute', left: pt.x - hookDragW / 2, top: pt.y, width: hookDragW, height: hookDragW, zIndex: 5 }}
+              activeOpacity={0.85}
+              onPress={() => handleEmptyPotPress(pt.id, s, pt)}
+            >
+              <Image source={HANGING_PLANT_IMAGES._seed} style={{ width: hookDragW, height: hookDragW }} resizeMode="contain" />
+            </TouchableOpacity>
           );
         })}
 
@@ -107,7 +227,11 @@ export default function Room3Screen({ navigation }) {
         {plantedSlots.map((slot) => {
           const pt = allSnapPoints.find((p) => p.id === slot.slotId);
           if (!pt) return null;
-          return <PlantSlot key={slot.slotId} slot={slot} position={pt} onPress={handleSlotPress} />;
+          // Hanging pots use the Balcony's sizing (stage 0 image is tall & narrow).
+          const hangingSize = slot.type === 'hanging'
+            ? { baseWidthOverride: slot.stage === 0 ? 85 : 235 }
+            : {};
+          return <PlantSlot key={slot.slotId} slot={slot} position={pt} onPress={handleSlotPress} onPestPress={handlePestPress} {...hangingSize} />;
         })}
 
         <WateringCan
@@ -127,6 +251,7 @@ export default function Room3Screen({ navigation }) {
           onSettings={() => navigation.navigate('Room')}
           onMap={() => navigation.navigate('Map')}
           onInventory={() => setInvOpen(true)}
+          onBook={() => navigation.navigate('FlowerBook')}
         />
 
 
@@ -141,11 +266,13 @@ export default function Room3Screen({ navigation }) {
         )}
 
         {heldSeed && !invOpen && (
-          <HeldSeedBanner flowerKey={heldSeed.flowerKey} onCancel={() => dispatch({ type: 'CLEAR_HELD' })} />
+          <HeldSeedBanner flowerKey={heldSeed.flowerKey} hint={heldSeedHint(heldSeed.flowerKey, ROOM_TYPES)} onCancel={() => dispatch({ type: 'CLEAR_HELD' })} />
         )}
 
+        {toast}
+
         {invOpen && (
-          <InventoryOverlay onClose={() => setInvOpen(false)} onPick={handlePickSeed} />
+          <InventoryOverlay onClose={() => setInvOpen(false)} onPick={handlePickSeed} roomTypes={ROOM_TYPES} onBlocked={handleBlockedSeed} />
         )}
       </View>
     </GestureHandlerRootView>

@@ -56,6 +56,7 @@ export default function HomeScreen({ navigation }) {
         onSettings={() => navigation.navigate('Room')}
         onMap={() => navigation.navigate('Map')}
         onInventory={() => setInvOpen(true)}
+        onBook={() => navigation.navigate('FlowerBook')}
       />
 
       {invOpen && (

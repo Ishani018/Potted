@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { PET_IMAGES } from '../engine/assets';
 import PetSprite from './PetSprite';
@@ -13,7 +13,8 @@ import { PET_POSITIONS, PET_BASE } from '../constants/gameData';
 // verifying Plopper layouts. Revert to false before release.
 const DEBUG_SHOW_ALL = false;
 
-export default function RoomPets({ room, sw, sh }) {
+// onPetPress(petKey) (optional): tapping a pet, e.g. to show what it does.
+export default function RoomPets({ room, sw, sh, onPetPress }) {
   const { state } = useGame();
   const { ownedPets = [], petPlacements = {} } = state.player;
   const spots = PET_POSITIONS[room] ?? {};
@@ -29,14 +30,18 @@ export default function RoomPets({ room, sw, sh }) {
         const cy = (p.y / PET_BASE.h) * sh;
         const w = (p.w / PET_BASE.w) * sw;
         const h = (p.h / PET_BASE.h) * sh;
+        const box = { position: 'absolute', left: cx - w / 2, top: cy - h / 2, width: w, height: h, zIndex: 6 + (p.z ?? 0) };
+        if (!onPetPress) {
+          return (
+            <View key={petKey} pointerEvents="none" style={box}>
+              <PetSprite petKey={petKey} w={w} h={h} flip={p.flip} />
+            </View>
+          );
+        }
         return (
-          <View
-            key={petKey}
-            pointerEvents="none"
-            style={{ position: 'absolute', left: cx - w / 2, top: cy - h / 2, width: w, height: h, zIndex: 6 + (p.z ?? 0) }}
-          >
+          <TouchableOpacity key={petKey} style={box} activeOpacity={0.85} onPress={() => onPetPress(petKey)}>
             <PetSprite petKey={petKey} w={w} h={h} flip={p.flip} />
-          </View>
+          </TouchableOpacity>
         );
       })}
     </>

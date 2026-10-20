@@ -5,6 +5,7 @@ import { projectSize } from '../engine/project';
 import { useLayout } from '../context/LayoutContext';
 import { isThirsty } from '../engine/gameEngine';
 import { FLOWER_STAGE_SCALE } from '../constants/gameData';
+import Pest from './Pest';
 
 // ── Pot display size (base coords against 1376×768) ─────────────────────────
 // BASE_POT_W is the fixed width for ALL stages. Height scales by natural aspect
@@ -87,7 +88,7 @@ function getPlantImage(slot) {
   return imgs[idx] ?? imgs[0];
 }
 
-export default function PlantSlot({ slot, position, onPress, baseWidthOverride, aspectOverride }) {
+export default function PlantSlot({ slot, position, onPress, onPestPress, baseWidthOverride, aspectOverride }) {
   const { width: sw, height: sh } = useLayout();
   const isPotted = slot.type === 'potted';
   // baseWidthOverride lets a room set its own hanging-pot width (room 2) without
@@ -111,8 +112,14 @@ export default function PlantSlot({ slot, position, onPress, baseWidthOverride, 
   const left = position.x - imgW / 2;
   const top = isPotted ? position.y - imgH : position.y;
 
-  const thirsty = isThirsty(slot);
+  // A pest replaces the thirsty hint — it has to go before the plant can grow.
+  const thirsty = isThirsty(slot) && !slot.pest;
   const drop = Math.round(imgW * 0.22); // water-drop badge size
+  // Pest sits on the foliage: size from the un-scaled pot width so it's the same
+  // on every flower; PEST_X/PEST_Y are fractions of the plant box.
+  const pestSize = Math.round(projectSize(isPotted ? 30 : 34, sw, sh));
+  const PEST_X = 0.62;
+  const PEST_Y = isPotted ? 0.45 : 0.5;
 
   // Use raw responder instead of TouchableOpacity so the watering can's pan
   // gesture always wins — TouchableOpacity intercepts drags and causes a jump.
@@ -140,6 +147,15 @@ export default function PlantSlot({ slot, position, onPress, baseWidthOverride, 
       {/* Thirsty water-drop hint (CSS droplet — no asset needed) */}
       {thirsty && (
         <View style={[styles.drop, { width: drop, height: drop, left: imgW / 2 - drop / 2, top: -drop * 0.6 }]} />
+      )}
+      {slot.pest && (
+        <Pest
+          type={slot.pest}
+          size={pestSize}
+          left={imgW * PEST_X - pestSize / 2}
+          top={imgH * PEST_Y - pestSize / 2}
+          onPress={() => onPestPress && onPestPress(slot)}
+        />
       )}
     </View>
   );

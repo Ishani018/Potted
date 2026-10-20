@@ -1,4 +1,4 @@
-import { GROWTH_TIMERS } from '../constants/gameData';
+import { GROWTH_TIMERS, PEST_CONFIG } from '../constants/gameData';
 
 // ─── Slot factory ─────────────────────────────────────────────────────────────
 export function createEmptySlot(slotId, room, type, hasPot = false) {
@@ -12,6 +12,7 @@ export function createEmptySlot(slotId, room, type, hasPot = false) {
     lastWatered: null,
     wilting: false,
     _budWatered: false,
+    pest: null, // 'aphid' | 'beetle' while a pest is on the plant
     hasPot, // true only when explicitly placed by user via PLACE_POT
   };
 }
@@ -26,27 +27,30 @@ export function plantSeed(slot, flowerKey) {
     lastWatered: null, // null = thirsty now, so a fresh seed can be watered immediately
     wilting: false,
     _budWatered: false,
+    pest: null,
   };
 }
 
-function maxStageFor(type) {
+export function maxStageFor(type) {
   return GROWTH_TIMERS.maxStage[type] ?? 3;
 }
 
 // A plant is thirsty (ready to be watered to the next stage) when it hasn't been
 // watered yet, or the cooldown since the last watering has elapsed — and it isn't
-// already fully grown.
+// already fully grown. slot.cooldown is set when watered (pets can shorten it).
 export function isThirsty(slot, now = Date.now()) {
   if (!slot.flowerKey) return false;
   if (slot.stage >= maxStageFor(slot.type)) return false;
   if (slot.lastWatered == null) return true;
-  return now - slot.lastWatered >= GROWTH_TIMERS.waterCooldown;
+  return now - slot.lastWatered >= (slot.cooldown ?? GROWTH_TIMERS.waterCooldown);
 }
 
 // ─── Watering — advances one stage if thirsty ─────────────────────────────────
-export function waterPlant(slot) {
+// eff: the room's pet effects (see petEffects.roomPetEffects), optional.
+export function waterPlant(slot, eff) {
   const now = Date.now();
   if (!slot.flowerKey) return slot;
+  if (slot.pest) return slot; // pest blocks growth until it's shooed away
   // Watering a wilting plant always revives it (and advances if it was thirsty).
   if (!isThirsty(slot, now) && !slot.wilting) return slot; // not ready yet — no-op
 
@@ -58,6 +62,7 @@ export function waterPlant(slot) {
     ...slot,
     stage: nextStage,
     lastWatered: now,
+    cooldown: Math.round(GROWTH_TIMERS.waterCooldown * (eff?.cooldownMult ?? 1)),
     wilting: false,
     _budWatered: slot._budWatered || wasBud,
   };
@@ -66,14 +71,14 @@ export function waterPlant(slot) {
 // ─── Growth tick ──────────────────────────────────────────────────────────────
 // Stages only change via watering; the tick only updates the "wilting" flag.
 // Plants never die. A full bloom never wilts (it's done growing).
-export function tickSlot(slot, now) {
+export function tickSlot(slot, now, eff) {
   if (!slot.flowerKey) return slot;
   const fullyGrown = slot.stage >= maxStageFor(slot.type);
   if (fullyGrown) {
     return slot.wilting ? { ...slot, wilting: false } : slot;
   }
   const since = now - (slot.lastWatered ?? slot.plantedAt ?? now);
-  const shouldWilt = since >= GROWTH_TIMERS.wiltAfter;
+  const shouldWilt = since >= GROWTH_TIMERS.wiltAfter * (eff?.wiltMult ?? 1);
   if (shouldWilt === slot.wilting) return slot;
   return { ...slot, wilting: shouldWilt };
 }
@@ -93,23 +98,55 @@ export function harvestPlant(slot) {
 }
 
 // ─── Passive hanging coin trickle ─────────────────────────────────────────────
-export function calcHangingPassiveCoins(slots, lastTickTime, now) {
+// Each mature hanging plant pays `amount` per full `interval` since lastTickTime.
+// Returns the coins and the new lastTickTime — advanced only by the intervals
+// paid out, so partial progress carries over to the next tick.
+// effByRoom (optional) weights each plant by its room's hangingCoinMult.
+export function calcHangingPassiveCoins(slots, lastTickTime, now, effByRoom) {
   const { amount, interval } = GROWTH_TIMERS.hangingPassiveCoins;
-  let total = 0;
-  for (const slot of Object.values(slots)) {
-    if (slot.type !== 'hanging' || !slot.flowerKey) continue;
-    if (slot.stage < maxStageFor('hanging')) continue; // only mature hanging plants
-    const elapsed = now - lastTickTime;
-    total += Math.floor(elapsed / interval) * amount;
+  const intervals = Math.max(0, Math.floor((now - lastTickTime) / interval));
+  const weight = Object.values(slots)
+    .filter((s) => s.type === 'hanging' && s.flowerKey && s.stage >= maxStageFor('hanging'))
+    .reduce((sum, s) => sum + (effByRoom?.[s.room]?.hangingCoinMult ?? 1), 0);
+  return { coins: Math.round(intervals * amount * weight), nextTick: lastTickTime + intervals * interval };
+}
+
+// ─── Pests ────────────────────────────────────────────────────────────────────
+// Growing plants (bud or later, not full bloom) can pick up a pest each tick.
+function canGetPest(slot) {
+  return !!slot.flowerKey && !slot.pest && slot.stage >= 1 && slot.stage < maxStageFor(slot.type);
+}
+
+function maybeSpawnPest(slot, rand, eff) {
+  const chance = PEST_CONFIG.chancePerTick * (eff?.pestChance ?? 1);
+  if (!canGetPest(slot) || rand() >= chance) return slot;
+  const types = PEST_CONFIG.types;
+  return { ...slot, pest: types[Math.floor(rand() * types.length)] };
+}
+
+// Pests that arrived while the game was closed: each growing plant gets one
+// with probability 1 - (1 - p)^minutes.
+export function spawnPestsOffline(slots, minutes, rand, effByRoom) {
+  const updated = {};
+  for (const [id, slot] of Object.entries(slots)) {
+    const chance = PEST_CONFIG.chancePerTick * (effByRoom?.[slot.room]?.pestChance ?? 1);
+    const p = 1 - Math.pow(1 - chance, minutes);
+    updated[id] = canGetPest(slot) && rand() < p
+      ? { ...slot, pest: PEST_CONFIG.types[Math.floor(rand() * PEST_CONFIG.types.length)] }
+      : slot;
   }
-  return total;
+  return updated;
 }
 
 // ─── Tick all slots ───────────────────────────────────────────────────────────
-export function tickAllSlots(slots, now) {
+// rand: () => [0,1). Passed in so the reducer stays deterministic per action.
+// effByRoom: pet effects per room (optional).
+export function tickAllSlots(slots, now, rand, effByRoom) {
   const updated = {};
   for (const [id, slot] of Object.entries(slots)) {
-    updated[id] = tickSlot(slot, now);
+    const eff = effByRoom?.[slot.room];
+    const ticked = tickSlot(slot, now, eff);
+    updated[id] = rand ? maybeSpawnPest(ticked, rand, eff) : ticked;
   }
   return updated;
 }

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { NURSERY_BG, SEED_IMAGES, UI_IMAGES } from '../engine/assets';
-import { POTTED_FLOWERS, HANGING_PLANTS } from '../constants/gameData';
+import { POTTED_FLOWERS, HANGING_PLANTS, seedType } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
 import { PixelToast, PixelText, COLORS } from '../components/Pixel';
@@ -52,7 +52,7 @@ export default function NurseryScreen({ navigation }) {
     if (coins < price) { showToast('Not enough coins'); return; }
     if (invFull) { showToast('Inventory full'); return; }
     dispatch({ type: 'BUY_SEED', flowerKey, price });
-    showToast(`Bought ${name}`);
+    showToast(`Bought ${name} · ${seedType(flowerKey) === 'hanging' ? 'grows in a hanging pot' : 'grows in a shelf pot'}`);
   };
 
   return (
@@ -72,6 +72,7 @@ export default function NurseryScreen({ navigation }) {
         onSettings={() => navigation.navigate('Room')}
         onMap={() => navigation.navigate('Map')}
         onInventory={() => setInvOpen(true)}
+        onBook={() => navigation.navigate('FlowerBook')}
       />
 
       {/* Coins — bottom-right */}

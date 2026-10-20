@@ -5,7 +5,9 @@ import { PixelText, COLORS } from './Pixel';
 
 // "You're holding a seed" sign: wooden pixel plaque with the seed bag (bobbing),
 // a short instruction, and the red X to put the seed back.
-export default function HeldSeedBanner({ flowerKey, onCancel }) {
+export default function HeldSeedBanner({ flowerKey, hint, onCancel }) {
+  // Trim the "tap to cancel" tail (the red X does that) and shout it pixel-style.
+  const text = (hint ?? 'Tap an empty pot to plant your seed').replace(/\s*·\s*tap( here)? to cancel/i, '').toUpperCase();
   const bob = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     const loop = Animated.loop(Animated.sequence([
@@ -25,9 +27,8 @@ export default function HeldSeedBanner({ flowerKey, onCancel }) {
           style={[styles.seed, { transform: [{ translateY: y }] }]}
           resizeMode="contain"
         />
-        <View>
-          <PixelText size={10}>TAP AN EMPTY POT</PixelText>
-          <PixelText size={8} color="#e8c890" style={{ marginTop: 6 }}>TO PLANT YOUR SEED</PixelText>
+        <View style={{ maxWidth: 340 }}>
+          <PixelText size={9} style={{ lineHeight: 15 }}>{text}</PixelText>
         </View>
         <TouchableOpacity onPress={onCancel} activeOpacity={0.8}>
           <Image source={UI_IMAGES.cancelbutton} style={styles.x} resizeMode="contain" />

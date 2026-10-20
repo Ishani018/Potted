@@ -1,89 +1,25 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import { useLayout } from '../context/LayoutContext';
-import { GestureHandlerRootView, Gesture, GestureDetector } from 'react-native-gesture-handler';
-import ReAnimated, { useSharedValue, useAnimatedStyle, runOnJS } from 'react-native-reanimated';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useGame } from '../context/GameContext';
 import { BACKGROUNDS, UI_IMAGES, PAINTING_IMAGES, PET_IMAGES, HANGING_PLANT_IMAGES, POTTED_PLANT_IMAGES, SEED_IMAGES } from '../engine/assets';
 import { getSnapPoints, WATERING_CAN_POSITIONS, DECOR_POSITIONS, POT_SOURCE_POSITIONS, scalePoint } from '../engine/snapPoints';
-import { getCurrentSeason } from '../constants/gameData';
+import { getCurrentSeason, seedType, heldSeedHint, PETS } from '../constants/gameData';
+import { pestRewardFor } from '../engine/petEffects';
+import { useToast } from '../components/Toast';
 import { projectSize, projectPoint } from '../engine/project';
 
 import CoinHUD from '../components/CoinHUD';
 import PlantSlot from '../components/PlantSlot';
 import HeldSeedBanner from '../components/HeldSeedBanner';
+import DraggableHangingPot from '../components/DraggableHangingPot';
 import RoomPets from '../components/RoomPets';
 import ScreenHud from '../components/ScreenHud';
 import WateringCan from '../components/WateringCan';
 import PlantPopup from '../components/PlantPopup';
 import InventoryOverlay from '../components/InventoryOverlay';
-
-function DraggableHangingPot({ startX, startY, potW, potH, dragW, dragH, ghostW, ghostH, targets, onPlace, dragSource, ghostSource }) {
-  const tx = useSharedValue(startX);
-  const ty = useSharedValue(startY);
-  const ox = useSharedValue(startX);
-  const oy = useSharedValue(startY);
-  const [isDragging, setIsDragging] = useState(false);
-
-  const trySnap = useCallback((x, y) => {
-    // Hooks on a rod differ mainly in x (same y per rod), and the pot hangs below
-    // the rod, so the drop y is always well under pt.y. Weight x distance heavily
-    // and y loosely so we snap to the column you aimed at, not a wrong neighbour.
-    const X_RANGE = 70;   // must be within this horizontal band of a hook
-    const Y_RANGE = 260;  // generous vertical band (rod → bottom of hanging pot)
-    let best = null, bestScore = Infinity;
-    for (const pt of targets) {
-      const dx = Math.abs(x - pt.x);
-      const dy = Math.abs(y - pt.y);
-      if (dx > X_RANGE || dy > Y_RANGE) continue;
-      const score = dx * 3 + dy; // x dominates the choice
-      if (score < bestScore) { bestScore = score; best = pt; }
-    }
-    if (best) onPlace(best);
-    tx.value = startX;
-    ty.value = startY;
-    setIsDragging(false);
-  }, [targets, onPlace, startX, startY]);
-
-  const drag = Gesture.Pan()
-    .onStart(() => { ox.value = tx.value; oy.value = ty.value; runOnJS(setIsDragging)(true); })
-    .onUpdate((e) => { tx.value = ox.value + e.translationX; ty.value = oy.value + e.translationY; })
-    .onEnd(() => { runOnJS(trySnap)(tx.value, ty.value); });
-
-  const animStyle = useAnimatedStyle(() => ({
-    position: 'absolute',
-    left: tx.value - potW / 2,
-    top: ty.value,
-    width: potW,
-    height: potH,
-    zIndex: 600,
-  }));
-
-  return (
-    <>
-      {isDragging && targets.map((pt) => (
-        <Image
-          key={pt.id}
-          source={ghostSource}
-          style={{ position: 'absolute', left: pt.x - ghostW / 2, top: pt.y, width: ghostW, height: ghostH, opacity: 0.4, zIndex: 4 }}
-          resizeMode="contain"
-        />
-      ))}
-      <GestureDetector gesture={drag}>
-        <ReAnimated.View style={animStyle}>
-          {isDragging && (
-            <Image
-              source={dragSource}
-              style={{ position: 'absolute', left: -(dragW - potW) / 2, top: 0, width: dragW, height: dragH }}
-              resizeMode="contain"
-            />
-          )}
-        </ReAnimated.View>
-      </GestureDetector>
-    </>
-  );
-}
 
 export default function Room2Screen({ navigation }) {
   const { width: sw, height: sh } = useLayout();
@@ -93,6 +29,7 @@ export default function Room2Screen({ navigation }) {
   const [popup, setPopup] = useState(null);
   const [invOpen, setInvOpen] = useState(false);
   const canDragging = useRef(false);
+  const [toast, showToast] = useToast();
   const season = getCurrentSeason();
 
   useEffect(() => {
@@ -129,11 +66,15 @@ export default function Room2Screen({ navigation }) {
   // Tap an empty hanging pot: plant the held seed, or open the popup.
   const handleEmptyPotPress = useCallback((slotId, slotObj, position) => {
     if (heldSeed) {
+      if (seedType(heldSeed.flowerKey) !== slotObj.type) {
+        showToast(slotObj.type === 'hanging' ? 'Only hanging plants grow here' : 'Only shelf flowers grow here');
+        return;
+      }
       dispatch({ type: 'PLANT_HELD', slotId });
     } else {
       setPopup({ slot: slotObj, position });
     }
-  }, [heldSeed, dispatch]);
+  }, [heldSeed, dispatch, showToast]);
 
   const handlePickSeed = useCallback((item) => {
     dispatch({ type: 'HOLD_SEED', invItemId: item.id, flowerKey: item.flowerKey });
@@ -145,8 +86,27 @@ export default function Room2Screen({ navigation }) {
   }, [dispatch]);
 
   const handleWater = useCallback((slotId) => {
+    if (slots[slotId]?.pest) { showToast('Shoo the bug away first!'); return; }
     dispatch({ type: 'WATER_PLANT', slotId });
-  }, [dispatch]);
+  }, [dispatch, slots, showToast]);
+
+  const handlePestPress = useCallback((slot) => {
+    const reward = pestRewardFor(player, slot.room);
+    dispatch({ type: 'REMOVE_PEST', slotId: slot.slotId });
+    showToast(`Bug shooed! +${reward} coins`);
+  }, [dispatch, showToast, player]);
+
+  // Tap a pet → what it does for this room.
+  const handlePetPress = useCallback((petKey) => {
+    const pet = PETS[petKey];
+    if (pet?.effect) showToast(`${pet.name} · ${pet.effect.title}: ${pet.effect.desc}`, 3500);
+  }, [showToast]);
+
+  const handleBlockedSeed = useCallback((item) => {
+    showToast(seedType(item.flowerKey) === 'hanging'
+      ? 'Hanging plant · plant it in a hanging pot'
+      : 'Shelf flower · plant it in a shelf pot');
+  }, [showToast]);
 
   const handlePopupHarvest = () => { if (popup) dispatch({ type: 'HARVEST_PLANT', slotId: popup.slot.slotId }); setPopup(null); };
   const handlePopupRemove = () => { if (popup) dispatch({ type: 'REMOVE_PLANT', slotId: popup.slot.slotId, deletePot: true }); setPopup(null); };
@@ -176,7 +136,7 @@ export default function Room2Screen({ navigation }) {
         />
 
         {/* Placed pets */}
-        <RoomPets room={2} sw={sw} sh={sh} />
+        <RoomPets room={2} sw={sw} sh={sh} onPetPress={handlePetPress} />
 
         {/* Photo frame */}
         {photoFrameKey && (() => {
@@ -254,6 +214,7 @@ export default function Room2Screen({ navigation }) {
               slot={slot}
               position={pt}
               onPress={handleSlotPress}
+              onPestPress={handlePestPress}
               baseWidthOverride={isSeedVisible ? 85 : 200}
             />
           );
@@ -276,6 +237,7 @@ export default function Room2Screen({ navigation }) {
           onSettings={() => navigation.navigate('Room')}
           onMap={() => navigation.navigate('Map')}
           onInventory={() => setInvOpen(true)}
+          onBook={() => navigation.navigate('FlowerBook')}
         />
 
 
@@ -291,11 +253,13 @@ export default function Room2Screen({ navigation }) {
         )}
 
         {heldSeed && !invOpen && (
-          <HeldSeedBanner flowerKey={heldSeed.flowerKey} onCancel={() => dispatch({ type: 'CLEAR_HELD' })} />
+          <HeldSeedBanner flowerKey={heldSeed.flowerKey} hint={heldSeedHint(heldSeed.flowerKey, ROOM_TYPES)} onCancel={() => dispatch({ type: 'CLEAR_HELD' })} />
         )}
 
+        {toast}
+
         {invOpen && (
-          <InventoryOverlay onClose={() => setInvOpen(false)} onPick={handlePickSeed} />
+          <InventoryOverlay onClose={() => setInvOpen(false)} onPick={handlePickSeed} roomTypes={ROOM_TYPES} onBlocked={handleBlockedSeed} />
         )}
       </View>
     </GestureHandlerRootView>

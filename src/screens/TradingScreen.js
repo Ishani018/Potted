@@ -4,6 +4,7 @@ import { useGame } from '../context/GameContext';
 import { TRADING_BG, TRADE_IMAGES, UI_IMAGES } from '../engine/assets';
 import { getDailyTrades, TRADE_FLOWERS } from '../constants/gameData';
 import ScreenHud from '../components/ScreenHud';
+import BouquetMaker from '../components/BouquetMaker';
 import { PixelText, PixelButton, PixelPanel, PixelToast, COLORS, PIXEL_FONT } from '../components/Pixel';
 
 // Slot positions on tradingscreen.png — base 1376×768, CENTER anchor. The 6 daily
@@ -44,6 +45,7 @@ export default function TradingScreen({ navigation }) {
   }, [offers]);
 
   const [invOpen, setInvOpen] = useState(false);
+  const [bouquetOpen, setBouquetOpen] = useState(false);
   const [active, setActive] = useState(null); // offer being traded
   const [qty, setQty] = useState(1);
   const [toast, setToast] = useState(null);
@@ -164,7 +166,11 @@ export default function TradingScreen({ navigation }) {
         </>
       )}
 
-      <PixelButton label="MY FLOWERS" onPress={() => setInvOpen(true)} style={styles.sellBtn} />
+      {/* Sell single flowers (featured today) or tie any 3 into a bouquet */}
+      <View style={styles.btnRow}>
+        <PixelButton label="MY FLOWERS" onPress={() => setInvOpen(true)} />
+        <PixelButton label="MAKE BOUQUET" tone="wood" onPress={() => setBouquetOpen(true)} />
+      </View>
 
       <ScreenHud
         sw={sw} sh={sh}
@@ -205,6 +211,10 @@ export default function TradingScreen({ navigation }) {
         </View>
       )}
 
+      {bouquetOpen && (
+        <BouquetMaker onClose={() => setBouquetOpen(false)} onSold={showToast} />
+      )}
+
       <PixelToast message={toast} />
     </View>
   );
@@ -240,7 +250,7 @@ const styles = StyleSheet.create({
   qtyBtn: { paddingHorizontal: 12, paddingVertical: 6 },
   actionRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
 
-  sellBtn: { position: 'absolute', bottom: 16, alignSelf: 'center', zIndex: 25 },
+  btnRow: { position: 'absolute', bottom: 16, alignSelf: 'center', flexDirection: 'row', gap: 12, zIndex: 25 },
 
   modalOverlay: {
     ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)',

@@ -22,11 +22,16 @@ import TradeScreen from './src/screens/TradeScreen';
 import TradingScreen from './src/screens/TradingScreen';
 import GalleryScreen from './src/screens/GalleryScreen';
 import RoomScreen from './src/screens/RoomScreen';
+import FlowerBookScreen from './src/screens/FlowerBookScreen';
+import CatchUpSummary from './src/components/CatchUpSummary';
+import NoticeToast from './src/components/NoticeToast';
 
 const Stack = createStackNavigator();
 
 export default function App() {
   const [layout, setLayout] = useState({ width: 854, height: 480 });
+  // Current screen — the catch-up summary waits until you're past the title.
+  const [route, setRoute] = useState('Main');
   // Load the pixel font used by the trade screen. Don't block the whole app on
   // it — if loading hangs or errors, render anyway (the font applies once ready,
   // and falls back to system font otherwise) instead of showing a black screen.
@@ -45,7 +50,7 @@ export default function App() {
         <GameProvider>
           <LayoutContext.Provider value={layout}>
             <View style={{ flex: 1 }} onLayout={onLayout}>
-              <NavigationContainer>
+              <NavigationContainer onStateChange={(nav) => nav && setRoute(nav.routes[nav.index]?.name)}>
                 <StatusBar hidden />
                 <Stack.Navigator
                   initialRouteName="Main"
@@ -67,8 +72,12 @@ export default function App() {
                   <Stack.Screen name="Trading" component={TradingScreen} />
                   <Stack.Screen name="Gallery" component={GalleryScreen} />
                   <Stack.Screen name="Room" component={RoomScreen} />
+                  <Stack.Screen name="FlowerBook" component={FlowerBookScreen} />
                 </Stack.Navigator>
               </NavigationContainer>
+              <CatchUpSummary hidden={route === 'Main' || route === 'Loading'} />
+              {/* Pet notices wait until the welcome-back card is closed */}
+              <NoticeToast hidden={route === 'Main' || route === 'Loading'} />
             </View>
           </LayoutContext.Provider>
         </GameProvider>

@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { PETSHOP_BG, PET_IMAGES, UI_IMAGES } from '../engine/assets';
-import { PETS } from '../constants/gameData';
+import { PETS, ROOM_NAMES } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
 import PetSprite from '../components/PetSprite';
@@ -146,7 +146,13 @@ function AdoptModal({ petKey, onClose }) {
             </>
           ) : (
             <>
-              <View style={{ height: 14 }} />
+              {pet.effect && (
+                <View style={styles.effectBox}>
+                  <PixelText size={9} color={COLORS.gold}>{pet.effect.title.toUpperCase()}</PixelText>
+                  <PixelText size={7} color="#e8c890" style={{ marginTop: 6, textAlign: 'center', lineHeight: 12 }}>{pet.effect.desc.toUpperCase()}</PixelText>
+                </View>
+              )}
+              <View style={{ height: 10 }} />
               {!owned ? (
                 <>
                   <View style={styles.priceRow}>
@@ -165,7 +171,7 @@ function AdoptModal({ petKey, onClose }) {
                   <PixelText size={8} color="#e8c890" style={{ marginBottom: 8 }}>LIVES IN</PixelText>
                   <View style={styles.btnRow}>
                     {[1, 2, 3].map((r) => (
-                      <PixelButton key={r} label={`${r}`} size={10} tone={placedRoom === r ? 'green' : 'wood'} onPress={() => handlePlace(r)} style={styles.chip} />
+                      <PixelButton key={r} label={(ROOM_NAMES[r] ?? `${r}`).toUpperCase()} size={8} tone={placedRoom === r ? 'green' : 'wood'} onPress={() => handlePlace(r)} style={styles.chip} />
                     ))}
                     <PixelButton label="TUCK AWAY" size={8} tone={placedRoom == null ? 'green' : 'wood'} onPress={() => handlePlace(null)} />
                   </View>
@@ -254,7 +260,8 @@ const styles = StyleSheet.create({
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   portrait: { alignItems: 'center', justifyContent: 'center' },
   btnRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap' },
-  chip: { paddingHorizontal: 12 },
+  chip: { paddingHorizontal: 10 },
+  effectBox: { alignSelf: 'stretch', alignItems: 'center', backgroundColor: COLORS.woodDark, borderWidth: 2, borderColor: COLORS.woodEdge, borderRadius: 4, paddingHorizontal: 10, paddingVertical: 8, marginTop: 4 },
   input: {
     marginTop: 12, marginBottom: 14, minWidth: 220, textAlign: 'center',
     fontFamily: PIXEL_FONT, fontSize: 13, color: '#5a3410',
