@@ -138,6 +138,7 @@ export const UI_IMAGES = {
   trashopen:    require('../../assets/ui_comps/trashopen.png'),
   // Flower book + bouquet wrappers
   // Settings screen art
+  settingsPanel: require('../../assets/ui_comps/settings_panel.png'),
   plantBanner:   require('../../assets/ui_comps/plant_banner.png'),
   settingsBoard: require('../../assets/ui_comps/settings_board.png'),
   settingsTitle: require('../../assets/ui_comps/settings_title.png'),
