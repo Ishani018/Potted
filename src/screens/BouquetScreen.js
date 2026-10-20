@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { BOUQUET_BG, TRADE_IMAGES, UI_IMAGES } from '../engine/assets';
 import {
@@ -8,15 +8,18 @@ import {
 import { globalPetEffects } from '../engine/petEffects';
 import BouquetArt from '../components/BouquetArt';
 import ScreenHud from '../components/ScreenHud';
-import { PixelPanel, PixelText, PixelButton, PixelToast, COLORS } from '../components/Pixel';
+import { PixelText, PixelButton, PixelToast, COLORS } from '../components/Pixel';
 
-// Bouquet table — a full screen on bouquetshop.png (1376×768 base). Left: pick
-// your wrapping paper. Centre: the bouquet on the table. Right: secret recipes.
-// Table front: your flowers + the TIE & SELL button.
+// Bouquet table — you work ON the workshop table (cosy florist bg, 1376×768 base):
+//   • three paper sheets laid out on the left of the table — tap one to choose
+//   • the bouquet takes shape in the middle, flowers blooming from the wrapper
+//   • your harvested flowers lie in a row along the front edge — tap to add
+//   • tie & sell on the right; UNDO takes the last flower back
+// Recipes live in the flower book (button top-right).
 const PLOPPER_W = 1376;
 const PLOPPER_H = 768;
 const PAPER_IMG = { plain: 'bouquetempty', layered: 'bouquetmixed', fancy: 'bouquetfancy' };
-const DARK = { textShadowColor: 'rgba(255,240,200,0.7)', textShadowRadius: 0, textShadowOffset: { width: 1, height: 1 } };
+const PAPER_TILT = { plain: '-5deg', layered: '0deg', fancy: '5deg' };
 
 export default function BouquetScreen({ navigation }) {
   const { state, dispatch } = useGame();
@@ -41,10 +44,9 @@ export default function BouquetScreen({ navigation }) {
   const result = full ? evaluateBouquet(picks, petMult, paper) : null;
   const isNewRecipe = !!result?.recipe && !found[result.recipe.id];
   const previewName = !result ? 'PICK 3 FLOWERS' : isNewRecipe ? 'SOMETHING SPECIAL...' : result.name.toUpperCase();
+  const foundCount = BOUQUET_RECIPES.filter((r) => found[r.id]).length;
 
   const add = (key) => { if (!full && left(key) > 0) setPicks([...picks, key]); };
-  const removeAt = (i) => setPicks(picks.filter((_, j) => j !== i));
-
   const sell = () => {
     if (!result) return;
     dispatch({ type: 'SELL_BOUQUET', flowers: picks, paper });
@@ -54,8 +56,11 @@ export default function BouquetScreen({ navigation }) {
     setPicks([]);
   };
 
-  const foundCount = BOUQUET_RECIPES.filter((r) => found[r.id]).length;
-  const art = fx(330);
+  const art = fx(340);
+  const rowN = Math.max(owned.length, 1);
+  const gap = Math.min(fx(96), fx(700) / rowN);
+  const rowW = gap * owned.length;
+  const rowLeft = fx(700) - rowW / 2;
 
   return (
     <View style={styles.root} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
@@ -63,120 +68,95 @@ export default function BouquetScreen({ navigation }) {
 
       {sw > 0 && (
         <>
-          <PixelText size={fs(26, 12)} style={[styles.title, { top: fy(46) }]}>BOUQUET TABLE</PixelText>
+          {/* ── Papers laid out on the table ─────────────────────────── */}
+          <PixelText size={fs(10, 6)} style={[styles.label, { left: fx(250), width: fx(380), top: fy(452) }]}>CHOOSE PAPER</PixelText>
+          {Object.values(BOUQUET_PAPERS).map((p, i) => {
+            const on = paper === p.id;
+            const cx = fx(300 + i * 130);
+            return (
+              <TouchableOpacity
+                key={p.id}
+                activeOpacity={0.85}
+                onPress={() => setPaper(p.id)}
+                style={[
+                  styles.sheet,
+                  { left: cx - fx(58), top: fy(478) - (on ? fy(10) : 0), width: fx(116), height: fy(170), transform: [{ rotate: PAPER_TILT[p.id] }] },
+                  on && styles.sheetOn,
+                ]}
+              >
+                <Image source={UI_IMAGES[PAPER_IMG[p.id]]} style={{ width: fx(92), height: fy(106) }} resizeMode="contain" />
+                <PixelText size={fs(8, 6)} color="#5a3410" style={styles.dark}>{p.name.toUpperCase()}</PixelText>
+                <PixelText size={fs(7, 5)} color="#8a5a24" style={styles.dark}>{p.bonus > 1 ? `+${Math.round((p.bonus - 1) * 100)}%` : 'BASE'}</PixelText>
+                {on && <View style={styles.tick}><PixelText size={fs(8, 6)}>✓</PixelText></View>}
+              </TouchableOpacity>
+            );
+          })}
 
-          {/* ── Left: choose your paper ─────────────────────────────── */}
-          <PixelPanel style={{ position: 'absolute', left: fx(60), top: fy(120), width: fx(300), height: fy(340) }}>
-            <PixelText size={fs(11, 7)} style={{ textAlign: 'center', marginBottom: fy(8) }}>CHOOSE PAPER</PixelText>
-            <View style={{ flex: 1, gap: fy(6) }}>
-              {Object.values(BOUQUET_PAPERS).map((p) => {
-                const on = paper === p.id;
-                return (
-                  <TouchableOpacity
-                    key={p.id}
-                    activeOpacity={0.85}
-                    onPress={() => setPaper(p.id)}
-                    style={[styles.paperCard, on && styles.paperOn]}
-                  >
-                    <Image source={UI_IMAGES[PAPER_IMG[p.id]]} style={{ width: fx(62), height: fy(86) }} resizeMode="contain" />
-                    <View style={{ flex: 1, marginLeft: fx(10) }}>
-                      <PixelText size={fs(10, 7)} color="#5a3410" style={DARK}>{p.name.toUpperCase()}</PixelText>
-                      <PixelText size={fs(8, 6)} color="#8a5a24" style={[DARK, { marginTop: 5 }]}>
-                        {p.bonus > 1 ? `+${Math.round((p.bonus - 1) * 100)}% VALUE` : 'BASE VALUE'}
-                      </PixelText>
-                    </View>
-                    {on && <PixelText size={fs(12, 8)} color={COLORS.green} style={DARK}>✓</PixelText>}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </PixelPanel>
-
-          {/* ── Centre: the bouquet ─────────────────────────────────── */}
-          <View style={{ position: 'absolute', left: fx(688) - art / 2, top: fy(138), width: art, alignItems: 'center' }}>
+          {/* ── The bouquet on the table ─────────────────────────────── */}
+          <View pointerEvents="none" style={{ position: 'absolute', left: fx(790) - art / 2, top: fy(300), width: art }}>
             <BouquetArt flowers={[picks[0], picks[1], picks[2]]} size={art} tier={paper} />
           </View>
-          <View style={[styles.namePlate, { left: fx(688) - fx(190), width: fx(380), top: fy(486) }]}>
-            <PixelText size={fs(11, 7)}>{previewName}</PixelText>
-            {result && !isNewRecipe && (
-              <PixelText size={fs(8, 6)} color={COLORS.gold} style={{ marginTop: 5 }}>
-                x{(result.multiplier * result.paperBonus).toFixed(2)} VALUE
-              </PixelText>
-            )}
+          <View style={[styles.namePlate, { left: fx(790) - fx(150), width: fx(300), top: fy(640) }]}>
+            <PixelText size={fs(10, 6)}>{previewName}</PixelText>
           </View>
 
-          {/* ── Right: secret recipes ───────────────────────────────── */}
-          <PixelPanel style={{ position: 'absolute', left: fx(1016), top: fy(120), width: fx(300), height: fy(340) }}>
-            <PixelText size={fs(11, 7)} style={{ textAlign: 'center', marginBottom: fy(6) }}>RECIPES {foundCount}/{BOUQUET_RECIPES.length}</PixelText>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {BOUQUET_RECIPES.map((r) => {
-                const got = !!found[r.id];
-                return (
-                  <View key={r.id} style={styles.recipe}>
-                    {got ? (
-                      <>
-                        <PixelText size={fs(8, 6)} color="#5a3410" style={DARK}>{r.name.toUpperCase()}  x{r.multiplier}</PixelText>
-                        <View style={{ flexDirection: 'row', gap: 3, marginTop: 4 }}>
-                          {r.flowers.map((k, i) => (
-                            <Image key={i} source={TRADE_IMAGES[TRADE_FLOWERS[k].img]} style={{ width: fx(26), height: fx(26) }} resizeMode="contain" />
-                          ))}
-                        </View>
-                      </>
-                    ) : (
-                      <>
-                        <PixelText size={fs(8, 6)} color="#a07a48" style={DARK}>???</PixelText>
-                        <PixelText size={fs(7, 5)} color="#8a5a24" style={[DARK, { marginTop: 4, lineHeight: fs(11, 8) }]}>{r.hint.toUpperCase()}</PixelText>
-                      </>
-                    )}
-                  </View>
-                );
-              })}
-            </ScrollView>
-          </PixelPanel>
+          {/* ── Flowers along the front edge ─────────────────────────── */}
+          <PixelText size={fs(8, 6)} style={[styles.label, { left: fx(250), width: fx(700), top: fy(686) }]}>
+            {owned.length === 0 ? 'NO HARVESTED FLOWERS YET - GROW SOME FIRST!' : 'TAP A FLOWER TO ADD IT'}
+          </PixelText>
+          {owned.map((key, i) => {
+            const n = left(key);
+            return (
+              <TouchableOpacity
+                key={key}
+                activeOpacity={0.75}
+                onPress={() => add(key)}
+                style={[styles.bunch, { left: rowLeft + i * gap + (gap - fx(66)) / 2, top: fy(704), width: fx(66), height: fx(52) }, (n <= 0 || full) && { opacity: 0.4 }]}
+              >
+                <Image source={TRADE_IMAGES[TRADE_FLOWERS[key].img]} style={{ width: fx(46), height: fx(46) }} resizeMode="contain" />
+                <View style={styles.badge}><PixelText size={fs(8, 6)}>{n}</PixelText></View>
+              </TouchableOpacity>
+            );
+          })}
 
-          {/* ── Table front: your flowers + sell ────────────────────── */}
-          <View style={[styles.tray, { left: fx(60), top: fy(584), width: fx(880), height: fy(150) }]}>
-            <PixelText size={fs(9, 6)} color="#f6e2b8" style={{ marginBottom: fy(6) }}>YOUR FLOWERS - TAP TO ADD</PixelText>
-            {owned.length === 0 ? (
-              <PixelText size={fs(9, 6)} color="#f6e2b8">NO HARVESTED FLOWERS YET - GROW SOME FIRST!</PixelText>
-            ) : (
-              <View style={styles.grid}>
-                {owned.map((key) => {
-                  const n = left(key);
-                  return (
-                    <TouchableOpacity
-                      key={key}
-                      activeOpacity={0.75}
-                      onPress={() => add(key)}
-                      style={[styles.cell, { width: fx(66), height: fx(66) }, (n <= 0 || full) && { opacity: 0.4 }]}
-                    >
-                      <Image source={TRADE_IMAGES[TRADE_FLOWERS[key].img]} style={{ width: fx(48), height: fx(48) }} resizeMode="contain" />
-                      <PixelText size={fs(8, 6)} style={styles.cellCount}>{n}</PixelText>
-                    </TouchableOpacity>
-                  );
-                })}
+          {/* ── Tie & sell ───────────────────────────────────────────── */}
+          <View style={{ position: 'absolute', left: fx(960), top: fy(520), width: fx(200), alignItems: 'center', gap: fy(10) }}>
+            {result && (
+              <View style={styles.price}>
+                <Image source={UI_IMAGES.goldcoins} style={{ width: fx(24), height: fx(24) }} resizeMode="contain" />
+                <PixelText size={fs(14, 8)} color={COLORS.gold}>{result.value}</PixelText>
               </View>
             )}
-          </View>
-
-          <View style={[styles.sellBox, { left: fx(980), top: fy(584), width: fx(336), height: fy(150) }]}>
-            <View style={styles.pickRow}>
-              {Array.from({ length: BOUQUET_SIZE }).map((_, i) => (
-                <TouchableOpacity key={i} style={[styles.pickSlot, { width: fx(56), height: fx(56) }]} onPress={() => picks[i] && removeAt(i)} activeOpacity={0.7}>
-                  {picks[i] && <Image source={TRADE_IMAGES[TRADE_FLOWERS[picks[i]].img]} style={{ width: fx(42), height: fx(42) }} resizeMode="contain" />}
-                </TouchableOpacity>
-              ))}
-            </View>
             <PixelButton
               onPress={full ? sell : undefined}
               disabled={!full}
               size={fs(10, 7)}
-              label={full ? `TIE & SELL  ${result.value}` : 'TIE & SELL'}
+              label="TIE & SELL"
               style={{ alignSelf: 'stretch' }}
             />
+            <PixelButton
+              onPress={() => setPicks(picks.slice(0, -1))}
+              disabled={picks.length === 0}
+              tone="wood"
+              size={fs(8, 6)}
+              label="UNDO"
+              style={{ alignSelf: 'stretch' }}
+            />
+            {result && !isNewRecipe && (
+              <PixelText size={fs(7, 5)} style={{ textAlign: 'center' }}>x{(result.multiplier * result.paperBonus).toFixed(2)} VALUE</PixelText>
+            )}
           </View>
         </>
       )}
+
+      {/* Recipes: the flower book's bouquet pages */}
+      <TouchableOpacity
+        style={[styles.recipeBtn, { right: fx(40), top: fy(100), paddingHorizontal: fx(10), paddingVertical: fy(8) }]}
+        onPress={() => navigation.navigate('FlowerBook', { tab: 'bouquets' })}
+        activeOpacity={0.85}
+      >
+        <PixelText size={fs(8, 6)}>RECIPES {foundCount}/{BOUQUET_RECIPES.length}</PixelText>
+      </TouchableOpacity>
 
       <ScreenHud
         sw={sw} sh={sh}
@@ -191,28 +171,36 @@ export default function BouquetScreen({ navigation }) {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#2a1608' },
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
-  title: { position: 'absolute', left: 0, right: 0, textAlign: 'center' },
-  paperCard: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8,
-    backgroundColor: COLORS.cream, borderRadius: 4, borderWidth: 3, borderColor: 'transparent',
+  label: { position: 'absolute', textAlign: 'center' },
+  dark: { textShadowColor: 'rgba(255,240,200,0.7)', textShadowRadius: 0, textShadowOffset: { width: 1, height: 1 } },
+  sheet: {
+    position: 'absolute', alignItems: 'center', justifyContent: 'center', borderRadius: 3,
+    backgroundColor: '#f3d9a4', borderWidth: 3, borderColor: 'rgba(90,52,16,0.55)',
+    shadowColor: '#000', shadowOpacity: 0.35, shadowRadius: 4, shadowOffset: { width: 2, height: 3 },
   },
-  paperOn: { borderColor: COLORS.green, backgroundColor: '#fff3d6' },
+  sheetOn: { borderColor: COLORS.green, backgroundColor: '#fff3d6' },
+  tick: {
+    position: 'absolute', top: -8, right: -8, backgroundColor: COLORS.green,
+    borderWidth: 2, borderColor: COLORS.greenEdge, borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1,
+  },
   namePlate: {
-    position: 'absolute', alignItems: 'center', paddingVertical: 8,
-    backgroundColor: COLORS.woodDark, borderWidth: 3, borderColor: COLORS.woodEdge, borderRadius: 4,
+    position: 'absolute', alignItems: 'center', paddingVertical: 6,
+    backgroundColor: 'rgba(58,32,12,0.88)', borderWidth: 3, borderColor: COLORS.woodEdge, borderRadius: 4,
   },
-  recipe: { paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: 'rgba(42,22,8,0.35)' },
-  tray: { position: 'absolute' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  cell: {
-    borderRadius: 4, backgroundColor: COLORS.cream, borderWidth: 3, borderColor: COLORS.creamEdge,
-    alignItems: 'center', justifyContent: 'center',
+  bunch: {
+    position: 'absolute', alignItems: 'center', justifyContent: 'center', borderRadius: 26,
+    backgroundColor: 'rgba(255,243,214,0.88)',
   },
-  cellCount: { position: 'absolute', right: 3, bottom: 1 },
-  sellBox: { position: 'absolute', alignItems: 'center', justifyContent: 'center', gap: 12 },
-  pickRow: { flexDirection: 'row', gap: 10 },
-  pickSlot: {
-    borderRadius: 4, backgroundColor: 'rgba(255,243,214,0.18)', borderWidth: 3,
-    borderColor: 'rgba(255,243,214,0.5)', alignItems: 'center', justifyContent: 'center',
+  badge: {
+    position: 'absolute', right: -4, bottom: -4, backgroundColor: COLORS.woodDark,
+    borderWidth: 2, borderColor: COLORS.woodEdge, borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1,
+  },
+  price: {
+    flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6,
+    backgroundColor: 'rgba(58,32,12,0.88)', borderWidth: 3, borderColor: COLORS.woodEdge, borderRadius: 4,
+  },
+  recipeBtn: {
+    position: 'absolute', zIndex: 30, backgroundColor: COLORS.woodDark,
+    borderWidth: 3, borderColor: COLORS.woodEdge, borderRadius: 4,
   },
 });

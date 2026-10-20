@@ -45,11 +45,11 @@ function bloomImage(key) {
   return stages[stages.length - 1].img;
 }
 
-export default function FlowerBookScreen({ navigation }) {
+export default function FlowerBookScreen({ navigation, route }) {
   const { state } = useGame();
   const book = state.player.flowerBook ?? {};
   const bouquetBook = state.player.bouquetBook ?? {};
-  const [tab, setTab] = useState('flowers');
+  const [tab, setTab] = useState(route?.params?.tab ?? 'flowers');
   const [selected, setSelected] = useState(FLOWER_BOOK[0].key);
   const [selectedRecipe, setSelectedRecipe] = useState(BOUQUET_RECIPES[0].id);
 
