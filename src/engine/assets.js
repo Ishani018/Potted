@@ -138,6 +138,23 @@ export const UI_IMAGES = {
   trashopen:    require('../../assets/ui_comps/trashopen.png'),
   // Flower book + bouquet wrappers
   // Settings screen art
+  // Pet card art
+  pcCard: require('../../assets/ui_comps/pc_card.png'),
+  pcBanner: require('../../assets/ui_comps/pc_banner.png'),
+  pcPortrait: require('../../assets/ui_comps/pc_portrait.png'),
+  pcPlate: require('../../assets/ui_comps/pc_plate.png'),
+  pcGreen: require('../../assets/ui_comps/pc_green.png'),
+  pcPrice: require('../../assets/ui_comps/pc_price.png'),
+  pcBtnGreen: require('../../assets/ui_comps/pc_btn_green.png'),
+  pcBtnTan: require('../../assets/ui_comps/pc_btn_tan.png'),
+  pcBtnRed: require('../../assets/ui_comps/pc_btn_red.png'),
+  pcBlossom: require('../../assets/ui_comps/pc_blossom.png'),
+  pcLeaf: require('../../assets/ui_comps/pc_leaf.png'),
+  pcPaw: require('../../assets/ui_comps/pc_paw.png'),
+  pcSprout: require('../../assets/ui_comps/pc_sprout.png'),
+  pcPerk: require('../../assets/ui_comps/pc_perk.png'),
+  pcThumb: require('../../assets/ui_comps/pc_thumb.png'),
+  pcThumbOn: require('../../assets/ui_comps/pc_thumb_on.png'),
   settingsPanel: require('../../assets/ui_comps/settings_panel.png'),
   plantBanner:   require('../../assets/ui_comps/plant_banner.png'),
   settingsBoard: require('../../assets/ui_comps/settings_board.png'),
