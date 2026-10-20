@@ -145,6 +145,12 @@ export const POT_SOURCE_POSITIONS = {
   3: { x: 120, y: 600 },
 };
 
+// Hanging-pot source (stool) for rooms with hooks AND a separate shelf pot
+// source. Room 2 uses POT_SOURCE_POSITIONS[2] for its only (hanging) pot.
+export const HANGING_POT_SOURCE_POSITIONS = {
+  3: { x: 1250, y: 690 },  // ← Room 3 hook-pot stool — CHANGE THIS
+};
+
 export const SNAP_RADIUS = 40;
 
 // ──────────────────────────────────────────────────────────────────────────────

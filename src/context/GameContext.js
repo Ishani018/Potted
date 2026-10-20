@@ -211,7 +211,7 @@ function reducer(state, action) {
       const held = state.heldSeed;
       if (!held) return state;
       const slot = state.slots[slotId];
-      if (!slot) return state; // shelf spots need a pot placed first
+      if (!slot || !slot.hasPot) return state; // a pot has to be placed first
       if (slot.flowerKey) return state;
       if (seedType(held.flowerKey) !== slot.type) return state; // wrong pot type
       return {
