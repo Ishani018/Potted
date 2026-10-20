@@ -28,6 +28,7 @@ const ROOM_TYPES = ['potted', 'hanging'];
 // Sunroom pots/can are drawn a bit smaller than the Greenhouse's (90 / 200).
 const SUN_POT_W = 72;
 const SUN_CAN = 120;
+const SUN_HANG_W = 260;   // hanging plant/pot canvas width (image has lots of padding)
 
 export default function Room3Screen({ navigation }) {
   const { width: sw, height: sh } = useLayout();
@@ -67,7 +68,7 @@ export default function Room3Screen({ navigation }) {
   const potH = Math.round(projectSize(SUN_POT_W, sw, sh) * (344 / 347));
   // Watering targets: shelf pots grow upward from pt.y, hanging pots hang below
   // the hook (same offset the Balcony uses).
-  const hangingPotH = Math.round(projectSize(200, sw, sh) * 0.9);
+  const hangingPotH = Math.round(projectSize(SUN_HANG_W, sw, sh) * 0.9);
   const plantedPottedPoints = allSnapPoints
     .filter((pt) => { const s = slots[pt.id]; return s && s.flowerKey; })
     .map((pt) => (pt.id.includes('_h')
@@ -98,9 +99,9 @@ export default function Room3Screen({ navigation }) {
 
   // Hanging pot sizes — same as the Balcony. Stool image sets the drag hitbox;
   // drag/ghost/placed pots share the (square) hanging pot image.
-  const hookPotW = Math.round(projectSize(100, sw, sh));
+  const hookPotW = Math.round(projectSize(120, sw, sh));
   const hookPotH = Math.round(hookPotW * 0.93);
-  const hookDragW = Math.round(projectSize(200, sw, sh));
+  const hookDragW = Math.round(projectSize(SUN_HANG_W, sw, sh));
   const rawHookSrc = HANGING_POT_SOURCE_POSITIONS[3];
   const hookSrcPos = projectPoint(rawHookSrc.x, rawHookSrc.y, sw, sh);
 
@@ -233,7 +234,7 @@ export default function Room3Screen({ navigation }) {
           if (!pt) return null;
           // Hanging pots use the Balcony's sizing (stage 0 image is tall & narrow).
           const hangingSize = slot.type === 'hanging'
-            ? { baseWidthOverride: slot.stage === 0 ? 85 : 200 }
+            ? { baseWidthOverride: slot.stage === 0 ? 100 : SUN_HANG_W }
             : { baseWidthOverride: SUN_POT_W };
           return <PlantSlot key={slot.slotId} slot={slot} position={pt} onPress={handleSlotPress} onPestPress={handlePestPress} {...hangingSize} />;
         })}
