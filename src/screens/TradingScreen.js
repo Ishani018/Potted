@@ -164,10 +164,8 @@ export default function TradingScreen({ navigation }) {
         </>
       )}
 
-      {/* Sell single flowers (featured today) or tie any 3 into a bouquet */}
       <View style={styles.btnRow}>
         <PixelButton label="MY FLOWERS" onPress={() => setInvOpen(true)} />
-        <PixelButton label="MAKE BOUQUET" tone="wood" onPress={() => navigation.navigate('Bouquet')} />
       </View>
 
       <ScreenHud

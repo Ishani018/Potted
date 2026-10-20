@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { MAP_BG, UI_IMAGES } from '../engine/assets';
+import { MAP_BG } from '../engine/assets';
+import MapTag from '../components/MapTag';
 import ScreenHud from '../components/ScreenHud';
 
 // Town buttons laid out in Plopper (1376×768 base, sprite CENTER anchor).
@@ -8,12 +9,14 @@ import ScreenHud from '../components/ScreenHud';
 // land exactly where placed in Plopper. img = UI_IMAGES key, dest = nav target.
 const PLOPPER_W = 1376;
 const PLOPPER_H = 768;
+// label = sign text; x/y = centre of the sign (text + arrow); dest = nav target.
 const BUTTONS = [
-  { img: 'marketbtn',  dest: 'Trade',   x: 1059, y: 392, w: 179, h: 84, flip: false, z: 1 },
-  { img: 'nurserybtn', dest: 'Nursery', x: 474,  y: 319, w: 192, h: 82, flip: false, z: 2 },
-  { img: 'homebutton', dest: 'Home',    x: 111,  y: 516, w: 140, h: 81, flip: false, z: 3 },
-  { img: 'adoptbtn',   dest: 'PetShop', x: 855,  y: 200, w: 144, h: 86, flip: false, z: 4 },
-  { img: 'gallerybtn', dest: 'Gallery', x: 761,  y: 587, w: 192, h: 73, flip: false, z: 5 },
+  { label: 'MARKET',  dest: 'Trade',   x: 1059, y: 392 },
+  { label: 'NURSERY', dest: 'Nursery', x: 474,  y: 319 },
+  { label: 'HOME',    dest: 'Home',    x: 111,  y: 516 },
+  { label: 'ADOPT',   dest: 'PetShop', x: 855,  y: 200 },
+  { label: 'GALLERY', dest: 'Gallery', x: 761,  y: 587 },
+  { label: 'FLORIST', dest: 'Bouquet', x: 1092, y: 190 },
 ];
 
 export default function MapScreen({ navigation }) {
@@ -27,19 +30,20 @@ export default function MapScreen({ navigation }) {
     >
       <Image source={MAP_BG} style={styles.bg} resizeMode="stretch" />
 
-      {BUTTONS.map((b) => {
-        const cx = (b.x / PLOPPER_W) * sw;
-        const cy = (b.y / PLOPPER_H) * sh;
-        const w = (b.w / PLOPPER_W) * sw;
-        const h = (b.h / PLOPPER_H) * sh;
+      {sw > 0 && BUTTONS.map((b, i) => {
+        const u = sw / PLOPPER_W;
+        const bw = 230 * u, bh = 90 * u;
         return (
           <TouchableOpacity
-            key={b.img}
+            key={b.label}
             activeOpacity={0.75}
             onPress={() => navigation.navigate(b.dest)}
-            style={{ position: 'absolute', left: cx - w / 2, top: cy - h / 2, width: w, height: h, zIndex: b.z }}
+            style={{
+              position: 'absolute', left: b.x * u - bw / 2, top: (b.y / PLOPPER_H) * sh - bh / 2,
+              width: bw, height: bh, alignItems: 'center', justifyContent: 'center', zIndex: 10 + i,
+            }}
           >
-            <Image source={UI_IMAGES[b.img]} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+            <MapTag label={b.label} u={u} delay={i * 180} />
           </TouchableOpacity>
         );
       })}
