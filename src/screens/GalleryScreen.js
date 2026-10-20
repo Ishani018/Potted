@@ -4,7 +4,8 @@ import { useGame } from '../context/GameContext';
 import { GALLERY_BG, PAINTING_IMAGES, UI_IMAGES } from '../engine/assets';
 import { PAINTINGS } from '../constants/gameData';
 import ScreenHud from '../components/ScreenHud';
-import { PixelPanel, PixelText, PixelButton } from '../components/Pixel';
+import { pixelText } from '../components/Pixel';
+import { Skinned } from '../components/NineSlice';
 import { useNotice } from '../components/PurchaseNotice';
 import InventoryOverlay from '../components/InventoryOverlay';
 
@@ -36,33 +37,42 @@ function BuyModal({ paintingKey, onClose, onBought }) {
     onClose();
   };
 
+  // The ornate floral frame (ornate_frame.png, 606×572) is the card. Fractions below
+  // locate its parchment area and its baked red X.
+  const W = 400, H = W * (572 / 606);
+  const INK = '#5a3410';
+  const text = { fontFamily: 'PressStart2P', color: INK };
+
   return (
     <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
-      <TouchableOpacity activeOpacity={1} onPress={() => {}}>
-        <PixelPanel style={{ alignItems: 'center', minWidth: 260, paddingTop: 16 }}>
-          <TouchableOpacity style={{ position: 'absolute', top: 6, right: 6, width: 34, height: 34, zIndex: 5 }} onPress={onClose} activeOpacity={0.8}>
-            <Image source={UI_IMAGES.cancelbutton} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
-          </TouchableOpacity>
-          <PixelPanel cream>
-            <Image source={PAINTING_IMAGES[paintingKey]} style={styles.modalImg} resizeMode="contain" />
-          </PixelPanel>
-          <PixelText size={13} style={{ marginTop: 14, marginBottom: 8, textAlign: 'center' }}>{p.name.toUpperCase()}</PixelText>
+      <TouchableOpacity activeOpacity={1} onPress={() => {}} style={{ width: W, height: H }}>
+        <Image source={UI_IMAGES.ornateFrame} style={{ position: 'absolute', left: 0, top: 0, width: W, height: H }} resizeMode="stretch" />
+
+        {/* red X (painted into the frame) */}
+        <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={{ position: 'absolute', left: W * 0.785, top: H * 0.05, width: W * 0.15, height: H * 0.15 }} />
+
+        {/* parchment area */}
+        <View style={{ position: 'absolute', left: W * 0.15, top: H * 0.17, width: W * 0.7, height: H * 0.64, alignItems: 'center' }}>
+          <Skinned src={UI_IMAGES.pcPicFrame} sw={96} sh={96} inset={26} scale={0.6} style={{ padding: 4 }}>
+            <Image source={PAINTING_IMAGES[paintingKey]} style={{ width: W * 0.4, height: W * 0.33 }} resizeMode="cover" />
+          </Skinned>
+          <Text style={[text, { fontSize: 13, marginTop: 10, textAlign: 'center' }]}>{p.name.toUpperCase()}</Text>
           {!owned && (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 14 }}>
-              <Image source={UI_IMAGES.goldcoins} style={{ width: 20, height: 20 }} resizeMode="contain" />
-              <PixelText size={11} color="#ffd060">{p.price}</PixelText>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 }}>
+              <Image source={UI_IMAGES.goldcoins} style={{ width: 22, height: 22 }} resizeMode="contain" />
+              <Text style={[text, { fontSize: 12 }]}>{p.price}</Text>
             </View>
           )}
-          {owned ? (
-            <PixelText size={9} color="#e8c890">IN YOUR COLLECTION</PixelText>
-          ) : (
-            <PixelButton
-              onPress={canAfford ? handleBuy : undefined}
-              disabled={!canAfford}
-              label={canAfford ? 'BUY' : `NEED ${p.price - state.player.coins} MORE`}
-            />
-          )}
-        </PixelPanel>
+          <View style={{ marginTop: 8, alignSelf: 'stretch', paddingHorizontal: W * 0.04 }}>
+            {owned ? (
+              <Text style={[text, { fontSize: 8, textAlign: 'center', color: '#3f7a2e', marginTop: 6 }]}>IN YOUR COLLECTION</Text>
+            ) : (
+              <Skinned src={UI_IMAGES.pcBtnGreen} sw={112} sh={80} inset={18} scale={0.5} onPress={canAfford ? handleBuy : undefined} disabled={!canAfford} style={{ paddingVertical: 11, alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={[pixelText(11, '#fff')]}>{canAfford ? 'BUY' : `NEED ${p.price - state.player.coins} MORE`}</Text>
+              </Skinned>
+            )}
+          </View>
+        </View>
       </TouchableOpacity>
     </TouchableOpacity>
   );

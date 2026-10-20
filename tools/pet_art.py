@@ -124,3 +124,17 @@ def b_pair(d): heart(d,6,5); heart(d,22,5,'#f0f0f0','#6a6a7a')
 
 perk('george',b_shield); perk('storm',b_seed); perk('koazy',b_moon); perk('brownie',b_coins); perk('aki',b_coin)
 perk('cherry',b_heartbook); perk('martin',b_hour); perk('tiger',b_ladybug); perk('milk',b_clover); perk('oreo',b_beetle); perk('ebonyandivory',b_pair)
+
+# wooden picture frame for gallery paintings (9-slice)
+def pic_frame():
+    w=h=24
+    im,d=new(w,h)
+    d.rectangle([0,0,w-1,h-1],fill=rgb('#3a2008'))
+    d.rectangle([1,1,w-2,h-2],fill=rgb('#7a4a1e'))
+    d.rectangle([2,2,w-3,h-3],fill=rgb('#a46122'))
+    for i in range(3,6): d.rectangle([i,i,w-1-i,h-1-i],fill=rgb('#8a5420' if i%2 else '#9a5f26'))
+    d.rectangle([6,6,w-7,h-7],fill=rgb('#4a2a10'))
+    d.rectangle([7,7,w-8,h-8],fill=rgb('#e6d3a8'))
+    d.line([(2,2),(w-3,2)],fill=rgb('#d9a35a')); d.line([(2,2),(2,h-3)],fill=rgb('#c98a3c'))
+    save(im,'pc_pic_frame.png')
+pic_frame()
