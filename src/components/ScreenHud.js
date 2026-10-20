@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, Text, TouchableOpacity, View, StyleSheet } from 'react-native';
+import { Image, TouchableOpacity } from 'react-native';
 import { UI_IMAGES } from '../engine/assets';
 
 // Standard corner HUD, positioned at fixed Plopper coords (1376×768 base, CENTER
@@ -46,26 +46,11 @@ export default function ScreenHud({ sw, sh, onSettings, onMap, onInventory, onBo
         </TouchableOpacity>
       )}
       {onBook && (
-        // Drawn book (no image asset yet): leather cover, cream page edge, flower.
         <TouchableOpacity style={place(HUD.book, sw, sh)} onPress={onBook} activeOpacity={0.8}>
-          <View style={styles.book}>
-            <View style={styles.spine} />
-            <View style={styles.pages} />
-            <Text style={[styles.flower, { fontSize: (HUD.book.h / PLOPPER_H) * sh * 0.42 }]}>✿</Text>
-          </View>
+          <Image source={UI_IMAGES.flowerbook} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
         </TouchableOpacity>
       )}
     </>
   );
 }
 
-const styles = StyleSheet.create({
-  book: {
-    flex: 1, margin: '8%', borderRadius: 6,
-    backgroundColor: '#7a3e1a', borderWidth: 2, borderColor: '#c8873a',
-    alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-  },
-  spine: { position: 'absolute', left: 0, top: 0, bottom: 0, width: '18%', backgroundColor: '#4e2410' },
-  pages: { position: 'absolute', right: 0, top: '8%', bottom: '8%', width: '10%', backgroundColor: '#f3e3c0' },
-  flower: { color: '#ffd060', marginLeft: '10%', textShadowColor: 'rgba(0,0,0,0.6)', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 1 },
-});

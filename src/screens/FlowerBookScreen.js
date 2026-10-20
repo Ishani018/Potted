@@ -185,7 +185,7 @@ function BouquetPages({ found, selected, onSelect, tabs }) {
                 onPress={() => onSelect(r.id)}
                 activeOpacity={0.75}
               >
-                {got ? <BouquetArt flowers={r.flowers} size={54} /> : <Text style={styles.recipeQ}>?</Text>}
+                {got ? <BouquetArt flowers={r.flowers} size={54} fancy /> : <Text style={styles.recipeQ}>?</Text>}
               </TouchableOpacity>
             );
           })}
@@ -199,7 +199,7 @@ function BouquetPages({ found, selected, onSelect, tabs }) {
           <Text style={styles.name}>{record ? recipe.name : '???'}</Text>
           {record ? (
             <>
-              <BouquetArt flowers={recipe.flowers} size={110} />
+              <BouquetArt flowers={recipe.flowers} size={110} fancy />
               <View style={styles.stageRow}>
                 {recipe.flowers.map((k, i) => (
                   <View key={i} style={styles.stage}>

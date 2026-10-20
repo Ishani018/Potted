@@ -136,6 +136,11 @@ export const UI_IMAGES = {
   cancelbutton: require('../../assets/ui_comps/cancelbutton.png'),
   trashclosed:  require('../../assets/ui_comps/trashclosed.png'),
   trashopen:    require('../../assets/ui_comps/trashopen.png'),
+  // Flower book + bouquet wrappers
+  flowerbook:    require('../../assets/ui_comps/flowerbook.png'),
+  bouquetempty:  require('../../assets/ui_comps/bouquetempty.png'),
+  bouquetmixed:  require('../../assets/ui_comps/bouquetmixed.png'),
+  bouquetfancy:  require('../../assets/ui_comps/bouquetfancy.png'),
 };
 
 // ─── Trade flower images (market) ─────────────────────────────────────────────

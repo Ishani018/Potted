@@ -49,7 +49,7 @@ export default function BouquetMaker({ onClose, onSold }) {
         {/* ── Left: the bouquet being made ───────────────────────────── */}
         <View style={styles.colLeft}>
           <Text style={styles.title}>Bouquet Table</Text>
-          <BouquetArt flowers={[picks[0], picks[1], picks[2]]} size={120} />
+          <BouquetArt flowers={[picks[0], picks[1], picks[2]]} size={130} fancy={!!result?.recipe} />
           <Text style={styles.previewName}>{previewName}</Text>
           {/* Picked flowers — tap to put back */}
           <View style={styles.pickRow}>
