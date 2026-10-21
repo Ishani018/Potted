@@ -230,3 +230,18 @@ export const BOUQUET_BG = require('../../assets/bouquetshop.png');   // bouquet 
 export const PETROOM_BG = require('../../assets/petroom.png');       // pet lounge (beds)
 export const GALLERY_BG = require('../../assets/gallery.png');
 export const LOADING_BG = require('../../assets/loadingshop.png');
+
+// ─── Florist customers ────────────────────────────────────────────────────────
+// Full-body sprites, one per customer in gameData CUSTOMERS. Until a sprite is
+// registered here the customer is drawn as a simple stand-in person. After
+// adding a PNG to assets/customers/, uncomment its line.
+export const CUSTOMER_IMAGES = {
+  // maemae: require('../../assets/customers/maemae.png'),
+  // okafor: require('../../assets/customers/okafor.png'),
+  // pip:    require('../../assets/customers/pip.png'),
+  // lucia:  require('../../assets/customers/lucia.png'),
+  // wen:    require('../../assets/customers/wen.png'),
+  // gus:    require('../../assets/customers/gus.png'),
+  // juno:   require('../../assets/customers/juno.png'),
+  // hana:   require('../../assets/customers/hana.png'),
+};

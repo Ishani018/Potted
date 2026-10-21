@@ -5,9 +5,10 @@ import {
   INITIAL_PLAYER_STATE, ROOM_UNLOCK_COSTS, CATCH_UP, BOUQUET_SIZE,
   POTTED_FLOWERS, HANGING_PLANTS, PETS, ROOM_NAMES,
   seedType, evaluateBouquet, bouquetPaper,
-  XP_CONFIG, levelInfo, playerLevel, seedUnlockLevel, unlocksAtLevel, TRADE_FLOWERS,
+  XP_CONFIG, levelInfo, playerLevel, seedUnlockLevel, unlocksAtLevel, TRADE_FLOWERS, CUSTOMERS,
 } from '../constants/gameData';
 import { roomPetEffects, globalPetEffects, pestRewardFor, placedPets, dayKey } from '../engine/petEffects';
+import { rollCustomerOrders, hashString, bouquetFillsOrder } from '../engine/customers';
 import {
   tickAllSlots,
   harvestPlant,
@@ -72,6 +73,35 @@ function grantXp(state, amount) {
     });
   }
   return { ...state, player, notices };
+}
+
+// Mark an order done, give its XP and seed bonus, and queue a thank-you notice.
+function completeOrder(state, order, message) {
+  const list = state.player.customers.list.map((o) => (o.id === order.id ? { ...o, done: true } : o));
+  const inventory = addSeed(state.inventory, order.seed, `c_${order.id}`);
+  const gotSeed = order.seed && inventory.length > state.inventory.length;
+  const seedName = order.seed ? (POTTED_FLOWERS[order.seed]?.name ?? HANGING_PLANTS[order.seed]?.name) : '';
+  const next = {
+    ...state,
+    inventory,
+    player: {
+      ...state.player,
+      customers: { ...state.player.customers, list },
+      customersServed: (state.player.customersServed ?? 0) + 1,
+    },
+    notices: [...state.notices, {
+      id: `cust_${order.id}_${Date.now()}`,
+      icon: '💐',
+      text: `${message}${gotSeed ? ` · and a ${seedName} seed!` : ''}`,
+    }],
+  };
+  return grantXp(next, order.xp);
+}
+
+// Put a seed in the inventory if there's room. Returns the new inventory.
+function addSeed(inventory, flowerKey, tag) {
+  if (!flowerKey || inventory.length >= INVENTORY_CAP) return inventory;
+  return [...inventory, { id: `inv_${Date.now()}_${tag}`, flowerKey }];
 }
 
 // Pets' once-a-day gifts (Storm digs up a seed, Aki fetches coins).
@@ -152,6 +182,14 @@ function reducer(state, action) {
       let player = { ...state.player, coins: state.player.coins + coins };
       let inventory = state.inventory;
       const notices = [];
+      // A new day brings a new set of florist customers.
+      const today = dayKey(now);
+      if (player.customers?.day !== today) {
+        player = {
+          ...player,
+          customers: { day: today, list: rollCustomerOrders(today, playerLevel(player), makeRand(hashString(today))) },
+        };
+      }
       if (rand) {
         // Bug-catching pets (Tiger) sometimes clear a bug in their room.
         for (const [id, slot] of Object.entries(updatedSlots)) {
@@ -351,8 +389,11 @@ function reducer(state, action) {
     // Tie BOUQUET_SIZE harvested flowers into a bouquet and sell it at once.
     // action: { flowers: [flowerKey, ...] }
     case 'SELL_BOUQUET': {
-      const { flowers, paper = 'plain' } = action;
+      const { flowers, paper = 'plain', customerId = null } = action;
       if (!Array.isArray(flowers) || flowers.length !== BOUQUET_SIZE) return state;
+      // Delivering to a customer: the order must be open and the bouquet must fit it.
+      const order = customerId ? state.player.customers?.list?.find((o) => o.id === customerId) : null;
+      if (customerId && (!order || !bouquetFillsOrder(order, flowers))) return state;
       if (state.player.coins < bouquetPaper(paper).cost) return state; // can't afford the paper
       if (playerLevel(state.player) < bouquetPaper(paper).level) return state; // paper not unlocked yet
       const harvested = { ...(state.player.harvestedFlowers ?? {}) };
@@ -368,16 +409,35 @@ function reducer(state, action) {
         bouquetBook[recipe.id] = { made: (prev?.made ?? 0) + 1, firstAt: prev?.firstAt ?? Date.now() };
       }
       const newRecipe = recipe && !state.player.bouquetBook?.[recipe.id];
-      return grantXp({
+      const tip = order ? order.tip : 0; // a customer pays the price plus a tip
+      let delivered = {
         ...state,
         player: {
           ...state.player,
-          coins: state.player.coins + net, // sale minus the paper used
+          coins: state.player.coins + net + tip, // sale minus the paper used, plus any tip
           harvestedFlowers: harvested,
           bouquetBook,
           bouquetsSold: (state.player.bouquetsSold ?? 0) + 1,
         },
-      }, Math.max(0, net) / XP_CONFIG.bouquetDivisor + (newRecipe ? XP_CONFIG.newRecipe : 0));
+      };
+      if (order) delivered = completeOrder(delivered, order, `${CUSTOMERS[order.customer].name} loved the bouquet! +${tip} tip`);
+      return grantXp(delivered, Math.max(0, net) / XP_CONFIG.bouquetDivisor + (newRecipe ? XP_CONFIG.newRecipe : 0));
+    }
+
+    // Hand a customer the flowers they asked for.
+    case 'FULFILL_CUSTOMER': {
+      const order = state.player.customers?.list?.find((o) => o.id === action.id);
+      if (!order || order.done || order.type !== 'flowers') return state;
+      const have = state.player.harvestedFlowers?.[order.flowerKey] ?? 0;
+      if (have < order.qty) return state;
+      const harvested = { ...state.player.harvestedFlowers };
+      harvested[order.flowerKey] = have - order.qty;
+      if (harvested[order.flowerKey] <= 0) delete harvested[order.flowerKey];
+      const paid = {
+        ...state,
+        player: { ...state.player, coins: state.player.coins + order.coins, harvestedFlowers: harvested },
+      };
+      return completeOrder(paid, order, `${CUSTOMERS[order.customer].name} paid ${order.coins} coins`);
     }
 
     case 'REMOVE_PLANT': {

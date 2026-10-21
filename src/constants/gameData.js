@@ -400,6 +400,8 @@ export const INITIAL_PLAYER_STATE = {
   flowerBook: {},    // flowerKey → { grown, firstAt } — page unlocks on first full bloom
   pestsCleared: 0,
   xp: 0,             // total experience — level is derived (see levelInfo)
+  customers: null,   // { day, list: [orders] } — today's florist orders (engine/customers)
+  customersServed: 0,
   bouquetBook: {},   // recipeId → { made, firstAt } — secret bouquet recipes found
   bouquetsSold: 0,
   petGifts: {},      // petKey → day key of the last daily gift
@@ -494,3 +496,77 @@ export function evaluateBouquet(keys, bonus = 1, paper = 'plain') {
   const value = Math.round(base * multiplier * paperBonus * bonus);
   return { recipe, name, multiplier, paperBonus, paperCost, value, net: value - paperCost };
 }
+
+// ── Florist customers ─────────────────────────────────────────────────────────
+// Each day three customers visit the florist with an order (see engine/customers).
+//   look   = palette for the stand-in drawn person (also a colour guide for the
+//            real sprite); desc = what the sprite should show.
+//   likes  = flowers they ask for; lines use {flower} / {qty}.
+export const CUSTOMERS = {
+  maemae: {
+    key: 'maemae', name: 'Granny Mae', desc: 'Elderly woman, grey bun, round glasses, lilac cardigan, little handbag.',
+    look: { skin: '#f1c9a0', hair: '#c9c9c9', outfit: '#9b7fc4' },
+    likes: ['daisy', 'marigold', 'petunia'],
+    askFlowers: 'My window box is bare, dear! Could you spare {qty} {flower}?',
+    askBouquet: 'Something cheerful for my sister, please. A bouquet with {flower} in it?',
+    thanks: 'Lovely, just lovely. Come for tea sometime!',
+  },
+  okafor: {
+    key: 'okafor', name: 'Mr. Okafor', desc: 'Tall man, neat suit and tie, short dark hair, holds a small gift bag.',
+    look: { skin: '#8a5a3a', hair: '#1c1410', outfit: '#2f4a6a' },
+    likes: ['rose', 'peony', 'hydrenga'],
+    askFlowers: "It's our anniversary! I need {qty} {flower}, and I need them fresh.",
+    askBouquet: 'A bouquet for my wife, please. It must have {flower} in it.',
+    thanks: "She'll love these. You've saved my evening!",
+  },
+  pip: {
+    key: 'pip', name: 'Little Pip', desc: 'Small child, bright red cap, school backpack, missing front tooth, big smile.',
+    look: { skin: '#f4cfa8', hair: '#6a3a1a', outfit: '#d65a4a' },
+    likes: ['daisy', 'poppy', 'snapdragon'],
+    askFlowers: "It's for my teacher! Can I have {qty} {flower}? I saved my pocket money!",
+    askBouquet: "Can you make a bouquet with {flower}? It's for my mum's birthday!",
+    thanks: 'Yay! Thank you, thank you!',
+  },
+  lucia: {
+    key: 'lucia', name: 'Chef Lucia', desc: 'Woman in white chef jacket and tall hat, red neckerchief, wooden spoon in pocket.',
+    look: { skin: '#e9b98f', hair: '#3a2416', outfit: '#f2f2ee' },
+    likes: ['snapdragon', 'poppy', 'marigold'],
+    askFlowers: 'The restaurant needs table flowers. {qty} {flower}, please. Quick, quick!',
+    askBouquet: 'A centrepiece with {flower} in it. Make it pretty, I have guests at eight!',
+    thanks: 'Perfect. Dinner is on me next time!',
+  },
+  wen: {
+    key: 'wen', name: 'Wen', desc: 'Young woman in a white dress and short veil, hair up with a pearl pin, nervous smile.',
+    look: { skin: '#f0cfae', hair: '#2a1c14', outfit: '#fbf6ee' },
+    likes: ['peony', 'hydrenga', 'rose'],
+    askFlowers: "I'm getting married on Saturday! I need {qty} {flower} for the arch.",
+    askBouquet: 'My bridal bouquet! It simply must have {flower} in it.',
+    thanks: "It's perfect. I might cry!",
+  },
+  gus: {
+    key: 'gus', name: 'Postman Gus', desc: 'Man in a blue postal uniform and cap, big leather mail bag, rosy cheeks, moustache.',
+    look: { skin: '#e3b088', hair: '#7a4a24', outfit: '#3a64a8' },
+    likes: ['marigold', 'jasmine', 'daisy'],
+    askFlowers: 'Delivery for you, and a favour to ask: could I have {qty} {flower}?',
+    askBouquet: "My route's been long. A bouquet with {flower} would cheer my day.",
+    thanks: 'Right on time. See you tomorrow!',
+  },
+  juno: {
+    key: 'juno', name: 'Artist Juno', desc: 'Person in a beret and paint-splattered apron, bright scarf, paintbrush behind the ear.',
+    look: { skin: '#e8b996', hair: '#b8442a', outfit: '#3f9a8f' },
+    likes: ['poppy', 'petunia', 'Bougainvillea'],
+    askFlowers: "I need colour to paint! {qty} {flower}, if you've got them.",
+    askBouquet: 'My muse wants a bouquet. It must have {flower} in it.',
+    thanks: "Magnificent. I'll paint these tonight!",
+  },
+  hana: {
+    key: 'hana', name: 'Dr. Hana', desc: 'Woman in a white coat with a stethoscope, hair in a ponytail, kind tired eyes.',
+    look: { skin: '#f0c8a4', hair: '#1c1c28', outfit: '#e7f1f2' },
+    likes: ['jasmine', 'marigold', 'stringofpearls'],
+    askFlowers: 'The ward could use brightening. May I have {qty} {flower}?',
+    askBouquet: 'A bouquet with {flower} for a patient who needs cheering up, please.',
+    thanks: "That'll make someone's day. Thank you.",
+  },
+};
+
+export const CUSTOMERS_PER_DAY = 3;

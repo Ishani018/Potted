@@ -8,6 +8,8 @@ import {
 import { globalPetEffects } from '../engine/petEffects';
 import BouquetArt from '../components/BouquetArt';
 import ScreenHud from '../components/ScreenHud';
+import CustomerCorner from '../components/CustomerCorner';
+import { openOrders, bouquetFillsOrder, CUSTOMERS } from '../engine/customers';
 import { PixelText, PixelButton, COLORS } from '../components/Pixel';
 import { useNotice } from '../components/PurchaseNotice';
 
@@ -53,11 +55,16 @@ export default function BouquetScreen({ navigation }) {
   const previewName = !result ? 'PICK 3 FLOWERS' : isNewRecipe ? 'SOMETHING SPECIAL...' : result.name.toUpperCase();
   const foundCount = BOUQUET_RECIPES.filter((r) => found[r.id]).length;
 
+  // A waiting customer who wants a bouquet like this one gets it instead of the market.
+  const order = full ? openOrders(state.player).find((o) => bouquetFillsOrder(o, picks)) : null;
+  const customerName = order ? CUSTOMERS[order.customer].name.split(' ').pop().toUpperCase() : '';
+  const payout = result ? result.net + (order ? order.tip : 0) : 0;
+
   const add = (key) => { if (!full && left(key) > 0) setPicks([...picks, key]); };
   const sell = () => {
     if (!result) return;
-    dispatch({ type: 'SELL_BOUQUET', flowers: picks, paper });
-    const earned = `You earned ${result.net} coins.`;
+    dispatch({ type: 'SELL_BOUQUET', flowers: picks, paper, customerId: order ? order.id : null });
+    const earned = order ? `${customerName} paid ${payout} coins.` : `You earned ${result.net} coins.`;
     notify({
       icon: UI_IMAGES[PAPER_IMG[paper]],
       title: isNewRecipe ? `New recipe: ${result.name}!` : `Sold ${result.name}!`,
@@ -152,7 +159,7 @@ export default function BouquetScreen({ navigation }) {
             {result && (
               <View style={styles.price}>
                 <Image source={UI_IMAGES.goldcoins} style={{ width: fx(24), height: fx(24) }} resizeMode="contain" />
-                <PixelText size={fs(14, 8)} color={COLORS.gold}>{result.net}</PixelText>
+                <PixelText size={fs(14, 8)} color={COLORS.gold}>{payout}</PixelText>
               </View>
             )}
             {/* only shown when you picked a paid paper: what the sheet costs */}
@@ -163,7 +170,7 @@ export default function BouquetScreen({ navigation }) {
               onPress={full ? sell : undefined}
               disabled={!full}
               size={fs(10, 7)}
-              label="TIE & SELL"
+              label={order ? `FOR ${customerName}` : 'TIE & SELL'}
               style={{ alignSelf: 'stretch' }}
             />
             <PixelButton
@@ -186,6 +193,9 @@ export default function BouquetScreen({ navigation }) {
       >
         <PixelText size={fs(8, 6)}>RECIPES {foundCount}/{BOUQUET_RECIPES.length}</PixelText>
       </TouchableOpacity>
+
+      {/* The next waiting customer (tap for their order) */}
+      <CustomerCorner sw={sw} sh={sh} />
 
       <ScreenHud
         sw={sw} sh={sh}
