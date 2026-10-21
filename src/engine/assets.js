@@ -103,7 +103,7 @@ export const PET_IMAGES = {
   ebonyandivory: require('../../assets/pets/ebonyandivory.png'),
   milk:          require('../../assets/pets/milk.png'),
   oreo:          require('../../assets/pets/oreo.png'),
-  // strays (foster corner)
+  // strays (Foster Center)
   biscuit:       require('../../assets/foster/biscuit.png'),
   marmalade:     require('../../assets/foster/marmalade.png'),
   honey:         require('../../assets/foster/marmaladealt.png'),
@@ -115,10 +115,7 @@ export const PET_IMAGES = {
 };
 // Biscuit naps on the foster beds.
 export const FOSTER_REST_IMAGES = { biscuit: require('../../assets/foster/biscuitsleep.png') };
-export const FOSTER_BGS = {
-  corner: require('../../assets/foster/corner.png'),
-  center: require('../../assets/foster/center.png'),
-};
+export const FOSTER_BG = require('../../assets/foster/center.png');
 
 // ─── UI ──────────────────────────────────────────────────────────────────────
 export const UI_IMAGES = {
@@ -243,7 +240,7 @@ export const INVENTORY_BG = require('../../assets/ui_comps/inventory.png');
 // ─── New screen backgrounds ───────────────────────────────────────────────────
 export const MAP_BG = require('../../assets/ui_comps/mapoftown.png');
 export const HOME_BG = require('../../assets/homeinsidescreen.png');
-export const PETSHOP_BG = require('../../assets/petshop.png');
+export const PETSHOP_BG = require('../../assets/petshop/petshop.png');   // the polished shop (the 11 resident pets stand on it)
 // ─── Pet food aisle ───────────────────────────────────────────────────────────
 export const PETFOOD_BG = require('../../assets/petfood/aisle.png');
 export const PETFOOD_IMAGES = {

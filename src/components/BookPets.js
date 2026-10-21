@@ -128,7 +128,7 @@ export default function BookPets({ tab, setTab }) {
           ) : (
             <Text style={b.note}>
               {pet.stray
-                ? `Waiting at the foster corner. Adopt ${pet.name} for ${pet.price} coins.`
+                ? `Waiting at the Foster Center. Adopt ${pet.name} for ${pet.price} coins.`
                 : `Not adopted yet. Visit the pet shop to adopt ${pet.name} for ${pet.price} coins.`}
             </Text>
           )}

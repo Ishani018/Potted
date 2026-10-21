@@ -104,7 +104,7 @@ export default function PetShopScreen({ navigation }) {
       />
 
       <View style={styles.foodBtn}>
-        <PixelButton label="FOSTER CORNER" tone="wood" size={8} onPress={() => navigation.navigate('Foster')} />
+        <PixelButton label="FOSTER CENTER" tone="wood" size={8} onPress={() => navigation.navigate('Foster')} />
         <PixelButton label="PET FOOD >" tone="wood" size={8} onPress={() => navigation.navigate('PetFood')} />
       </View>
 

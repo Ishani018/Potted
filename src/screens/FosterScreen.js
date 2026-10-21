@@ -1,18 +1,15 @@
 import React, { useState } from 'react';
 import { View, Image, Pressable, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { FOSTER_BGS, FOSTER_REST_IMAGES, PET_IMAGES, PERK_ICONS } from '../engine/assets';
-import {
-  STRAYS, FOSTER_SEATS, FOSTER_SIZE, FOSTER_BASE_W, FOSTER_ROOMS, CENTER_OPENS_AT, fosterCenterOpen, CUSTOMERS,
-} from '../constants/gameData';
+import { FOSTER_BG, FOSTER_REST_IMAGES, PET_IMAGES, PERK_ICONS } from '../engine/assets';
+import { STRAYS, FOSTER_SEATS, FOSTER_SIZE, FOSTER_BASE_W, CUSTOMERS } from '../constants/gameData';
 import ScreenHud from '../components/ScreenHud';
 import InventoryOverlay from '../components/InventoryOverlay';
 import PetSprite from '../components/PetSprite';
 import { PixelText, PixelPanel, PixelButton, COLORS } from '../components/Pixel';
 
-// The foster corner (and, once you've adopted a couple of strays, the bigger foster
-// centre): the pet shop's cosy back rooms. Customers find strays and
-// bring them here; each takes an empty seat until you adopt it. Tap one to read
+// The Foster Center: the pet shop's big back room. Customers find strays and bring
+// them here; each takes an empty seat until you adopt it. Tap one to read
 // where it was found and to adopt it (it then lives in your garden like any pet).
 const dark = { textShadowRadius: 0 };
 
@@ -66,25 +63,19 @@ function StrayCard({ stray, onClose }) {
 export default function FosterScreen({ navigation }) {
   const { state } = useGame();
   const [box, setBox] = useState({ w: 0, h: 0 });
-  const [room, setRoom] = useState('corner');
   const [hovered, setHovered] = useState(null);
   const [picked, setPicked] = useState(null);
   const [invOpen, setInvOpen] = useState(false);
   const sw = box.w, sh = box.h;
-  const allStrays = state.player.strays ?? [];
+  const strays = state.player.strays ?? [];
   const seatOf = (st) => FOSTER_SEATS.find((x) => x.id === st.seat) ?? FOSTER_SEATS[0];
-  const strays = allStrays.filter((st) => seatOf(st).room === room);
-  const centerOpen = fosterCenterOpen(state.player);
-  const other = room === 'corner' ? 'center' : 'corner';
-  const otherCount = allStrays.filter((st) => seatOf(st).room === other).length;
-  const adoptedStrays = (state.player.ownedPets ?? []).filter((k) => STRAYS[k]).length;
   const fx = (v) => (v / FOSTER_SIZE.w) * sw;
   const fy = (v) => (v / FOSTER_SIZE.h) * sh;
   const fw = (v) => (v / FOSTER_BASE_W) * sw;   // pet widths
 
   return (
     <View style={styles.root} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
-      <Image source={FOSTER_BGS[room]} style={styles.bg} resizeMode="stretch" />
+      <Image source={FOSTER_BG} style={styles.bg} resizeMode="stretch" />
 
       {sw > 0 && strays.map((stray) => {
         const def = STRAYS[stray.key];
@@ -115,7 +106,7 @@ export default function FosterScreen({ navigation }) {
 
       {sw > 0 && strays.length === 0 && (
         <View style={styles.empty} pointerEvents="none">
-          <PixelText size={8}>NO STRAYS HERE RIGHT NOW</PixelText>
+          <PixelText size={8}>NO STRAYS RIGHT NOW</PixelText>
           <PixelText size={7} color="#f6e2b8" style={{ marginTop: 4 }}>CUSTOMERS BRING THEM IN FROM TIME TO TIME</PixelText>
         </View>
       )}
@@ -123,24 +114,12 @@ export default function FosterScreen({ navigation }) {
       {sw > 0 && (
         <View style={styles.roomTitle} pointerEvents="none">
           <PixelPanel style={{ paddingHorizontal: 4 }}>
-            <PixelText size={9}>{FOSTER_ROOMS[room].title.toUpperCase()}</PixelText>
+            <PixelText size={9}>FOSTER CENTER</PixelText>
           </PixelPanel>
         </View>
       )}
 
       <View style={styles.back}>
-        {centerOpen ? (
-          <PixelButton
-            label={`${room === 'corner' ? 'FOSTER CENTER' : 'FOSTER CORNER'}${otherCount ? ` (${otherCount})` : ''} >`}
-            tone="wood" size={8} onPress={() => setRoom(other)}
-          />
-        ) : (
-          <PixelPanel style={{ paddingHorizontal: 2 }}>
-            <PixelText size={7} color="#f6e2b8">
-              {`FOSTER CENTER OPENS AFTER ${CENTER_OPENS_AT} ADOPTIONS (${Math.min(adoptedStrays, CENTER_OPENS_AT)}/${CENTER_OPENS_AT})`}
-            </PixelText>
-          </PixelPanel>
-        )}
         <PixelButton label="< PET SHOP" tone="wood" size={8} onPress={() => navigation.navigate('PetShop')} />
       </View>
 

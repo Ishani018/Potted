@@ -26,6 +26,8 @@ assets/
 # Everything else in assets/ stays local.
 !assets/
 assets/*
+!assets/petshop/
+!assets/petshop/*.png
 !assets/foster/
 !assets/foster/*.png
 !assets/petfood/

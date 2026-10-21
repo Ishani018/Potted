@@ -7,7 +7,7 @@ import {
   seedType, evaluateBouquet, bouquetPaper,
   XP_CONFIG, levelInfo, playerLevel, seedUnlockLevel, unlocksAtLevel, TRADE_FLOWERS, CUSTOMERS,
   roomScentShield, HERBALIST, HERBALIST_TRADES, REMEDIES, SACHET_MS, isShielded,
-  PET_FOOD, PET_SPECIES, FED_MAX_HOURS, fosterCenterOpen,
+  PET_FOOD, PET_SPECIES, FED_MAX_HOURS,
 } from '../constants/gameData';
 import { maybeArriveStray } from '../engine/strays';
 import { roomPetEffects, globalPetEffects, pestRewardFor, placedPets, dayKey } from '../engine/petEffects';
@@ -585,15 +585,11 @@ function reducer(state, action) {
           coins: state.player.coins - price,
           ownedPets: [...(state.player.ownedPets ?? []), petKey],
           petPlacements: { ...(state.player.petPlacements ?? {}), [petKey]: 'all' },
-          // a stray leaves the foster corner (its finder is remembered for the book)
+          // a stray leaves the Foster Center (its finder is remembered for the book)
           strays: (state.player.strays ?? []).filter((s) => s.key !== petKey),
           petFound: { ...(state.player.petFound ?? {}), ...(state.player.strays ?? []).filter((s) => s.key === petKey).reduce((o, s) => ({ ...o, [petKey]: s.finder }), {}) },
         },
       };
-      // adopting enough strays opens the bigger foster centre
-      if (!fosterCenterOpen(state.player) && fosterCenterOpen(next.player)) {
-        return { ...next, notices: [...state.notices, { id: `center_${Date.now()}`, text: 'Word is spreading! The Foster Center is now open at the pet shop.' }] };
-      }
       return next;
     }
 

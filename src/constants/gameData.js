@@ -199,50 +199,30 @@ export const PET_FOOD = [
   { key: 'shampoo',    name: 'Pet Shampoo',     price: 30, hours: 24, for: 'any', scope: 'one' },
 ];
 
-// ── Strays at the foster corner ───────────────────────────────────────────────
-// Customers find strays and bring them to the pet shop's foster corner. Each one
+// ── Strays at the Foster Center ───────────────────────────────────────────────
+// Customers find strays and bring them to the pet shop's Foster Center. Each one
 // takes an empty seat (FOSTER_SEATS) until you adopt it; adopting works like any
 // other pet (they're added to PETS below). New strays turn up every STRAY_MS while
 // there is a free seat, up to STRAY_MAX at a time. aspect = image width / height,
 // fw = how wide it sits on the foster picture (px of the 1020×571 art).
 export const STRAY_MS = 8 * 3600000;
+export const STRAY_MAX = 5;                  // at most this many wait at once, so there are always empty seats
 export const FOSTER_BASE_W = 1020;          // pet widths (fw) are measured against a screen this wide
-export const FOSTER_SIZE = { w: 1677, h: 938 }; // both foster pictures are this size
-// Two rooms: the corner is open from the start; the centre opens once you have
-// adopted CENTER_OPENS_AT strays (word gets round). Max strays waiting = seats of
-// open rooms capped at STRAY_MAX_BY_ROOM.
-export const FOSTER_ROOMS = { corner: { title: 'Foster Corner' }, center: { title: 'Foster Center' } };
-export const CENTER_OPENS_AT = 2;
+export const FOSTER_SIZE = { w: 1677, h: 938 }; // size of the foster centre picture
 // Feet position of a pet sitting on each seat (px of the 1677×938 picture).
 export const FOSTER_SEATS = [
-  // corner
-  { id: 'blueBed',   room: 'corner', x: 520,  y: 665, scale: 1.05 },
-  { id: 'cushion',   room: 'corner', x: 320,  y: 782, scale: 1.1 },
-  { id: 'bench',     room: 'corner', x: 360,  y: 532, scale: 0.9 },
-  { id: 'treeMid',   room: 'corner', x: 960,  y: 296, scale: 0.75 },
-  { id: 'pinkBed',   room: 'corner', x: 1550, y: 775, scale: 1 },
-  { id: 'creamBed',  room: 'corner', x: 1520, y: 665, scale: 1 },
-  { id: 'rug',       room: 'corner', x: 900,  y: 790, scale: 1.15 },
-  // centre
-  { id: 'cubbyL',    room: 'center', x: 200,  y: 655, scale: 0.7 },
-  { id: 'cubbyR',    room: 'center', x: 440,  y: 560, scale: 0.6 },
-  { id: 'bench2',    room: 'center', x: 400,  y: 458, scale: 0.9 },
-  { id: 'greenBed',  room: 'center', x: 500,  y: 655, scale: 1.1 },
-  { id: 'treeHouse', room: 'center', x: 842,  y: 590, scale: 0.7 },
-  { id: 'greenDog',  room: 'center', x: 1170, y: 628, scale: 1.1 },
-  { id: 'flowerL',   room: 'center', x: 200,  y: 810, scale: 1.3 },
-  { id: 'flowerR',   room: 'center', x: 1500, y: 685, scale: 1.2 },
-  { id: 'pinkBed2',  room: 'center', x: 1470, y: 845, scale: 1.2 },
-  { id: 'pawRug',    room: 'center', x: 850,  y: 810, scale: 1.2 },
-  { id: 'playpen',   room: 'center', x: 1285, y: 520, scale: 0.7 },
+  { id: 'cubbyL',    x: 200,  y: 655, scale: 0.7 },
+  { id: 'cubbyR',    x: 440,  y: 560, scale: 0.6 },
+  { id: 'bench',     x: 400,  y: 458, scale: 0.9 },
+  { id: 'greenBed',  x: 500,  y: 655, scale: 1.1 },
+  { id: 'treeHouse', x: 842,  y: 590, scale: 0.7 },
+  { id: 'greenDog',  x: 1170, y: 628, scale: 1.1 },
+  { id: 'flowerL',   x: 200,  y: 810, scale: 1.3 },
+  { id: 'flowerR',   x: 1500, y: 685, scale: 1.2 },
+  { id: 'pinkBed',   x: 1470, y: 845, scale: 1.2 },
+  { id: 'pawRug',    x: 850,  y: 810, scale: 1.2 },
+  { id: 'playpen',   x: 1285, y: 520, scale: 0.7 },
 ];
-// The rooms open to this player.
-export const fosterCenterOpen = (player) =>
-  (player.ownedPets ?? []).filter((k) => k in STRAYS).length >= CENTER_OPENS_AT;
-export const openFosterSeats = (player) =>
-  FOSTER_SEATS.filter((s) => s.room === 'corner' || fosterCenterOpen(player));
-// 4 waiting at once while only the corner is open, 8 once the centre is.
-export const strayMax = (player) => (fosterCenterOpen(player) ? 8 : 4);
 export const STRAYS = {
   biscuit:   { key: 'biscuit',   name: 'Biscuit',   breed: 'Shih Tzu',      species: 'dog',    price: 120, aspect: 300 / 262, fw: 120, restAspect: 300 / 155, restFw: 150,
     found: (n) => `${n} found Biscuit dozing under a park bench, far too sleepy to be scared.`,
@@ -567,7 +547,7 @@ export const INITIAL_PLAYER_STATE = {
   bouquetBook: {},   // recipeId → { made, firstAt } — secret bouquet recipes found
   bouquetsSold: 0,
   petGifts: {},      // petKey → day key of the last daily gift
-  strays: [],        // strays waiting at the foster corner: { key, finder, seat, at }
+  strays: [],        // strays waiting at the Foster Center: { key, finder, seat, at }
   lastStrayAt: null, // when the last stray arrived (null = none yet, the first comes straight away)
   petFound: {},      // adopted stray key -> customer who found it
   petCare: {},       // petKey → time (ms) its food wears off; fed pets get a stronger perk
@@ -797,7 +777,7 @@ export function isShielded(slot, now = Date.now()) {
 
 
 // The pets the book shows: the shop's pets, plus any stray you've met (at the
-// foster corner now, or already adopted). Unmet strays stay a surprise.
+// Foster Center now, or already adopted). Unmet strays stay a surprise.
 export function knownPetKeys(player) {
   const met = new Set([...(player.ownedPets ?? []), ...(player.strays ?? []).map((s) => s.key)]);
   return Object.keys(PETS).filter((k) => !PETS[k].stray || met.has(k));
