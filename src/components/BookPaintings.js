@@ -60,9 +60,7 @@ export default function BookPaintings({ tab, setTab }) {
 
           {has ? (
             <>
-              <View style={[b.chip, { borderColor: isHung ? '#6a9a3a' : '#c9a86a', backgroundColor: isHung ? '#e4f0c8' : '#fbf0cf' }]}>
-                <Text style={b.chipTxt}>{isHung ? 'Hanging on the Balcony' : 'In your collection'}</Text>
-              </View>
+              <Text style={[b.tagline, { color: isHung ? '#3f7a2e' : '#8a6a40' }]}>{isHung ? '✦ Hanging on the Balcony' : 'In your collection'}</Text>
               {isHung ? (
                 <BookButton label="Take it down" onPress={() => frame(null)} />
               ) : (

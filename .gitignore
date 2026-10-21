@@ -22,7 +22,7 @@ assets/
 !readme_assets/
 !readme_assets/**
 
-# Florist customer, pest, herbalist and flower-book art ship with the repo (the shop needs them to run).
+# Florist customer, pest, herbalist and flower-book art, and the book's body font, ship with the repo (the shop needs them to run).
 # Everything else in assets/ stays local.
 !assets/
 assets/*
@@ -34,3 +34,6 @@ assets/*
 !assets/herbalist/*.png
 !assets/book/
 !assets/book/*.png
+!assets/fonts/
+assets/fonts/*
+!assets/fonts/PatrickHand-Regular.ttf

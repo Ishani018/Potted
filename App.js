@@ -39,6 +39,8 @@ export default function App() {
   // and falls back to system font otherwise) instead of showing a black screen.
   useFonts({
     PressStart2P: require('./assets/fonts/PressStart2P-Regular.ttf'),
+    // Handwritten body text for the flower book (Patrick Hand, SIL Open Font License)
+    PatrickHand: require('./assets/fonts/PatrickHand-Regular.ttf'),
   });
 
   const onLayout = useCallback((e) => {

@@ -5,7 +5,7 @@ import { TRADE_IMAGES } from '../engine/assets';
 import { CUSTOMERS, TRADE_FLOWERS } from '../constants/gameData';
 import Portrait from './Portrait';
 import BookFrame from './BookFrame';
-import { BookTabs, bookStyles as b, INK } from './BookParts';
+import { BookTabs, bookStyles as b, INK, BODY } from './BookParts';
 
 // Flower book → Customers. A portrait card for everyone who visits the florist.
 // A card fills in the first time you serve that customer; until then it's a
@@ -23,7 +23,7 @@ export default function BookCustomers({ tab, setTab }) {
   const rec = book[selected];
   const order = today.find((o) => o.customer === selected);
   const visit = !order ? 'Not visiting today' : order.done ? 'Served today' : 'Waiting at the florist';
-  const visitColor = !order ? '#c9a86a' : order.done ? '#6a9a3a' : '#e0a830';
+  const visitColor = !order ? '#a08860' : order.done ? '#3f7a2e' : '#a8700a';
 
   return (
     <BookFrame
@@ -66,17 +66,13 @@ export default function BookCustomers({ tab, setTab }) {
                 ))}
               </View>
               <Text style={b.sub}>Served {rec.served}× · first visit {new Date(rec.firstAt).toLocaleDateString()}</Text>
-              <View style={[b.chip, { borderColor: visitColor, backgroundColor: '#fbf0cf' }]}>
-                <Text style={b.chipTxt}>{visit}</Text>
-              </View>
+              <Text style={[b.tagline, { color: visitColor }]}>✦ {visit}</Text>
             </>
           ) : (
             <>
               <Text style={b.note}>You haven't met this customer yet.</Text>
               <Text style={b.sub}>Keep serving the florist's visitors each day and they will drop by.</Text>
-              <View style={[b.chip, { borderColor: visitColor, backgroundColor: '#fbf0cf' }]}>
-                <Text style={b.chipTxt}>{visit}</Text>
-              </View>
+              <Text style={[b.tagline, { color: visitColor }]}>✦ {visit}</Text>
             </>
           )}
         </ScrollView>
@@ -90,5 +86,5 @@ const s = StyleSheet.create({
   likes: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, marginBottom: 4 },
   like: { alignItems: 'center', width: 58 },
   likeImg: { width: 30, height: 30 },
-  likeTxt: { color: INK, fontSize: 9, marginTop: 1 },
+  likeTxt: { fontFamily: BODY, color: INK, fontSize: 12, marginTop: 1 },
 });

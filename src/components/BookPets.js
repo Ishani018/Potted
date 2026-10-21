@@ -5,7 +5,7 @@ import { PET_IMAGES, PERK_ICONS } from '../engine/assets';
 import { PETS } from '../constants/gameData';
 import PetSprite from './PetSprite';
 import BookFrame from './BookFrame';
-import { BookTabs, BookButton, bookStyles as b, INK, PIXEL_FONT } from './BookParts';
+import { BookTabs, BookButton, bookStyles as b, INK, PIXEL_FONT, BODY } from './BookParts';
 
 // Flower book → Pets. A portrait card for every pet. Pets you've adopted are in
 // colour; the rest are silhouettes. The card shows their perk and (for your pets)
@@ -126,8 +126,8 @@ const s = StyleSheet.create({
   tileImg: { width: '92%', height: '92%' },
   perk: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'stretch', marginTop: 2, marginBottom: 2, paddingHorizontal: 4 },
   perkIcon: { width: 34, height: 32 },
-  perkTitle: { color: '#3f7a2e', fontSize: 11, fontWeight: 'bold' },
-  perkDesc: { color: INK, fontSize: 10, lineHeight: 13 },
+  perkTitle: { fontFamily: PIXEL_FONT, color: '#3f7a2e', fontSize: 8, marginBottom: 2 },
+  perkDesc: { fontFamily: BODY, color: INK, fontSize: 13, lineHeight: 14 },
   row: { flexDirection: 'row', gap: 6 },
   renameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
   input: {

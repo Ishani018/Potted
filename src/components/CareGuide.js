@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Platform } from 'react-native';
 import { POTTED_PLANT_IMAGES, TRADE_IMAGES, PET_IMAGES } from '../engine/assets';
 import { PEST_IMAGES } from '../engine/pestImages';
 import {
@@ -18,6 +18,7 @@ const PAPER = '#f3e3c0';
 const INK = '#4a2a10';
 const SOFT = '#8a6a40';
 const PIXEL_FONT = 'PressStart2P';
+const BODY = Platform.select({ web: "'PatrickHand', Georgia, serif", default: 'PatrickHand' });
 
 function Block({ title, children }) {
   return (
@@ -149,7 +150,7 @@ function KeepingAway() {
   return (
     <>
       <Block title="Scented flowers">
-        <P>Some flowers smell too sweet for bugs. In full bloom they make bugs less likely on every plant in the room, and several together help more.</P>
+        <P>Some flowers smell too sweet for bugs. In full bloom they keep bugs away from the whole room.</P>
         {scented.map(([k, mult]) => (
           <View key={k} style={styles.itemRow}>
             {TRADE_IMAGES[TRADE_FLOWERS[k]?.img] && <Image source={TRADE_IMAGES[TRADE_FLOWERS[k].img]} style={styles.flowerImg} resizeMode="contain" />}
@@ -179,11 +180,11 @@ function UsingRemedies() {
   return (
     <>
       <Block title="Using a remedy">
-        <P>In a garden room, look for the little bag at the bottom-left. Tap a remedy to pick it up, then tap the plant you want to use it on. Tap the remedy again to put it back.</P>
+        <P>Open the little bag at the bottom-left. Tap a remedy to pick it up, then tap the plant to use it on. Tap it again to put it back.</P>
         <P>A Bug Balm only works on a plant that has a bug. A Scent Sachet goes on a plant that is still growing, and hangs there until it wears off.</P>
       </Block>
       <Block title="Before you leave">
-        <P>Bugs keep arriving while you are away. Hang a Scent Sachet on the plants you care about most, and keep a scented flower blooming in each room.</P>
+        <P>Bugs keep coming while you are away. Hang a Sachet on your favourite plants and keep a scented flower in bloom.</P>
       </Block>
     </>
   );
@@ -211,11 +212,11 @@ export default function CareGuide({ tabs }) {
   const pager = (
     <View style={styles.pager}>
       <TouchableOpacity disabled={spread === 0} onPress={() => setSpread(spread - 1)} style={[styles.pageBtn, spread === 0 && styles.pageBtnOff]}>
-        <Text style={styles.pageBtnTxt}>‹</Text>
+        <Text style={styles.pageBtnTxt}>{'<'}</Text>
       </TouchableOpacity>
       <Text style={styles.pageNum}>Page {spread + 1} of {SPREADS.length}</Text>
       <TouchableOpacity disabled={spread === last} onPress={() => setSpread(spread + 1)} style={[styles.pageBtn, spread === last && styles.pageBtnOff]}>
-        <Text style={styles.pageBtnTxt}>›</Text>
+        <Text style={styles.pageBtnTxt}>{'>'}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -243,31 +244,31 @@ export default function CareGuide({ tabs }) {
 const styles = StyleSheet.create({
   scroll: { paddingBottom: 6 },
 
-  block: { marginBottom: 6 },
-  heading: { fontFamily: PIXEL_FONT, fontSize: 9, color: '#5a7a2a', marginBottom: 3 },
-  body: { color: INK, fontSize: 11, lineHeight: 15, marginBottom: 3 },
-  small: { color: SOFT, fontSize: 10, lineHeight: 13 },
-  swap: { color: INK, fontSize: 11, lineHeight: 15 },
+  block: { marginBottom: 4 },
+  heading: { fontFamily: PIXEL_FONT, fontSize: 8, color: '#5a7a2a', marginBottom: 3 },
+  body: { fontFamily: BODY, color: INK, fontSize: 14, lineHeight: 16, marginBottom: 3 },
+  small: { fontFamily: BODY, color: SOFT, fontSize: 12.5, lineHeight: 13 },
+  swap: { fontFamily: BODY, color: INK, fontSize: 14, lineHeight: 16 },
 
   stageRow: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 3 },
   stage: { alignItems: 'center', flex: 1 },
   stageImg: { width: 32, height: 38 },
-  arrow: { position: 'absolute', right: -4, top: 16, color: SOFT, fontSize: 14 },
+  arrow: { position: 'absolute', right: -4, top: 14, color: SOFT, fontFamily: BODY, fontSize: 16 },
 
+  // plain entries with a hairline between them, no boxes
   bugRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: '#fbf0cf', borderRadius: 8, borderWidth: 1, borderColor: '#d8b872',
-    paddingVertical: 2, paddingHorizontal: 5, marginBottom: 3,
+    paddingVertical: 2, marginBottom: 2, borderBottomWidth: 1, borderBottomColor: 'rgba(160,120,60,0.35)',
   },
   bugImgBox: { width: 52, alignItems: 'center', justifyContent: 'center' },
-  bugName: { color: INK, fontSize: 12, fontWeight: 'bold', marginBottom: 1 },
+  bugName: { fontFamily: BODY, color: INK, fontSize: 15, marginBottom: 0 },
 
-  itemRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 3 },
-  flowerImg: { width: 28, height: 28 },
+  itemRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },
+  flowerImg: { width: 24, height: 24 },
 
   pager: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
-  pageBtn: { width: 28, height: 24, borderRadius: 6, backgroundColor: '#7a3e1a', alignItems: 'center', justifyContent: 'center' },
-  pageBtnOff: { opacity: 0.3 },
-  pageBtnTxt: { color: PAPER, fontSize: 16, fontWeight: 'bold', marginTop: -2 },
-  pageNum: { color: SOFT, fontSize: 10 },
+  pageBtn: { paddingHorizontal: 8, paddingVertical: 4 },
+  pageBtnOff: { opacity: 0.25 },
+  pageBtnTxt: { fontFamily: PIXEL_FONT, color: '#7a3e1a', fontSize: 11 },
+  pageNum: { fontFamily: BODY, color: SOFT, fontSize: 13 },
 });
