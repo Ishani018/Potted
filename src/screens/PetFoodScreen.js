@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Image, Pressable, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Image, Pressable, TouchableOpacity, Platform, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { PETFOOD_BG, PETFOOD_IMAGES, PET_IMAGES } from '../engine/assets';
 import {
@@ -18,7 +18,13 @@ const BG_W = 1677;
 const BG_H = 938;
 const SHELF_BASE = [402, 522, 650];         // y of each shelf surface, bg px
 const COL_X = [540, 720, 900, 1080, 1260, 1440];
-const BOX = { w: 150, h: 104 };             // largest a product can be on the shelf, bg px
+// How tall each product stands on the shelf, bg px, so bags tower over tins like real stock
+const SHELF_H = {
+  dogfood: 100, catfood: 100, puppyfood: 98, kittenfood: 98, grainfree: 100, seniorcare: 100,
+  wetcat: 58, wetdog: 58, biscuits: 72, treats: 72, dental: 82, training: 82,
+  catlitter: 100, clumping: 98, puppypads: 84, wipes: 56, deodoriser: 96, shampoo: 90,
+};
+const MAX_W = 150;
 
 // width / height of each cut-out
 const ASPECT = {
@@ -26,6 +32,9 @@ const ASPECT = {
   wetcat: 1, wetdog: 200 / 194, biscuits: 156 / 200, treats: 160 / 200, dental: 148 / 200, training: 146 / 200,
   catlitter: 131 / 200, clumping: 142 / 200, puppypads: 154 / 200, wipes: 200 / 131, deodoriser: 80 / 200, shampoo: 86 / 200,
 };
+
+// back-row copies are a little darker, as if further in
+const DIM = Platform.OS === 'web' ? { filter: 'brightness(0.82) saturate(0.9)' } : { opacity: 0.8 };
 
 const KIND_LABEL = { dog: 'dogs', cat: 'cats', any: 'any pet' };
 const SINGULAR = { dog: 'dog', cat: 'cat', any: 'pet' };
@@ -127,31 +136,61 @@ export default function PetFoodScreen({ navigation }) {
 
       {sw > 0 && PET_FOOD.map((item) => {
         const ar = ASPECT[item.key];
-        // fit inside BOX, standing on the shelf
-        const h = Math.min(BOX.h, BOX.w / ar);
+        let h = SHELF_H[item.key];
+        if (h * ar > MAX_W) h = MAX_W / ar;
         const w = h * ar;
         const pw = (w / BG_W) * sw, ph = (h / BG_H) * sh;
-        const left = (COL_X[item.col] / BG_W) * sw - pw / 2;
-        const top = (SHELF_BASE[item.row] / BG_H) * sh - ph;
+        const cx = (COL_X[item.col] / BG_W) * sw;
+        const base = ((SHELF_BASE[item.row] + 3) / BG_H) * sh;       // sits a touch into the shelf
         const on = hovered === item.key;
+        const back = { w: pw * 0.92, h: ph * 0.92 };
+        const gap = Math.max(pw * 0.38, (30 / BG_W) * sw); // two facings side by side
+        const facing = (dx) => {
+          const left = cx + dx - pw / 2;
+          return (
+            <React.Fragment key={dx}>
+              {/* soft shadow where it stands */}
+              <View pointerEvents="none" style={{ position: 'absolute', zIndex: 4, left: left - pw * 0.06, top: base - sh * 0.006, width: pw * 1.12, height: Math.max(4, sh * 0.016), borderRadius: 50, backgroundColor: 'rgba(30,50,70,0.3)' }} />
+              <Pressable
+                style={{ position: 'absolute', left, top: base - ph, width: pw, height: ph, zIndex: on ? 40 : dx < 0 ? 5 : 6, transform: [{ translateY: on ? -3 : 0 }] }}
+                onHoverIn={() => setHovered(item.key)}
+                onHoverOut={() => setHovered((k) => (k === item.key ? null : k))}
+                onPress={() => setPicked(item)}
+              >
+                <Image source={PETFOOD_IMAGES[item.key]} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+                {on && dx < 0 && (
+                  <View style={[styles.tag, { left: -50, right: -50 + gap * 2 }]} pointerEvents="none">
+                    <PixelText size={8}>{item.name.toUpperCase()}</PixelText>
+                    <PixelText size={7} color={COLORS.gold}>{`${item.price} COINS`}</PixelText>
+                  </View>
+                )}
+              </Pressable>
+            </React.Fragment>
+          );
+        };
         return (
-          <Pressable
-            key={item.key}
-            style={{ position: 'absolute', left, top, width: pw, height: ph, zIndex: on ? 40 : 5, transform: [{ translateY: on ? -3 : 0 }] }}
-            onHoverIn={() => setHovered(item.key)}
-            onHoverOut={() => setHovered((k) => (k === item.key ? null : k))}
-            onPress={() => setPicked(item)}
-          >
-            <Image source={PETFOOD_IMAGES[item.key]} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
-            {on && (
-              <View style={styles.tag} pointerEvents="none">
-                <PixelText size={8}>{item.name.toUpperCase()}</PixelText>
-                <PixelText size={7} color={COLORS.gold}>{`${item.price} COINS`}</PixelText>
-              </View>
-            )}
-          </Pressable>
+          <React.Fragment key={item.key}>
+            {/* one more behind, a little darker and higher, so the shelf looks stocked */}
+            <Image
+              source={PETFOOD_IMAGES[item.key]}
+              pointerEvents="none"
+              style={[{ position: 'absolute', zIndex: 3, left: cx - back.w / 2, top: base - back.h - sh * 0.012, width: back.w, height: back.h }, DIM]}
+              resizeMode="contain"
+            />
+            {facing(-gap)}
+            {facing(gap)}
+          </React.Fragment>
         );
       })}
+
+      {/* a faint glass glare across the cabinet, over the stock */}
+      {sw > 0 && (
+        <View pointerEvents="none" style={{ position: 'absolute', zIndex: 20, left: (425 / BG_W) * sw, top: (285 / BG_H) * sh, width: (1150 / BG_W) * sw, height: (380 / BG_H) * sh, overflow: 'hidden' }}>
+          <View style={[styles.glare, { left: '12%', width: '7%' }]} />
+          <View style={[styles.glare, { left: '22%', width: '2.5%', opacity: 0.7 }]} />
+          <View style={[styles.glare, { left: '68%', width: '5%', opacity: 0.6 }]} />
+        </View>
+      )}
 
       <View style={styles.back}>
         <PixelButton label="< PET SHOP" tone="wood" size={8} onPress={() => navigation.navigate('PetShop')} />
@@ -168,6 +207,7 @@ export default function PetFoodScreen({ navigation }) {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#1a1200' },
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
+  glare: { position: 'absolute', top: '-10%', height: '130%', backgroundColor: 'rgba(255,255,255,0.10)', transform: [{ skewX: '-14deg' }] },
   tag: { position: 'absolute', bottom: '100%', left: -50, right: -50, alignItems: 'center', gap: 2, marginBottom: 2 },
   back: { position: 'absolute', right: 16, bottom: 12, zIndex: 30 },
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center', zIndex: 200 },
