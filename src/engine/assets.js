@@ -236,12 +236,14 @@ export const LOADING_BG = require('../../assets/loadingshop.png');
 // registered here the customer is drawn as a simple stand-in person. After
 // adding a PNG to assets/customers/, uncomment its line.
 export const CUSTOMER_IMAGES = {
-  // maemae: require('../../assets/customers/maemae.png'),
-  // okafor: require('../../assets/customers/okafor.png'),
-  // pip:    require('../../assets/customers/pip.png'),
-  // lucia:  require('../../assets/customers/lucia.png'),
-  // wen:    require('../../assets/customers/wen.png'),
-  // gus:    require('../../assets/customers/gus.png'),
-  // juno:   require('../../assets/customers/juno.png'),
-  // hana:   require('../../assets/customers/hana.png'),
+  // clara:   require('../../assets/customers/clara.png'),
+  // theo:    require('../../assets/customers/theo.png'),
+  // iris:    require('../../assets/customers/iris.png'),
+  // posy:    require('../../assets/customers/posy.png'),
+  // walt:    require('../../assets/customers/walt.png'),
+  // finn:    require('../../assets/customers/finn.png'),
+  // marisol: require('../../assets/customers/marisol.png'),
+  // ben:     require('../../assets/customers/ben.png'),
+  // maemae:  require('../../assets/customers/maemae.png'),
+  // nori:    require('../../assets/customers/nori.png'),
 };

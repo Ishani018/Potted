@@ -8,7 +8,7 @@ import {
   XP_CONFIG, levelInfo, playerLevel, seedUnlockLevel, unlocksAtLevel, TRADE_FLOWERS, CUSTOMERS,
 } from '../constants/gameData';
 import { roomPetEffects, globalPetEffects, pestRewardFor, placedPets, dayKey } from '../engine/petEffects';
-import { rollCustomerOrders, hashString, bouquetFillsOrder } from '../engine/customers';
+import { rollCustomerOrders, hashString, bouquetFillsOrder, hasStaleOrders } from '../engine/customers';
 import {
   tickAllSlots,
   harvestPlant,
@@ -184,7 +184,7 @@ function reducer(state, action) {
       const notices = [];
       // A new day brings a new set of florist customers.
       const today = dayKey(now);
-      if (player.customers?.day !== today) {
+      if (player.customers?.day !== today || hasStaleOrders(player.customers)) {
         player = {
           ...player,
           customers: { day: today, list: rollCustomerOrders(today, playerLevel(player), makeRand(hashString(today))) },

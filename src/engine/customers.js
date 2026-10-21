@@ -38,12 +38,19 @@ export function customerLine(order, which = 'ask') {
 
 // rand: () => [0,1). level: the player's level (keeps orders fulfillable).
 export function rollCustomerOrders(day, level, rand) {
-  // Shuffle the roster, take the first few.
-  const keys = Object.keys(CUSTOMERS);
-  for (let i = keys.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [keys[i], keys[j]] = [keys[j], keys[i]];
-  }
+  // Customers who like something the player can already get (or is one level
+  // from) come first, so people ask for what they'd really want. Shuffle each
+  // group, then take the first few.
+  const shuffle = (arr) => {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  };
+  const all = Object.keys(CUSTOMERS);
+  const canAsk = (k) => CUSTOMERS[k].likes.some((f) => seedUnlockLevel(f) <= level + 1);
+  const keys = [...shuffle(all.filter(canAsk)), ...shuffle(all.filter((k) => !canAsk(k)))];
   const pick = (arr) => arr[Math.floor(rand() * arr.length)];
 
   return keys.slice(0, CUSTOMERS_PER_DAY).map((customer, i) => {
@@ -79,9 +86,15 @@ export function rollCustomerOrders(day, level, rand) {
   });
 }
 
-// Orders still waiting, oldest first.
+// Orders still waiting, oldest first. Orders from a customer that no longer
+// exists (an older roster saved in the player's data) are ignored.
 export function openOrders(player) {
-  return (player.customers?.list ?? []).filter((o) => !o.done);
+  return (player.customers?.list ?? []).filter((o) => !o.done && CUSTOMERS[o.customer]);
+}
+
+// True if saved orders are for today but name customers we don't have any more.
+export function hasStaleOrders(customers) {
+  return !!customers?.list?.some((o) => !CUSTOMERS[o.customer]);
 }
 
 // Does a tied bouquet (array of flower keys) satisfy this order?
