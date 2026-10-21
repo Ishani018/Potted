@@ -3,6 +3,7 @@ import { View, Text, Image, ScrollView, TextInput, TouchableOpacity, StyleSheet 
 import { useGame } from '../context/GameContext';
 import { PET_IMAGES, PERK_ICONS } from '../engine/assets';
 import { PETS, FED_BOOST, formatDuration, knownPetKeys, CUSTOMERS, STRAYS } from '../constants/gameData';
+import { adventureLeftMs } from '../engine/adventures';
 import { isFed } from '../engine/petEffects';
 import PetSprite from './PetSprite';
 import BookFrame from './BookFrame';
@@ -30,6 +31,9 @@ export default function BookPets({ tab, setTab }) {
   const home = placements[selected] != null;     // 'all' (or an older room number) = out and about
   const count = owned.filter((k) => PETS[k]).length;
   const found = state.player.petFound?.[selected];
+  const now = Date.now();
+  const away = !!state.player.adventures?.[selected];
+  const left = adventureLeftMs(state.player, selected, now);
 
   const pick = (k) => { setSelected(k); setRenaming(false); };
   const startRename = () => { setDraft(names[selected] ?? pet.name); setRenaming(true); };
@@ -65,13 +69,13 @@ export default function BookPets({ tab, setTab }) {
       )}
       right={(
         <ScrollView style={b.pageInner} contentContainerStyle={b.detail} showsVerticalScrollIndicator={false}>
-          <View style={[b.hero, { width: 120, height: 80 }]}>
-            <View style={[b.glow, !has && b.glowLocked, { width: 72, height: 72, borderRadius: 36 }]} />
+          <View style={[b.hero, { width: 120, height: 70 }]}>
+            <View style={[b.glow, !has && b.glowLocked, { width: 64, height: 64, borderRadius: 32 }]} />
             {has ? (
-              <PetSprite petKey={selected} w={78} h={70} />
+              <PetSprite petKey={selected} w={70} h={62} />
             ) : (
               <>
-                <Image source={PET_IMAGES[selected]} style={[{ width: 74, height: 68 }, b.silhouette]} resizeMode="contain" />
+                <Image source={PET_IMAGES[selected]} style={[{ width: 66, height: 60 }, b.silhouette]} resizeMode="contain" />
                 <Text style={[b.tileQ, { fontSize: 22 }]}>?</Text>
               </>
             )}
@@ -84,10 +88,12 @@ export default function BookPets({ tab, setTab }) {
           )}
 
           {has && (
-            <Text style={[b.tagline, { color: isFed(state.player, selected) ? '#3f7a2e' : '#a08860' }]}>
-              {isFed(state.player, selected)
-                ? `✦ Fed, perk ${FED_BOOST}x for ${formatDuration(state.player.petCare[selected] - Date.now())}`
-                : '✦ Hungry, try the pet food aisle'}
+            <Text style={[b.tagline, { color: away ? '#a8700a' : isFed(state.player, selected) ? '#3f7a2e' : '#a08860' }]}>
+              {away
+                ? (left > 0 ? `✦ Out exploring, back in ${formatDuration(left)}` : '✦ Back with a box!')
+                : isFed(state.player, selected)
+                  ? `✦ Fed, perk ${FED_BOOST}x for ${formatDuration(state.player.petCare[selected] - Date.now())}`
+                  : '✦ Hungry, try the pet food aisle'}
             </Text>
           )}
 
@@ -124,7 +130,16 @@ export default function BookPets({ tab, setTab }) {
                   <BookButton label="Every room" on={home} onPress={() => dispatch({ type: 'PLACE_PET', petKey: selected, room: 'all' })} />
                   <BookButton label="Tuck away" on={!home} onPress={() => dispatch({ type: 'PLACE_PET', petKey: selected, room: null })} />
                 </View>
-                <BookButton label="Rename" onPress={startRename} style={{ marginTop: 5 }} />
+                <View style={[s.row, { marginTop: 5 }]}>
+                  <BookButton label="Rename" onPress={startRename} />
+                  {away ? (
+                    left > 0
+                      ? <BookButton label={`Away ${formatDuration(left)}`} disabled onPress={() => {}} />
+                      : <BookButton label="Open box" on onPress={() => dispatch({ type: 'COLLECT_ADVENTURE', petKey: selected, now: Date.now(), seed: Math.random() })} />
+                  ) : (
+                    <BookButton label="Adventure" on onPress={() => dispatch({ type: 'SEND_ADVENTURE', petKey: selected, now: Date.now() })} />
+                  )}
+                </View>
               </>
             )
           ) : (

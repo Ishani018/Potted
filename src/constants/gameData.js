@@ -164,6 +164,16 @@ export const PETS = {
     effect: { title: 'Bonded Pair',      desc: 'Plants in its room are ready to water 15% sooner and get 25% fewer bugs.', room: { cooldownMult: 0.85, pestChance: 0.75 } } },
 };
 
+// ── Pet adventures ────────────────────────────────────────────────────────────
+// Send a pet out for `hours`; it comes back with `rolls` rewards (a fed pet gets
+// `fedRolls`). A pet that is away doesn't help in the rooms. odds = chance of each
+// reward kind per roll (the rest is a flower).
+export const ADVENTURE = {
+  hours: 4, rolls: 1, fedRolls: 2,
+  coins: [25, 60],
+  odds: { coins: 0.45, seed: 0.3 },
+};
+
 // ── Pet food aisle ────────────────────────────────────────────────────────────
 // Everything on the shelves is buyable. A "fed" pet gets its perk doubled until
 // the food wears off (hours stack up to FED_MAX_HOURS). Nothing bad happens to a
@@ -583,6 +593,7 @@ export const INITIAL_PLAYER_STATE = {
   strays: [],        // strays waiting at the Foster Center: { key, finder, seat, at }
   lastStrayAt: null, // when the last stray arrived (null = none yet, the first comes straight away)
   petFound: {},      // adopted stray key -> customer who found it
+  adventures: {},    // petKey -> { startedAt, endsAt, fed } while a pet is out exploring
   petCare: {},       // petKey → time (ms) its food wears off; fed pets get a stronger perk
 };
 

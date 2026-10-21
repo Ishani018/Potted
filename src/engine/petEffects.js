@@ -36,7 +36,8 @@ function boostEffect(effect) {
 export function placedPets(player, now = Date.now()) {
   const placements = player.petPlacements ?? {};
   return (player.ownedPets ?? [])
-    .filter((k) => placements[k] != null && PETS[k])
+    // a pet that is out on an adventure isn't home to help
+    .filter((k) => placements[k] != null && PETS[k] && !player.adventures?.[k])
     // 'all' = the pet appears (and helps) in every room
     .flatMap((k) => {
       const effect = isFed(player, k, now) ? boostEffect(PETS[k].effect ?? {}) : (PETS[k].effect ?? {});

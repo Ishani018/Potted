@@ -16,6 +16,7 @@ import BookPaintings from '../components/BookPaintings';
 import { BookTabs, RibbonTitle, BODY, HEAD, SOFT } from '../components/BookParts';
 import Portrait from '../components/Portrait';
 import TileFrame from '../components/TileFrame';
+import AdventureResult from '../components/AdventureResult';
 import { BookProvider, useBook, CHAPTERS } from '../components/BookNav';
 
 // Flower book — an open journal you turn page by page (arrows, swipe, or the
@@ -154,6 +155,7 @@ function FlowerBookPages({ navigation }) {
   return (
     <View style={styles.root}>
       <BackSign onPress={() => navigation.goBack()} />
+      <AdventureResult />
 
       {tab === 'contents' ? (
         <ContentsPages found={found} bouquetsFound={BOUQUET_RECIPES.filter((r) => bouquetBook[r.id]).length} />

@@ -21,7 +21,7 @@ export default function RoomPets({ room, sw, sh, onPetPress }) {
 
   // Strays have no hand-laid spot yet: they take the spot of a shop pet you don't have
   // out in this room, standing on its feet line.
-  const shown = (k) => ownedPets.includes(k) && (petPlacements[k] === room || petPlacements[k] === 'all');
+  const shown = (k) => ownedPets.includes(k) && !state.player.adventures?.[k] && (petPlacements[k] === room || petPlacements[k] === 'all');
   const free = Object.keys(spots).filter((k) => !shown(k) && !STRAYS[k]);
   const strayCount = {};
   const spotFor = (petKey) => {
@@ -38,6 +38,7 @@ export default function RoomPets({ room, sw, sh, onPetPress }) {
     <>
       {ownedPets.map((petKey) => {
         if (!DEBUG_SHOW_ALL && petPlacements[petKey] !== room && petPlacements[petKey] !== 'all') return null;
+        if (state.player.adventures?.[petKey]) return null; // out exploring
         const p = spotFor(petKey);
         const img = PET_IMAGES[petKey];
         if (!p || !img) return null;

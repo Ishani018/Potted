@@ -7,9 +7,10 @@ import {
   seedType, evaluateBouquet, bouquetPaper,
   XP_CONFIG, levelInfo, playerLevel, seedUnlockLevel, unlocksAtLevel, TRADE_FLOWERS, CUSTOMERS,
   roomScentShield, HERBALIST, HERBALIST_TRADES, REMEDIES, SACHET_MS, isShielded,
-  PET_FOOD, PET_SPECIES, FED_MAX_HOURS,
+  PET_FOOD, PET_SPECIES, FED_MAX_HOURS, ADVENTURE,
 } from '../constants/gameData';
 import { maybeArriveStray } from '../engine/strays';
+import { rollRewards } from '../engine/adventures';
 import { roomPetEffects, globalPetEffects, pestRewardFor, placedPets, dayKey } from '../engine/petEffects';
 import { rollCustomerOrders, hashString, bouquetFillsOrder, hasStaleOrders } from '../engine/customers';
 import {
@@ -51,6 +52,7 @@ const initialState = {
   initialized: false,
   lastPassiveTick: Date.now(),
   lastSeen: Date.now(),  // last time the game was running (saved) — for catch-up
+  lastAdventure: null,   // { petKey, rewards, full } a returned pet's box, shown until closed
   awaySummary: null,     // "while you were away" report, shown until dismissed
   heldRemedy: null,      // 'balm' | 'sachet' picked from the tray, awaiting a plant tap
   notices: [],           // pet messages ({ id, text }) shown one at a time, not saved
@@ -593,6 +595,51 @@ function reducer(state, action) {
       return next;
     }
 
+    // Send a pet out for ADVENTURE.hours. It must be owned and home. Whether it was
+    // fed when it left is remembered, because that decides how much it brings back.
+    case 'SEND_ADVENTURE': {
+      const { petKey } = action;
+      const now = action.now ?? Date.now();
+      if (!(state.player.ownedPets ?? []).includes(petKey)) return state;
+      if (state.player.adventures?.[petKey]) return state;
+      const fed = (state.player.petCare?.[petKey] ?? 0) > now;
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          adventures: { ...(state.player.adventures ?? {}), [petKey]: { startedAt: now, endsAt: now + ADVENTURE.hours * 3600000, fed } },
+        },
+      };
+    }
+
+    // Open the box a returned pet brought. action: { petKey, now, seed }
+    case 'COLLECT_ADVENTURE': {
+      const { petKey } = action;
+      const now = action.now ?? Date.now();
+      const adv = state.player.adventures?.[petKey];
+      if (!adv || now < adv.endsAt) return state;
+      const rewards = rollRewards(adv.fed, makeRand(action.seed ?? Math.random()));
+      let coins = state.player.coins, inv = state.inventory;
+      const harvested = { ...(state.player.harvestedFlowers ?? {}) };
+      const lost = [];
+      rewards.forEach((r, i) => {
+        if (r.type === 'coins') coins += r.amount;
+        else if (r.type === 'flower') harvested[r.flowerKey] = (harvested[r.flowerKey] ?? 0) + r.amount;
+        else if (inv.length < INVENTORY_CAP) inv = [...inv, { id: `inv_${now}_adv${i}`, flowerKey: r.flowerKey }];
+        else lost.push(r);
+      });
+      const adventures = { ...state.player.adventures }; delete adventures[petKey];
+      return {
+        ...state, inventory: inv,
+        lastAdventure: { petKey, rewards: rewards.filter((r) => !lost.includes(r)), full: lost.length > 0 },
+        player: { ...state.player, coins, harvestedFlowers: harvested, adventures, adventureCount: (state.player.adventureCount ?? 0) + 1 },
+      };
+    }
+
+    case 'CLOSE_ADVENTURE': {
+      return { ...state, lastAdventure: null };
+    }
+
     // Buy something from the pet food aisle and give it to a pet. 'one' items go to
     // action.petKey; 'species' items (litter, pads) to every owned pet of that kind.
     // Fed time stacks on top of what's left, up to FED_MAX_HOURS.
@@ -647,6 +694,8 @@ function reducer(state, action) {
       delete petNames[petKey];
       const petCare = { ...(state.player.petCare ?? {}) };
       delete petCare[petKey];
+      const adventures = { ...(state.player.adventures ?? {}) };
+      delete adventures[petKey];
       return {
         ...state,
         player: {
@@ -656,6 +705,7 @@ function reducer(state, action) {
           petPlacements: placements,
           petNames,
           petCare,
+          adventures,
         },
       };
     }
