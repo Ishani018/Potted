@@ -249,11 +249,10 @@ export const CUSTOMER_IMAGES = {
 };
 
 // ─── Herbalist (Granny Mae) and her remedies ──────────────────────────────────
-// The herbalist reuses Granny Mae's customer sprite (CUSTOMER_IMAGES.maemae), so
-// she needs no art of her own. Only the two remedy icons are left to draw:
-// transparent 256×256 PNGs in assets/herbalist/ (shipped with the repo).
-// Anything not registered here is drawn as a simple stand-in.
+// The herbalist reuses Granny Mae's customer sprite (CUSTOMER_IMAGES.maemae). The
+// two remedy icons (256×256 transparent) live in assets/herbalist/ and ship with
+// the repo. An icon that isn't registered here is drawn as a simple stand-in.
 export const HERBALIST_IMAGES = {
-  // balm:       require('../../assets/herbalist/balm.png'),
-  // sachet:     require('../../assets/herbalist/sachet.png'),
+  balm:   require('../../assets/herbalist/balm.png'),
+  sachet: require('../../assets/herbalist/sachet.png'),
 };
