@@ -43,7 +43,7 @@ export default function HomeScreen({ navigation }) {
       ))}
       <MapTagButton label={PET_TAG.label} x={PET_TAG.x} y={PET_TAG.y} box={box} z={14} delay={600} onPress={() => navigation.navigate('PetRoom')} />
 
-      {/* Doc Bristle: free daily remedy + herb swaps (tap her) */}
+      {/* Granny Mae the herbalist: free daily remedy + herb swaps (tap her) */}
       <HerbalistCorner sw={sw} sh={sh} />
 
       {/* Standard HUD — settings (TL) + map (TR) + inventory (BL) */}

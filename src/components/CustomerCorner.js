@@ -6,6 +6,7 @@ import { CUSTOMERS, TRADE_FLOWERS, CUSTOMERS_PER_DAY } from '../constants/gameDa
 import { openOrders, customerLine, flowerName } from '../engine/customers';
 import { PixelPanel, PixelButton, PixelText, COLORS } from './Pixel';
 import CustomerSprite, { SPRITE_ASPECT } from './CustomerSprite';
+import Portrait from './Portrait';
 
 // The next waiting customer stands at the florist with a "!" bubble. Tap them
 // to read their order. Flower orders can be handed over right here; bouquet
@@ -88,12 +89,7 @@ export default function CustomerCorner({ sw, sh }) {
             <PixelPanel>
               <View style={{ gap: 10 }}>
                 <View style={styles.head}>
-                  <View style={styles.portrait}>
-                    {/* sprite scaled so the 64px box frames head and shoulders */}
-                    <View style={{ position: 'absolute', top: 2, left: (64 - 170 * SPRITE_ASPECT) / 2 }}>
-                      <CustomerSprite customerKey={order.customer} height={170} bob={false} />
-                    </View>
-                  </View>
+                  <Portrait customerKey={order.customer} size={72} />
                   <View style={{ flex: 1, gap: 4 }}>
                     <PixelText size={11} color={COLORS.gold}>{c.name.toUpperCase()}</PixelText>
                     <PixelText size={7}>CUSTOMER {Math.min(done + 1, CUSTOMERS_PER_DAY)} OF {CUSTOMERS_PER_DAY} TODAY</PixelText>
@@ -164,10 +160,6 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', zIndex: 250,
   },
   head: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  portrait: {
-    width: 64, height: 64, overflow: 'hidden', borderRadius: 4,
-    backgroundColor: '#e8d4a8', borderWidth: 3, borderColor: COLORS.woodEdge,
-  },
   speech: { backgroundColor: '#fbf0cf', borderRadius: 4, borderWidth: 2, borderColor: COLORS.creamEdge, padding: 8 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   icon: { width: 34, height: 34 },

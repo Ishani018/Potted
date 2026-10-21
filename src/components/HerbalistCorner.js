@@ -6,9 +6,10 @@ import { HERBALIST, HERBALIST_TRADES, REMEDIES, TRADE_FLOWERS } from '../constan
 import { dayKey } from '../engine/petEffects';
 import { PixelPanel, PixelButton, PixelText, COLORS } from './Pixel';
 import HerbalistSprite, { HERBALIST_ASPECT } from './HerbalistSprite';
+import Portrait from './Portrait';
 import RemedyIcon from './RemedyIcon';
 
-// Doc Bristle waits at the Home screen. Tap her to take today's free Bug Balm
+// Granny Mae the herbalist waits at the Home screen. Tap her to take today's free Bug Balm
 // or swap harvested flowers for more remedies — nothing here is bought with
 // coins. A "!" bubble shows when she has something for you.
 // Position is in the 1376×768 base space (feet on the floor); tune to the art.
@@ -47,11 +48,7 @@ export default function HerbalistCorner({ sw, sh }) {
             <PixelPanel>
               <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 7 }}>
                 <View style={styles.head}>
-                  <View style={styles.portrait}>
-                    <View style={{ position: 'absolute', top: 2, left: (64 - 170 * HERBALIST_ASPECT) / 2 }}>
-                      <HerbalistSprite height={170} bob={false} />
-                    </View>
-                  </View>
+                  <Portrait customerKey={HERBALIST.sprite} size={72} />
                   <View style={{ flex: 1, gap: 4 }}>
                     <PixelText size={11} color={COLORS.gold}>{HERBALIST.name.toUpperCase()}</PixelText>
                     <PixelText size={7}>{HERBALIST.title}</PixelText>
@@ -125,10 +122,6 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', zIndex: 250,
   },
   head: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  portrait: {
-    width: 64, height: 64, overflow: 'hidden', borderRadius: 4,
-    backgroundColor: '#e8d4a8', borderWidth: 3, borderColor: COLORS.woodEdge,
-  },
   speech: { backgroundColor: '#fbf0cf', borderRadius: 4, borderWidth: 2, borderColor: COLORS.creamEdge, padding: 8 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   trade: {

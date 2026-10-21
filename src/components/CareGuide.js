@@ -10,7 +10,7 @@ import RemedyIcon from './RemedyIcon';
 
 // The flower book's "Care" tab: how to look after your plants, in two spreads.
 //   1. Watering  |  Bugs (and how to clear each kind)
-//   2. Wilting & harvesting  |  Doc Bristle's remedies and swaps
+//   2. Wilting & harvesting  |  Granny Mae's remedies and swaps
 //   3. Using a remedy  |  Keeping bugs away (scented flowers, pets)
 // All numbers come from the game data, so the guide stays right when they change.
 const PAPER = '#f3e3c0';

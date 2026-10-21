@@ -618,14 +618,6 @@ export const CUSTOMERS = {
     askBouquet: 'A bouquet with {flower} for the garden club raffle.',
     thanks: 'Smashing. The club will love them.',
   },
-  maemae: {
-    key: 'maemae', name: 'Granny Mae', desc: 'Elderly woman with a grey bun, purple floral shawl, long plum skirt, wicker basket.',
-    look: { skin: '#f1c9a0', hair: '#c9c9c9', outfit: '#7a3a4a' },
-    likes: ['daisy', 'marigold', 'petunia'],
-    askFlowers: 'My window box is bare, dear! Could you spare {qty} {flower}?',
-    askBouquet: 'Something cheerful for my sister, please. A bouquet with {flower} in it?',
-    thanks: 'Lovely, just lovely. Come for tea sometime!',
-  },
   nori: {
     key: 'nori', name: 'Nori', desc: 'Girl with long black hair, white bow and headphones, cream sweater, olive cargo trousers, tote bag.',
     look: { skin: '#f0cfae', hair: '#1c1418', outfit: '#6a7a3a' },
@@ -639,21 +631,23 @@ export const CUSTOMERS = {
 export const CUSTOMERS_PER_DAY = 3;
 
 // ── The herbalist & remedies ──────────────────────────────────────────────────
-// A friendly herbalist visits the Home screen. Her remedies can't be bought:
+// Granny Mae the herbalist waits on the Home screen. Her remedies can't be bought:
 // she gives one Bug Balm free every day and swaps more for flowers you've grown.
 //   balm    — clears a pest from one plant at once (no coins/XP, unlike by hand)
 //   sachet  — hangs on a plant and keeps pests off it for SACHET_MS
-// Art: assets/herbalist/docbristle.png (400x600), balm.png and sachet.png
-// (256x256), all transparent — see HERBALIST_IMAGES in engine/assets.
+// Art: she reuses Granny Mae's customer sprite; balm.png and sachet.png (256x256,
+// transparent, assets/herbalist/) are optional icons — see HERBALIST_IMAGES in engine/assets.
 export const HERBALIST = {
-  key: 'docbristle',
-  name: 'Doc Bristle',
+  key: 'maemae',
+  name: 'Granny Mae',
   title: 'HERBALIST',
-  desc: 'A friendly hedgehog herbalist with tiny round spectacles, a leafy satchel and little glass bottles.',
-  look: { body: '#8a6a4a', face: '#f0d9b8', accent: '#5a8a3a' },
-  greetDaily: "Morning! A fresh jar of balm for you, on the house.",
-  greetNone: "Back already? Bring me herbs and I'll mix you something.",
-  thanks: 'Splendid! There you go.',
+  // Reuses the customer sprite CUSTOMER_IMAGES[sprite] (she isn't a florist
+  // customer any more).
+  sprite: 'maemae',
+  desc: 'Elderly woman with a grey bun, purple floral shawl, long plum skirt and a wicker basket of herbs.',
+  greetDaily: "Morning, dear! A fresh jar of balm for you, on the house.",
+  greetNone: "Back already, dear? Bring me some herbs and I'll mix you something.",
+  thanks: 'There you go, dear.',
 };
 
 export const REMEDIES = {
