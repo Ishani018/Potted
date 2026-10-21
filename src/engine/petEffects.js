@@ -33,7 +33,14 @@ export function roomPetEffects(player) {
 
 export function globalPetEffects(player) {
   let bouquetMult = 1;
-  for (const { effect } of placedPets(player)) bouquetMult *= effect.global?.bouquetMult ?? 1;
+  // A pet placed in 'all' rooms shows up once per room in placedPets, so count
+  // each pet once here (these effects aren't per-room).
+  const seen = new Set();
+  for (const { key, effect } of placedPets(player)) {
+    if (seen.has(key)) continue;
+    seen.add(key);
+    bouquetMult *= effect.global?.bouquetMult ?? 1;
+  }
   return { bouquetMult };
 }
 

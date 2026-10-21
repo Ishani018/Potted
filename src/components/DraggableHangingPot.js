@@ -71,6 +71,3 @@ export default function DraggableHangingPot({ startX, startY, potW, potH, dragW,
     </>
   );
 }
-
-// Pot types in this room — seeds of any other type can't be planted here.
-const ROOM_TYPES = ['hanging'];

@@ -69,6 +69,3 @@ export default function DraggablePot({ startX, startY, potW, potH, targets, onPl
     </>
   );
 }
-
-// Pot types in this room — seeds of any other type can't be planted here.
-const ROOM_TYPES = ['potted'];
