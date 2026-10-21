@@ -22,7 +22,7 @@ assets/
 !readme_assets/
 !readme_assets/**
 
-# Florist customer, pest and herbalist art ship with the repo (the shop needs them to run).
+# Florist customer, pest, herbalist and flower-book art ship with the repo (the shop needs them to run).
 # Everything else in assets/ stays local.
 !assets/
 assets/*
@@ -32,3 +32,5 @@ assets/*
 !assets/pests/*.png
 !assets/herbalist/
 !assets/herbalist/*.png
+!assets/book/
+!assets/book/*.png

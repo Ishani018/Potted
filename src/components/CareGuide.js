@@ -7,6 +7,7 @@ import {
   SCENT_SHIELD, PETS, TRADE_FLOWERS, SACHET_MS, formatDuration,
 } from '../constants/gameData';
 import RemedyIcon from './RemedyIcon';
+import BookFrame from './BookFrame';
 
 // The flower book's "Care" tab: how to look after your plants, in two spreads.
 //   1. Watering  |  Bugs (and how to clear each kind)
@@ -84,14 +85,14 @@ function Bugs() {
   return (
     <>
       <Block title="Bugs">
-        <P>A bug on a plant stops it growing until it is gone. {PEST_CONFIG.handClearing ? `Clearing one by hand pays ${PEST_CONFIG.reward} coins and a little XP. Each kind has its own way:` : "Bugs are cleared with the herbalist's remedies. Here is who you might meet:"}</P>
+        <P>A bug stops its plant growing until it is gone. {PEST_CONFIG.handClearing ? `Clearing one by hand pays ${PEST_CONFIG.reward} coins and a little XP:` : "Only the herbalist's remedies clear them. You might meet:"}</P>
       </Block>
       {kinds.map((k) => {
         const info = PEST_INFO[k];
         return (
           <View key={k} style={styles.bugRow}>
             <View style={styles.bugImgBox}>
-              <Image source={PEST_IMAGES[k]} style={{ width: 54, height: 54 * info.aspect }} resizeMode="contain" />
+              <Image source={PEST_IMAGES[k]} style={{ width: 44, height: 44 * info.aspect }} resizeMode="contain" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.bugName}>{info.name}</Text>
@@ -113,14 +114,14 @@ function Remedies() {
       <Block title={`${HERBALIST.name}'s remedies`}>
         <P>{HERBALIST.name} waits at Home. She never sells anything, but she is happy to help a good gardener.</P>
         <View style={styles.itemRow}>
-          <RemedyIcon kind="balm" size={34} />
+          <RemedyIcon kind="balm" size={30} />
           <View style={{ flex: 1 }}>
             <Text style={styles.bugName}>{REMEDIES.balm.name}</Text>
             <Text style={styles.small}>{REMEDIES.balm.desc} She gives you one free every day.</Text>
           </View>
         </View>
         <View style={styles.itemRow}>
-          <RemedyIcon kind="sachet" size={34} />
+          <RemedyIcon kind="sachet" size={30} />
           <View style={{ flex: 1 }}>
             <Text style={styles.bugName}>{REMEDIES.sachet.name}</Text>
             <Text style={styles.small}>Keeps one growing plant bug-free for {SACHET_MS / 3600000} hours, even while you are away.</Text>
@@ -148,7 +149,7 @@ function KeepingAway() {
   return (
     <>
       <Block title="Scented flowers">
-        <P>Some flowers smell too sweet for bugs. Once one is in full bloom, it makes bugs less likely on every plant in its room, and several together help even more.</P>
+        <P>Some flowers smell too sweet for bugs. In full bloom they make bugs less likely on every plant in the room, and several together help more.</P>
         {scented.map(([k, mult]) => (
           <View key={k} style={styles.itemRow}>
             {TRADE_IMAGES[TRADE_FLOWERS[k]?.img] && <Image source={TRADE_IMAGES[TRADE_FLOWERS[k].img]} style={styles.flowerImg} resizeMode="contain" />}
@@ -165,7 +166,7 @@ function KeepingAway() {
             {PET_IMAGES[p.key] && <Image source={PET_IMAGES[p.key]} style={styles.flowerImg} resizeMode="contain" />}
             <View style={{ flex: 1 }}>
               <Text style={styles.bugName}>{p.name}</Text>
-              <Text style={styles.small}>{p.effect.desc}</Text>
+              <Text style={styles.small}>{PET_SHORT[p.key] ?? p.effect.desc}</Text>
             </View>
           </View>
         ))}
@@ -187,6 +188,14 @@ function UsingRemedies() {
     </>
   );
 }
+
+// Short versions of the pet perks for the guide (the full text is on each pet's card).
+const PET_SHORT = {
+  george: 'Half as many bugs in its room.',
+  tiger: 'Sometimes catches bugs for you.',
+  oreo: 'Bugs you clear pay double.',
+  ebonyandivory: '25% fewer bugs in its room.',
+};
 
 const SPREADS = [
   { left: Watering, right: Bugs },
@@ -212,61 +221,53 @@ export default function CareGuide({ tabs }) {
   );
 
   return (
-    <View style={styles.book}>
-      <View style={[styles.page, styles.pageLeft]}>
-        {tabs}
-        <Text style={styles.title}>Care Guide</Text>
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          <Left />
-        </ScrollView>
-        {pager}
-      </View>
-      <View style={styles.spine} />
-      <View style={[styles.page, styles.pageRight]}>
+    <BookFrame
+      left={(
+        <View style={{ flex: 1 }}>
+          {tabs}
+          <Text style={styles.title}>Care Guide</Text>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+            <Left />
+          </ScrollView>
+        </View>
+      )}
+      right={(
         <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           <Right />
         </ScrollView>
-      </View>
-    </View>
+      )}
+      pager={pager}
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  book: {
-    flexDirection: 'row', width: '86%', height: '86%',
-    backgroundColor: '#7a3e1a', borderRadius: 14, padding: 8,
-    borderWidth: 2, borderColor: '#c8873a',
-  },
-  page: { flex: 1, backgroundColor: PAPER, padding: 12 },
-  pageLeft: { borderTopLeftRadius: 8, borderBottomLeftRadius: 8 },
-  pageRight: { borderTopRightRadius: 8, borderBottomRightRadius: 8 },
-  spine: { width: 4, backgroundColor: '#c9b48a' },
-  title: { fontFamily: PIXEL_FONT, fontSize: 13, color: INK, textAlign: 'center', marginBottom: 6 },
+  title: { fontFamily: PIXEL_FONT, fontSize: 12, color: INK, textAlign: 'center', marginBottom: 4 },
   scroll: { paddingBottom: 6 },
 
-  block: { marginBottom: 8 },
-  heading: { fontFamily: PIXEL_FONT, fontSize: 10, color: '#5a7a2a', marginBottom: 5 },
-  body: { color: INK, fontSize: 12, lineHeight: 17, marginBottom: 5 },
-  small: { color: SOFT, fontSize: 10, lineHeight: 14 },
-  swap: { color: INK, fontSize: 11, lineHeight: 17 },
+  block: { marginBottom: 6 },
+  heading: { fontFamily: PIXEL_FONT, fontSize: 9, color: '#5a7a2a', marginBottom: 3 },
+  body: { color: INK, fontSize: 11, lineHeight: 15, marginBottom: 3 },
+  small: { color: SOFT, fontSize: 10, lineHeight: 13 },
+  swap: { color: INK, fontSize: 11, lineHeight: 15 },
 
-  stageRow: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 6 },
+  stageRow: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 3 },
   stage: { alignItems: 'center', flex: 1 },
-  stageImg: { width: 38, height: 46 },
+  stageImg: { width: 32, height: 38 },
   arrow: { position: 'absolute', right: -4, top: 16, color: SOFT, fontSize: 14 },
 
   bugRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: '#fbf0cf', borderRadius: 8, borderWidth: 1, borderColor: '#d8b872',
-    paddingVertical: 4, paddingHorizontal: 6, marginBottom: 5,
+    paddingVertical: 2, paddingHorizontal: 5, marginBottom: 3,
   },
-  bugImgBox: { width: 64, alignItems: 'center', justifyContent: 'center' },
+  bugImgBox: { width: 52, alignItems: 'center', justifyContent: 'center' },
   bugName: { color: INK, fontSize: 12, fontWeight: 'bold', marginBottom: 1 },
 
-  itemRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 6 },
-  flowerImg: { width: 34, height: 34 },
+  itemRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 3 },
+  flowerImg: { width: 28, height: 28 },
 
-  pager: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, paddingTop: 6 },
+  pager: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
   pageBtn: { width: 28, height: 24, borderRadius: 6, backgroundColor: '#7a3e1a', alignItems: 'center', justifyContent: 'center' },
   pageBtnOff: { opacity: 0.3 },
   pageBtnTxt: { color: PAPER, fontSize: 16, fontWeight: 'bold', marginTop: -2 },

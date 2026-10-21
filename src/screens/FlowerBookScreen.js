@@ -9,6 +9,7 @@ import {
 import BouquetArt from '../components/BouquetArt';
 import BackSign from '../components/BackSign';
 import CareGuide from '../components/CareGuide';
+import BookFrame from '../components/BookFrame';
 
 // Flower book — an open two-page journal with three tabs (Flowers, Bouquets, Care).
 // Flowers: every flower (silhouettes until discovered); a page unlocks the first
@@ -84,9 +85,9 @@ export default function FlowerBookScreen({ navigation, route }) {
           tabs={<Tabs tab={tab} setTab={setTab} />}
         />
       ) : (
-      <View style={styles.book}>
-        {/* ── Left page: index of every flower ─────────────────────────── */}
-        <View style={[styles.page, styles.pageLeft]}>
+      <BookFrame
+        left={(
+        <View style={styles.pageInner}>
           <Tabs tab={tab} setTab={setTab} />
           <Text style={styles.title}>Flower Book</Text>
           <Text style={styles.progress}>{found} / {FLOWER_BOOK.length} discovered</Text>
@@ -119,12 +120,9 @@ export default function FlowerBookScreen({ navigation, route }) {
             })}
           </View>
         </View>
-
-        <View style={styles.spine} />
-
-        {/* ── Right page: selected flower ──────────────────────────────── */}
-        <View style={[styles.page, styles.pageRight]}>
-          <ScrollView contentContainerStyle={styles.detail} showsVerticalScrollIndicator={false}>
+        )}
+        right={(
+          <ScrollView style={styles.pageInner} contentContainerStyle={styles.detail} showsVerticalScrollIndicator={false}>
             {/* Big close-up of the bloom on a soft glow */}
             <View style={styles.hero}>
               <View style={[styles.heroGlow, !unlocked && styles.heroGlowLocked]} />
@@ -171,11 +169,11 @@ export default function FlowerBookScreen({ navigation, route }) {
                 <Text style={styles.tip}>Tip: {entry.tip}</Text>
                 <View style={styles.stats}>
                   <Text style={styles.stat}>
-                    Water every {formatDuration((FLOWER_GROWTH[selected]?.hours ?? 3) * 3600000)} · seed to bloom {formatDuration((FLOWER_GROWTH[selected]?.hours ?? 3) * 3600000 * (type === 'hanging' ? 1 : 2))}
+                    Water every {formatDuration((FLOWER_GROWTH[selected]?.hours ?? 3) * 3600000)} · bloom in {formatDuration((FLOWER_GROWTH[selected]?.hours ?? 3) * 3600000 * (type === 'hanging' ? 1 : 2))}
                   </Text>
-                  <Text style={styles.stat}>Unlocks at level {seedUnlockLevel(selected)}</Text>
-                  <Text style={styles.stat}>Grown to full bloom: {record.grown}</Text>
-                  <Text style={styles.stat}>First bloom: {new Date(record.firstAt).toLocaleDateString()}</Text>
+                  <Text style={styles.stat}>
+                    Level {seedUnlockLevel(selected)} · grown {record.grown}× · first {new Date(record.firstAt).toLocaleDateString()}
+                  </Text>
                 </View>
               </>
             ) : (
@@ -189,8 +187,8 @@ export default function FlowerBookScreen({ navigation, route }) {
               </>
             )}
           </ScrollView>
-        </View>
-      </View>
+        )}
+      />
       )}
     </View>
   );
@@ -214,8 +212,9 @@ function BouquetPages({ found, selected, onSelect, tabs }) {
   const record = found[selected];
   const count = BOUQUET_RECIPES.filter((r) => found[r.id]).length;
   return (
-    <View style={styles.book}>
-      <View style={[styles.page, styles.pageLeft]}>
+    <BookFrame
+      left={(
+      <View style={styles.pageInner}>
         {tabs}
         <Text style={styles.title}>Bouquets</Text>
         <Text style={styles.progress}>{count} / {BOUQUET_RECIPES.length} recipes found</Text>
@@ -229,21 +228,19 @@ function BouquetPages({ found, selected, onSelect, tabs }) {
                 onPress={() => onSelect(r.id)}
                 activeOpacity={0.75}
               >
-                {got ? <BouquetArt flowers={r.flowers} size={54} fancy /> : <Text style={styles.recipeQ}>?</Text>}
+                {got ? <BouquetArt flowers={r.flowers} size={50} fancy /> : <Text style={styles.recipeQ}>?</Text>}
               </TouchableOpacity>
             );
           })}
         </View>
       </View>
-
-      <View style={styles.spine} />
-
-      <View style={[styles.page, styles.pageRight]}>
-        <ScrollView contentContainerStyle={styles.detail} showsVerticalScrollIndicator={false}>
+      )}
+      right={(
+        <ScrollView style={styles.pageInner} contentContainerStyle={styles.detail} showsVerticalScrollIndicator={false}>
           <Text style={styles.name}>{record ? recipe.name : '???'}</Text>
           {record ? (
             <>
-              <BouquetArt flowers={recipe.flowers} size={110} fancy />
+              <BouquetArt flowers={recipe.flowers} size={96} fancy />
               <View style={styles.stageRow}>
                 {recipe.flowers.map((k, i) => (
                   <View key={i} style={styles.stage}>
@@ -266,8 +263,8 @@ function BouquetPages({ found, selected, onSelect, tabs }) {
             </>
           )}
         </ScrollView>
-      </View>
-    </View>
+      )}
+    />
   );
 }
 
@@ -278,30 +275,23 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#2a1608', alignItems: 'center', justifyContent: 'center' },
   backImg: { width: '100%', height: '100%' },
 
-  book: {
-    flexDirection: 'row', width: '86%', height: '86%',
-    backgroundColor: '#7a3e1a', borderRadius: 14, padding: 8,
-    borderWidth: 2, borderColor: '#c8873a',
-  },
-  page: { flex: 1, backgroundColor: PAPER, padding: 12 },
-  pageLeft: { borderTopLeftRadius: 8, borderBottomLeftRadius: 8 },
-  pageRight: { borderTopRightRadius: 8, borderBottomRightRadius: 8 },
-  spine: { width: 4, backgroundColor: '#c9b48a' },
+  // The page is painted (BookFrame); this just sits inside its content area.
+  pageInner: { flex: 1 },
 
-  tabs: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginBottom: 6 },
-  tab: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 8, borderWidth: 1, borderColor: '#c9a86a' },
+  tabs: { flexDirection: 'row', justifyContent: 'center', gap: 5, marginBottom: 4 },
+  tab: { paddingHorizontal: 9, paddingVertical: 2, borderRadius: 8, borderWidth: 1, borderColor: '#c9a86a' },
   tabOn: { backgroundColor: '#7a3e1a', borderColor: '#7a3e1a' },
   tabTxt: { color: '#8a6a40', fontSize: 10, fontWeight: 'bold' },
   tabTxtOn: { color: PAPER },
-  recipeTile: { width: '30%' },
+  recipeTile: { width: '29%' },
   recipeQ: { fontFamily: PIXEL_FONT, fontSize: 16, color: '#b89a6a' },
   recipeBigQ: { fontFamily: PIXEL_FONT, fontSize: 40, color: '#c9a86a', marginVertical: 14 },
-  recipeImg: { width: 40, height: 40 },
-  title: { fontFamily: PIXEL_FONT, fontSize: 13, color: INK, textAlign: 'center', marginBottom: 4 },
-  progress: { color: '#8a6a40', fontSize: 11, textAlign: 'center', marginBottom: 8 },
-  grid: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignContent: 'center', gap: 6 },
+  recipeImg: { width: 34, height: 34 },
+  title: { fontFamily: PIXEL_FONT, fontSize: 12, color: INK, textAlign: 'center', marginBottom: 2 },
+  progress: { color: '#8a6a40', fontSize: 10, textAlign: 'center', marginBottom: 4 },
+  grid: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignContent: 'center', gap: 5 },
   tile: {
-    width: '22%', aspectRatio: 0.9, borderRadius: 8, paddingTop: 4, paddingBottom: 3,
+    width: '23%', aspectRatio: 0.88, borderRadius: 8, paddingTop: 4, paddingBottom: 3,
     backgroundColor: '#e8d4a8', borderWidth: 1.5, borderColor: '#c9a86a',
     alignItems: 'center', justifyContent: 'space-between',
   },
@@ -311,35 +301,35 @@ const styles = StyleSheet.create({
   tileImg: { width: '92%', height: '92%' },
   tileQ: { position: 'absolute', fontFamily: PIXEL_FONT, fontSize: 14, color: '#fbf0cf', textShadowColor: '#5a4630', textShadowRadius: 2 },
   tileStar: { position: 'absolute', right: 5, top: 0, fontSize: 9, color: '#e0a830' },
-  tileName: { color: INK, fontSize: 9, fontWeight: 'bold', maxWidth: '94%' },
+  tileName: { color: INK, fontSize: 8, fontWeight: 'bold', maxWidth: '96%' },
   tileNameLocked: { color: '#a08860' },
   silhouette: { tintColor: '#4a3a28', opacity: 0.4 },
 
   detail: { alignItems: 'center', paddingBottom: 8 },
-  hero: { width: 150, height: 130, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+  hero: { width: 110, height: 84, alignItems: 'center', justifyContent: 'center', marginBottom: 1 },
   heroGlow: {
-    position: 'absolute', width: 118, height: 118, borderRadius: 59,
+    position: 'absolute', width: 78, height: 78, borderRadius: 39,
     backgroundColor: '#fbeab0', borderWidth: 3, borderColor: '#ecd48a',
   },
   heroGlowLocked: { backgroundColor: '#e6d6b0', borderColor: '#d2bd90' },
-  heroImg: { width: 112, height: 112 },
+  heroImg: { width: 72, height: 72 },
   heroSpark: { position: 'absolute', fontSize: 14, color: '#e0a830' },
   heroQ: { position: 'absolute', fontFamily: PIXEL_FONT, fontSize: 26, color: '#fbf0cf', textShadowColor: '#5a4630', textShadowRadius: 3 },
-  name: { fontFamily: PIXEL_FONT, fontSize: 13, color: INK, marginBottom: 8, textAlign: 'center' },
-  chipRow: { flexDirection: 'row', gap: 6, marginBottom: 8 },
+  name: { fontFamily: PIXEL_FONT, fontSize: 12, color: INK, marginBottom: 5, textAlign: 'center' },
+  chipRow: { flexDirection: 'row', gap: 5, marginBottom: 5 },
   chip: { borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1 },
   chipPot: { backgroundColor: '#e7c9a0', borderColor: '#a8703a' },
   chipHang: { backgroundColor: '#cfe3b8', borderColor: '#6a9a3a' },
   chipSeason: { backgroundColor: '#f0dca0', borderColor: '#b8963a' },
   chipTxt: { color: INK, fontSize: 10, fontWeight: 'bold' },
 
-  stageRow: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginBottom: 8 },
+  stageRow: { flexDirection: 'row', justifyContent: 'center', gap: 5, marginBottom: 5 },
   stage: { alignItems: 'center' },
-  stageImg: { width: 48, height: 60 },
+  stageImg: { width: 34, height: 40 },
   stageLabel: { color: '#8a6a40', fontSize: 9, marginTop: 2 },
-  blurb: { color: INK, fontSize: 12, textAlign: 'center', marginBottom: 6, lineHeight: 17 },
-  tip: { color: '#5a7a2a', fontSize: 11, fontStyle: 'italic', textAlign: 'center', marginBottom: 8 },
-  stats: { borderTopWidth: 1, borderTopColor: '#c9a86a', paddingTop: 6, alignSelf: 'stretch', alignItems: 'center' },
+  blurb: { color: INK, fontSize: 11, textAlign: 'center', marginBottom: 4, lineHeight: 15 },
+  tip: { color: '#5a7a2a', fontSize: 10, fontStyle: 'italic', textAlign: 'center', marginBottom: 4, lineHeight: 13 },
+  stats: { borderTopWidth: 1, borderTopColor: '#c9a86a', paddingTop: 4, alignSelf: 'stretch', alignItems: 'center' },
   stat: { color: '#8a6a40', fontSize: 10 },
 
   lockedHint: { color: '#8a6a40', fontSize: 11, textAlign: 'center', fontStyle: 'italic' },

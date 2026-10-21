@@ -256,3 +256,8 @@ export const HERBALIST_IMAGES = {
   balm:   require('../../assets/herbalist/balm.png'),
   sachet: require('../../assets/herbalist/sachet.png'),
 };
+
+// ─── Flower book ──────────────────────────────────────────────────────────────
+// The open book (cropped to the book itself, transparent outside it). Text goes in
+// the page areas defined in components/BookFrame.js. Ships with the repo.
+export const BOOK_IMG = require('../../assets/book/flowerbook.png');
