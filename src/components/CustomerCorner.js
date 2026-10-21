@@ -56,8 +56,9 @@ export default function CustomerCorner({ sw, sh }) {
               <View style={{ gap: 10 }}>
                 <View style={styles.head}>
                   <View style={styles.portrait}>
-                    <View style={{ position: 'absolute', top: 2, left: (64 - 120 * SPRITE_ASPECT) / 2 }}>
-                      <CustomerSprite customerKey={order.customer} height={120} bob={false} />
+                    {/* sprite scaled so the 64px box frames head and shoulders */}
+                    <View style={{ position: 'absolute', top: 2, left: (64 - 170 * SPRITE_ASPECT) / 2 }}>
+                      <CustomerSprite customerKey={order.customer} height={170} bob={false} />
                     </View>
                   </View>
                   <View style={{ flex: 1, gap: 4 }}>
