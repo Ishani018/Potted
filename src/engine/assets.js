@@ -316,8 +316,8 @@ export const BOOK_TILES = {
 // flowers on the corners keep their shape at any width. cap = cap width / height.
 export const BOOK_BUTTONS = {
   green: { l: require('../../assets/book/btn_green_l.png'), m: require('../../assets/book/btn_green_m.png'), r: require('../../assets/book/btn_green_r.png'), cap: 82 / 170 },
-  wood:  { l: require('../../assets/book/btn_wood_l.png'),  m: require('../../assets/book/btn_wood_m.png'),  r: require('../../assets/book/btn_wood_r.png'),  cap: 92 / 170 },
-  red:   { l: require('../../assets/book/btn_red_l.png'),   m: require('../../assets/book/btn_red_m.png'),   r: require('../../assets/book/btn_red_r.png'),   cap: 78 / 170 },
+  wood:  { l: require('../../assets/book/btn_wood_l.png'),  m: require('../../assets/book/btn_wood_m.png'),  r: require('../../assets/book/btn_wood_r.png'),  cap: 83 / 170 },
+  red:   { l: require('../../assets/book/btn_red_l.png'),   m: require('../../assets/book/btn_red_m.png'),   r: require('../../assets/book/btn_red_r.png'),   cap: 82 / 170 },
 };
 export const BOOK_ARROWS = { left: require('../../assets/book/arrow_left.png'), right: require('../../assets/book/arrow_right.png') };
 export const BOOK_MEDAL = require('../../assets/book/medal.png');
