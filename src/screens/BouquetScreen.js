@@ -3,7 +3,7 @@ import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { BOUQUET_BG, TRADE_IMAGES, UI_IMAGES } from '../engine/assets';
 import {
-  TRADE_FLOWERS, BOUQUET_SIZE, BOUQUET_RECIPES, BOUQUET_PAPERS, evaluateBouquet,
+  TRADE_FLOWERS, BOUQUET_SIZE, BOUQUET_RECIPES, BOUQUET_PAPERS, bouquetPaper, evaluateBouquet,
 } from '../constants/gameData';
 import { globalPetEffects } from '../engine/petEffects';
 import BouquetArt from '../components/BouquetArt';
@@ -13,9 +13,11 @@ import { useNotice } from '../components/PurchaseNotice';
 
 // Bouquet table — you work ON the workshop table (cosy florist bg, 1376×768 base):
 //   • three paper sheets laid out on the left of the table — tap one to choose
+//     (a fancier sheet raises the price but costs coins each time)
 //   • the bouquet takes shape in the middle, flowers blooming from the wrapper
 //   • your harvested flowers lie in a row along the front edge — tap to add
-//   • tie & sell on the right; UNDO takes the last flower back
+//   • tie & sell on the right (shows what you actually earn); UNDO takes the
+//     last flower back
 // Recipes live in the flower book (button top-right).
 const PLOPPER_W = 1376;
 const PLOPPER_H = 768;
@@ -28,8 +30,11 @@ export default function BouquetScreen({ navigation }) {
   const found = state.player.bouquetBook ?? {};
   const [box, setBox] = useState({ w: 0, h: 0 });
   const [picks, setPicks] = useState([]);
-  const [paper, setPaper] = useState('plain');
+  const [chosenPaper, setPaper] = useState('plain');
   const [notice, notify] = useNotice(3000);
+  const coins = state.player.coins;
+  // If you can't afford the chosen sheet any more, fall back to free kraft.
+  const paper = coins >= bouquetPaper(chosenPaper).cost ? chosenPaper : 'plain';
 
   const sw = box.w, sh = box.h;
   const fx = (v) => (v / PLOPPER_W) * sw;
@@ -50,10 +55,11 @@ export default function BouquetScreen({ navigation }) {
   const sell = () => {
     if (!result) return;
     dispatch({ type: 'SELL_BOUQUET', flowers: picks, paper });
+    const earned = `You earned ${result.net} coins.`;
     notify({
       icon: UI_IMAGES[PAPER_IMG[paper]],
       title: isNewRecipe ? `New recipe: ${result.name}!` : `Sold ${result.name}!`,
-      subtitle: isNewRecipe ? `Saved to your flower book. You earned ${result.value} coins.` : `You earned ${result.value} coins.`,
+      subtitle: isNewRecipe ? `Saved to your flower book. ${earned}` : earned,
     });
     setPicks([]);
   };
@@ -61,6 +67,9 @@ export default function BouquetScreen({ navigation }) {
   const art = fx(340);
   const rowN = Math.max(owned.length, 1);
   const gap = Math.min(fx(96), fx(700) / rowN);
+  // Shrink the flower tiles when there are many so they never overlap.
+  const bunchW = Math.min(fx(66), gap - fx(6));
+  const bunchH = bunchW * 0.8;
   const rowW = gap * owned.length;
   const rowLeft = fx(700) - rowW / 2;
 
@@ -74,21 +83,31 @@ export default function BouquetScreen({ navigation }) {
           <PixelText size={fs(10, 6)} style={[styles.label, { left: fx(250), width: fx(380), top: fy(452) }]}>CHOOSE PAPER</PixelText>
           {Object.values(BOUQUET_PAPERS).map((p, i) => {
             const on = paper === p.id;
+            const cantAfford = coins < p.cost;
             const cx = fx(300 + i * 130);
             return (
               <TouchableOpacity
                 key={p.id}
                 activeOpacity={0.85}
-                onPress={() => setPaper(p.id)}
+                onPress={cantAfford ? undefined : () => setPaper(p.id)}
                 style={[
                   styles.sheet,
                   { left: cx - fx(58), top: fy(478) - (on ? fy(10) : 0), width: fx(116), height: fy(170), transform: [{ rotate: PAPER_TILT[p.id] }] },
                   on && styles.sheetOn,
+                  cantAfford && { opacity: 0.45 },
                 ]}
               >
                 <Image source={UI_IMAGES[PAPER_IMG[p.id]]} style={{ width: fx(92), height: fy(106) }} resizeMode="contain" />
                 <PixelText size={fs(8, 6)} color="#5a3410" style={styles.dark}>{p.name.toUpperCase()}</PixelText>
-                <PixelText size={fs(7, 5)} color="#8a5a24" style={styles.dark}>{p.bonus > 1 ? `+${Math.round((p.bonus - 1) * 100)}%` : 'BASE'}</PixelText>
+                {/* price of one sheet (used up each time you tie a bouquet) */}
+                {p.cost > 0 ? (
+                  <View style={styles.sheetCost}>
+                    <Image source={UI_IMAGES.goldcoins} style={{ width: fx(14), height: fx(14) }} resizeMode="contain" />
+                    <PixelText size={fs(8, 6)} color="#8a5a24" style={styles.dark}>{p.cost}</PixelText>
+                  </View>
+                ) : (
+                  <PixelText size={fs(7, 5)} color="#8a5a24" style={styles.dark}>FREE</PixelText>
+                )}
                 {on && <View style={styles.tick}><PixelText size={fs(8, 6)}>✓</PixelText></View>}
               </TouchableOpacity>
             );
@@ -103,9 +122,11 @@ export default function BouquetScreen({ navigation }) {
           </View>
 
           {/* ── Flowers along the front edge ─────────────────────────── */}
-          <PixelText size={fs(8, 6)} style={[styles.label, { left: fx(250), width: fx(700), top: fy(686) }]}>
-            {owned.length === 0 ? 'NO HARVESTED FLOWERS YET - GROW SOME FIRST!' : 'TAP A FLOWER TO ADD IT'}
-          </PixelText>
+          {owned.length === 0 && (
+            <PixelText size={fs(8, 6)} style={[styles.label, { left: fx(250), width: fx(700), top: fy(700) }]}>
+              NO HARVESTED FLOWERS YET - GROW SOME FIRST!
+            </PixelText>
+          )}
           {owned.map((key, i) => {
             const n = left(key);
             return (
@@ -113,9 +134,9 @@ export default function BouquetScreen({ navigation }) {
                 key={key}
                 activeOpacity={0.75}
                 onPress={() => add(key)}
-                style={[styles.bunch, { left: rowLeft + i * gap + (gap - fx(66)) / 2, top: fy(704), width: fx(66), height: fx(52) }, (n <= 0 || full) && { opacity: 0.4 }]}
+                style={[styles.bunch, { left: rowLeft + i * gap + (gap - bunchW) / 2, top: fy(704), width: bunchW, height: bunchH }, (n <= 0 || full) && { opacity: 0.4 }]}
               >
-                <Image source={TRADE_IMAGES[TRADE_FLOWERS[key].img]} style={{ width: fx(46), height: fx(46) }} resizeMode="contain" />
+                <Image source={TRADE_IMAGES[TRADE_FLOWERS[key].img]} style={{ width: bunchW * 0.7, height: bunchW * 0.7 }} resizeMode="contain" />
                 <View style={styles.badge}><PixelText size={fs(8, 6)}>{n}</PixelText></View>
               </TouchableOpacity>
             );
@@ -126,8 +147,12 @@ export default function BouquetScreen({ navigation }) {
             {result && (
               <View style={styles.price}>
                 <Image source={UI_IMAGES.goldcoins} style={{ width: fx(24), height: fx(24) }} resizeMode="contain" />
-                <PixelText size={fs(14, 8)} color={COLORS.gold}>{result.value}</PixelText>
+                <PixelText size={fs(14, 8)} color={COLORS.gold}>{result.net}</PixelText>
               </View>
+            )}
+            {/* only shown when you picked a paid paper: what the sheet costs */}
+            {result && result.paperCost > 0 && (
+              <PixelText size={fs(7, 5)} style={{ textAlign: 'center' }}>PAPER -{result.paperCost}</PixelText>
             )}
             <PixelButton
               onPress={full ? sell : undefined}
@@ -144,9 +169,6 @@ export default function BouquetScreen({ navigation }) {
               label="UNDO"
               style={{ alignSelf: 'stretch' }}
             />
-            {result && !isNewRecipe && (
-              <PixelText size={fs(7, 5)} style={{ textAlign: 'center' }}>x{(result.multiplier * result.paperBonus).toFixed(2)} VALUE</PixelText>
-            )}
           </View>
         </>
       )}
@@ -181,6 +203,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.35, shadowRadius: 4, shadowOffset: { width: 2, height: 3 },
   },
   sheetOn: { borderColor: COLORS.green, backgroundColor: '#fff3d6' },
+  sheetCost: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   tick: {
     position: 'absolute', top: -8, right: -8, backgroundColor: COLORS.green,
     borderWidth: 2, borderColor: COLORS.greenEdge, borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1,

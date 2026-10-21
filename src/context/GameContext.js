@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   INITIAL_PLAYER_STATE, ROOM_UNLOCK_COSTS, CATCH_UP, BOUQUET_SIZE,
   POTTED_FLOWERS, HANGING_PLANTS, PETS, ROOM_NAMES,
-  seedType, evaluateBouquet,
+  seedType, evaluateBouquet, bouquetPaper,
 } from '../constants/gameData';
 import { roomPetEffects, globalPetEffects, pestRewardFor, placedPets, dayKey } from '../engine/petEffects';
 import {
@@ -322,13 +322,14 @@ function reducer(state, action) {
     case 'SELL_BOUQUET': {
       const { flowers, paper = 'plain' } = action;
       if (!Array.isArray(flowers) || flowers.length !== BOUQUET_SIZE) return state;
+      if (state.player.coins < bouquetPaper(paper).cost) return state; // can't afford the paper
       const harvested = { ...(state.player.harvestedFlowers ?? {}) };
       for (const k of flowers) {
         if (!(harvested[k] > 0)) return state; // don't have enough of this flower
         harvested[k] -= 1;
       }
       for (const k of Object.keys(harvested)) if (harvested[k] <= 0) delete harvested[k];
-      const { recipe, value } = evaluateBouquet(flowers, globalPetEffects(state.player).bouquetMult, paper);
+      const { recipe, net } = evaluateBouquet(flowers, globalPetEffects(state.player).bouquetMult, paper);
       const bouquetBook = { ...(state.player.bouquetBook ?? {}) };
       if (recipe) {
         const prev = bouquetBook[recipe.id];
@@ -338,7 +339,7 @@ function reducer(state, action) {
         ...state,
         player: {
           ...state.player,
-          coins: state.player.coins + value,
+          coins: state.player.coins + net, // sale minus the paper used
           harvestedFlowers: harvested,
           bouquetBook,
           bouquetsSold: (state.player.bouquetsSold ?? 0) + 1,

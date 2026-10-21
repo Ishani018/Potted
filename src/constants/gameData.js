@@ -347,12 +347,20 @@ export const BOUQUET_RECIPES = [
   { id: 'wedding',    name: 'Wedding Day',    flowers: ['rose', 'peony', 'hydrenga'],      multiplier: 2.0, hint: 'The grandest flowers for the biggest day.' },
 ];
 
-// Wrapping papers — each fancier than the last, with a small value bonus.
+// Wrapping papers — each fancier than the last, with a value bonus. A sheet is
+// used up every time you tie a bouquet, so it costs `cost` coins each time:
+// worth it on a valuable bouquet (e.g. +12 on a 110-coin Sweetheart for 6), a
+// loss on a cheap one (+4 on a 38-coin mixed bunch for 6).
 export const BOUQUET_PAPERS = {
-  plain:   { id: 'plain',   name: 'Kraft',   bonus: 1.0 },
-  layered: { id: 'layered', name: 'Layered', bonus: 1.1 },
-  fancy:   { id: 'fancy',   name: 'Fancy',   bonus: 1.2 },
+  plain:   { id: 'plain',   name: 'Kraft',   bonus: 1.0, cost: 0 },
+  layered: { id: 'layered', name: 'Layered', bonus: 1.1, cost: 6 },
+  fancy:   { id: 'fancy',   name: 'Fancy',   bonus: 1.2, cost: 14 },
 };
+
+// Unknown ids fall back to plain kraft (free).
+export function bouquetPaper(id) {
+  return BOUQUET_PAPERS[id] ?? BOUQUET_PAPERS.plain;
+}
 
 function sameFlowers(a, b) {
   if (a.length !== b.length) return false;
@@ -360,7 +368,9 @@ function sameFlowers(a, b) {
   return x.every((k, i) => k === y[i]);
 }
 
-// keys: array of BOUQUET_SIZE flower keys → { recipe, name, multiplier, value }.
+// keys: array of BOUQUET_SIZE flower keys →
+// { recipe, name, multiplier, paperBonus, paperCost, value, net }
+// (value = sale price, net = value minus the paper's cost).
 // bonus: extra multiplier from pets (see globalPetEffects).
 export function evaluateBouquet(keys, bonus = 1, paper = 'plain') {
   const base = keys.reduce((sum, k) => sum + (TRADE_FLOWERS[k]?.base ?? 0), 0);
@@ -374,6 +384,7 @@ export function evaluateBouquet(keys, bonus = 1, paper = 'plain') {
     name = `${TRADE_FLOWERS[keys[0]]?.name ?? keys[0]} Bouquet`;
     multiplier = BOUQUET_TRIO.multiplier;
   }
-  const paperBonus = BOUQUET_PAPERS[paper]?.bonus ?? 1;
-  return { recipe, name, multiplier, paperBonus, value: Math.round(base * multiplier * paperBonus * bonus) };
+  const { bonus: paperBonus, cost: paperCost } = bouquetPaper(paper);
+  const value = Math.round(base * multiplier * paperBonus * bonus);
+  return { recipe, name, multiplier, paperBonus, paperCost, value, net: value - paperCost };
 }
