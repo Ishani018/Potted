@@ -4,7 +4,9 @@ import { POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES, UI_IMAGES } from '../engine/
 import { projectSize } from '../engine/project';
 import { useLayout } from '../context/LayoutContext';
 import { isThirsty } from '../engine/gameEngine';
-import { FLOWER_STAGE_SCALE } from '../constants/gameData';
+import { FLOWER_STAGE_SCALE, PEST_CONFIG, isShielded } from '../constants/gameData';
+import { useGame } from '../context/GameContext';
+import RemedyIcon from './RemedyIcon';
 import Pest from './Pest';
 
 // ── Pot display size (base coords against 1376×768) ─────────────────────────
@@ -90,6 +92,8 @@ function getPlantImage(slot) {
 
 export default function PlantSlot({ slot, position, onPress, onPestPress, baseWidthOverride, aspectOverride }) {
   const { width: sw, height: sh } = useLayout();
+  const { state } = useGame();
+  const armed = !!state.heldRemedy;   // a remedy is picked up: taps go to the plant
   const isPotted = slot.type === 'potted';
   // baseWidthOverride lets a room set its own hanging-pot width (room 2) without
   // affecting other rooms that use the shared BASE_HANGING_W.
@@ -160,7 +164,15 @@ export default function PlantSlot({ slot, position, onPress, onPestPress, baseWi
           cx={imgW * PEST_X}
           cy={imgH * PEST_Y}
           onClear={() => onPestPress && onPestPress(slot)}
+          armed={armed}
+          interactive={PEST_CONFIG.handClearing}
         />
+      )}
+      {/* a Scent Sachet hangs on the plant while it's protected */}
+      {isShielded(slot) && (
+        <View style={{ position: 'absolute', right: -Math.round(imgW * 0.06), top: Math.round(imgH * 0.04), zIndex: 9 }} pointerEvents="none">
+          <RemedyIcon kind="sachet" size={Math.max(18, Math.round(imgW * 0.3))} />
+        </View>
       )}
     </View>
   );

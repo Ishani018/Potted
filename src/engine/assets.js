@@ -247,3 +247,14 @@ export const CUSTOMER_IMAGES = {
   maemae:  require('../../assets/customers/maemae.png'),
   nori:    require('../../assets/customers/nori.png'),
 };
+
+// ─── Herbalist (Doc Bristle) and her remedies ─────────────────────────────────
+// docbristle: full-body sprite (400×600 transparent, feet at the bottom).
+// balm / sachet: item icons (256×256 transparent). Files go in assets/herbalist/
+// and ship with the repo. Anything not registered here is drawn as a simple
+// stand-in, so the herbalist works before the art exists.
+export const HERBALIST_IMAGES = {
+  // docbristle: require('../../assets/herbalist/docbristle.png'),
+  // balm:       require('../../assets/herbalist/balm.png'),
+  // sachet:     require('../../assets/herbalist/sachet.png'),
+};

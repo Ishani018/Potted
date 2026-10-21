@@ -27,7 +27,9 @@ const WEB_STYLE = Platform.OS === 'web'
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const N = false; // useNativeDriver — these values are also set by gestures, so keep them on JS
 
-export default function Pest({ type, size, cx, cy, onClear }) {
+// armed:       a remedy is picked up — leave the touch to the plant so tapping the bug uses it.
+// interactive: false = the bug can't be cleared by hand (only with remedies).
+export default function Pest({ type, size, cx, cy, onClear, armed = false, interactive = true }) {
   const info = pestInfo(type);
   const action = info.action;
   const w = size;
@@ -44,6 +46,8 @@ export default function Pest({ type, size, cx, cy, onClear }) {
 
   const onClearRef = useRef(onClear);
   onClearRef.current = onClear;
+  const gate = useRef({ armed, interactive });
+  gate.current = { armed, interactive };
   const st = useRef({ done: false, path: 0, lastDx: 0, lastDy: 0, taps: 0, far: false, hold: null }).current;
 
   // Gentle idle motion (moths flutter a bit faster).
@@ -88,8 +92,8 @@ export default function Pest({ type, size, cx, cy, onClear }) {
   };
 
   const responder = useMemo(() => PanResponder.create({
-    onStartShouldSetPanResponder: () => !st.done,
-    onMoveShouldSetPanResponder: () => !st.done,
+    onStartShouldSetPanResponder: () => !st.done && gate.current.interactive && !gate.current.armed,
+    onMoveShouldSetPanResponder: () => !st.done && gate.current.interactive && !gate.current.armed,
     onPanResponderTerminationRequest: () => false,
 
     onPanResponderGrant: () => {
@@ -170,7 +174,7 @@ export default function Pest({ type, size, cx, cy, onClear }) {
   const lift = prog.interpolate({ inputRange: [0, 1], outputRange: [0, action === 'hold' ? -h * 0.3 : 0] });
   const grow = prog.interpolate({ inputRange: [0, 1], outputRange: [1, action === 'hold' ? 1.15 : 1] });
   const showBar = action === 'rub' || action === 'hold' || action === 'catch';
-  const hint = action === 'drag' && far ? 'LET GO!' : info.hint;
+  const hint = !interactive ? 'NEEDS BALM' : action === 'drag' && far ? 'LET GO!' : info.hint;
   const hintSize = Math.max(6, Math.round(w * 0.2));
 
   return (

@@ -5,6 +5,7 @@ import { HOME_BG } from '../engine/assets';
 import { MapTagButton } from '../components/MapTag';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
+import HerbalistCorner from '../components/HerbalistCorner';
 
 // Entry buttons laid out in Plopper (1376×768 base, sprite CENTER anchor).
 // Render bg stretched + position against the measured box → exact placement.
@@ -41,6 +42,9 @@ export default function HomeScreen({ navigation }) {
         <MapTagButton key={e.label} label={e.label} x={e.x} y={e.y} box={box} z={10 + i} delay={i * 180} onPress={() => go(e)} />
       ))}
       <MapTagButton label={PET_TAG.label} x={PET_TAG.x} y={PET_TAG.y} box={box} z={14} delay={600} onPress={() => navigation.navigate('PetRoom')} />
+
+      {/* Doc Bristle: free daily remedy + herb swaps (tap her) */}
+      <HerbalistCorner sw={sw} sh={sh} />
 
       {/* Standard HUD — settings (TL) + map (TR) + inventory (BL) */}
       <ScreenHud

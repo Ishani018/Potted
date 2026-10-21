@@ -6,7 +6,7 @@ import {
   POTTED_FLOWERS, HANGING_PLANTS, PETS, ROOM_NAMES,
   seedType, evaluateBouquet, bouquetPaper,
   XP_CONFIG, levelInfo, playerLevel, seedUnlockLevel, unlocksAtLevel, TRADE_FLOWERS, CUSTOMERS,
-  roomScentShield,
+  roomScentShield, HERBALIST, HERBALIST_TRADES, REMEDIES, SACHET_MS, isShielded,
 } from '../constants/gameData';
 import { roomPetEffects, globalPetEffects, pestRewardFor, placedPets, dayKey } from '../engine/petEffects';
 import { rollCustomerOrders, hashString, bouquetFillsOrder, hasStaleOrders } from '../engine/customers';
@@ -50,6 +50,7 @@ const initialState = {
   lastPassiveTick: Date.now(),
   lastSeen: Date.now(),  // last time the game was running (saved) — for catch-up
   awaySummary: null,     // "while you were away" report, shown until dismissed
+  heldRemedy: null,      // 'balm' | 'sachet' picked from the tray, awaiting a plant tap
   notices: [],           // pet messages ({ id, text }) shown one at a time, not saved
 };
 
@@ -179,7 +180,7 @@ function reducer(state, action) {
       const gap = now - (state.lastSeen ?? state.lastPassiveTick ?? now);
       let updatedSlots = tickAllSlots(state.slots, now, rand, eff);
       const gapMinutes = Math.min(Math.floor(gap / 60000) - 1, CATCH_UP.maxPestMinutes);
-      if (rand && gapMinutes > 0) updatedSlots = spawnPestsOffline(updatedSlots, gapMinutes, rand, eff);
+      if (rand && gapMinutes > 0) updatedSlots = spawnPestsOffline(updatedSlots, gapMinutes, rand, eff, now);
       const { coins, nextTick } = calcHangingPassiveCoins(state.slots, state.lastPassiveTick ?? now, now, eff);
       const summary = gap >= CATCH_UP.minAwayMs
         ? buildAwaySummary(state.slots, updatedSlots, gap, coins)
@@ -266,7 +267,7 @@ function reducer(state, action) {
     // Pick a seed from the inventory to plant next (held until a pot is tapped).
     case 'HOLD_SEED': {
       const { invItemId, flowerKey } = action;
-      return { ...state, heldSeed: { invItemId, flowerKey } };
+      return { ...state, heldSeed: { invItemId, flowerKey }, heldRemedy: null };
     }
 
     case 'CLEAR_HELD': {
@@ -428,6 +429,77 @@ function reducer(state, action) {
       };
       if (order) delivered = completeOrder(delivered, order, `${CUSTOMERS[order.customer].name} loved the bouquet! +${tip} tip`);
       return grantXp(delivered, Math.max(0, net) / XP_CONFIG.bouquetDivisor + (newRecipe ? XP_CONFIG.newRecipe : 0));
+    }
+
+    // ── Herbalist ─────────────────────────────────────────────────────────────
+    // One free Bug Balm per day.
+    case 'CLAIM_DAILY_REMEDY': {
+      const today = dayKey(Date.now());
+      if (state.player.herbalistDay === today) return state;
+      const rem = { ...(state.player.remedies ?? {}) };
+      rem.balm = (rem.balm ?? 0) + 1;
+      return {
+        ...state,
+        player: { ...state.player, remedies: rem, herbalistDay: today },
+        notices: [...state.notices, { id: `rem_daily_${Date.now()}`, icon: '🌿', text: `${HERBALIST.name} gave you a ${REMEDIES.balm.name}!` }],
+      };
+    }
+
+    // Swap harvested flowers for a remedy. action: { id } (see HERBALIST_TRADES)
+    case 'TRADE_REMEDY': {
+      const trade = HERBALIST_TRADES.find((t) => t.id === action.id);
+      if (!trade) return state;
+      const harvested = { ...(state.player.harvestedFlowers ?? {}) };
+      for (const [k, n] of Object.entries(trade.give)) {
+        if ((harvested[k] ?? 0) < n) return state;       // not enough of this flower
+      }
+      for (const [k, n] of Object.entries(trade.give)) {
+        harvested[k] -= n;
+        if (harvested[k] <= 0) delete harvested[k];
+      }
+      const rem = { ...(state.player.remedies ?? {}) };
+      rem[trade.get] = (rem[trade.get] ?? 0) + trade.qty;
+      return {
+        ...state,
+        player: { ...state.player, harvestedFlowers: harvested, remedies: rem },
+        notices: [...state.notices, { id: `rem_trade_${Date.now()}`, icon: '🌿', text: `${HERBALIST.thanks} +${trade.qty} ${REMEDIES[trade.get].name}` }],
+      };
+    }
+
+    // Pick a remedy from the tray (tap again to put it back).
+    case 'HOLD_REMEDY': {
+      const { kind } = action;
+      if (!REMEDIES[kind] || (state.player.remedies?.[kind] ?? 0) <= 0) return state;
+      return { ...state, heldRemedy: state.heldRemedy === kind ? null : kind, heldSeed: null };
+    }
+
+    case 'CLEAR_REMEDY': {
+      return { ...state, heldRemedy: null };
+    }
+
+    // Use the held remedy on a plant. Balm: clears its bug. Sachet: pests stay
+    // off it for SACHET_MS. Invalid targets change nothing (the room shows a hint).
+    case 'USE_REMEDY': {
+      const kind = state.heldRemedy;
+      const slot = state.slots[action.slotId];
+      if (!kind || !slot?.flowerKey) return state;
+      const left = state.player.remedies?.[kind] ?? 0;
+      if (left <= 0) return { ...state, heldRemedy: null };
+      let used;
+      if (kind === 'balm') {
+        if (!slot.pest) return state;
+        used = { ...slot, pest: null };
+      } else {
+        if (slot.stage >= maxStageFor(slot.type) || isShielded(slot)) return state;
+        used = { ...slot, shieldUntil: Date.now() + SACHET_MS };
+      }
+      const rem = { ...state.player.remedies, [kind]: left - 1 };
+      return {
+        ...state,
+        slots: { ...state.slots, [action.slotId]: used },
+        player: { ...state.player, remedies: rem },
+        heldRemedy: left - 1 > 0 ? kind : null,    // stay armed while you have more
+      };
     }
 
     // Hand a customer the flowers they asked for.

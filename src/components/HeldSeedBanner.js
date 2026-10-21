@@ -10,7 +10,7 @@ import { PixelText } from './Pixel';
 const ASPECT = 1086 / 362;
 const INK = '#5a2a10';
 
-export default function HeldSeedBanner({ flowerKey, hint, onCancel }) {
+export default function HeldSeedBanner({ flowerKey, hint, onCancel, icon }) {
   const { width: sw } = useLayout();
   const bob = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -34,11 +34,18 @@ export default function HeldSeedBanner({ flowerKey, hint, onCancel }) {
       <View style={{ width: W, height: H }}>
         <Image source={UI_IMAGES.plantBanner} style={{ width: W, height: H }} resizeMode="stretch" />
 
-        <Animated.Image
-          source={SEED_IMAGES[flowerKey]}
-          style={{ position: 'absolute', left: W * 0.105, top: H * 0.3, width: W * 0.1, height: H * 0.44, transform: [{ translateY: y }] }}
-          resizeMode="contain"
-        />
+        {icon ? (
+          // a custom icon (e.g. a remedy) instead of the seed bag
+          <Animated.View style={{ position: 'absolute', left: W * 0.105, top: H * 0.3, width: W * 0.1, height: H * 0.44, alignItems: 'center', justifyContent: 'center', transform: [{ translateY: y }] }}>
+            {icon(Math.min(W * 0.1, H * 0.44))}
+          </Animated.View>
+        ) : (
+          <Animated.Image
+            source={SEED_IMAGES[flowerKey]}
+            style={{ position: 'absolute', left: W * 0.105, top: H * 0.3, width: W * 0.1, height: H * 0.44, transform: [{ translateY: y }] }}
+            resizeMode="contain"
+          />
+        )}
 
         <View style={{ position: 'absolute', left: W * 0.25, width: W * 0.55, top: H * 0.3, height: H * 0.44, justifyContent: 'center' }}>
           <PixelText size={fs} color={INK} style={{ textAlign: 'center', lineHeight: fs * 1.5, textShadowColor: 'transparent' }}>{text}</PixelText>

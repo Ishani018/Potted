@@ -14,6 +14,7 @@ import { projectSize, projectPoint } from '../engine/project';
 import CoinHUD from '../components/CoinHUD';
 import PlantSlot from '../components/PlantSlot';
 import HeldSeedBanner from '../components/HeldSeedBanner';
+import RemedyBar, { useRemedyUse } from '../components/RemedyBar';
 import DraggablePot from '../components/DraggablePot';
 import DraggableHangingPot from '../components/DraggableHangingPot';
 import RoomPets from '../components/RoomPets';
@@ -39,6 +40,7 @@ export default function Room3Screen({ navigation }) {
   const [invOpen, setInvOpen] = useState(false);
   const canDragging = useRef(false);
   const [toast, showToast] = useToast();
+  const tryRemedy = useRemedyUse(showToast);
   const season = getCurrentSeason();
 
   useEffect(() => {
@@ -77,8 +79,9 @@ export default function Room3Screen({ navigation }) {
 
   const handleSlotPress = useCallback((slot, position) => {
     if (canDragging.current) return;
+    if (tryRemedy(slot)) return;   // a remedy is picked up: use it on this plant
     if (slot.flowerKey) setPopup({ slot, position });
-  }, []);
+  }, [tryRemedy]);
 
   // Tap an empty pot: plant the held seed (if it fits), else open the popup.
   const handleEmptyPotPress = useCallback((slotId, slotObj, position) => {
@@ -258,6 +261,7 @@ export default function Room3Screen({ navigation }) {
           onInventory={() => setInvOpen(true)}
           onBook={() => navigation.navigate('FlowerBook')}
         />
+        <RemedyBar sw={sw} sh={sh} />
 
 
         {popup && (

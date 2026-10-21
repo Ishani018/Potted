@@ -60,6 +60,9 @@ export function heldSeedHint(flowerKey, roomTypes) {
 export const PEST_CONFIG = {
   chancePerTick: 0.012,   // ≈ one pest per plant every ~80 min of play
   reward: 3,
+  // true = pests can also be cleared by hand with their little actions (see
+  // PEST_INFO). false = only the herbalist's remedies work.
+  handClearing: true,
   // How often each pest shows up (relative weights).
   weights: { aphid: 30, caterpillar: 25, snail: 20, moth: 15, ladybug: 10 },
 };
@@ -447,6 +450,8 @@ export const INITIAL_PLAYER_STATE = {
   xp: 0,             // total experience — level is derived (see levelInfo)
   customers: null,   // { day, list: [orders] } — today's florist orders (engine/customers)
   customersServed: 0,
+  remedies: { balm: 0, sachet: 0 },  // herbalist remedies in the bag
+  herbalistDay: null,                // day key of the last free daily balm
   bouquetBook: {},   // recipeId → { made, firstAt } — secret bouquet recipes found
   bouquetsSold: 0,
   petGifts: {},      // petKey → day key of the last daily gift
@@ -632,3 +637,42 @@ export const CUSTOMERS = {
 };
 
 export const CUSTOMERS_PER_DAY = 3;
+
+// ── The herbalist & remedies ──────────────────────────────────────────────────
+// A friendly herbalist visits the Home screen. Her remedies can't be bought:
+// she gives one Bug Balm free every day and swaps more for flowers you've grown.
+//   balm    — clears a pest from one plant at once (no coins/XP, unlike by hand)
+//   sachet  — hangs on a plant and keeps pests off it for SACHET_MS
+// Art: assets/herbalist/docbristle.png (400x600), balm.png and sachet.png
+// (256x256), all transparent — see HERBALIST_IMAGES in engine/assets.
+export const HERBALIST = {
+  key: 'docbristle',
+  name: 'Doc Bristle',
+  title: 'HERBALIST',
+  desc: 'A friendly hedgehog herbalist with tiny round spectacles, a leafy satchel and little glass bottles.',
+  look: { body: '#8a6a4a', face: '#f0d9b8', accent: '#5a8a3a' },
+  greetDaily: "Morning! A fresh jar of balm for you, on the house.",
+  greetNone: "Back already? Bring me herbs and I'll mix you something.",
+  thanks: 'Splendid! There you go.',
+};
+
+export const REMEDIES = {
+  balm:   { key: 'balm',   name: 'Bug Balm',     desc: 'Clears the bug from one plant at once.' },
+  sachet: { key: 'sachet', name: 'Scent Sachet', desc: 'Keeps one plant bug-free for a day.' },
+};
+
+export const SACHET_MS = 24 * HOUR;
+
+// What she'll swap for flowers you've harvested.
+export const HERBALIST_TRADES = [
+  { id: 'balm_marigold', give: { marigold: 2 }, get: 'balm',   qty: 1 },
+  { id: 'balm_daisy',    give: { daisy: 3 },    get: 'balm',   qty: 1 },
+  { id: 'sachet_jasmine', give: { jasmine: 1 }, get: 'sachet', qty: 1 },
+  { id: 'sachet_poppy',  give: { poppy: 2 },    get: 'sachet', qty: 1 },
+];
+
+// Whether a plant is currently protected by a sachet.
+export function isShielded(slot, now = Date.now()) {
+  return !!slot?.shieldUntil && slot.shieldUntil > now;
+}
+

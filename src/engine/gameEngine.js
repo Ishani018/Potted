@@ -13,6 +13,7 @@ export function createEmptySlot(slotId, room, type, hasPot = false) {
     wilting: false,
     _budWatered: false,
     pest: null, // pest type (see PEST_INFO) while a pest is on the plant
+    shieldUntil: null, // ms timestamp: a Scent Sachet keeps pests off until then
     hasPot, // true only when explicitly placed by user via PLACE_POT
   };
 }
@@ -28,6 +29,7 @@ export function plantSeed(slot, flowerKey) {
     wilting: false,
     _budWatered: false,
     pest: null,
+    shieldUntil: null,
   };
 }
 
@@ -122,24 +124,28 @@ export function calcHangingPassiveCoins(slots, lastTickTime, now, effByRoom) {
 
 // ─── Pests ────────────────────────────────────────────────────────────────────
 // Growing plants (bud or later, not full bloom) can pick up a pest each tick.
-function canGetPest(slot) {
+function canGetPest(slot, now = Date.now()) {
+  if (slot.shieldUntil && slot.shieldUntil > now) return false; // protected by a sachet
   return !!slot.flowerKey && !slot.pest && slot.stage >= 1 && slot.stage < maxStageFor(slot.type);
 }
 
-function maybeSpawnPest(slot, rand, eff) {
+function maybeSpawnPest(slot, rand, eff, now) {
   const chance = PEST_CONFIG.chancePerTick * (eff?.pestChance ?? 1);
-  if (!canGetPest(slot) || rand() >= chance) return slot;
+  if (!canGetPest(slot, now) || rand() >= chance) return slot;
   return { ...slot, pest: pickPestType(rand) };
 }
 
 // Pests that arrived while the game was closed: each growing plant gets one
 // with probability 1 - (1 - p)^minutes.
-export function spawnPestsOffline(slots, minutes, rand, effByRoom) {
+export function spawnPestsOffline(slots, minutes, rand, effByRoom, now = Date.now()) {
   const updated = {};
   for (const [id, slot] of Object.entries(slots)) {
     const chance = PEST_CONFIG.chancePerTick * (effByRoom?.[slot.room]?.pestChance ?? 1);
-    const p = 1 - Math.pow(1 - chance, minutes);
-    updated[id] = canGetPest(slot) && rand() < p
+    // A sachet covers part of the time away: only count the unprotected minutes.
+    const away = now - minutes * 60000;
+    const covered = slot.shieldUntil ? Math.max(0, Math.min(minutes, (slot.shieldUntil - away) / 60000)) : 0;
+    const p = 1 - Math.pow(1 - chance, Math.max(0, minutes - covered));
+    updated[id] = canGetPest({ ...slot, shieldUntil: null }) && rand() < p
       ? { ...slot, pest: pickPestType(rand) }
       : slot;
   }
@@ -154,7 +160,7 @@ export function tickAllSlots(slots, now, rand, effByRoom) {
   for (const [id, slot] of Object.entries(slots)) {
     const eff = effByRoom?.[slot.room];
     const ticked = tickSlot(slot, now, eff);
-    updated[id] = rand ? maybeSpawnPest(ticked, rand, eff) : ticked;
+    updated[id] = rand ? maybeSpawnPest(ticked, rand, eff, now) : ticked;
   }
   return updated;
 }

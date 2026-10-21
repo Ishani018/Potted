@@ -4,7 +4,7 @@ import { PixelPanel, PixelButton, PixelText, COLORS } from './Pixel';
 import { useLayout } from '../context/LayoutContext';
 import { projectSize } from '../engine/project';
 import { msUntilThirsty, maxStageFor } from '../engine/gameEngine';
-import { POTTED_FLOWERS, HANGING_PLANTS, formatDuration, pestInfo } from '../constants/gameData';
+import { POTTED_FLOWERS, HANGING_PLANTS, formatDuration, pestInfo, PEST_CONFIG, isShielded } from '../constants/gameData';
 
 // Re-render every `ms` so countdowns tick while the popup is open.
 function useNow(ms = 1000) {
@@ -19,7 +19,10 @@ function useNow(ms = 1000) {
 // What the plant needs right now → { text, color }.
 function plantStatus(slot, now) {
   const max = maxStageFor(slot.type);
-  if (slot.pest) return { text: `${pestInfo(slot.pest).name.toUpperCase()}! ${pestInfo(slot.pest).verb}`, color: '#ff9a7a' };
+  if (slot.pest) {
+    const p = pestInfo(slot.pest);
+    return { text: `${p.name.toUpperCase()}! ${PEST_CONFIG.handClearing ? p.verb : 'USE BUG BALM'}`, color: '#ff9a7a' };
+  }
   if (slot.stage >= max) {
     return slot.type === 'potted'
       ? { text: 'FULL BLOOM - READY!', color: COLORS.gold }
@@ -45,7 +48,8 @@ export default function PlantPopup({ slot, position, onHarvest, onRemove, onClos
   // Sit the popup right on the tapped plant: centred over a shelf pot, or just
   // under the hook for a hanging one. Clamped so it never leaves the screen.
   const W = 190;
-  const H = (canHarvest ? 112 : 58) + (hasPlant ? 46 : 0);
+  const shielded = hasPlant && isShielded(slot, now);
+  const H = (canHarvest ? 112 : 58) + (hasPlant ? 46 : 0) + (shielded ? 14 : 0);
   const plantH = projectSize(slot.type === 'potted' ? 120 : 140, sw, sh);
   const left = Math.max(8, Math.min(position.x - W / 2, sw - W - 8));
   const rawTop = slot.type === 'potted' ? position.y - plantH * 0.75 - H : position.y + plantH * 0.35;
@@ -60,6 +64,9 @@ export default function PlantPopup({ slot, position, onHarvest, onRemove, onClos
               <View style={styles.info}>
                 <PixelText size={9} color={COLORS.gold}>{(name ?? '').toUpperCase()}</PixelText>
                 <PixelText size={7} color={status.color} style={{ textAlign: 'center' }}>{status.text}</PixelText>
+                {shielded && (
+                  <PixelText size={6} color="#cfe8a0" style={{ textAlign: 'center' }}>SACHET: BUG-FREE FOR {formatDuration(slot.shieldUntil - now).toUpperCase()}</PixelText>
+                )}
               </View>
             )}
             {canHarvest && <PixelButton label="HARVEST" onPress={onHarvest} />}
