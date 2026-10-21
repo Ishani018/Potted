@@ -8,12 +8,14 @@ import {
 } from '../constants/gameData';
 import BouquetArt from '../components/BouquetArt';
 import BackSign from '../components/BackSign';
+import CareGuide from '../components/CareGuide';
 
-// Flower book — an open two-page journal with two tabs.
+// Flower book — an open two-page journal with three tabs (Flowers, Bouquets, Care).
 // Flowers: every flower (silhouettes until discovered); a page unlocks the first
 // time that flower reaches full bloom (see WATER_PLANT).
 // Bouquets: the secret bouquet recipes; one unlocks the first time it's tied
 // and sold at the market (see SELL_BOUQUET). Locked ones show only a hint.
+// Care: a guide to looking after plants — watering, bugs, remedies (CareGuide).
 
 const PIXEL_FONT = 'PressStart2P';
 
@@ -72,7 +74,9 @@ export default function FlowerBookScreen({ navigation, route }) {
     <View style={styles.root}>
       <BackSign onPress={() => navigation.goBack()} />
 
-      {tab === 'bouquets' ? (
+      {tab === 'care' ? (
+        <CareGuide tabs={<Tabs tab={tab} setTab={setTab} />} />
+      ) : tab === 'bouquets' ? (
         <BouquetPages
           found={bouquetBook}
           selected={selectedRecipe}
@@ -195,7 +199,7 @@ export default function FlowerBookScreen({ navigation, route }) {
 function Tabs({ tab, setTab }) {
   return (
     <View style={styles.tabs}>
-      {[['flowers', 'Flowers'], ['bouquets', 'Bouquets']].map(([key, label]) => (
+      {[['flowers', 'Flowers'], ['bouquets', 'Bouquets'], ['care', 'Care']].map(([key, label]) => (
         <TouchableOpacity key={key} style={[styles.tab, tab === key && styles.tabOn]} onPress={() => setTab(key)}>
           <Text style={[styles.tabTxt, tab === key && styles.tabTxtOn]}>{label}</Text>
         </TouchableOpacity>

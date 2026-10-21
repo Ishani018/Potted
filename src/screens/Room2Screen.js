@@ -92,7 +92,7 @@ export default function Room2Screen({ navigation }) {
   }, [dispatch]);
 
   const handleWater = useCallback((slotId) => {
-    if (slots[slotId]?.pest) { showToast(`${pestInfo(slots[slotId].pest).name} on it! ${pestInfo(slots[slotId].pest).verb.toLowerCase()} first`); return; }
+    if (slots[slotId]?.pest) { showToast(`${pestInfo(slots[slotId].pest).name} on that plant! Clear it first`); return; }
     dispatch({ type: 'WATER_PLANT', slotId });
   }, [dispatch, slots, showToast]);
 

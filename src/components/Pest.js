@@ -1,8 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Animated, Easing, Image, PanResponder, Platform, StyleSheet, View } from 'react-native';
 import { PEST_IMAGES } from '../engine/pestImages';
 import { pestInfo } from '../constants/gameData';
-import { PixelText } from './Pixel';
 
 // A bug on a plant. Each kind is cleared with its own little action:
 //   aphid       RUB   scrub it off by swiping back and forth over it
@@ -42,13 +41,12 @@ export default function Pest({ type, size, cx, cy, onClear, armed = false, inter
   const opacity = useRef(new Animated.Value(1)).current;
   const idle = useRef(new Animated.Value(0)).current;     // 0..1 bobbing
   const prog = useRef(new Animated.Value(0)).current;     // 0..1 progress bar (+ hold lift)
-  const [far, setFar] = useState(false);                   // snail: pulled far enough
 
   const onClearRef = useRef(onClear);
   onClearRef.current = onClear;
   const gate = useRef({ armed, interactive });
   gate.current = { armed, interactive };
-  const st = useRef({ done: false, path: 0, lastDx: 0, lastDy: 0, taps: 0, far: false, hold: null }).current;
+  const st = useRef({ done: false, path: 0, lastDx: 0, lastDy: 0, taps: 0, hold: null }).current;
 
   // Gentle idle motion (moths flutter a bit faster).
   useEffect(() => {
@@ -120,8 +118,6 @@ export default function Pest({ type, size, cx, cy, onClear, armed = false, inter
       } else if (action === 'drag') {
         tx.setValue(g.dx);
         ty.setValue(g.dy);
-        const isFar = Math.hypot(g.dx, g.dy) >= w * DRAG_FAR;
-        if (isFar !== st.far) { st.far = isFar; setFar(isFar); }
       } else if (action === 'hold') {
         if (Math.hypot(g.dx, g.dy) > w * 0.7 && st.hold) cancelHold(); // wandered off it
       }
@@ -139,7 +135,7 @@ export default function Pest({ type, size, cx, cy, onClear, armed = false, inter
         ]).start();
       } else if (action === 'drag') {
         if (moved >= w * DRAG_FAR) finish({ dx: g.dx * 2, dy: g.dy * 2 });
-        else { st.far = false; setFar(false); springBack(); }
+        else springBack();
       } else if (action === 'hold') {
         cancelHold();
       } else if (action === 'catch') {
@@ -174,8 +170,6 @@ export default function Pest({ type, size, cx, cy, onClear, armed = false, inter
   const lift = prog.interpolate({ inputRange: [0, 1], outputRange: [0, action === 'hold' ? -h * 0.3 : 0] });
   const grow = prog.interpolate({ inputRange: [0, 1], outputRange: [1, action === 'hold' ? 1.15 : 1] });
   const showBar = action === 'rub' || action === 'hold' || action === 'catch';
-  const hint = !interactive ? 'NEEDS BALM' : action === 'drag' && far ? 'LET GO!' : info.hint;
-  const hintSize = Math.max(6, Math.round(w * 0.2));
 
   return (
     <Animated.View
@@ -199,15 +193,14 @@ export default function Pest({ type, size, cx, cy, onClear, armed = false, inter
     >
       <Image source={PEST_IMAGES[type] ?? PEST_IMAGES.ladybug} style={{ width: w, height: h }} resizeMode="contain" draggable={false} />
 
-      {/* what to do, and how far along you are */}
-      <View style={[styles.hintWrap, { top: h + 1 }]}>
-        <PixelText size={hintSize} color="#fff">{hint}</PixelText>
-        {showBar && (
+      {/* how far along you are (the how-to lives in the flower book's care guide) */}
+      {showBar && (
+        <View style={[styles.hintWrap, { top: h + 1 }]}>
           <View style={[styles.bar, { width: w * 0.8 }]}>
             <Animated.View style={[styles.fill, { width: prog.interpolate({ inputRange: [0, 1], outputRange: [0, w * 0.8] }) }]} />
           </View>
-        )}
-      </View>
+        </View>
+      )}
     </Animated.View>
   );
 }

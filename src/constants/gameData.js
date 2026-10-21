@@ -72,11 +72,11 @@ export const PEST_CONFIG = {
 //   drag = pull it away from the plant, catch = tap it 3 times as it flutters,
 //   tap = tap to send it off. aspect = sprite height / width.
 export const PEST_INFO = {
-  aphid:       { name: 'Aphids',      action: 'rub',   hint: 'RUB!',   verb: 'RUB THEM OFF',        aspect: 0.753 },
-  caterpillar: { name: 'Caterpillar', action: 'hold',  hint: 'HOLD!',  verb: 'HOLD TO LIFT IT OFF', aspect: 0.597 },
-  snail:       { name: 'Snail',       action: 'drag',  hint: 'DRAG!',  verb: 'DRAG IT AWAY',        aspect: 0.7 },
-  moth:        { name: 'Moth',        action: 'catch', hint: 'CATCH!', verb: 'CATCH IT (3 TAPS)',   aspect: 0.7 },
-  ladybug:     { name: 'Ladybug',     action: 'tap',   hint: 'TAP!',   verb: 'TAP TO SEND IT OFF',  aspect: 0.8 },
+  aphid:       { name: 'Aphids',      action: 'rub',   verb: 'Swipe back and forth over them to rub them off.', aspect: 0.753 },
+  caterpillar: { name: 'Caterpillar', action: 'hold',  verb: 'Press and hold until it is lifted off.',          aspect: 0.597 },
+  snail:       { name: 'Snail',       action: 'drag',  verb: 'Drag it away from the plant, then let go.',       aspect: 0.7 },
+  moth:        { name: 'Moth',        action: 'catch', verb: 'Tap it three times. It flutters off after each tap.', aspect: 0.7 },
+  ladybug:     { name: 'Ladybug',     action: 'tap',   verb: 'Give it one tap to send it off.',                 aspect: 0.8 },
 };
 
 // Unknown types (older saves had 'beetle') behave like the easy tap-to-clear pest.
@@ -262,8 +262,8 @@ export function formatDuration(ms) {
   const d = Math.floor(s / 86400);
   const h = Math.floor((s % 86400) / 3600);
   const m = Math.floor((s % 3600) / 60);
-  if (d > 0) return `${d}d ${h}h`;
-  if (h > 0) return `${h}h ${m}m`;
+  if (d > 0) return h ? `${d}d ${h}h` : `${d}d`;
+  if (h > 0) return m ? `${h}h ${m}m` : `${h}h`;
   if (m > 0) return `${m}m`;
   return `${s}s`;
 }

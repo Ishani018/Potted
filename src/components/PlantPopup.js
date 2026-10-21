@@ -4,7 +4,7 @@ import { PixelPanel, PixelButton, PixelText, COLORS } from './Pixel';
 import { useLayout } from '../context/LayoutContext';
 import { projectSize } from '../engine/project';
 import { msUntilThirsty, maxStageFor } from '../engine/gameEngine';
-import { POTTED_FLOWERS, HANGING_PLANTS, formatDuration, pestInfo, PEST_CONFIG, isShielded } from '../constants/gameData';
+import { POTTED_FLOWERS, HANGING_PLANTS, formatDuration, pestInfo, isShielded } from '../constants/gameData';
 
 // Re-render every `ms` so countdowns tick while the popup is open.
 function useNow(ms = 1000) {
@@ -21,7 +21,7 @@ function plantStatus(slot, now) {
   const max = maxStageFor(slot.type);
   if (slot.pest) {
     const p = pestInfo(slot.pest);
-    return { text: `${p.name.toUpperCase()}! ${PEST_CONFIG.handClearing ? p.verb : 'USE BUG BALM'}`, color: '#ff9a7a' };
+    return { text: `${p.name.toUpperCase()} ON IT!`, color: '#ff9a7a' };
   }
   if (slot.stage >= max) {
     return slot.type === 'potted'
