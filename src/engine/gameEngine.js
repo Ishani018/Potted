@@ -1,4 +1,4 @@
-import { GROWTH_TIMERS, PEST_CONFIG } from '../constants/gameData';
+import { GROWTH_TIMERS, PEST_CONFIG, growthCooldownMs } from '../constants/gameData';
 
 // ─── Slot factory ─────────────────────────────────────────────────────────────
 export function createEmptySlot(slotId, room, type, hasPot = false) {
@@ -37,12 +37,20 @@ export function maxStageFor(type) {
 
 // A plant is thirsty (ready to be watered to the next stage) when it hasn't been
 // watered yet, or the cooldown since the last watering has elapsed — and it isn't
-// already fully grown. slot.cooldown is set when watered (pets can shorten it).
+// already fully grown. slot.cooldown is set when watered (flower's own growth
+// time, shortened by pets); older saves fall back to the flower's default.
 export function isThirsty(slot, now = Date.now()) {
-  if (!slot.flowerKey) return false;
-  if (slot.stage >= maxStageFor(slot.type)) return false;
-  if (slot.lastWatered == null) return true;
-  return now - slot.lastWatered >= (slot.cooldown ?? GROWTH_TIMERS.waterCooldown);
+  return msUntilThirsty(slot, now) === 0;
+}
+
+// Milliseconds until the plant can be watered again: 0 = thirsty now, null =
+// nothing to wait for (empty slot or fully grown).
+export function msUntilThirsty(slot, now = Date.now()) {
+  if (!slot.flowerKey) return null;
+  if (slot.stage >= maxStageFor(slot.type)) return null;
+  if (slot.lastWatered == null) return 0;
+  const cooldown = slot.cooldown ?? growthCooldownMs(slot.flowerKey);
+  return Math.max(0, slot.lastWatered + cooldown - now);
 }
 
 // ─── Watering — advances one stage if thirsty ─────────────────────────────────
@@ -62,7 +70,7 @@ export function waterPlant(slot, eff) {
     ...slot,
     stage: nextStage,
     lastWatered: now,
-    cooldown: Math.round(GROWTH_TIMERS.waterCooldown * (eff?.cooldownMult ?? 1)),
+    cooldown: Math.round(growthCooldownMs(slot.flowerKey) * (eff?.cooldownMult ?? 1)),
     wilting: false,
     _budWatered: slot._budWatered || wasBud,
   };
@@ -84,15 +92,16 @@ export function tickSlot(slot, now, eff) {
 }
 
 // ─── Harvest ──────────────────────────────────────────────────────────────────
-// Harvesting a full-bloom potted flower yields FLOWERS (not coins) — the player
-// trades them for coins at the market. Returns how many flowers were collected
-// (1, or 2 with the bud-watered bonus) and the cleared slot.
+// Harvesting a full-bloom plant yields FLOWERS (not coins) — the player trades
+// them for coins at the market. Potted flowers give 1 (2 with the bud-watered
+// bonus); hanging plants give 1 and stop their passive coin trickle (the pot
+// stays on the hook, empty). Returns how many flowers and the cleared slot.
 export function harvestPlant(slot) {
   const max = maxStageFor(slot.type);
-  if (!slot.flowerKey || slot.stage < max || slot.type !== 'potted') {
+  if (!slot.flowerKey || slot.stage < max) {
     return { flowerKey: null, amount: 0, slot };
   }
-  const amount = slot._budWatered ? 2 : 1; // bud-stage watering = double yield
+  const amount = slot.type === 'potted' && slot._budWatered ? 2 : 1;
   const cleared = createEmptySlot(slot.slotId, slot.room, slot.type, slot.hasPot);
   return { flowerKey: slot.flowerKey, amount, slot: cleared };
 }

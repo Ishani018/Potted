@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { NURSERY_BG, SEED_IMAGES, UI_IMAGES } from '../engine/assets';
-import { POTTED_FLOWERS, HANGING_PLANTS, seedType } from '../constants/gameData';
+import { POTTED_FLOWERS, HANGING_PLANTS, seedType, seedUnlockLevel, playerLevel, FLOWER_GROWTH, formatDuration } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
 import { PixelText, COLORS } from '../components/Pixel';
@@ -42,17 +42,21 @@ export default function NurseryScreen({ navigation }) {
   const [box, setBox] = useState({ w: 0, h: 0 });
   const sw = box.w, sh = box.h;
 
+  const level = playerLevel(state.player);
   const INVENTORY_CAP = 35;
   const invFull = (state.inventory?.length ?? 0) >= INVENTORY_CAP;
 
   const handleBuy = (flowerKey, price, name) => {
+    const need = seedUnlockLevel(flowerKey);
+    if (level < need) { notify({ icon: SEED_IMAGES[flowerKey], title: `${name} is locked`, subtitle: `Reach level ${need} to unlock these seeds. You are level ${level}.` }); return; }
     if (coins < price) { notify({ icon: UI_IMAGES.goldcoins, title: 'Not enough coins', subtitle: `You need ${price - coins} more for ${name}.` }); return; }
     if (invFull) { notify({ icon: UI_IMAGES.inventorybtn, title: 'Inventory full', subtitle: 'Plant some seeds to make room.' }); return; }
     dispatch({ type: 'BUY_SEED', flowerKey, price });
+    const hrs = FLOWER_GROWTH[flowerKey]?.hours;
     notify({
       icon: SEED_IMAGES[flowerKey],
       title: `Bought ${name}!`,
-      subtitle: seedType(flowerKey) === 'hanging' ? 'Grows in a hanging pot.' : 'Grows in a shelf pot.',
+      subtitle: `${seedType(flowerKey) === 'hanging' ? 'Grows in a hanging pot' : 'Grows in a shelf pot'}${hrs ? ` · water every ${formatDuration(hrs * 3600000)}` : ''}.`,
     });
   };
 
@@ -91,6 +95,8 @@ export default function NurseryScreen({ navigation }) {
         const bw = (w / PLOPPER_W) * sw;
         const bh = (h / PLOPPER_H) * sh;
         const affordable = coins >= info.price;
+        const lockedAt = seedUnlockLevel(key);
+        const locked = level < lockedAt;
         return (
           <TouchableOpacity
             key={key}
@@ -100,14 +106,20 @@ export default function NurseryScreen({ navigation }) {
           >
             <Image
               source={SEED_IMAGES[key]}
-              style={{ width: bw, height: bh, opacity: affordable ? 1 : 0.5 }}
+              style={{ width: bw, height: bh, opacity: locked ? 0.3 : affordable ? 1 : 0.5 }}
               resizeMode="contain"
             />
-            {/* Price tag under the bag */}
-            <View style={styles.priceTag}>
-              <Image source={UI_IMAGES.goldcoins} style={styles.priceIcon} resizeMode="contain" />
-              <PixelText size={8} color={affordable ? '#fff' : '#ff8a8a'}>{info.price}</PixelText>
-            </View>
+            {/* Price tag under the bag — or the level it unlocks at */}
+            {locked ? (
+              <View style={styles.priceTag}>
+                <PixelText size={8} color="#cfe8a0">LV {lockedAt}</PixelText>
+              </View>
+            ) : (
+              <View style={styles.priceTag}>
+                <Image source={UI_IMAGES.goldcoins} style={styles.priceIcon} resizeMode="contain" />
+                <PixelText size={8} color={affordable ? '#fff' : '#ff8a8a'}>{info.price}</PixelText>
+              </View>
+            )}
           </TouchableOpacity>
         );
       })}

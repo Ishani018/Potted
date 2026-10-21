@@ -4,6 +4,7 @@ import { useGame } from '../context/GameContext';
 import { POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES, UI_IMAGES, TRADE_IMAGES } from '../engine/assets';
 import {
   FLOWER_BOOK, POTTED_FLOWERS, HANGING_PLANTS, BOUQUET_RECIPES, TRADE_FLOWERS, seedType,
+  FLOWER_GROWTH, formatDuration, seedUnlockLevel,
 } from '../constants/gameData';
 import BouquetArt from '../components/BouquetArt';
 import BackSign from '../components/BackSign';
@@ -133,6 +134,10 @@ export default function FlowerBookScreen({ navigation, route }) {
                 <Text style={styles.blurb}>{entry.blurb}</Text>
                 <Text style={styles.tip}>Tip: {entry.tip}</Text>
                 <View style={styles.stats}>
+                  <Text style={styles.stat}>
+                    Water every {formatDuration((FLOWER_GROWTH[selected]?.hours ?? 3) * 3600000)} · seed to bloom {formatDuration((FLOWER_GROWTH[selected]?.hours ?? 3) * 3600000 * (type === 'hanging' ? 1 : 2))}
+                  </Text>
+                  <Text style={styles.stat}>Unlocks at level {seedUnlockLevel(selected)}</Text>
                   <Text style={styles.stat}>Grown to full bloom: {record.grown}</Text>
                   <Text style={styles.stat}>First bloom: {new Date(record.firstAt).toLocaleDateString()}</Text>
                 </View>

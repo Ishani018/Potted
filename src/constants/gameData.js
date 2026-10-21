@@ -182,6 +182,108 @@ export const GROWTH_TIMERS = {
 
 export const BONUS_COIN_MULTIPLIER = 1.2;
 
+// ── Per-flower growth time ────────────────────────────────────────────────────
+// Hours until a watered plant is thirsty again (and so can be watered to its
+// next stage). Potted flowers need 2 waits (seed→bud→bloom→full = 3 waterings),
+// hanging plants need 1. Slower flowers are also the more valuable ones.
+// A pet's cooldownMult (Koazy etc.) shortens these.
+export const FLOWER_GROWTH = {
+  daisy:          { hours: 1 },
+  snapdragon:     { hours: 1.5 },
+  poppy:          { hours: 2 },
+  marigold:       { hours: 2.5 },
+  peony:          { hours: 3.5 },
+  hydrenga:       { hours: 4.5 },
+  rose:           { hours: 6 },
+  stringofpearls: { hours: 2 },
+  Philodendron:   { hours: 3 },
+  jasmine:        { hours: 4 },
+  petunia:        { hours: 5 },
+  Bougainvillea:  { hours: 6 },
+};
+
+// Water-again cooldown in ms for a flower (falls back to the global default).
+export function growthCooldownMs(flowerKey) {
+  const h = FLOWER_GROWTH[flowerKey]?.hours;
+  return h ? Math.round(h * HOUR) : GROWTH_TIMERS.waterCooldown;
+}
+
+// "1h 12m" / "35m" / "20s"
+export function formatDuration(ms) {
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m`;
+  return `${s}s`;
+}
+
+// ── Player levels ─────────────────────────────────────────────────────────────
+// XP comes from growing and selling. Each level unlocks new seeds and bouquet
+// papers and pays a coin reward. Level is derived from total XP (player.xp).
+export const XP_CONFIG = {
+  water: 3,            // each time a plant is watered to its next stage
+  pest: 2,             // shooing a bug
+  firstBloom: 15,      // a flower's first full bloom (fills its book page)
+  newRecipe: 20,       // discovering a bouquet recipe
+  bouquetDivisor: 3,   // bouquet XP = coins earned / this
+  levelUpCoins: 20,    // reward = this x the new level
+};
+
+// XP needed to go from level n to n+1.
+export function xpToNext(n) {
+  return 40 + 25 * n;
+}
+
+// { level, into, need, progress } for a total XP amount.
+export function levelInfo(totalXp = 0) {
+  let level = 1;
+  let left = Math.max(0, totalXp);
+  while (left >= xpToNext(level)) {
+    left -= xpToNext(level);
+    level += 1;
+  }
+  const need = xpToNext(level);
+  return { level, into: left, need, progress: left / need };
+}
+
+// TEST SWITCH: the level is never below this. Set to 99 to unlock everything
+// while testing. Leave at 1 for the real game.
+export const DEBUG_MIN_LEVEL = 1;
+
+export function playerLevel(player) {
+  return Math.max(levelInfo(player?.xp ?? 0).level, DEBUG_MIN_LEVEL);
+}
+
+// Level at which each seed appears in the nursery.
+export const SEED_UNLOCK_LEVEL = {
+  daisy: 1, stringofpearls: 1,
+  snapdragon: 2, Philodendron: 2,
+  poppy: 3, jasmine: 3,
+  marigold: 4, petunia: 4,
+  peony: 5, Bougainvillea: 5,
+  hydrenga: 6,
+  rose: 7,
+};
+
+export function seedUnlockLevel(flowerKey) {
+  return SEED_UNLOCK_LEVEL[flowerKey] ?? 1;
+}
+
+// Names of everything that unlocks exactly at `level` (for the level-up notice).
+export function unlocksAtLevel(level) {
+  const names = [];
+  for (const [key, lv] of Object.entries(SEED_UNLOCK_LEVEL)) {
+    if (lv === level) names.push(`${POTTED_FLOWERS[key]?.name ?? HANGING_PLANTS[key]?.name ?? key} seeds`);
+  }
+  for (const p of Object.values(BOUQUET_PAPERS)) {
+    if (p.level === level) names.push(`${p.name} paper`);
+  }
+  return names;
+}
+
 // Stages
 // Potted:  0=seed, 1=bud, 2=slight bloom, 3=full bloom (harvest)
 // Hanging: 0=seed, 1=bud, 2=full (harvest)
@@ -297,6 +399,7 @@ export const INITIAL_PLAYER_STATE = {
   petPlacements: {}, // petKey → room number where the owned pet is currently placed
   flowerBook: {},    // flowerKey → { grown, firstAt } — page unlocks on first full bloom
   pestsCleared: 0,
+  xp: 0,             // total experience — level is derived (see levelInfo)
   bouquetBook: {},   // recipeId → { made, firstAt } — secret bouquet recipes found
   bouquetsSold: 0,
   petGifts: {},      // petKey → day key of the last daily gift
@@ -345,6 +448,9 @@ export const BOUQUET_RECIPES = [
   { id: 'summer',     name: 'Summer Breeze',  flowers: ['hydrenga', 'poppy', 'rose'],      multiplier: 1.7, hint: 'Three summer bloomers together.' },
   { id: 'harvest',    name: 'Harvest Moon',   flowers: ['marigold', 'marigold', 'snapdragon'], multiplier: 1.6, hint: 'Golden autumn colours under the moon.' },
   { id: 'wedding',    name: 'Wedding Day',    flowers: ['rose', 'peony', 'hydrenga'],      multiplier: 2.0, hint: 'The grandest flowers for the biggest day.' },
+  { id: 'cascade',    name: 'Garden Cascade', flowers: ['jasmine', 'petunia', 'Bougainvillea'],       multiplier: 1.8, hint: 'Everything that hangs and spills over the edge.' },
+  { id: 'trailing',   name: 'Trailing Vines', flowers: ['stringofpearls', 'Philodendron', 'jasmine'], multiplier: 1.6, hint: 'Long green strands with a sweet white finish.' },
+  { id: 'meadow',     name: 'Wild Meadow',    flowers: ['daisy', 'poppy', 'petunia'],                 multiplier: 1.6, hint: 'A little of the ground, a little of the sky.' },
 ];
 
 // Wrapping papers — each fancier than the last, with a value bonus. A sheet is
@@ -352,9 +458,9 @@ export const BOUQUET_RECIPES = [
 // worth it on a valuable bouquet (e.g. +12 on a 110-coin Sweetheart for 6), a
 // loss on a cheap one (+4 on a 38-coin mixed bunch for 6).
 export const BOUQUET_PAPERS = {
-  plain:   { id: 'plain',   name: 'Kraft',   bonus: 1.0, cost: 0 },
-  layered: { id: 'layered', name: 'Layered', bonus: 1.1, cost: 6 },
-  fancy:   { id: 'fancy',   name: 'Fancy',   bonus: 1.2, cost: 14 },
+  plain:   { id: 'plain',   name: 'Kraft',   bonus: 1.0, cost: 0,  level: 1 },
+  layered: { id: 'layered', name: 'Layered', bonus: 1.1, cost: 6,  level: 3 },
+  fancy:   { id: 'fancy',   name: 'Fancy',   bonus: 1.2, cost: 14, level: 5 },
 };
 
 // Unknown ids fall back to plain kraft (free).

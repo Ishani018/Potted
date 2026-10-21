@@ -21,7 +21,7 @@ export default function NoticeToast({ hidden }) {
   return (
     <View style={styles.wrap} pointerEvents="none">
       <View style={styles.pill}>
-        <Text style={styles.paw}>🐾</Text>
+        <Text style={styles.paw}>{notice.icon ?? '🐾'}</Text>
         <Text style={styles.text}>{notice.text}</Text>
       </View>
     </View>

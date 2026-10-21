@@ -3,7 +3,7 @@ import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { BOUQUET_BG, TRADE_IMAGES, UI_IMAGES } from '../engine/assets';
 import {
-  TRADE_FLOWERS, BOUQUET_SIZE, BOUQUET_RECIPES, BOUQUET_PAPERS, bouquetPaper, evaluateBouquet,
+  TRADE_FLOWERS, BOUQUET_SIZE, BOUQUET_RECIPES, BOUQUET_PAPERS, bouquetPaper, evaluateBouquet, playerLevel,
 } from '../constants/gameData';
 import { globalPetEffects } from '../engine/petEffects';
 import BouquetArt from '../components/BouquetArt';
@@ -33,8 +33,10 @@ export default function BouquetScreen({ navigation }) {
   const [chosenPaper, setPaper] = useState('plain');
   const [notice, notify] = useNotice(3000);
   const coins = state.player.coins;
-  // If you can't afford the chosen sheet any more, fall back to free kraft.
-  const paper = coins >= bouquetPaper(chosenPaper).cost ? chosenPaper : 'plain';
+  const level = playerLevel(state.player);
+  // If the chosen sheet is locked or you can't afford it any more, use free kraft.
+  const usable = (p) => coins >= p.cost && level >= p.level;
+  const paper = usable(bouquetPaper(chosenPaper)) ? chosenPaper : 'plain';
 
   const sw = box.w, sh = box.h;
   const fx = (v) => (v / PLOPPER_W) * sw;
@@ -83,7 +85,8 @@ export default function BouquetScreen({ navigation }) {
           <PixelText size={fs(10, 6)} style={[styles.label, { left: fx(250), width: fx(380), top: fy(452) }]}>CHOOSE PAPER</PixelText>
           {Object.values(BOUQUET_PAPERS).map((p, i) => {
             const on = paper === p.id;
-            const cantAfford = coins < p.cost;
+            const locked = level < p.level;
+            const cantAfford = locked || coins < p.cost;
             const cx = fx(300 + i * 130);
             return (
               <TouchableOpacity
@@ -100,7 +103,9 @@ export default function BouquetScreen({ navigation }) {
                 <Image source={UI_IMAGES[PAPER_IMG[p.id]]} style={{ width: fx(92), height: fy(106) }} resizeMode="contain" />
                 <PixelText size={fs(8, 6)} color="#5a3410" style={styles.dark}>{p.name.toUpperCase()}</PixelText>
                 {/* price of one sheet (used up each time you tie a bouquet) */}
-                {p.cost > 0 ? (
+                {locked ? (
+                  <PixelText size={fs(7, 5)} color="#8a5a24" style={styles.dark}>LV {p.level}</PixelText>
+                ) : p.cost > 0 ? (
                   <View style={styles.sheetCost}>
                     <Image source={UI_IMAGES.goldcoins} style={{ width: fx(14), height: fx(14) }} resizeMode="contain" />
                     <PixelText size={fs(8, 6)} color="#8a5a24" style={styles.dark}>{p.cost}</PixelText>

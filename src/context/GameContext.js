@@ -5,6 +5,7 @@ import {
   INITIAL_PLAYER_STATE, ROOM_UNLOCK_COSTS, CATCH_UP, BOUQUET_SIZE,
   POTTED_FLOWERS, HANGING_PLANTS, PETS, ROOM_NAMES,
   seedType, evaluateBouquet, bouquetPaper,
+  XP_CONFIG, levelInfo, playerLevel, seedUnlockLevel, unlocksAtLevel, TRADE_FLOWERS,
 } from '../constants/gameData';
 import { roomPetEffects, globalPetEffects, pestRewardFor, placedPets, dayKey } from '../engine/petEffects';
 import {
@@ -50,6 +51,29 @@ const initialState = {
   notices: [],           // pet messages ({ id, text }) shown one at a time, not saved
 };
 
+// Award XP; each level gained pays coins and queues a notice naming what it
+// unlocked. Returns the new state.
+function grantXp(state, amount) {
+  if (!(amount > 0)) return state;
+  const oldXp = state.player.xp ?? 0;
+  const before = levelInfo(oldXp).level;
+  const xp = oldXp + Math.round(amount);
+  const after = levelInfo(xp).level;
+  let player = { ...state.player, xp };
+  const notices = [...state.notices];
+  for (let lv = before + 1; lv <= after; lv++) {
+    const reward = XP_CONFIG.levelUpCoins * lv;
+    player = { ...player, coins: player.coins + reward };
+    const unlocks = unlocksAtLevel(lv);
+    notices.push({
+      id: `level_${lv}_${Date.now()}`,
+      icon: '★',
+      text: `Level ${lv}! +${reward} coins${unlocks.length ? ` · Unlocked ${unlocks.join(', ')}` : ''}`,
+    });
+  }
+  return { ...state, player, notices };
+}
+
 // Pets' once-a-day gifts (Storm digs up a seed, Aki fetches coins).
 // Returns { player, inventory, notices } with the gifts applied.
 function givePetGifts(player, inventory, now, rand) {
@@ -91,7 +115,7 @@ function buildAwaySummary(before, after, awayMs, coins) {
   for (const slot of Object.values(after)) {
     if (!slot.flowerKey) continue;
     const r = (rooms[slot.room] ??= { ready: 0, thirsty: 0, wilting: 0, pests: 0 });
-    if (slot.type === 'potted' && slot.stage >= maxStageFor('potted')) r.ready++;
+    if (slot.stage >= maxStageFor(slot.type)) r.ready++;
     else if (slot.pest) r.pests++;
     else if (slot.wilting) r.wilting++;
     else if (isThirsty(slot)) r.thirsty++;
@@ -184,6 +208,7 @@ function reducer(state, action) {
     // action: { flowerKey, price }
     case 'BUY_SEED': {
       const { flowerKey, price = 0 } = action;
+      if (playerLevel(state.player) < seedUnlockLevel(flowerKey)) return state; // not unlocked yet
       if (state.player.coins < price) return state;          // can't afford
       if (state.inventory.length >= INVENTORY_CAP) return state; // inventory full
       const id = `inv_${Date.now()}_${Math.random().toString(36).slice(2)}`;
@@ -241,6 +266,7 @@ function reducer(state, action) {
       // First time reaching full bloom fills that flower's page in the book.
       const max = maxStageFor(slot.type);
       let player = state.player;
+      const firstBloom = watered.stage === max && slot.stage < max && !player.flowerBook?.[slot.flowerKey];
       if (watered.stage === max && slot.stage < max) {
         const book = { ...(player.flowerBook ?? {}) };
         const prev = book[slot.flowerKey];
@@ -250,7 +276,12 @@ function reducer(state, action) {
         };
         player = { ...player, flowerBook: book };
       }
-      return { ...state, player, slots: { ...state.slots, [slotId]: watered } };
+      let next = { ...state, player, slots: { ...state.slots, [slotId]: watered } };
+      if (watered.stage > slot.stage) {
+        // Growing a stage earns XP; the first full bloom of a flower earns extra.
+        next = grantXp(next, XP_CONFIG.water + (firstBloom ? XP_CONFIG.firstBloom : 0));
+      }
+      return next;
     }
 
     // Tap a pest off a plant → it can grow again, and you get a small reward.
@@ -258,7 +289,7 @@ function reducer(state, action) {
       const { slotId } = action;
       const slot = state.slots[slotId];
       if (!slot?.pest) return state;
-      return {
+      return grantXp({
         ...state,
         slots: { ...state.slots, [slotId]: { ...slot, pest: null } },
         player: {
@@ -266,7 +297,7 @@ function reducer(state, action) {
           coins: state.player.coins + pestRewardFor(state.player, slot.room),
           pestsCleared: (state.player.pestsCleared ?? 0) + 1,
         },
-      };
+      }, XP_CONFIG.pest);
     }
 
     case 'HARVEST_PLANT': {
@@ -283,7 +314,7 @@ function reducer(state, action) {
       const harvested = { ...(state.player.harvestedFlowers ?? {}) };
       harvested[flowerKey] = (harvested[flowerKey] ?? 0) + amount;
       const luckyPet = lucky && placedPets(state.player).find((p) => p.room === slot.room && p.effect.room?.harvestLuck);
-      return {
+      return grantXp({
         ...state,
         notices: lucky
           ? [...state.notices, { id: `harvest_${Date.now()}`, text: `${PETS[luckyPet?.key]?.name ?? 'Your pet'} found an extra flower!` }]
@@ -294,7 +325,7 @@ function reducer(state, action) {
           harvestedFlowers: harvested,
           harvestCount: (state.player.harvestCount ?? 0) + 1,
         },
-      };
+      }, TRADE_FLOWERS[flowerKey]?.base ?? 10); // XP = the flower's base value
     }
 
     // Trade harvested flowers for coins at the market.
@@ -323,6 +354,7 @@ function reducer(state, action) {
       const { flowers, paper = 'plain' } = action;
       if (!Array.isArray(flowers) || flowers.length !== BOUQUET_SIZE) return state;
       if (state.player.coins < bouquetPaper(paper).cost) return state; // can't afford the paper
+      if (playerLevel(state.player) < bouquetPaper(paper).level) return state; // paper not unlocked yet
       const harvested = { ...(state.player.harvestedFlowers ?? {}) };
       for (const k of flowers) {
         if (!(harvested[k] > 0)) return state; // don't have enough of this flower
@@ -335,7 +367,8 @@ function reducer(state, action) {
         const prev = bouquetBook[recipe.id];
         bouquetBook[recipe.id] = { made: (prev?.made ?? 0) + 1, firstAt: prev?.firstAt ?? Date.now() };
       }
-      return {
+      const newRecipe = recipe && !state.player.bouquetBook?.[recipe.id];
+      return grantXp({
         ...state,
         player: {
           ...state.player,
@@ -344,7 +377,7 @@ function reducer(state, action) {
           bouquetBook,
           bouquetsSold: (state.player.bouquetsSold ?? 0) + 1,
         },
-      };
+      }, Math.max(0, net) / XP_CONFIG.bouquetDivisor + (newRecipe ? XP_CONFIG.newRecipe : 0));
     }
 
     case 'REMOVE_PLANT': {
