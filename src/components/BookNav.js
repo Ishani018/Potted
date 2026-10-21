@@ -14,6 +14,7 @@ export const BOOK_PAGES = [
   { key: 'care', title: 'Care', spread: 0 },
   { key: 'care', title: 'Care', spread: 1 },
   { key: 'care', title: 'Care', spread: 2 },
+  { key: 'care', title: 'Care', spread: 3 },
   { key: 'customers', title: 'Customers' },
   { key: 'pets', title: 'Pets' },
   { key: 'paintings', title: 'Paintings' },

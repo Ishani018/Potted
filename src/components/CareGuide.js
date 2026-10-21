@@ -1,18 +1,20 @@
 import React from 'react';
 import { View, Text, Image, ScrollView, StyleSheet, Platform } from 'react-native';
-import { POTTED_PLANT_IMAGES, TRADE_IMAGES, PET_IMAGES } from '../engine/assets';
+import { POTTED_PLANT_IMAGES, TRADE_IMAGES, PET_IMAGES, PETFOOD_IMAGES } from '../engine/assets';
 import { PEST_IMAGES } from '../engine/pestImages';
 import {
   PEST_INFO, PEST_CONFIG, FLOWER_GROWTH, GROWTH_TIMERS, HERBALIST, HERBALIST_TRADES, REMEDIES,
   SCENT_SHIELD, PETS, TRADE_FLOWERS, SACHET_MS, formatDuration,
+  PET_FOOD, FED_BOOST, FED_MAX_HOURS, STRAY_MS, STRAY_MAX,
 } from '../constants/gameData';
 import RemedyIcon from './RemedyIcon';
 import BookFrame from './BookFrame';
 
-// The flower book's care chapter: how to look after your plants, over three spreads.
+// The flower book's care chapter: how to look after your plants and pets, over four spreads.
 //   1. Watering  |  Bugs (and how to clear each kind)
 //   2. Wilting & harvesting  |  Granny Mae's remedies and swaps
 //   3. Using a remedy  |  Keeping bugs away (scented flowers, pets)
+//   4. Feeding your pets  |  The Foster Center
 // All numbers come from the game data, so the guide stays right when they change.
 const PAPER = '#f3e3c0';
 const INK = '#4a2a10';
@@ -190,6 +192,47 @@ function UsingRemedies() {
   );
 }
 
+// ── Spread 4 ──────────────────────────────────────────────────────────────────
+function Feeding() {
+  const byKey = (k) => PET_FOOD.find((f) => f.key === k);
+  const examples = ['biscuits', 'dogfood', 'seniorcare'].map(byKey);
+  return (
+    <>
+      <Block title="Feeding your pets">
+        <P>Pets work fine when they are hungry, but a fed pet's perk is {FED_BOOST}x as strong.</P>
+        <P>Buy food in the pet shop's food aisle (the button at the bottom right), then pick who eats it.</P>
+        {examples.map((f) => (
+          <View key={f.key} style={styles.itemRow}>
+            <Image source={PETFOOD_IMAGES[f.key]} style={styles.foodImg} resizeMode="contain" />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.bugName}>{f.name}</Text>
+              <Text style={styles.small}>{f.price} coins keeps a pet fed for {f.hours}h</Text>
+            </View>
+          </View>
+        ))}
+      </Block>
+      <Block title="Good to know">
+        <P>Food stacks up, to at most {FED_MAX_HOURS}h. Litter and puppy pads look after every cat or every dog at once.</P>
+      </Block>
+    </>
+  );
+}
+
+function FosterCenter() {
+  return (
+    <>
+      <Block title="The Foster Center">
+        <P>Customers find strays and bring them to the Foster Center, the back room of the pet shop.</P>
+        <P>A new one turns up about every {STRAY_MS / 3600000} hours. Up to {STRAY_MAX} wait at once, so adopting one makes room for the next.</P>
+      </Block>
+      <Block title="Adopting">
+        <P>Tap an animal to read where it was found and what it can do. Older animals cost less and have calm, steady perks.</P>
+        <P>Once adopted, a pet lives in your rooms like any other, and you can rename it in the Pets pages. Its finder is written on its card.</P>
+      </Block>
+    </>
+  );
+}
+
 // Short versions of the pet perks for the guide (the full text is on each pet's card).
 const PET_SHORT = {
   george: 'Half as many bugs in its room.',
@@ -202,6 +245,7 @@ const SPREADS = [
   { left: Watering, right: Bugs },
   { left: WiltingHarvest, right: Remedies },
   { left: UsingRemedies, right: KeepingAway },
+  { left: Feeding, right: FosterCenter },
 ];
 
 export default function CareGuide({ tabs, spread = 0 }) {
@@ -249,5 +293,6 @@ const styles = StyleSheet.create({
 
   itemRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },
   flowerImg: { width: 24, height: 24 },
+  foodImg: { width: 30, height: 34 },
 
 });
