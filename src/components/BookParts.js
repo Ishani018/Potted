@@ -87,7 +87,6 @@ export const bookStyles = StyleSheet.create({
 const s = StyleSheet.create({
   tabs: { marginBottom: 4 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  rule: { flex: 1, height: 1, backgroundColor: 'rgba(122,62,26,0.45)' },
   titleTxt: { fontFamily: HEAD, fontSize: 19, color: '#7a3e1a', letterSpacing: 0.5 },
   leaf: { width: 14, height: 14 },
 });

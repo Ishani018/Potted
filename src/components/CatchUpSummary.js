@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
   sub: { fontFamily: BODY, color: '#8a6a40', fontSize: 15, marginBottom: 6 },
   row: {
     alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 8,
-    borderBottomWidth: 1, borderBottomColor: 'rgba(160,120,60,0.4)', paddingVertical: 3,
+    paddingVertical: 4,
   },
   room: { fontFamily: HEAD, color: '#4a2a10', fontSize: 15, width: 76 },
   line: { flex: 1, fontFamily: BODY, color: '#5a3a1a', fontSize: 13.5, lineHeight: 15 },

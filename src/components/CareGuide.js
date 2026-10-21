@@ -318,10 +318,10 @@ const styles = StyleSheet.create({
   stageImg: { width: 36, height: 42 },
   arrow: { position: 'absolute', right: -4, top: 16, color: SOFT, fontFamily: BODY, fontSize: 18 },
 
-  // plain entries with a hairline between them, no boxes
+  // plain entries, no boxes or lines
   bugRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    paddingVertical: 2, marginBottom: 2, borderBottomWidth: 1, borderBottomColor: 'rgba(160,120,60,0.35)',
+    paddingVertical: 3, marginBottom: 1,
   },
   bugImgBox: { width: 54, alignItems: 'center', justifyContent: 'center' },
   bugName: { fontFamily: HEAD, color: INK, fontSize: 15, lineHeight: 16 },

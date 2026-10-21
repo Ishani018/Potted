@@ -125,7 +125,7 @@ function ContentsPages({ found, bouquetsFound }) {
             <TouchableOpacity key={c.key} onPress={() => goTo(c.page)} activeOpacity={0.6} style={styles.contentsRow}>
               <View style={styles.contentsIcon}>{chapterIcon(c.key)}</View>
               <Text style={styles.contentsName}>{c.title}</Text>
-              <View style={styles.leader} />
+              <View style={{ flex: 1 }} />
               <Text style={styles.contentsCount}>{counts[c.key] ?? ''}</Text>
               <Text style={styles.contentsPage}>{c.page + 1}</Text>
             </TouchableOpacity>
@@ -358,7 +358,6 @@ const styles = StyleSheet.create({
   contentsRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 3 },
   contentsIcon: { width: 34, alignItems: 'center', marginRight: 6 },
   contentsName: { fontFamily: HEAD, fontSize: 21, color: INK },
-  leader: { flex: 1, marginHorizontal: 6, marginBottom: 4, borderBottomWidth: 2, borderStyle: 'dotted', borderColor: 'rgba(122,62,26,0.4)' },
   contentsCount: { fontFamily: BODY, fontSize: 13, color: SOFT, marginRight: 8, marginBottom: 1 },
   contentsPage: { fontFamily: HEAD, fontSize: 18, color: '#7a3e1a', width: 20, textAlign: 'right' },
   root: { flex: 1, backgroundColor: '#2a1608', alignItems: 'center', justifyContent: 'center' },
@@ -406,7 +405,7 @@ const styles = StyleSheet.create({
   stageLabel: { fontFamily: BODY, color: '#8a6a40', fontSize: 12, marginTop: 1 },
   blurb: { fontFamily: BODY, color: INK, fontSize: 13.5, textAlign: 'center', marginBottom: 2, lineHeight: 14.5 },
   tip: { fontFamily: BODY, color: '#5a7a2a', fontSize: 12.5, textAlign: 'center', marginBottom: 2, lineHeight: 14 },
-  stats: { borderTopWidth: 1, borderTopColor: '#c9a86a', paddingTop: 4, alignSelf: 'stretch', alignItems: 'center' },
+  stats: { paddingTop: 4, alignSelf: 'stretch', alignItems: 'center' },
   stat: { fontFamily: BODY, color: '#8a6a40', fontSize: 13 },
 
   lockedHint: { fontFamily: BODY, color: '#8a6a40', fontSize: 14, textAlign: 'center' },
