@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Image, Pressable, TouchableOpacity, Platform, StyleSheet } from 'react-native';
+import { View, Image, Pressable, TouchableOpacity, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { PETFOOD_BG, PETFOOD_IMAGES, PET_IMAGES } from '../engine/assets';
 import {
@@ -10,31 +10,43 @@ import ScreenHud from '../components/ScreenHud';
 import InventoryOverlay from '../components/InventoryOverlay';
 import { PixelText, PixelPanel, PixelButton, COLORS } from '../components/Pixel';
 
-// The pet food aisle: a chilled cabinet with three shelves (aisle.png, 1677×938,
-// stretched to the screen like the pet shop). Every product sits on its shelf and
-// opens a small card: pick a pet and it eats right away; litter and pads look
-// after every pet of that kind at once.
-const BG_W = 1677;
-const BG_H = 938;
-const SHELF_BASE = [402, 522, 650];         // y of each shelf surface, bg px
-const COL_X = [540, 720, 900, 1080, 1260, 1440];
-// How tall each product stands on the shelf, bg px, so bags tower over tins like real stock
-const SHELF_H = {
-  dogfood: 100, catfood: 100, puppyfood: 98, kittenfood: 98, grainfree: 100, seniorcare: 100,
-  wetcat: 58, wetdog: 58, biscuits: 72, treats: 72, dental: 82, training: 82,
-  catlitter: 100, clumping: 98, puppypads: 84, wipes: 56, deodoriser: 96, shampoo: 90,
-};
-const MAX_W = 150;
-
-// width / height of each cut-out
-const ASPECT = {
-  dogfood: 127 / 200, catfood: 126 / 200, puppyfood: 126 / 200, kittenfood: 125 / 200, grainfree: 126 / 200, seniorcare: 132 / 200,
-  wetcat: 1, wetdog: 200 / 194, biscuits: 156 / 200, treats: 160 / 200, dental: 148 / 200, training: 146 / 200,
-  catlitter: 131 / 200, clumping: 142 / 200, puppypads: 154 / 200, wipes: 200 / 131, deodoriser: 80 / 200, shampoo: 86 / 200,
-};
-
-// back-row copies are a little darker, as if further in
-const DIM = Platform.OS === 'web' ? { filter: 'brightness(0.82) saturate(0.9)' } : { opacity: 0.8 };
+// The pet food aisle: the stocked fridge is painted into aisle.png (1676×939,
+// stretched to the screen like the pet shop). Invisible hotspots sit over each
+// product; hovering one outlines it, tapping opens a small card: pick a pet and it
+// eats right away; litter and pads look after every pet of that kind at once.
+const BG_W = 1676;
+const BG_H = 939;
+// [item, x0, y0, x1, y1] in aisle.png pixels. Where the art shows the same product
+// in several places, each one opens the same item.
+const SPOTS = [
+  ['dogfood', 452, 296, 566, 440],
+  ['catfood', 580, 296, 690, 440],
+  ['puppyfood', 700, 296, 812, 440],
+  ['kittenfood', 826, 296, 940, 440],
+  ['grainfree', 953, 296, 1068, 440],
+  ['seniorcare', 1080, 296, 1198, 440],
+  ['wetcat', 1225, 330, 1375, 438],
+  ['wetdog', 1378, 330, 1457, 438],
+  ['treats', 1470, 314, 1562, 438],
+  ['biscuits', 465, 466, 575, 596],
+  ['treats', 585, 466, 695, 596],
+  ['training', 725, 464, 832, 598],
+  ['dental', 845, 464, 952, 598],
+  ['catlitter', 975, 462, 1105, 598],
+  ['puppypads', 1112, 462, 1245, 598],
+  ['deodoriser', 1315, 455, 1387, 598],
+  ['shampoo', 1412, 455, 1488, 598],
+  ['wetdog', 455, 618, 537, 722],
+  ['wetcat', 538, 618, 620, 722],
+  ['wetcat', 624, 618, 706, 722],
+  ['wipes', 714, 626, 946, 722],
+  ['catfood', 965, 618, 1065, 725],
+  ['kittenfood', 1070, 615, 1165, 725],
+  ['grainfree', 1168, 618, 1265, 725],
+  ['biscuits', 1272, 622, 1370, 724],
+  ['biscuits', 1372, 622, 1468, 724],
+  ['biscuits', 1470, 622, 1562, 724],
+];
 
 const KIND_LABEL = { dog: 'dogs', cat: 'cats', any: 'any pet' };
 const SINGULAR = { dog: 'dog', cat: 'cat', any: 'pet' };
@@ -134,63 +146,29 @@ export default function PetFoodScreen({ navigation }) {
     <View style={styles.root} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
       <Image source={PETFOOD_BG} style={styles.bg} resizeMode="stretch" />
 
-      {sw > 0 && PET_FOOD.map((item) => {
-        const ar = ASPECT[item.key];
-        let h = SHELF_H[item.key];
-        if (h * ar > MAX_W) h = MAX_W / ar;
-        const w = h * ar;
-        const pw = (w / BG_W) * sw, ph = (h / BG_H) * sh;
-        const cx = (COL_X[item.col] / BG_W) * sw;
-        const base = ((SHELF_BASE[item.row] + 3) / BG_H) * sh;       // sits a touch into the shelf
-        const on = hovered === item.key;
-        const back = { w: pw * 0.92, h: ph * 0.92 };
-        const gap = Math.max(pw * 0.38, (30 / BG_W) * sw); // two facings side by side
-        const facing = (dx) => {
-          const left = cx + dx - pw / 2;
-          return (
-            <React.Fragment key={dx}>
-              {/* soft shadow where it stands */}
-              <View pointerEvents="none" style={{ position: 'absolute', zIndex: 4, left: left - pw * 0.06, top: base - sh * 0.006, width: pw * 1.12, height: Math.max(4, sh * 0.016), borderRadius: 50, backgroundColor: 'rgba(30,50,70,0.3)' }} />
-              <Pressable
-                style={{ position: 'absolute', left, top: base - ph, width: pw, height: ph, zIndex: on ? 40 : dx < 0 ? 5 : 6, transform: [{ translateY: on ? -3 : 0 }] }}
-                onHoverIn={() => setHovered(item.key)}
-                onHoverOut={() => setHovered((k) => (k === item.key ? null : k))}
-                onPress={() => setPicked(item)}
-              >
-                <Image source={PETFOOD_IMAGES[item.key]} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
-                {on && dx < 0 && (
-                  <View style={[styles.tag, { left: -50, right: -50 + gap * 2 }]} pointerEvents="none">
-                    <PixelText size={8}>{item.name.toUpperCase()}</PixelText>
-                    <PixelText size={7} color={COLORS.gold}>{`${item.price} COINS`}</PixelText>
-                  </View>
-                )}
-              </Pressable>
-            </React.Fragment>
-          );
-        };
+      {sw > 0 && SPOTS.map(([key, x0, y0, x1, y1], i) => {
+        const item = PET_FOOD.find((f) => f.key === key);
+        const on = hovered === i;
         return (
-          <React.Fragment key={item.key}>
-            {/* one more behind, a little darker and higher, so the shelf looks stocked */}
-            <Image
-              source={PETFOOD_IMAGES[item.key]}
-              pointerEvents="none"
-              style={[{ position: 'absolute', zIndex: 3, left: cx - back.w / 2, top: base - back.h - sh * 0.012, width: back.w, height: back.h }, DIM]}
-              resizeMode="contain"
-            />
-            {facing(-gap)}
-            {facing(gap)}
-          </React.Fragment>
+          <Pressable
+            key={i}
+            style={[styles.spot, {
+              left: (x0 / BG_W) * sw, top: (y0 / BG_H) * sh, width: ((x1 - x0) / BG_W) * sw, height: ((y1 - y0) / BG_H) * sh,
+              zIndex: on ? 40 : 5,
+            }, on && styles.spotOn]}
+            onHoverIn={() => setHovered(i)}
+            onHoverOut={() => setHovered((h) => (h === i ? null : h))}
+            onPress={() => setPicked(item)}
+          >
+            {on && (
+              <View style={styles.tag} pointerEvents="none">
+                <PixelText size={8}>{item.name.toUpperCase()}</PixelText>
+                <PixelText size={7} color={COLORS.gold}>{`${item.price} COINS`}</PixelText>
+              </View>
+            )}
+          </Pressable>
         );
       })}
-
-      {/* a faint glass glare across the cabinet, over the stock */}
-      {sw > 0 && (
-        <View pointerEvents="none" style={{ position: 'absolute', zIndex: 20, left: (425 / BG_W) * sw, top: (285 / BG_H) * sh, width: (1150 / BG_W) * sw, height: (380 / BG_H) * sh, overflow: 'hidden' }}>
-          <View style={[styles.glare, { left: '12%', width: '7%' }]} />
-          <View style={[styles.glare, { left: '22%', width: '2.5%', opacity: 0.7 }]} />
-          <View style={[styles.glare, { left: '68%', width: '5%', opacity: 0.6 }]} />
-        </View>
-      )}
 
       <View style={styles.back}>
         <PixelButton label="< PET SHOP" tone="wood" size={8} onPress={() => navigation.navigate('PetShop')} />
@@ -207,7 +185,8 @@ export default function PetFoodScreen({ navigation }) {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#1a1200' },
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
-  glare: { position: 'absolute', top: '-10%', height: '130%', backgroundColor: 'rgba(255,255,255,0.10)', transform: [{ skewX: '-14deg' }] },
+  spot: { position: 'absolute', borderRadius: 6 },
+  spotOn: { borderWidth: 2, borderColor: 'rgba(255,255,255,0.85)', backgroundColor: 'rgba(255,255,255,0.12)' },
   tag: { position: 'absolute', bottom: '100%', left: -50, right: -50, alignItems: 'center', gap: 2, marginBottom: 2 },
   back: { position: 'absolute', right: 16, bottom: 12, zIndex: 30 },
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center', zIndex: 200 },

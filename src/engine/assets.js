@@ -240,7 +240,6 @@ export const PETFOOD_IMAGES = {
   dental: require('../../assets/petfood/dental.png'),
   training: require('../../assets/petfood/training.png'),
   catlitter: require('../../assets/petfood/catlitter.png'),
-  clumping: require('../../assets/petfood/clumping.png'),
   puppypads: require('../../assets/petfood/puppypads.png'),
   wipes: require('../../assets/petfood/wipes.png'),
   deodoriser: require('../../assets/petfood/deodoriser.png'),
