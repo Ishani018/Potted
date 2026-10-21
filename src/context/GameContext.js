@@ -95,7 +95,7 @@ function completeOrder(state, order, message) {
       ...state.player,
       customers: { ...state.player.customers, list },
       customersServed: (state.player.customersServed ?? 0) + 1,
-      // the customers page in the flower book fills in as you serve people
+      // the customers page in the garden journal fills in as you serve people
       customerBook: {
         ...(state.player.customerBook ?? {}),
         [order.customer]: { served: (met?.served ?? 0) + 1, firstAt: met?.firstAt ?? Date.now() },

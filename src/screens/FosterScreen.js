@@ -47,7 +47,7 @@ function StrayCard({ stray, onClose }) {
             <View style={styles.doneRow}>
               <Image source={BOOK_STAMP} style={styles.stamp} resizeMode="contain" />
               <PixelText size={8} color="#3f7a2e" style={[dark, { flex: 1 }]}>
-                {`${def.name} is yours! Rename or move them in the flower book.`}
+                {`${def.name} is yours! Rename or move them in the garden journal.`}
               </PixelText>
             </View>
           ) : (

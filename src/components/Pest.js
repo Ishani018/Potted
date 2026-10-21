@@ -193,7 +193,7 @@ export default function Pest({ type, size, cx, cy, onClear, armed = false, inter
     >
       <Image source={PEST_IMAGES[type] ?? PEST_IMAGES.ladybug} style={{ width: w, height: h }} resizeMode="contain" draggable={false} />
 
-      {/* how far along you are (the how-to lives in the flower book's care guide) */}
+      {/* how far along you are (the how-to lives in the garden journal's care guide) */}
       {showBar && (
         <View style={[styles.hintWrap, { top: h + 1 }]}>
           <View style={[styles.bar, { width: w * 0.8 }]}>

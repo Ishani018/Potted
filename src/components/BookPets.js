@@ -10,7 +10,7 @@ import BookFrame from './BookFrame';
 import TileFrame from './TileFrame';
 import { BookTabs, BookButton, bookStyles as b, INK, PIXEL_FONT, BODY, HEAD } from './BookParts';
 
-// Flower book → Pets. A portrait card for every pet. Pets you've adopted are in
+// Garden journal → Pets. A portrait card for every pet. Pets you've adopted are in
 // colour; the rest are silhouettes. The card shows their perk and (for your pets)
 // lets you choose where they live and give them a new name. Adopting still
 // happens at the pet shop.

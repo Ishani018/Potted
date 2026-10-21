@@ -8,7 +8,7 @@ import BookFrame from './BookFrame';
 import TileFrame from './TileFrame';
 import { BookTabs, bookStyles as b, INK, BODY } from './BookParts';
 
-// Flower book → Customers. A portrait card for everyone who visits the florist.
+// Garden journal → Customers. A portrait card for everyone who visits the florist.
 // A card fills in the first time you serve that customer; until then it's a
 // silhouette. Shows what they like, how often you've served them, and today's visit.
 const KEYS = Object.keys(CUSTOMERS);

@@ -7,7 +7,7 @@ import BookFrame from './BookFrame';
 import TileFrame from './TileFrame';
 import { BookTabs, BookButton, bookStyles as b } from './BookParts';
 
-// Flower book → Paintings. Every painting at the gallery; the ones you own are in
+// Garden journal → Paintings. Every painting at the gallery; the ones you own are in
 // colour. Pick one to hang it in the Balcony's photo frame (or take it down).
 // Buying still happens at the gallery.
 const KEYS = Object.keys(PAINTINGS);

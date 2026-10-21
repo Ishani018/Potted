@@ -7,7 +7,7 @@ import { PixelPanel, PixelButton, PixelText, COLORS } from '../components/Pixel'
 import BackSign from '../components/BackSign';
 
 // Settings: sound and the basics. Everything about your pets, paintings and
-// plants lives in the flower book now.
+// plants lives in the garden journal now.
 const CONFIRM_MS = 4000;   // how long "tap again to erase" stays armed
 const STEPS = 10;          // volume bar segments
 

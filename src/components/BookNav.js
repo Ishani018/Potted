@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, PanResponder } from 'react-native';
 
-// Page-turning for the flower book. The book is a row of spreads; you flip with
+// Page-turning for the garden journal. The book is a row of spreads; you flip with
 // the arrows under the left page, by swiping across the book, or from the
 // contents page. A flip squashes the turning page towards the spine, swaps the
 // spread at the edge-on moment, and opens the new one out again.

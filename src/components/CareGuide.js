@@ -11,7 +11,7 @@ import RemedyIcon from './RemedyIcon';
 import HerbalistSprite from './HerbalistSprite';
 import BookFrame from './BookFrame';
 
-// The flower book's care chapter: how to look after your plants and pets, over four spreads.
+// The garden journal's care chapter: how to look after your plants and pets, over four spreads.
 //   1. Watering  |  Bugs (and how to clear each kind)
 //   2. Wilting & harvesting  |  Granny Mae's remedies and swaps
 //   3. Using a remedy  |  Keeping bugs away (scented flowers, pets)

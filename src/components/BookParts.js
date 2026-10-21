@@ -5,7 +5,7 @@ import { PixelButton } from './Pixel';
 import { BOOK_BANNER } from '../engine/assets';
 import { useBook } from './BookNav';
 
-// Shared pieces for the flower book's pages.
+// Shared pieces for the garden journal's pages.
 // Type: headings, names, tabs and buttons use the game's pixel font; everything
 // you read (descriptions, notes, stats) is set in a handwritten face, Patrick Hand.
 export const INK = '#4a2a10';

@@ -19,7 +19,7 @@ import TileFrame from '../components/TileFrame';
 import AdventureResult from '../components/AdventureResult';
 import { BookProvider, useBook, CHAPTERS } from '../components/BookNav';
 
-// Flower book — an open journal you turn page by page (arrows, swipe, or the
+// Garden journal — an open journal you turn page by page (arrows, swipe, or the
 // contents page): Flowers, Bouquets, Care (3 spreads), Customers, Pets, Paintings.
 // Flowers: every flower (silhouettes until discovered); a page unlocks the first
 // time that flower reaches full bloom (see WATER_PLANT).
@@ -107,8 +107,9 @@ function ContentsPages({ found, bouquetsFound }) {
       left={(
         <View style={styles.coverPage}>
           <Text style={styles.coverSmall}>The</Text>
-          <Text style={styles.coverTitle}>Flower Book</Text>
-          <Text style={styles.coverSub}>a gardener's journal</Text>
+          <Text style={styles.coverTitle}>Garden</Text>
+          <Text style={styles.coverTitle}>Journal</Text>
+          <Text style={styles.coverSub}>all about your nursery</Text>
           <Image source={BOOK_DIVIDER} style={styles.coverDivider} resizeMode="contain" />
           <View style={styles.coverArtRow}>
             <Image source={PET_IMAGES.george} style={styles.coverPet} resizeMode="contain" />
@@ -345,7 +346,7 @@ const PAPER = '#f3e3c0';
 const styles = StyleSheet.create({
   coverPage: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   coverSmall: { fontFamily: HEAD, fontSize: 18, color: SOFT, marginBottom: 0 },
-  coverTitle: { fontFamily: HEAD, fontSize: 40, color: '#7a3e1a', lineHeight: 44 },
+  coverTitle: { fontFamily: HEAD, fontSize: 36, color: '#7a3e1a', lineHeight: 38 },
   coverRule: { flexDirection: 'row', alignItems: 'center', gap: 6, marginVertical: 4 },
   coverDivider: { width: 200, height: 20, marginTop: 4 },
   coverSub: { fontFamily: BODY, fontSize: 16, color: INK, marginBottom: 8 },

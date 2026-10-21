@@ -168,7 +168,7 @@ export const UI_IMAGES = {
   cancelbutton: require('../../assets/ui_comps/cancelbutton.png'),
   trashclosed:  require('../../assets/ui_comps/trashclosed.png'),
   trashopen:    require('../../assets/ui_comps/trashopen.png'),
-  // Flower book + bouquet wrappers
+  // Garden journal + bouquet wrappers
   // Settings screen art
   // Pet card art
   pcCard: require('../../assets/ui_comps/pc_card.png'),
@@ -317,7 +317,7 @@ export const HERBALIST_IMAGES = {
   sachet: require('../../assets/herbalist/sachet.png'),
 };
 
-// ─── Flower book ──────────────────────────────────────────────────────────────
+// ─── Garden journal ──────────────────────────────────────────────────────────────
 // The open book (cropped to the book itself, transparent outside it). Text goes in
 // the page areas defined in components/BookFrame.js. Ships with the repo.
 export const BOOK_IMG = require('../../assets/book/flowerbook.png');

@@ -597,7 +597,7 @@ export const INITIAL_PLAYER_STATE = {
   petCare: {},       // petKey → time (ms) its food wears off; fed pets get a stronger perk
 };
 
-// ── Flower book ───────────────────────────────────────────────────────────────
+// ── Garden journal ───────────────────────────────────────────────────────────────
 // One page per flower. A page unlocks the first time that flower reaches full
 // bloom. season = the flower's natural bloom season (flavour for now).
 export const FLOWER_BOOK = [

@@ -20,7 +20,7 @@ import { useNotice } from '../components/PurchaseNotice';
 //   • your harvested flowers lie in a row along the front edge — tap to add
 //   • tie & sell on the right (shows what you actually earn); UNDO takes the
 //     last flower back
-// Recipes live in the flower book (button top-right).
+// Recipes live in the garden journal (button top-right).
 const PLOPPER_W = 1376;
 const PLOPPER_H = 768;
 const PAPER_IMG = { plain: 'bouquetempty', layered: 'bouquetmixed', fancy: 'bouquetfancy' };
@@ -68,7 +68,7 @@ export default function BouquetScreen({ navigation }) {
     notify({
       icon: UI_IMAGES[PAPER_IMG[paper]],
       title: isNewRecipe ? `New recipe: ${result.name}!` : `Sold ${result.name}!`,
-      subtitle: isNewRecipe ? `Saved to your flower book. ${earned}` : earned,
+      subtitle: isNewRecipe ? `Saved to your garden journal. ${earned}` : earned,
     });
     setPicks([]);
   };
@@ -185,7 +185,7 @@ export default function BouquetScreen({ navigation }) {
         </>
       )}
 
-      {/* Recipes: the flower book's bouquet pages */}
+      {/* Recipes: the garden journal's bouquet pages */}
       <TouchableOpacity
         style={[styles.recipeBtn, { right: fx(40), top: fy(100), paddingHorizontal: fx(10), paddingVertical: fy(8) }]}
         onPress={() => navigation.navigate('FlowerBook', { tab: 'bouquets' })}
