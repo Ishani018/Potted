@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { BOOK_MEDAL } from '../engine/assets';
+import { BOOK_MEDAL, BOOK_XP } from '../engine/assets';
 import { useGame } from '../context/GameContext';
 import { PixelText, COLORS } from './Pixel';
 import { levelInfo, playerLevel, SEED_UNLOCK_LEVEL, POTTED_FLOWERS, HANGING_PLANTS, BOUQUET_PAPERS } from '../constants/gameData';
@@ -34,7 +34,12 @@ export default function LevelBadge({ style }) {
           </View>
         </View>
         <View style={styles.bar}>
-          <View style={[styles.fill, { width: `${Math.round(info.progress * 100)}%` }]} />
+          <Image source={BOOK_XP.frame} style={styles.barFrame} resizeMode="stretch" />
+          <View style={styles.barInner}>
+            <View style={{ width: `${Math.round(info.progress * 100)}%`, height: '100%', overflow: 'hidden' }}>
+              <Image source={BOOK_XP.fill} style={styles.barFill} resizeMode="stretch" />
+            </View>
+          </View>
         </View>
       </View>
       {open && (
@@ -57,8 +62,10 @@ const styles = StyleSheet.create({
   medal: { width: 44, height: 51 },
   medalImg: { width: 44, height: 51 },
   medalNum: { position: 'absolute', left: 0, right: 0, top: 11, height: 22, alignItems: 'center', justifyContent: 'center' },
-  bar: { height: 7, backgroundColor: '#2a1608', borderRadius: 3, overflow: 'hidden', width: 46, borderWidth: 1.5, borderColor: COLORS.woodEdge },
-  fill: { height: '100%', backgroundColor: COLORS.green },
+  bar: { width: 84, height: 14 },
+  barFrame: { position: 'absolute', width: 84, height: 14 },
+  barInner: { position: 'absolute', left: 7, right: 7, top: 4, bottom: 4, overflow: 'hidden' },
+  barFill: { width: 70, height: 6 },
   tip: {
     marginTop: 4, backgroundColor: COLORS.woodDark, borderWidth: 3, borderColor: COLORS.woodEdge,
     borderRadius: 4, padding: 6, maxWidth: 190,

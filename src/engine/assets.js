@@ -321,5 +321,12 @@ export const BOOK_BUTTONS = {
 };
 export const BOOK_ARROWS = { left: require('../../assets/book/arrow_left.png'), right: require('../../assets/book/arrow_right.png') };
 export const BOOK_MEDAL = require('../../assets/book/medal.png');
+// Torn-paper card with a ribbon seal (pop-up summaries), hanging tag (hover labels),
+// wax tick stamp (done), XP bar frame + fill, notice board (daily goals, later).
+export const BOOK_CARD = require('../../assets/book/card_big.png');
+export const BOOK_TAG = require('../../assets/book/tag.png');
+export const BOOK_STAMP = require('../../assets/book/stamp.png');
+export const BOOK_XP = { frame: require('../../assets/book/xp_frame.png'), fill: require('../../assets/book/xp_fill.png') };
+export const BOOK_BOARD = require('../../assets/book/board.png');
 export const BOOK_BANNER = require('../../assets/book/banner.png');
 export const BOOK_DIVIDER = require('../../assets/book/divider.png');

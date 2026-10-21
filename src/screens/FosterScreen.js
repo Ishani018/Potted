@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { View, Image, Pressable, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { FOSTER_BG, FOSTER_REST_IMAGES, PET_IMAGES, PERK_ICONS } from '../engine/assets';
+import { FOSTER_BG, FOSTER_REST_IMAGES, PET_IMAGES, PERK_ICONS, BOOK_STAMP } from '../engine/assets';
 import { STRAYS, FOSTER_SEATS, FOSTER_SIZE, FOSTER_BASE_W, CUSTOMERS } from '../constants/gameData';
 import ScreenHud from '../components/ScreenHud';
 import InventoryOverlay from '../components/InventoryOverlay';
 import PetSprite from '../components/PetSprite';
-import { PixelText, PixelPanel, PixelButton, COLORS } from '../components/Pixel';
+import { PixelText, PixelPanel, PixelButton } from '../components/Pixel';
+import TagLabel from '../components/TagLabel';
 
 // The Foster Center: the pet shop's big back room. Customers find strays and bring
 // them here; each takes an empty seat until you adopt it. Tap one to read
@@ -43,9 +44,12 @@ function StrayCard({ stray, onClose }) {
           </View>
 
           {done ? (
-            <PixelText size={8} color="#3f7a2e" style={[dark, styles.msg]}>
-              {`${def.name} is yours! Rename or move them in the flower book.`}
-            </PixelText>
+            <View style={styles.doneRow}>
+              <Image source={BOOK_STAMP} style={styles.stamp} resizeMode="contain" />
+              <PixelText size={8} color="#3f7a2e" style={[dark, { flex: 1 }]}>
+                {`${def.name} is yours! Rename or move them in the flower book.`}
+              </PixelText>
+            </View>
           ) : (
             <View style={styles.buyRow}>
               <PixelText size={9} color="#a8700a" style={dark}>{`${def.price} coins`}</PixelText>
@@ -95,10 +99,7 @@ export default function FosterScreen({ navigation }) {
           >
             <PetSprite petKey={stray.key} w={w} h={h} source={rest} asleep={rest ? true : undefined} />
             {on && (
-              <View style={styles.tag} pointerEvents="none">
-                <PixelText size={8}>{def.name.toUpperCase()}</PixelText>
-                <PixelText size={7} color={COLORS.gold}>{`${def.price} COINS`}</PixelText>
-              </View>
+              <TagLabel title={def.name} sub={`${def.price} coins`} style={styles.tag} />
             )}
           </Pressable>
         );
@@ -134,7 +135,7 @@ export default function FosterScreen({ navigation }) {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#1a1200' },
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
-  tag: { position: 'absolute', bottom: '100%', left: -50, right: -50, alignItems: 'center', gap: 2, marginBottom: 2 },
+  tag: { position: 'absolute', bottom: '100%', alignSelf: 'center', marginBottom: 2 },
   empty: { position: 'absolute', left: 0, right: 0, top: '12%', alignItems: 'center', zIndex: 30 },
   back: { position: 'absolute', right: 16, bottom: 12, zIndex: 30, flexDirection: 'row', gap: 8, alignItems: 'center' },
   roomTitle: { position: 'absolute', left: 0, right: 0, top: 8, alignItems: 'center', zIndex: 30 },
@@ -145,5 +146,7 @@ const styles = StyleSheet.create({
   perk: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   perkIcon: { width: 40, height: 38 },
   buyRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
+  doneRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginVertical: 6 },
+  stamp: { width: 40, height: 39 },
   msg: { marginVertical: 6, textAlign: 'center' },
 });

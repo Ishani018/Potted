@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, Platform, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { UI_IMAGES } from '../engine/assets';
+import { UI_IMAGES, BOOK_CARD } from '../engine/assets';
+import { PixelButton } from './Pixel';
 import { ROOM_NAMES } from '../constants/gameData';
 
 // "While you were away" card. Shown once after coming back to the game (the
@@ -39,39 +40,44 @@ export default function CatchUpSummary({ hidden }) {
     .map(([room, r]) => ({ room, line: roomLine(r) }))
     .filter((r) => r.line);
 
+  // The painted card is 330×430; the writing sits on the paper above the ribbon.
   return (
     <View style={styles.overlay}>
       <View style={styles.card}>
-        <Text style={styles.title}>Welcome back!</Text>
-        <Text style={styles.sub}>You were away for {formatAway(summary.awayMs)}</Text>
+        <Image source={BOOK_CARD} style={styles.cardArt} resizeMode="stretch" />
+        <View style={styles.paper}>
+          <Text style={styles.title}>Welcome back!</Text>
+          <Text style={styles.sub}>You were away for {formatAway(summary.awayMs)}</Text>
 
-        {rooms.map(({ room, line }) => (
-          <View key={room} style={styles.row}>
-            <Text style={styles.room}>{ROOM_NAMES[room] ?? `Room ${room}`}</Text>
-            <Text style={styles.line}>{line}</Text>
-          </View>
-        ))}
+          {rooms.map(({ room, line }) => (
+            <View key={room} style={styles.row}>
+              <Text style={styles.room}>{ROOM_NAMES[room] ?? `Room ${room}`}</Text>
+              <Text style={styles.line}>{line}</Text>
+            </View>
+          ))}
 
-        {summary.newPests > 0 && (
-          <Text style={styles.note}>
-            {plural(summary.newPests, 'bug', 'bugs')} moved in while you were gone. Tap them to shoo them away!
-          </Text>
-        )}
+          {summary.newPests > 0 && (
+            <Text style={styles.note}>
+              {plural(summary.newPests, 'bug', 'bugs')} moved in while you were gone. Tap them to shoo them away!
+            </Text>
+          )}
 
-        {summary.coins > 0 && (
-          <View style={styles.coinRow}>
-            <Image source={UI_IMAGES.goldcoins} style={styles.coin} resizeMode="contain" />
-            <Text style={styles.coinTxt}>Your hanging plants earned {summary.coins} coins</Text>
-          </View>
-        )}
+          {summary.coins > 0 && (
+            <View style={styles.coinRow}>
+              <Image source={UI_IMAGES.goldcoins} style={styles.coin} resizeMode="contain" />
+              <Text style={styles.coinTxt}>Your hanging plants earned {summary.coins} coins</Text>
+            </View>
+          )}
 
-        <TouchableOpacity style={styles.btn} onPress={() => dispatch({ type: 'DISMISS_SUMMARY' })} activeOpacity={0.85}>
-          <Text style={styles.btnTxt}>Let's go!</Text>
-        </TouchableOpacity>
+          <PixelButton label="LET'S GO!" size={9} onPress={() => dispatch({ type: 'DISMISS_SUMMARY' })} style={{ marginTop: 8 }} />
+        </View>
       </View>
     </View>
   );
 }
+
+const HEAD = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
+const BODY = Platform.select({ web: "'PatrickHand', Georgia, serif", default: 'PatrickHand' });
 
 const styles = StyleSheet.create({
   overlay: {
@@ -79,25 +85,19 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
     alignItems: 'center', justifyContent: 'center', zIndex: 9500,
   },
-  card: {
-    backgroundColor: '#f3e3c0', borderRadius: 14, borderWidth: 3, borderColor: '#7a3e1a',
-    paddingHorizontal: 22, paddingVertical: 16, minWidth: 300, maxWidth: 440, alignItems: 'center',
-  },
-  title: { fontFamily: 'PressStart2P', fontSize: 14, color: '#4a2a10', marginBottom: 6 },
-  sub: { color: '#8a6a40', fontSize: 12, marginBottom: 10 },
+  card: { width: 330, height: 430 },
+  cardArt: { position: 'absolute', width: 330, height: 430 },
+  paper: { position: 'absolute', left: 46, right: 50, top: 54, height: 252, alignItems: 'center' },
+  title: { fontFamily: HEAD, fontSize: 26, color: '#4a2a10', lineHeight: 28 },
+  sub: { fontFamily: BODY, color: '#8a6a40', fontSize: 15, marginBottom: 6 },
   row: {
-    alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 10,
-    borderBottomWidth: 1, borderBottomColor: '#d9c39a', paddingVertical: 5,
+    alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 8,
+    borderBottomWidth: 1, borderBottomColor: 'rgba(160,120,60,0.4)', paddingVertical: 3,
   },
-  room: { color: '#4a2a10', fontSize: 12, fontWeight: 'bold', width: 84 },
-  line: { flex: 1, color: '#5a3a1a', fontSize: 12 },
-  note: { color: '#7a4a18', fontSize: 11, fontStyle: 'italic', marginTop: 8, textAlign: 'center' },
-  coinRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
+  room: { fontFamily: HEAD, color: '#4a2a10', fontSize: 15, width: 76 },
+  line: { flex: 1, fontFamily: BODY, color: '#5a3a1a', fontSize: 13.5, lineHeight: 15 },
+  note: { fontFamily: BODY, color: '#7a4a18', fontSize: 13.5, lineHeight: 15, marginTop: 4, textAlign: 'center' },
+  coinRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   coin: { width: 18, height: 18 },
-  coinTxt: { color: '#7a5a10', fontSize: 12, fontWeight: 'bold' },
-  btn: {
-    marginTop: 14, backgroundColor: '#3d6020', borderRadius: 10,
-    paddingHorizontal: 24, paddingVertical: 9, borderWidth: 1.5, borderColor: '#70a840',
-  },
-  btnTxt: { color: '#e0ffc0', fontSize: 14, fontWeight: 'bold', letterSpacing: 1 },
+  coinTxt: { fontFamily: BODY, color: '#7a5a10', fontSize: 13.5 },
 });

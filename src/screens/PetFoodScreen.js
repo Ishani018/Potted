@@ -9,6 +9,8 @@ import { isFed } from '../engine/petEffects';
 import ScreenHud from '../components/ScreenHud';
 import InventoryOverlay from '../components/InventoryOverlay';
 import { PixelText, PixelPanel, PixelButton, COLORS } from '../components/Pixel';
+import TagLabel from '../components/TagLabel';
+import { BOOK_STAMP } from '../engine/assets';
 
 // The pet food aisle: the stocked fridge is painted into aisle.png (1676×939,
 // stretched to the screen like the pet shop). Invisible hotspots sit over each
@@ -89,7 +91,10 @@ function FoodCard({ item, onClose }) {
           </View>
 
           {done ? (
-            <PixelText size={8} color="#3f7a2e" style={[styles.dark, styles.msg]}>{done}</PixelText>
+            <View style={styles.doneRow}>
+              <Image source={BOOK_STAMP} style={styles.stamp} resizeMode="contain" />
+              <PixelText size={8} color="#3f7a2e" style={[styles.dark, { flex: 1 }]}>{done}</PixelText>
+            </View>
           ) : pets.length === 0 ? (
             <PixelText size={8} color="#8a5a24" style={[styles.dark, styles.msg]}>
               {`You need a ${SINGULAR[item.for]} first. Adopt one at the pet shop!`}
@@ -161,10 +166,7 @@ export default function PetFoodScreen({ navigation }) {
             onPress={() => setPicked(item)}
           >
             {on && (
-              <View style={styles.tag} pointerEvents="none">
-                <PixelText size={8}>{item.name.toUpperCase()}</PixelText>
-                <PixelText size={7} color={COLORS.gold}>{`${item.price} COINS`}</PixelText>
-              </View>
+              <TagLabel title={item.name} sub={`${item.price} coins`} style={styles.tag} />
             )}
           </Pressable>
         );
@@ -187,13 +189,15 @@ const styles = StyleSheet.create({
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
   spot: { position: 'absolute', borderRadius: 6 },
   spotOn: { borderWidth: 2, borderColor: 'rgba(255,255,255,0.85)', backgroundColor: 'rgba(255,255,255,0.12)' },
-  tag: { position: 'absolute', bottom: '100%', left: -50, right: -50, alignItems: 'center', gap: 2, marginBottom: 2 },
+  tag: { position: 'absolute', bottom: '100%', alignSelf: 'center', marginBottom: 2 },
   back: { position: 'absolute', right: 16, bottom: 12, zIndex: 30 },
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center', zIndex: 200 },
   card: { width: 330, maxWidth: '94%' },
   head: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
   big: { width: 84, height: 100 },
   dark: { textShadowRadius: 0 },
+  doneRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginVertical: 4 },
+  stamp: { width: 40, height: 39 },
   msg: { marginVertical: 4, alignItems: 'center', textAlign: 'center' },
   petRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   petBtn: { width: 64, alignItems: 'center', paddingVertical: 4, borderRadius: 4, borderWidth: 2, borderColor: COLORS.creamEdge, backgroundColor: 'rgba(255,255,255,0.35)' },
