@@ -140,7 +140,7 @@ function givePetGifts(player, inventory, now, rand) {
         notices.push(`${name} dug up a seed, but your inventory is full.`);
         break;
       }
-      const keys = [...Object.keys(POTTED_FLOWERS), ...Object.keys(HANGING_PLANTS)];
+      const keys = [...Object.keys(POTTED_FLOWERS).filter((k) => !POTTED_FLOWERS[k].rare), ...Object.keys(HANGING_PLANTS)];
       const flowerKey = keys[Math.floor(rand() * keys.length)];
       const seedName = POTTED_FLOWERS[flowerKey]?.name ?? HANGING_PLANTS[flowerKey]?.name;
       inv = [...inv, { id: `inv_${now}_${key}_${i}`, flowerKey }];
@@ -157,7 +157,7 @@ function buildAwaySummary(before, after, awayMs, coins) {
   for (const slot of Object.values(after)) {
     if (!slot.flowerKey) continue;
     const r = (rooms[slot.room] ??= { ready: 0, thirsty: 0, wilting: 0, pests: 0 });
-    if (slot.stage >= maxStageFor(slot.type)) r.ready++;
+    if (slot.stage >= maxStageFor(slot.type, slot.flowerKey)) r.ready++;
     else if (slot.pest) r.pests++;
     else if (slot.wilting) r.wilting++;
     else if (isThirsty(slot)) r.thirsty++;
@@ -328,7 +328,7 @@ function reducer(state, action) {
       if (!slot || !slot.flowerKey) return state;
       const watered = waterPlant(slot, roomPetEffects(state.player)[slot.room]);
       // First time reaching full bloom fills that flower's page in the book.
-      const max = maxStageFor(slot.type);
+      const max = maxStageFor(slot.type, slot.flowerKey);
       let player = state.player;
       const firstBloom = watered.stage === max && slot.stage < max && !player.flowerBook?.[slot.flowerKey];
       if (watered.stage === max && slot.stage < max) {
@@ -509,7 +509,7 @@ function reducer(state, action) {
         if (!slot.pest) return state;
         used = { ...slot, pest: null };
       } else {
-        if (slot.stage >= maxStageFor(slot.type) || isShielded(slot)) return state;
+        if (slot.stage >= maxStageFor(slot.type, slot.flowerKey) || isShielded(slot)) return state;
         used = { ...slot, shieldUntil: Date.now() + SACHET_MS };
       }
       const rem = { ...state.player.remedies, [kind]: left - 1 };

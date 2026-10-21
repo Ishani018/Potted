@@ -3,7 +3,7 @@ import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from 'rea
 import { useGame } from '../context/GameContext';
 import { POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES, UI_IMAGES, TRADE_IMAGES, PET_IMAGES, PAINTING_IMAGES, BOOK_DIVIDER } from '../engine/assets';
 import {
-  FLOWER_BOOK, POTTED_FLOWERS, HANGING_PLANTS, BOUQUET_RECIPES, TRADE_FLOWERS, seedType,
+  FLOWER_BOOK, RARE_BOOK, POTTED_FLOWERS, HANGING_PLANTS, BOUQUET_RECIPES, TRADE_FLOWERS, seedType,
   FLOWER_GROWTH, formatDuration, seedUnlockLevel, playerLevel, CUSTOMERS, knownPetKeys,
 } from '../constants/gameData';
 import BouquetArt from '../components/BouquetArt';
@@ -49,6 +49,14 @@ function stageImages(key) {
     ];
   }
   const imgs = POTTED_PLANT_IMAGES[key] ?? [];
+  if (POTTED_FLOWERS[key]?.rare) {
+    // rare plants only have two growth stages
+    return [
+      { img: POTTED_PLANT_IMAGES._seedVisible, label: 'Seed' },
+      { img: imgs[0], label: 'Bud' },
+      { img: imgs[1], label: 'Full' },
+    ];
+  }
   return [
     { img: POTTED_PLANT_IMAGES._seedVisible, label: 'Seed' },
     { img: imgs[0], label: 'Bud' },
@@ -81,6 +89,7 @@ function chapterIcon(key) {
   const box = { width: 30, height: 30 };
   switch (key) {
     case 'flowers': return <Image source={flowerArt(FLOWER_BOOK[0].key)} style={box} resizeMode="contain" />;
+    case 'rare': return <Image source={flowerArt(RARE_BOOK[0].key)} style={box} resizeMode="contain" />;
     case 'bouquets': return <Image source={UI_IMAGES.bouquetmixed} style={box} resizeMode="contain" />;
     case 'care': return <Image source={UI_IMAGES.wateringcan1} style={box} resizeMode="contain" />;
     case 'customers': return <Portrait customerKey="clara" size={30} bare />;
@@ -97,6 +106,7 @@ function ContentsPages({ found, bouquetsFound }) {
   const p = state.player;
   const counts = {
     flowers: `${found} / ${FLOWER_BOOK.length}`,
+    rare: `${RARE_BOOK.filter((f) => (p.flowerBook ?? {})[f.key]).length} / ${RARE_BOOK.length}`,
     bouquets: `${bouquetsFound} / ${BOUQUET_RECIPES.length}`,
     customers: `${Object.keys(p.customerBook ?? {}).length} / ${Object.keys(CUSTOMERS).length}`,
     pets: `${(p.ownedPets ?? []).length} / ${knownPetKeys(p).length}`,
@@ -143,12 +153,16 @@ function FlowerBookPages({ navigation }) {
   const tab = info.key;
   const book = state.player.flowerBook ?? {};
   const bouquetBook = state.player.bouquetBook ?? {};
-  const [selected, setSelected] = useState(FLOWER_BOOK[0].key);
+  const [pickedFlower, setSelected] = useState(FLOWER_BOOK[0].key);
   const [selectedRecipe, setSelectedRecipe] = useState(BOUQUET_RECIPES[0].id);
 
   const level = playerLevel(state.player);
-  const found = FLOWER_BOOK.filter((f) => book[f.key]).length;
-  const entry = FLOWER_BOOK.find((f) => f.key === selected);
+  // the Flowers page and the Rare Plants page share this layout, with their own lists
+  const isRare = tab === 'rare';
+  const list = isRare ? RARE_BOOK : FLOWER_BOOK;
+  const selected = list.some((f) => f.key === pickedFlower) ? pickedFlower : list[0].key;
+  const found = list.filter((f) => book[f.key]).length;
+  const entry = list.find((f) => f.key === selected);
   const record = book[selected];
   const unlocked = !!record;
   const type = seedType(selected);
@@ -180,12 +194,12 @@ function FlowerBookPages({ navigation }) {
         left={(
         <View style={styles.pageInner}>
           <BookTabs />
-          <Text style={styles.progress}>{found} / {FLOWER_BOOK.length} discovered</Text>
+          <Text style={styles.progress}>{found} / {list.length} {isRare ? 'found' : 'discovered'}</Text>
           <View style={styles.grid}>
-            {FLOWER_BOOK.map((f) => {
+            {list.map((f) => {
               const isFound = !!book[f.key];
               const isSel = f.key === selected;
-              const seedLocked = !isFound && level < seedUnlockLevel(f.key);
+              const seedLocked = !isRare && !isFound && level < seedUnlockLevel(f.key);
               return (
                 <TouchableOpacity
                   key={f.key}
@@ -236,7 +250,7 @@ function FlowerBookPages({ navigation }) {
 
             {/* Pot type is always shown so you know where a new seed goes */}
             <Text style={styles.tagline}>
-              {type === 'hanging' ? 'Hanging pot' : 'Shelf pot'}{unlocked ? `  ·  ${SEASON_LABEL[entry.season] ?? entry.season}` : ''}
+              {type === 'hanging' ? 'Hanging pot' : 'Shelf pot'}{isRare ? '  ·  Rare' : ''}{unlocked ? `  ·  ${SEASON_LABEL[entry.season] ?? entry.season}` : ''}
             </Text>
 
             {unlocked ? (
@@ -253,10 +267,10 @@ function FlowerBookPages({ navigation }) {
                 <Text style={styles.tip}>Tip: {entry.tip}</Text>
                 <View style={styles.stats}>
                   <Text style={styles.stat}>
-                    Water every {formatDuration((FLOWER_GROWTH[selected]?.hours ?? 3) * 3600000)} · bloom in {formatDuration((FLOWER_GROWTH[selected]?.hours ?? 3) * 3600000 * (type === 'hanging' ? 1 : 2))}
+                    Water every {formatDuration((FLOWER_GROWTH[selected]?.hours ?? 3) * 3600000)} · bloom in {formatDuration((FLOWER_GROWTH[selected]?.hours ?? 3) * 3600000 * (type === 'hanging' || isRare ? 1 : 2))}
                   </Text>
                   <Text style={styles.stat}>
-                    Level {seedUnlockLevel(selected)} · grown {record.grown}× · first {new Date(record.firstAt).toLocaleDateString()}
+                    {isRare ? 'Rare' : `Level ${seedUnlockLevel(selected)}`} · grown {record.grown}× · first {new Date(record.firstAt).toLocaleDateString()}
                   </Text>
                 </View>
               </>
@@ -264,7 +278,9 @@ function FlowerBookPages({ navigation }) {
               <>
                 <Text style={styles.lockedHint}>Grow one to full bloom to fill in this page.</Text>
                 <Text style={styles.lockedLevel}>
-                  {level >= seedUnlockLevel(selected)
+                  {isRare
+                    ? 'Pets sometimes bring its seed home from an adventure.'
+                    : level >= seedUnlockLevel(selected)
                     ? 'The seeds are waiting for you at the nursery.'
                     : `Its seeds unlock at level ${seedUnlockLevel(selected)}.`}
                 </Text>
@@ -356,7 +372,7 @@ const styles = StyleSheet.create({
   coverBloom: { width: 62, height: 70 },
   coverHint: { fontFamily: BODY, fontSize: 12.5, color: SOFT },
   contentsHead: { fontFamily: HEAD, fontSize: 26, color: '#7a3e1a', textAlign: 'center', marginTop: 0, marginBottom: 8 },
-  contentsRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 3 },
+  contentsRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 1 },
   contentsIcon: { width: 34, alignItems: 'center', marginRight: 6 },
   contentsName: { fontFamily: HEAD, fontSize: 21, color: INK },
   contentsCount: { fontFamily: BODY, fontSize: 13, color: SOFT, marginRight: 8, marginBottom: 1 },

@@ -45,6 +45,18 @@ export const POTTED_PLANT_IMAGES = {
   rose:       [require('../../assets/pottedplants/rose.png'),       require('../../assets/pottedplants/rose1.png'),       require('../../assets/pottedplants/rose2.png'),       require('../../assets/pottedplants/rose3.png')],
 };
 
+// Rare plants: two growth stages only (bud, full bloom), so just two pictures each.
+Object.assign(POTTED_PLANT_IMAGES, {
+  goldenrose: [require('../../assets/rare/goldenrose_bud.png'), require('../../assets/rare/goldenrose_bloom.png')],
+  moonbell: [require('../../assets/rare/moonbell_bud.png'), require('../../assets/rare/moonbell_bloom.png')],
+  dreamhydrangea: [require('../../assets/rare/dreamhydrangea_bud.png'), require('../../assets/rare/dreamhydrangea_bloom.png')],
+  blushmonstera: [require('../../assets/rare/blushmonstera_bud.png'), require('../../assets/rare/blushmonstera_bloom.png')],
+  midnightlily: [require('../../assets/rare/midnightlily_bud.png'), require('../../assets/rare/midnightlily_bloom.png')],
+  frostrose: [require('../../assets/rare/frostrose_bud.png'), require('../../assets/rare/frostrose_bloom.png')],
+  bleedingheart: [require('../../assets/rare/bleedingheart_bud.png'), require('../../assets/rare/bleedingheart_bloom.png')],
+  ivoryhibiscus: [require('../../assets/rare/ivoryhibiscus_bud.png'), require('../../assets/rare/ivoryhibiscus_bloom.png')],
+});
+
 // ─── Hanging Plants ──────────────────────────────────────────────────────────
 // stage 0 = emptyhangingpotwithseed, 1 = bud, 2 = full, 3 = dead
 export const HANGING_PLANT_IMAGES = {
@@ -74,6 +86,17 @@ export const SEED_IMAGES = {
   petunia:        require('../../assets/seeds/petuniaseed.png'),
   Bougainvillea:  require('../../assets/seeds/bougenvillaseed.png'),
 };
+
+Object.assign(SEED_IMAGES, {
+  goldenrose: require('../../assets/rare/goldenrose_seed.png'),
+  moonbell: require('../../assets/rare/moonbell_seed.png'),
+  dreamhydrangea: require('../../assets/rare/dreamhydrangea_seed.png'),
+  blushmonstera: require('../../assets/rare/blushmonstera_seed.png'),
+  midnightlily: require('../../assets/rare/midnightlily_seed.png'),
+  frostrose: require('../../assets/rare/frostrose_seed.png'),
+  bleedingheart: require('../../assets/rare/bleedingheart_seed.png'),
+  ivoryhibiscus: require('../../assets/rare/ivoryhibiscus_seed.png'),
+});
 
 // ─── Wall Decor ──────────────────────────────────────────────────────────────
 export const PAINTING_IMAGES = {
@@ -251,6 +274,16 @@ export const TRADE_IMAGES = {
   petuniatrade:        require('../../assets/ui_comps/petuniatrade.png'),
   bougenvillatrade:    require('../../assets/ui_comps/bougenvillatrade.png'),
 };
+Object.assign(TRADE_IMAGES, {
+  goldenrosetrade: require('../../assets/rare/goldenrose_trade.png'),
+  moonbelltrade: require('../../assets/rare/moonbell_trade.png'),
+  dreamhydrangeatrade: require('../../assets/rare/dreamhydrangea_trade.png'),
+  blushmonsteratrade: require('../../assets/rare/blushmonstera_trade.png'),
+  midnightlilytrade: require('../../assets/rare/midnightlily_trade.png'),
+  frostrosetrade: require('../../assets/rare/frostrose_trade.png'),
+  bleedinghearttrade: require('../../assets/rare/bleedingheart_trade.png'),
+  ivoryhibiscustrade: require('../../assets/rare/ivoryhibiscus_trade.png'),
+});
 
 // ─── Nursery background ───────────────────────────────────────────────────────
 export const NURSERY_BG = require('../../assets/nursery.jpeg');

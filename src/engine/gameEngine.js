@@ -1,4 +1,4 @@
-import { GROWTH_TIMERS, PEST_CONFIG, growthCooldownMs, pickPestType } from '../constants/gameData';
+import { GROWTH_TIMERS, PEST_CONFIG, POTTED_FLOWERS, growthCooldownMs, pickPestType } from '../constants/gameData';
 
 // ─── Slot factory ─────────────────────────────────────────────────────────────
 export function createEmptySlot(slotId, room, type, hasPot = false) {
@@ -33,8 +33,9 @@ export function plantSeed(slot, flowerKey) {
   };
 }
 
-export function maxStageFor(type) {
-  return GROWTH_TIMERS.maxStage[type] ?? 3;
+// type = the pot type; flowerKey (optional) lets rare plants have their own, shorter growth.
+export function maxStageFor(type, flowerKey) {
+  return POTTED_FLOWERS[flowerKey]?.maxStage ?? GROWTH_TIMERS.maxStage[type] ?? 3;
 }
 
 // A plant is thirsty (ready to be watered to the next stage) when it hasn't been
@@ -49,7 +50,7 @@ export function isThirsty(slot, now = Date.now()) {
 // nothing to wait for (empty slot or fully grown).
 export function msUntilThirsty(slot, now = Date.now()) {
   if (!slot.flowerKey) return null;
-  if (slot.stage >= maxStageFor(slot.type)) return null;
+  if (slot.stage >= maxStageFor(slot.type, slot.flowerKey)) return null;
   if (slot.lastWatered == null) return 0;
   const cooldown = slot.cooldown ?? growthCooldownMs(slot.flowerKey);
   return Math.max(0, slot.lastWatered + cooldown - now);
@@ -64,7 +65,7 @@ export function waterPlant(slot, eff) {
   // Watering a wilting plant always revives it (and advances if it was thirsty).
   if (!isThirsty(slot, now) && !slot.wilting) return slot; // not ready yet — no-op
 
-  const max = maxStageFor(slot.type);
+  const max = maxStageFor(slot.type, slot.flowerKey);
   const wasBud = slot.stage === 1; // bud-stage watering grants the harvest bonus
   const nextStage = Math.min(slot.stage + 1, max);
 
@@ -83,7 +84,7 @@ export function waterPlant(slot, eff) {
 // Plants never die. A full bloom never wilts (it's done growing).
 export function tickSlot(slot, now, eff) {
   if (!slot.flowerKey) return slot;
-  const fullyGrown = slot.stage >= maxStageFor(slot.type);
+  const fullyGrown = slot.stage >= maxStageFor(slot.type, slot.flowerKey);
   if (fullyGrown) {
     return slot.wilting ? { ...slot, wilting: false } : slot;
   }
@@ -99,7 +100,7 @@ export function tickSlot(slot, now, eff) {
 // bonus); hanging plants give 1 and stop their passive coin trickle (the pot
 // stays on the hook, empty). Returns how many flowers and the cleared slot.
 export function harvestPlant(slot) {
-  const max = maxStageFor(slot.type);
+  const max = maxStageFor(slot.type, slot.flowerKey);
   if (!slot.flowerKey || slot.stage < max) {
     return { flowerKey: null, amount: 0, slot };
   }
@@ -126,7 +127,7 @@ export function calcHangingPassiveCoins(slots, lastTickTime, now, effByRoom) {
 // Growing plants (bud or later, not full bloom) can pick up a pest each tick.
 function canGetPest(slot, now = Date.now()) {
   if (slot.shieldUntil && slot.shieldUntil > now) return false; // protected by a sachet
-  return !!slot.flowerKey && !slot.pest && slot.stage >= 1 && slot.stage < maxStageFor(slot.type);
+  return !!slot.flowerKey && !slot.pest && slot.stage >= 1 && slot.stage < maxStageFor(slot.type, slot.flowerKey);
 }
 
 function maybeSpawnPest(slot, rand, eff, now) {

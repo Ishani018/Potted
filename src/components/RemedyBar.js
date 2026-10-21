@@ -71,7 +71,7 @@ export function useRemedyUse(showToast) {
       showToast('The bug is gone!');
       return true;
     }
-    if (slot.stage >= maxStageFor(slot.type)) { showToast('Already in full bloom, it needs no protection'); return true; }
+    if (slot.stage >= maxStageFor(slot.type, slot.flowerKey)) { showToast('Already in full bloom, it needs no protection'); return true; }
     if (isShielded(slot)) { showToast(`Already protected for ${formatDuration(slot.shieldUntil - Date.now())}`); return true; }
     dispatch({ type: 'USE_REMEDY', slotId: slot.slotId });
     showToast(`Protected from bugs for ${formatDuration(SACHET_MS)}`);

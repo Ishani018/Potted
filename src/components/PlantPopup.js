@@ -18,7 +18,7 @@ function useNow(ms = 1000) {
 
 // What the plant needs right now → { text, color }.
 function plantStatus(slot, now) {
-  const max = maxStageFor(slot.type);
+  const max = maxStageFor(slot.type, slot.flowerKey);
   if (slot.pest) {
     const p = pestInfo(slot.pest);
     return { text: `${p.name.toUpperCase()} ON IT!`, color: '#ff9a7a' };
@@ -40,7 +40,7 @@ export default function PlantPopup({ slot, position, onHarvest, onRemove, onClos
   if (!slot) return null;
 
   // Full bloom is harvestable: potted stage 3, hanging stage 2.
-  const canHarvest = !!slot.flowerKey && slot.stage >= maxStageFor(slot.type);
+  const canHarvest = !!slot.flowerKey && slot.stage >= maxStageFor(slot.type, slot.flowerKey);
   const hasPlant = !!slot.flowerKey;
   const name = POTTED_FLOWERS[slot.flowerKey]?.name ?? HANGING_PLANTS[slot.flowerKey]?.name;
   const status = hasPlant ? plantStatus(slot, now) : null;

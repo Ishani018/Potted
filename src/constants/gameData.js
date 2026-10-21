@@ -31,6 +31,27 @@ export const HANGING_PLANTS = {
   Bougainvillea:  { key: 'Bougainvillea',  name: 'Bougainvillea',    seedPrice: 22 },
 };
 
+
+// ── Rare plants ───────────────────────────────────────────────────────────────
+// Eight rare shelf plants with only TWO growth stages (bud, then full bloom). Their
+// seeds can't be bought: pets bring them home from adventures. They are merged into
+// POTTED_FLOWERS (rare: true, maxStage: 2) so the rest of the game treats them as
+// shelf flowers; the nursery, Storm's digging and level unlocks skip them.
+export const RARE_PLANTS = {
+  goldenrose: { key: 'goldenrose', name: 'Golden Rose', hours: 8, base: 70, season: 'summer', blurb: "Every petal glints as if dipped in sunrise. Gardeners whisper that it grows only for the very patient.", tip: "Worth a fortune at the market." },
+  moonbell: { key: 'moonbell', name: 'Moonbell', hours: 9, base: 65, season: 'autumn', blurb: "Purple bells that glow softly after dark and chime when the wind is right.", tip: "Looks best on a dark shelf." },
+  dreamhydrangea: { key: 'dreamhydrangea', name: 'Dream Hydrangea', hours: 10, base: 75, season: 'summer', blurb: "Pink, lilac and sky-blue blooms all on one plant, like a sweet dream of summer.", tip: "Makes the fanciest bouquets." },
+  blushmonstera: { key: 'blushmonstera', name: 'Blush Monstera', hours: 7, base: 60, season: 'spring', blurb: "Leaves painted in pink and cream, each with its own pattern. No two are alike.", tip: "A favourite of the florist customers." },
+  midnightlily: { key: 'midnightlily', name: 'Midnight Lily', hours: 11, base: 80, season: 'autumn', blurb: "Dark as night, with gold dust on the stamens. Very rare, and very proud.", tip: "The most valuable rare plant." },
+  frostrose: { key: 'frostrose', name: 'Frost Rose', hours: 12, base: 85, season: 'winter', blurb: "A rose that seems carved from ice, cool to the touch even in July.", tip: "The priciest plant in the game." },
+  bleedingheart: { key: 'bleedingheart', name: 'Bleeding Heart', hours: 7, base: 55, season: 'spring', blurb: "Little hearts on a long arching stem, ready to fall for whoever waters it.", tip: "Pairs well with pink flowers in a bouquet." },
+  ivoryhibiscus: { key: 'ivoryhibiscus', name: 'Ivory Hibiscus', hours: 8, base: 60, season: 'summer', blurb: "Cream petals edged in gold. It opens slowly, as if it knows it is special.", tip: "Calm, steady, and always in demand." },
+};
+for (const r of Object.values(RARE_PLANTS)) {
+  POTTED_FLOWERS[r.key] = { key: r.key, name: r.name, harvestCoins: Math.round(r.base * 0.9), seedPrice: null, rare: true, maxStage: 2 };
+}
+export const RARE_KEYS = Object.keys(RARE_PLANTS);
+
 // ── Seed → pot type ───────────────────────────────────────────────────────────
 // Potted flowers only grow in shelf pots, hanging plants only in hanging pots.
 // Returns 'potted' | 'hanging' | null.
@@ -172,6 +193,7 @@ export const ADVENTURE = {
   hours: 4, rolls: 1, fedRolls: 2,
   coins: [25, 60],
   odds: { coins: 0.45, seed: 0.3 },
+  rareSeed: 0.12, fedRareSeed: 0.25,   // chance that a seed reward is one of the rare plants
 };
 
 // ── Pet food aisle ────────────────────────────────────────────────────────────
@@ -370,6 +392,16 @@ export const BONUS_COIN_MULTIPLIER = 1.2;
 // hanging plants need 1. Slower flowers are also the more valuable ones.
 // A pet's cooldownMult (Koazy etc.) shortens these.
 export const FLOWER_GROWTH = {
+  // rare plants (see RARE_PLANTS)
+  goldenrose: { hours: 8 },
+  moonbell: { hours: 9 },
+  dreamhydrangea: { hours: 10 },
+  blushmonstera: { hours: 7 },
+  midnightlily: { hours: 11 },
+  frostrose: { hours: 12 },
+  bleedingheart: { hours: 7 },
+  ivoryhibiscus: { hours: 8 },
+
   daisy:          { hours: 1 },
   snapdragon:     { hours: 1.5 },
   poppy:          { hours: 2 },
@@ -478,6 +510,16 @@ export function unlocksAtLevel(level) {
 // Stage 0 (seed) uses the shared pot image, so it's not listed here.
 // Indexed [flowerKey][stage]. Missing entries default to 1.0.
 export const FLOWER_STAGE_SCALE = {
+  // rare plants: pot-rim width / image width measured from each cut-out
+  goldenrose: { 1: 1.73, 2: 1.94 },
+  moonbell: { 1: 1.65, 2: 1.83 },
+  dreamhydrangea: { 1: 1.86, 2: 2.07 },
+  blushmonstera: { 1: 1.77, 2: 1.89 },
+  midnightlily: { 1: 1.83, 2: 1.85 },
+  frostrose: { 1: 1.87, 2: 1.66 },
+  bleedingheart: { 1: 1.87, 2: 1.93 },
+  ivoryhibiscus: { 1: 1.81, 2: 1.93 },
+
   // Potted (stages 1=bud, 2=slight bloom, 3=full bloom). Bumped up so the
   // flower+pot matches an empty pot's size despite each PNG's tight crop.
   // Scales measured PER STAGE per PNG (pot-rim width ÷ image width vs the empty
@@ -528,6 +570,9 @@ export const TRADE_FLOWERS = {
   petunia:        { key: 'petunia',        name: 'Petunia',          img: 'petuniatrade',        base: 19 },
   Bougainvillea:  { key: 'Bougainvillea',  name: 'Bougainvillea',    img: 'bougenvillatrade',    base: 22 },
 };
+for (const r of Object.values(RARE_PLANTS)) {
+  TRADE_FLOWERS[r.key] = { key: r.key, name: r.name, img: `${r.key}trade`, base: r.base, rare: true };
+}
 
 // Deterministic per-day pseudo-random (mulberry32 seeded by an integer).
 function seededRandom(seed) {
@@ -546,13 +591,16 @@ export function getDailyTrades() {
   const daySeed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
   const rand = seededRandom(daySeed);
 
-  // Shuffle the 12 keys, take 6.
-  const keys = Object.keys(TRADE_FLOWERS);
+  // Shuffle the 12 everyday keys, take 6. On about 2 days in 5 a collector visits:
+  // the last tile is a rare plant (which one is picked by the day) at a high price.
+  const keys = Object.keys(TRADE_FLOWERS).filter((k) => !TRADE_FLOWERS[k].rare);
   for (let i = keys.length - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1));
     [keys[i], keys[j]] = [keys[j], keys[i]];
   }
-  return keys.slice(0, 6).map((key) => {
+  const picks = keys.slice(0, 6);
+  if (rand() < 0.4) picks[5] = RARE_KEYS[Math.floor(rand() * RARE_KEYS.length)];
+  return picks.map((key) => {
     const f = TRADE_FLOWERS[key];
     // Price varies ±40% around base value, rounded, min 1.
     const factor = 0.6 + rand() * 0.8;
@@ -614,6 +662,9 @@ export const FLOWER_BOOK = [
   { key: 'petunia',        season: 'spring', blurb: 'Trumpet-shaped blooms that spill down in a colourful cascade.',                     tip: 'Grows in hanging pots only.' },
   { key: 'Bougainvillea',  season: 'summer', blurb: 'Bright paper-like bracts in hot pink — a burst of colour.',                         tip: 'Grows in hanging pots only.' },
 ];
+
+// Rare plants' pages in the journal (their own chapter).
+export const RARE_BOOK = Object.values(RARE_PLANTS).map((r) => ({ key: r.key, season: r.season, blurb: r.blurb, tip: r.tip, rare: true }));
 
 export const ACHIEVEMENTS = [
   { id: 'first_bloom',    title: 'First Bloom',       desc: 'Harvest your first flower.',          check: (s) => s.harvestCount >= 1 },

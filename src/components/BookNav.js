@@ -10,6 +10,7 @@ import { Animated, Easing, PanResponder } from 'react-native';
 export const BOOK_PAGES = [
   { key: 'contents', title: 'Contents' },
   { key: 'flowers', title: 'Flowers' },
+  { key: 'rare', title: 'Rare Plants' },
   { key: 'bouquets', title: 'Bouquets' },
   { key: 'care', title: 'Care', spread: 0 },
   { key: 'care', title: 'Care', spread: 1 },
@@ -23,6 +24,7 @@ export const BOOK_PAGES = [
 // The chapters listed on the contents page → the spread each starts on.
 export const CHAPTERS = [
   { key: 'flowers', title: 'Flowers' },
+  { key: 'rare', title: 'Rare Plants' },
   { key: 'bouquets', title: 'Bouquets' },
   { key: 'care', title: 'Care Guide' },
   { key: 'customers', title: 'Customers' },

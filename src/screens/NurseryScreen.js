@@ -10,7 +10,7 @@ import { useNotice } from '../components/PurchaseNotice';
 
 // All buyable seeds keyed by flowerKey → { name, price }.
 const SEED_INFO = {};
-[...Object.values(POTTED_FLOWERS), ...Object.values(HANGING_PLANTS)].forEach((s) => {
+[...Object.values(POTTED_FLOWERS).filter((f) => !f.rare), ...Object.values(HANGING_PLANTS)].forEach((s) => {
   SEED_INFO[s.key] = { name: s.name, price: s.seedPrice ?? 10 };
 });
 

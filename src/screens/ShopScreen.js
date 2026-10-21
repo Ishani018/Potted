@@ -134,7 +134,7 @@ export default function ShopScreen({ navigation }) {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.shelf}
         >
-          {activeTab === 'potted' && Object.values(POTTED_FLOWERS).map((f) => (
+          {activeTab === 'potted' && Object.values(POTTED_FLOWERS).filter((f) => !f.rare).map((f) => (
             <SeedCard
               key={f.key}
               name={f.name}
