@@ -83,7 +83,7 @@ function chapterIcon(key) {
     case 'flowers': return <Image source={flowerArt(FLOWER_BOOK[0].key)} style={box} resizeMode="contain" />;
     case 'bouquets': return <Image source={UI_IMAGES.bouquetmixed} style={box} resizeMode="contain" />;
     case 'care': return <Image source={UI_IMAGES.wateringcan1} style={box} resizeMode="contain" />;
-    case 'customers': return <Portrait customerKey="clara" size={30} />;
+    case 'customers': return <Portrait customerKey="clara" size={30} bare />;
     case 'pets': return <Image source={PET_IMAGES.george} style={box} resizeMode="contain" />;
     case 'paintings': return <Image source={PAINTING_IMAGES.beachpainting} style={box} resizeMode="contain" />;
     default: return null;
