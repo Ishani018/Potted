@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Platform } from 'react-native';
+import React from 'react';
+import { View, Text, Image, ScrollView, StyleSheet, Platform } from 'react-native';
 import { POTTED_PLANT_IMAGES, TRADE_IMAGES, PET_IMAGES } from '../engine/assets';
 import { PEST_IMAGES } from '../engine/pestImages';
 import {
@@ -9,7 +9,7 @@ import {
 import RemedyIcon from './RemedyIcon';
 import BookFrame from './BookFrame';
 
-// The flower book's "Care" tab: how to look after your plants, in two spreads.
+// The flower book's care chapter: how to look after your plants, over three spreads.
 //   1. Watering  |  Bugs (and how to clear each kind)
 //   2. Wilting & harvesting  |  Granny Mae's remedies and swaps
 //   3. Using a remedy  |  Keeping bugs away (scented flowers, pets)
@@ -204,23 +204,8 @@ const SPREADS = [
   { left: UsingRemedies, right: KeepingAway },
 ];
 
-export default function CareGuide({ tabs }) {
-  const [spread, setSpread] = useState(0);
-  const { left: Left, right: Right } = SPREADS[spread];
-  const last = SPREADS.length - 1;
-
-  const pager = (
-    <View style={styles.pager}>
-      <TouchableOpacity disabled={spread === 0} onPress={() => setSpread(spread - 1)} style={[styles.pageBtn, spread === 0 && styles.pageBtnOff]}>
-        <Text style={styles.pageBtnTxt}>{'<'}</Text>
-      </TouchableOpacity>
-      <Text style={styles.pageNum}>Page {spread + 1} of {SPREADS.length}</Text>
-      <TouchableOpacity disabled={spread === last} onPress={() => setSpread(spread + 1)} style={[styles.pageBtn, spread === last && styles.pageBtnOff]}>
-        <Text style={styles.pageBtnTxt}>{'>'}</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
+export default function CareGuide({ tabs, spread = 0 }) {
+  const { left: Left, right: Right } = SPREADS[spread] ?? SPREADS[0];
   return (
     <BookFrame
       left={(
@@ -236,7 +221,6 @@ export default function CareGuide({ tabs }) {
           <Right />
         </ScrollView>
       )}
-      pager={pager}
     />
   );
 }
@@ -266,9 +250,4 @@ const styles = StyleSheet.create({
   itemRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },
   flowerImg: { width: 24, height: 24 },
 
-  pager: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
-  pageBtn: { paddingHorizontal: 8, paddingVertical: 4 },
-  pageBtnOff: { opacity: 0.25 },
-  pageBtnTxt: { fontFamily: PIXEL_FONT, color: '#7a3e1a', fontSize: 11 },
-  pageNum: { fontFamily: BODY, color: SOFT, fontSize: 13 },
 });

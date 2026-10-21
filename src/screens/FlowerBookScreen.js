@@ -4,7 +4,7 @@ import { useGame } from '../context/GameContext';
 import { POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES, UI_IMAGES, TRADE_IMAGES } from '../engine/assets';
 import {
   FLOWER_BOOK, POTTED_FLOWERS, HANGING_PLANTS, BOUQUET_RECIPES, TRADE_FLOWERS, seedType,
-  FLOWER_GROWTH, formatDuration, seedUnlockLevel, playerLevel,
+  FLOWER_GROWTH, formatDuration, seedUnlockLevel, playerLevel, CUSTOMERS, PETS,
 } from '../constants/gameData';
 import BouquetArt from '../components/BouquetArt';
 import BackSign from '../components/BackSign';
@@ -13,10 +13,11 @@ import BookFrame from '../components/BookFrame';
 import BookCustomers from '../components/BookCustomers';
 import BookPets from '../components/BookPets';
 import BookPaintings from '../components/BookPaintings';
-import { BookTabs, BODY } from '../components/BookParts';
+import { BookTabs, BODY, SOFT } from '../components/BookParts';
+import { BookProvider, useBook, CHAPTERS } from '../components/BookNav';
 
-// Flower book — an open two-page journal with six tabs: Flowers, Bouquets, Care,
-// Customers, Pets and Paintings.
+// Flower book — an open journal you turn page by page (arrows, swipe, or the
+// contents page): Flowers, Bouquets, Care (3 spreads), Customers, Pets, Paintings.
 // Flowers: every flower (silhouettes until discovered); a page unlocks the first
 // time that flower reaches full bloom (see WATER_PLANT).
 // Bouquets: the secret bouquet recipes; one unlocks the first time it's tied
@@ -65,10 +66,61 @@ function flowerArt(key) {
 }
 
 export default function FlowerBookScreen({ navigation, route }) {
+  return (
+    <BookProvider startKey={route?.params?.tab ?? 'flowers'}>
+      <FlowerBookPages navigation={navigation} />
+    </BookProvider>
+  );
+}
+
+// Left page: the book's title and what you've collected. Right page: the contents.
+function ContentsPages({ found, bouquetsFound }) {
   const { state } = useGame();
+  const { goTo } = useBook();
+  const p = state.player;
+  const counts = {
+    flowers: `${found} / ${FLOWER_BOOK.length}`,
+    bouquets: `${bouquetsFound} / ${BOUQUET_RECIPES.length}`,
+    customers: `${Object.keys(p.customerBook ?? {}).length} / ${Object.keys(CUSTOMERS).length}`,
+    pets: `${(p.ownedPets ?? []).length} / ${Object.keys(PETS).length}`,
+    paintings: `${(p.ownedPaintings ?? []).length}`,
+  };
+  return (
+    <BookFrame
+      left={(
+        <View style={styles.coverPage}>
+          <Text style={styles.coverSmall}>THE</Text>
+          <Text style={styles.coverTitle}>FLOWER</Text>
+          <Text style={styles.coverTitle}>BOOK</Text>
+          <View style={styles.coverRule} />
+          <Text style={styles.coverSub}>a gardener's journal</Text>
+          <Image source={bloomImage(FLOWER_BOOK[0].key)} style={styles.coverArt} resizeMode="contain" />
+          <Text style={styles.coverHint}>turn the page, or swipe</Text>
+        </View>
+      )}
+      right={(
+        <View style={styles.pageInner}>
+          <Text style={styles.contentsHead}>CONTENTS</Text>
+          {CHAPTERS.map((c) => (
+            <TouchableOpacity key={c.key} onPress={() => goTo(c.page)} activeOpacity={0.6} style={styles.contentsRow}>
+              <Text style={styles.contentsName}>{c.title}</Text>
+              <View style={styles.leader} />
+              <Text style={styles.contentsCount}>{counts[c.key] ?? ''}</Text>
+              <Text style={styles.contentsPage}>{c.page + 1}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+    />
+  );
+}
+
+function FlowerBookPages({ navigation }) {
+  const { state } = useGame();
+  const { info } = useBook();
+  const tab = info.key;
   const book = state.player.flowerBook ?? {};
   const bouquetBook = state.player.bouquetBook ?? {};
-  const [tab, setTab] = useState(route?.params?.tab ?? 'flowers');
   const [selected, setSelected] = useState(FLOWER_BOOK[0].key);
   const [selectedRecipe, setSelectedRecipe] = useState(BOUQUET_RECIPES[0].id);
 
@@ -83,26 +135,28 @@ export default function FlowerBookScreen({ navigation, route }) {
     <View style={styles.root}>
       <BackSign onPress={() => navigation.goBack()} />
 
-      {tab === 'customers' ? (
-        <BookCustomers tab={tab} setTab={setTab} />
+      {tab === 'contents' ? (
+        <ContentsPages found={found} bouquetsFound={BOUQUET_RECIPES.filter((r) => bouquetBook[r.id]).length} />
+      ) : tab === 'customers' ? (
+        <BookCustomers />
       ) : tab === 'pets' ? (
-        <BookPets tab={tab} setTab={setTab} />
+        <BookPets />
       ) : tab === 'paintings' ? (
-        <BookPaintings tab={tab} setTab={setTab} />
+        <BookPaintings />
       ) : tab === 'care' ? (
-        <CareGuide tabs={<BookTabs tab={tab} setTab={setTab} />} />
+        <CareGuide spread={info.spread} tabs={<BookTabs />} />
       ) : tab === 'bouquets' ? (
         <BouquetPages
           found={bouquetBook}
           selected={selectedRecipe}
           onSelect={setSelectedRecipe}
-          tabs={<BookTabs tab={tab} setTab={setTab} />}
+          tabs={<BookTabs />}
         />
       ) : (
       <BookFrame
         left={(
         <View style={styles.pageInner}>
-          <BookTabs tab={tab} setTab={setTab} />
+          <BookTabs />
           <Text style={styles.progress}>{found} / {FLOWER_BOOK.length} discovered</Text>
           <View style={styles.grid}>
             {FLOWER_BOOK.map((f) => {
@@ -265,6 +319,19 @@ const INK = '#4a2a10';
 const PAPER = '#f3e3c0';
 
 const styles = StyleSheet.create({
+  coverPage: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  coverSmall: { fontFamily: PIXEL_FONT, fontSize: 8, color: SOFT, marginBottom: 6 },
+  coverTitle: { fontFamily: PIXEL_FONT, fontSize: 20, color: '#7a3e1a', lineHeight: 28 },
+  coverRule: { width: 90, height: 2, backgroundColor: 'rgba(122,62,26,0.5)', marginVertical: 8 },
+  coverSub: { fontFamily: BODY, fontSize: 16, color: INK, marginBottom: 8 },
+  coverArt: { width: 74, height: 74, marginBottom: 6 },
+  coverHint: { fontFamily: BODY, fontSize: 12.5, color: SOFT },
+  contentsHead: { fontFamily: PIXEL_FONT, fontSize: 10, color: '#7a3e1a', textAlign: 'center', marginTop: 4, marginBottom: 14 },
+  contentsRow: { flexDirection: 'row', alignItems: 'flex-end', paddingVertical: 7 },
+  contentsName: { fontFamily: BODY, fontSize: 17, color: INK },
+  leader: { flex: 1, marginHorizontal: 6, marginBottom: 4, borderBottomWidth: 2, borderStyle: 'dotted', borderColor: 'rgba(122,62,26,0.4)' },
+  contentsCount: { fontFamily: BODY, fontSize: 13, color: SOFT, marginRight: 8, marginBottom: 1 },
+  contentsPage: { fontFamily: PIXEL_FONT, fontSize: 8, color: '#7a3e1a', width: 14, textAlign: 'right', marginBottom: 3 },
   root: { flex: 1, backgroundColor: '#2a1608', alignItems: 'center', justifyContent: 'center' },
   backImg: { width: '100%', height: '100%' },
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { PixelButton } from './Pixel';
+import { useBook } from './BookNav';
 
 // Shared pieces for the flower book's pages.
 // Type: headings, names, tabs and buttons use the game's pixel font; everything
@@ -11,27 +12,19 @@ export const PAPER = '#f3e3c0';
 export const PIXEL_FONT = 'PressStart2P';
 export const BODY = Platform.select({ web: "'PatrickHand', Georgia, serif", default: 'PatrickHand' });
 
-export const TABS = [
-  ['flowers', 'Flowers'], ['bouquets', 'Bouquets'], ['care', 'Care'],
-  ['customers', 'Customers'], ['pets', 'Pets'], ['paintings', 'Paintings'],
-];
-
-// The six tabs as plain lettering in two rows of three: the open one is dark with
-// an ink underline, the others are faded.
-export function BookTabs({ tab, setTab }) {
-  const rows = [TABS.slice(0, 3), TABS.slice(3)];
+// The chapter title at the top of a left page: small pixel lettering between two
+// little rules, like a heading written into a journal. (Pages are turned with the
+// arrows, a swipe, or the contents page, so there are no tabs.)
+export function BookTabs() {
+  const book = useBook();
+  const title = (book?.info?.title ?? '').toUpperCase();
   return (
     <View style={s.tabs}>
-      {rows.map((row, i) => (
-        <View key={i} style={s.tabRow}>
-          {row.map(([key, label]) => (
-            <TouchableOpacity key={key} onPress={() => setTab(key)} activeOpacity={0.7} style={s.tab}>
-              <Text style={[s.tabTxt, tab === key && s.tabTxtOn]}>{label.toUpperCase()}</Text>
-              <View style={[s.tabLine, tab === key && s.tabLineOn]} />
-            </TouchableOpacity>
-          ))}
-        </View>
-      ))}
+      <View style={s.titleRow}>
+        <View style={s.rule} />
+        <Text style={s.titleTxt}>{title}</Text>
+        <View style={s.rule} />
+      </View>
     </View>
   );
 }
@@ -81,11 +74,8 @@ export const bookStyles = StyleSheet.create({
 });
 
 const s = StyleSheet.create({
-  tabs: { gap: 2, marginBottom: 4 },
-  tabRow: { flexDirection: 'row', justifyContent: 'center', gap: 12 },
-  tab: { alignItems: 'center', paddingVertical: 2 },
-  tabTxt: { fontFamily: PIXEL_FONT, fontSize: 7, color: '#b39a72' },
-  tabTxtOn: { color: INK },
-  tabLine: { height: 2, alignSelf: 'stretch', marginTop: 2, backgroundColor: 'transparent' },
-  tabLineOn: { backgroundColor: '#7a3e1a' },
+  tabs: { marginBottom: 6 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  rule: { flex: 1, height: 1, backgroundColor: 'rgba(122,62,26,0.45)' },
+  titleTxt: { fontFamily: PIXEL_FONT, fontSize: 8, color: '#7a3e1a' },
 });
