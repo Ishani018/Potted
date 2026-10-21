@@ -87,6 +87,16 @@ export const PAINTING_IMAGES = {
   picnic:                require('../../assets/walldecor/picnic.jpeg'),
 };
 
+// ─── Weather badges (wreath icons) and floating bits ──────────────────────────
+export const WEATHER_IMAGES = {
+  sunny:  require('../../assets/weather/sunny.png'),
+  rainy:  require('../../assets/weather/rainy.png'),
+  windy:  require('../../assets/weather/windy.png'),
+  cloudy: require('../../assets/weather/cloudy.png'),
+  raindrop: require('../../assets/weather/raindrop.png'),
+  leaf:     require('../../assets/weather/leaf.png'),
+};
+
 // ─── Pets ────────────────────────────────────────────────────────────────────
 // ebonyandivory = the always-together sleeping PAIR (one purchasable unit).
 // milk (white cat) and oreo (black cat) are separate single pets.

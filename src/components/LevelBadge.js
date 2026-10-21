@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { BOOK_MEDAL, BOOK_XP } from '../engine/assets';
+import { BOOK_MEDAL, BOOK_XP, WEATHER_IMAGES } from '../engine/assets';
+import { weatherFor } from '../constants/gameData';
+import { dayKey } from '../engine/petEffects';
 import { useGame } from '../context/GameContext';
 import { PixelText, COLORS } from './Pixel';
 import { levelInfo, playerLevel, SEED_UNLOCK_LEVEL, POTTED_FLOWERS, HANGING_PLANTS, BOUQUET_PAPERS } from '../constants/gameData';
@@ -11,6 +13,7 @@ export default function LevelBadge({ style }) {
   const [open, setOpen] = useState(false);
   const info = levelInfo(state.player.xp ?? 0);
   const level = playerLevel(state.player);
+  const weather = weatherFor(dayKey(Date.now()));
 
   // Next level at which something new unlocks (seed or paper).
   const nextUnlock = (() => {
@@ -41,10 +44,12 @@ export default function LevelBadge({ style }) {
             </View>
           </View>
         </View>
+        <Image source={WEATHER_IMAGES[weather.key]} style={styles.weather} resizeMode="contain" />
       </View>
       {open && (
         <View style={styles.tip}>
           <PixelText size={7}>{info.into} / {info.need} XP</PixelText>
+          <PixelText size={6} color="#ffe9a8" style={{ marginTop: 4 }}>{weather.name.toUpperCase()}: {weather.desc.toUpperCase()}</PixelText>
           {nextUnlock && (
             <PixelText size={6} color="#cfe8a0" style={{ marginTop: 4 }}>
               LV {nextUnlock.lv}: {nextUnlock.names.join(', ').toUpperCase()}
@@ -62,6 +67,7 @@ const styles = StyleSheet.create({
   medal: { width: 44, height: 51 },
   medalImg: { width: 44, height: 51 },
   medalNum: { position: 'absolute', left: 0, right: 0, top: 11, height: 22, alignItems: 'center', justifyContent: 'center' },
+  weather: { width: 34, height: 40, marginLeft: 2 },
   bar: { width: 84, height: 14 },
   barFrame: { position: 'absolute', width: 84, height: 14 },
   barInner: { position: 'absolute', left: 7, right: 7, top: 4, bottom: 4, overflow: 'hidden' },

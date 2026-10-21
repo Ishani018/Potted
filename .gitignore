@@ -28,6 +28,8 @@ assets/
 assets/*
 !assets/petshop/
 !assets/petshop/*.png
+!assets/weather/
+!assets/weather/*.png
 !assets/foster/
 !assets/foster/*.png
 !assets/petfood/

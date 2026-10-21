@@ -1,4 +1,4 @@
-import { PETS, PEST_CONFIG, FED_BOOST } from '../constants/gameData';
+import { PETS, PEST_CONFIG, FED_BOOST, weatherFor } from '../constants/gameData';
 
 // Combines the effects of every placed pet. A pet counts only while it's placed
 // in a room (petPlacements[key] is a room number), not when tucked away.
@@ -47,12 +47,17 @@ export function placedPets(player, now = Date.now()) {
 // { [room]: effects } for rooms 1–3, defaults where no pet helps.
 export function roomPetEffects(player, now) {
   const out = { 1: { ...ROOM_DEFAULTS }, 2: { ...ROOM_DEFAULTS }, 3: { ...ROOM_DEFAULTS } };
-  for (const { room, effect } of placedPets(player, now)) {
-    if (!effect.room || !out[room]) continue;
-    for (const [k, v] of Object.entries(effect.room)) {
+  const apply = (room, block) => {
+    for (const [k, v] of Object.entries(block)) {
       out[room][k] = ADDITIVE.includes(k) ? Math.min(0.9, out[room][k] + v) : out[room][k] * v;
     }
+  };
+  for (const { room, effect } of placedPets(player, now)) {
+    if (effect.room && out[room]) apply(room, effect.room);
   }
+  // today's weather applies in every room
+  const weather = weatherFor(dayKey(now ?? Date.now()));
+  for (const room of [1, 2, 3]) apply(room, weather.room);
   return out;
 }
 
