@@ -4,7 +4,7 @@ import { useGame } from '../context/GameContext';
 import { POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES, UI_IMAGES, TRADE_IMAGES } from '../engine/assets';
 import {
   FLOWER_BOOK, POTTED_FLOWERS, HANGING_PLANTS, BOUQUET_RECIPES, TRADE_FLOWERS, seedType,
-  FLOWER_GROWTH, formatDuration, seedUnlockLevel, playerLevel, CUSTOMERS, PETS,
+  FLOWER_GROWTH, formatDuration, seedUnlockLevel, playerLevel, CUSTOMERS, knownPetKeys,
 } from '../constants/gameData';
 import BouquetArt from '../components/BouquetArt';
 import BackSign from '../components/BackSign';
@@ -82,7 +82,7 @@ function ContentsPages({ found, bouquetsFound }) {
     flowers: `${found} / ${FLOWER_BOOK.length}`,
     bouquets: `${bouquetsFound} / ${BOUQUET_RECIPES.length}`,
     customers: `${Object.keys(p.customerBook ?? {}).length} / ${Object.keys(CUSTOMERS).length}`,
-    pets: `${(p.ownedPets ?? []).length} / ${Object.keys(PETS).length}`,
+    pets: `${(p.ownedPets ?? []).length} / ${knownPetKeys(p).length}`,
     paintings: `${(p.ownedPaintings ?? []).length}`,
   };
   return (

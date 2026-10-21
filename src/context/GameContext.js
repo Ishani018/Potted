@@ -9,6 +9,7 @@ import {
   roomScentShield, HERBALIST, HERBALIST_TRADES, REMEDIES, SACHET_MS, isShielded,
   PET_FOOD, PET_SPECIES, FED_MAX_HOURS,
 } from '../constants/gameData';
+import { maybeArriveStray } from '../engine/strays';
 import { roomPetEffects, globalPetEffects, pestRewardFor, placedPets, dayKey } from '../engine/petEffects';
 import { rollCustomerOrders, hashString, bouquetFillsOrder, hasStaleOrders } from '../engine/customers';
 import {
@@ -221,6 +222,8 @@ function reducer(state, action) {
           const catcher = placedPets(player).find((p) => p.room === slot.room && p.effect.room?.autoCatch);
           notices.push(`${PETS[catcher?.key]?.name ?? 'Your pet'} caught a bug in the ${ROOM_NAMES[slot.room]}! +${reward}`);
         }
+        const arrived = maybeArriveStray(player, now, rand);
+        if (arrived) { player = arrived.player; notices.push(arrived.notice); }
         const gifts = givePetGifts(player, inventory, now, rand);
         player = gifts.player;
         inventory = gifts.inventory;
@@ -582,6 +585,9 @@ function reducer(state, action) {
           coins: state.player.coins - price,
           ownedPets: [...(state.player.ownedPets ?? []), petKey],
           petPlacements: { ...(state.player.petPlacements ?? {}), [petKey]: 'all' },
+          // a stray leaves the foster corner (its finder is remembered for the book)
+          strays: (state.player.strays ?? []).filter((s) => s.key !== petKey),
+          petFound: { ...(state.player.petFound ?? {}), ...(state.player.strays ?? []).filter((s) => s.key === petKey).reduce((o, s) => ({ ...o, [petKey]: s.finder }), {}) },
         },
       };
     }

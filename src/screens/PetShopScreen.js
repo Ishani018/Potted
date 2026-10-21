@@ -104,6 +104,7 @@ export default function PetShopScreen({ navigation }) {
       />
 
       <View style={styles.foodBtn}>
+        <PixelButton label="FOSTER CORNER" tone="wood" size={8} onPress={() => navigation.navigate('Foster')} />
         <PixelButton label="PET FOOD >" tone="wood" size={8} onPress={() => navigation.navigate('PetFood')} />
       </View>
 
@@ -123,7 +124,7 @@ const styles = StyleSheet.create({
   // Sign floating above each pet (centred, overflowing the sprite box upward)
   tagWrap: { position: 'absolute', left: -40, right: -40, top: -22, alignItems: 'center', zIndex: 50 },
 
-  foodBtn: { position: 'absolute', right: 16, bottom: 12, zIndex: 30 },
+  foodBtn: { position: 'absolute', right: 16, bottom: 12, zIndex: 30, flexDirection: 'row', gap: 8 },
 
   modalOverlay: {
     ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.65)',

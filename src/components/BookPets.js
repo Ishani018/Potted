@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Image, ScrollView, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { PET_IMAGES, PERK_ICONS } from '../engine/assets';
-import { PETS, FED_BOOST, formatDuration } from '../constants/gameData';
+import { PETS, FED_BOOST, formatDuration, knownPetKeys, CUSTOMERS, STRAYS } from '../constants/gameData';
 import { isFed } from '../engine/petEffects';
 import PetSprite from './PetSprite';
 import BookFrame from './BookFrame';
@@ -12,14 +12,14 @@ import { BookTabs, BookButton, bookStyles as b, INK, PIXEL_FONT, BODY } from './
 // colour; the rest are silhouettes. The card shows their perk and (for your pets)
 // lets you choose where they live and give them a new name. Adopting still
 // happens at the pet shop.
-const KEYS = Object.keys(PETS);
 
 export default function BookPets({ tab, setTab }) {
   const { state, dispatch } = useGame();
   const owned = state.player.ownedPets ?? [];
   const names = state.player.petNames ?? {};
   const placements = state.player.petPlacements ?? {};
-  const [selected, setSelected] = useState(KEYS[0]);
+  const KEYS = knownPetKeys(state.player);
+  const [selected, setSelected] = useState(Object.keys(PETS)[0]);
   const [renaming, setRenaming] = useState(false);
   const [draft, setDraft] = useState('');
 
@@ -28,6 +28,7 @@ export default function BookPets({ tab, setTab }) {
   const shown = (k) => names[k] ?? PETS[k].name;
   const home = placements[selected] != null;     // 'all' (or an older room number) = out and about
   const count = owned.filter((k) => PETS[k]).length;
+  const found = state.player.petFound?.[selected];
 
   const pick = (k) => { setSelected(k); setRenaming(false); };
   const startRename = () => { setDraft(names[selected] ?? pet.name); setRenaming(true); };
@@ -47,7 +48,7 @@ export default function BookPets({ tab, setTab }) {
                   key={k}
                   activeOpacity={0.8}
                   onPress={() => pick(k)}
-                  style={[b.tile, mine && b.tileFound, k === selected && b.tileSel, s.card]}
+                  style={[b.tile, mine && b.tileFound, k === selected && b.tileSel, s.card, KEYS.length > 12 && { width: '18%' }]}
                 >
                   <View style={b.tileArt}>
                     <Image source={PET_IMAGES[k]} style={[s.tileImg, !mine && b.silhouette]} resizeMode="contain" />
@@ -76,6 +77,9 @@ export default function BookPets({ tab, setTab }) {
 
           <Text style={b.name}>{has ? shown(selected) : '???'}</Text>
           <Text style={b.sub}>{pet.breed}{has && names[selected] ? ` · ${pet.name}` : ''}</Text>
+          {has && found && CUSTOMERS[found] && STRAYS[selected] && (
+            <Text style={[b.tagline, { color: '#a08860' }]}>{`✦ Found by ${CUSTOMERS[found].name}`}</Text>
+          )}
 
           {has && (
             <Text style={[b.tagline, { color: isFed(state.player, selected) ? '#3f7a2e' : '#a08860' }]}>
@@ -122,7 +126,11 @@ export default function BookPets({ tab, setTab }) {
               </>
             )
           ) : (
-            <Text style={b.note}>Not adopted yet. Visit the pet shop to adopt {pet.name} for {pet.price} coins.</Text>
+            <Text style={b.note}>
+              {pet.stray
+                ? `Waiting at the foster corner. Adopt ${pet.name} for ${pet.price} coins.`
+                : `Not adopted yet. Visit the pet shop to adopt ${pet.name} for ${pet.price} coins.`}
+            </Text>
           )}
         </ScrollView>
       )}

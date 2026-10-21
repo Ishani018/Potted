@@ -199,6 +199,57 @@ export const PET_FOOD = [
   { key: 'shampoo',    name: 'Pet Shampoo',     price: 30, hours: 24, for: 'any', scope: 'one' },
 ];
 
+// ── Strays at the foster corner ───────────────────────────────────────────────
+// Customers find strays and bring them to the pet shop's foster corner. Each one
+// takes an empty seat (FOSTER_SEATS) until you adopt it; adopting works like any
+// other pet (they're added to PETS below). New strays turn up every STRAY_MS while
+// there is a free seat, up to STRAY_MAX at a time. aspect = image width / height,
+// fw = how wide it sits on the foster picture (px of the 1020×571 art).
+export const STRAY_MS = 8 * 3600000;
+export const STRAY_MAX = 4;
+export const FOSTER_SIZE = { w: 1020, h: 571 };
+// Feet position of a pet sitting on each seat (px of the foster picture).
+export const FOSTER_SEATS = [
+  { id: 'blueBed',   x: 325, y: 452, scale: 1 },
+  { id: 'cushion',   x: 190, y: 520, scale: 1 },
+  { id: 'bench',     x: 215, y: 336, scale: 0.9 },
+  { id: 'treeMid',   x: 582, y: 296, scale: 0.75 },
+  { id: 'pinkBed',   x: 950, y: 498, scale: 1 },
+  { id: 'creamBed',  x: 925, y: 432, scale: 1 },
+  { id: 'rug',       x: 560, y: 495, scale: 1.05 },
+];
+export const STRAYS = {
+  biscuit:   { key: 'biscuit',   name: 'Biscuit',   breed: 'Shih Tzu',      species: 'dog',    price: 120, aspect: 300 / 262, fw: 120, restAspect: 300 / 155, restFw: 150,
+    found: (n) => `${n} found Biscuit dozing under a park bench, far too sleepy to be scared.`,
+    effect: { title: 'Sleepy Guard', desc: 'Plants in its room take 1.5x as long to wilt.', room: { wiltMult: 1.5 } } },
+  marmalade: { key: 'marmalade', name: 'Marmalade', breed: 'Ginger Kitten', species: 'cat',    price: 110, aspect: 280 / 300, fw: 80,
+    found: (n) => `${n} heard a tiny mew from a flowerpot behind the bakery.`,
+    effect: { title: 'Pounce', desc: 'Sometimes catches bugs in its room for you.', room: { autoCatch: 0.1 } } },
+  honey:     { key: 'honey',     name: 'Honey',     breed: 'Fluffy Kitten', species: 'cat',    price: 130, aspect: 289 / 300, fw: 85,
+    found: (n) => `${n} noticed a fluffy kitten watching the shop window every single morning.`,
+    effect: { title: 'Window Watcher', desc: 'Plants in its room are ready to water 10% sooner.', room: { cooldownMult: 0.9 } } },
+  soot:      { key: 'soot',      name: 'Soot',      breed: 'Black Pup',     species: 'dog',    price: 140, aspect: 300 / 271, fw: 120,
+    found: (n) => `${n} met a very muddy puppy who took a bow and would not stop wagging.`,
+    effect: { title: 'Treasure Sniffer', desc: 'Brings you 8–18 coins once a day.', daily: { coins: [8, 18] } } },
+  cloud:     { key: 'cloud',     name: 'Cloud',     breed: 'Bichon',        species: 'dog',    price: 150, aspect: 299 / 300, fw: 105,
+    found: (n) => `${n} found a little cloud of fluff waiting by the florist's door.`,
+    effect: { title: 'Fluffy Charm', desc: 'Bouquets sell for 10% more.', global: { bouquetMult: 1.1 } } },
+  smoky:     { key: 'smoky',     name: 'Smoky',     breed: 'Grey Kitten',   species: 'cat',    price: 120, aspect: 300 / 175, fw: 120, asleep: true,
+    found: (n) => `${n} carried a grey kitten home, and it fell asleep before they got there.`,
+    effect: { title: 'Cosy Purr', desc: 'Plants in its room are ready to water 10% sooner.', room: { cooldownMult: 0.9 } } },
+  maple:     { key: 'maple',     name: 'Maple',     breed: 'Shiba Pup',     species: 'dog',    price: 170, aspect: 244 / 300, fw: 95,
+    found: (n) => `${n} met a fox-faced pup begging, very politely, outside the market.`,
+    effect: { title: 'Show-Off', desc: 'Hanging plants in its room earn 1.5x coins.', room: { hangingCoinMult: 1.5 } } },
+  clover:    { key: 'clover',    name: 'Clover',    breed: 'Rabbit',        species: 'rabbit', price: 130, aspect: 265 / 300, fw: 85,
+    found: (n) => `${n} found a rabbit nibbling the clover by the garden gate.`,
+    effect: { title: 'Lucky Foot', desc: 'Harvests in its room have a 15% chance of an extra flower.', room: { harvestLuck: 0.15 } } },
+};
+export const STRAY_KEYS = Object.keys(STRAYS);
+for (const [k, st] of Object.entries(STRAYS)) {
+  PETS[k] = { key: k, name: st.name, price: st.price, breed: st.breed, stray: true, effect: st.effect };
+  PET_SPECIES[k] = st.species;
+}
+
 // ── Pre-determined pet positions per room ─────────────────────────────────────
 // Laid out in Plopper (1376×768 base, sprite CENTER anchor). A pet shows at its
 // room's spot only when the player has PLACED it there (petPlacements[key]===room).
@@ -491,6 +542,9 @@ export const INITIAL_PLAYER_STATE = {
   bouquetBook: {},   // recipeId → { made, firstAt } — secret bouquet recipes found
   bouquetsSold: 0,
   petGifts: {},      // petKey → day key of the last daily gift
+  strays: [],        // strays waiting at the foster corner: { key, finder, seat, at }
+  lastStrayAt: null, // when the last stray arrived (null = none yet, the first comes straight away)
+  petFound: {},      // adopted stray key -> customer who found it
   petCare: {},       // petKey → time (ms) its food wears off; fed pets get a stronger perk
 };
 
@@ -716,3 +770,10 @@ export function isShielded(slot, now = Date.now()) {
   return !!slot?.shieldUntil && slot.shieldUntil > now;
 }
 
+
+// The pets the book shows: the shop's pets, plus any stray you've met (at the
+// foster corner now, or already adopted). Unmet strays stay a surprise.
+export function knownPetKeys(player) {
+  const met = new Set([...(player.ownedPets ?? []), ...(player.strays ?? []).map((s) => s.key)]);
+  return Object.keys(PETS).filter((k) => !PETS[k].stray || met.has(k));
+}

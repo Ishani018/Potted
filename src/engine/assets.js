@@ -103,7 +103,19 @@ export const PET_IMAGES = {
   ebonyandivory: require('../../assets/pets/ebonyandivory.png'),
   milk:          require('../../assets/pets/milk.png'),
   oreo:          require('../../assets/pets/oreo.png'),
+  // strays (foster corner)
+  biscuit:       require('../../assets/foster/biscuit.png'),
+  marmalade:     require('../../assets/foster/marmalade.png'),
+  honey:         require('../../assets/foster/marmaladealt.png'),
+  soot:          require('../../assets/foster/soot.png'),
+  cloud:         require('../../assets/foster/cloud.png'),
+  smoky:         require('../../assets/foster/smoky.png'),
+  maple:         require('../../assets/foster/maple.png'),
+  clover:        require('../../assets/foster/clover.png'),
 };
+// Biscuit naps on the foster beds.
+export const FOSTER_REST_IMAGES = { biscuit: require('../../assets/foster/biscuitsleep.png') };
+export const FOSTER_BG = require('../../assets/foster/corner.png');
 
 // ─── UI ──────────────────────────────────────────────────────────────────────
 export const UI_IMAGES = {
@@ -197,6 +209,11 @@ export const PERK_ICONS = {
   oreo: require('../../assets/ui_comps/pc_perk_oreo.png'),
   ebonyandivory: require('../../assets/ui_comps/pc_perk_ebonyandivory.png'),
 };
+// Strays borrow the icon of the pet whose perk is most like theirs.
+Object.assign(PERK_ICONS, {
+  biscuit: PERK_ICONS.martin, marmalade: PERK_ICONS.tiger, honey: PERK_ICONS.koazy, soot: PERK_ICONS.aki,
+  cloud: PERK_ICONS.cherry, smoky: PERK_ICONS.koazy, maple: PERK_ICONS.brownie, clover: PERK_ICONS.milk,
+});
 
 // ─── Trade flower images (market) ─────────────────────────────────────────────
 export const TRADE_IMAGES = {

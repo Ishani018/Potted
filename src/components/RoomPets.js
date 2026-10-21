@@ -3,7 +3,7 @@ import { View, TouchableOpacity } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { PET_IMAGES } from '../engine/assets';
 import PetSprite from './PetSprite';
-import { PET_POSITIONS, PET_BASE } from '../constants/gameData';
+import { PET_POSITIONS, PET_BASE, STRAYS } from '../constants/gameData';
 
 // Renders every owned pet the player has PLACED in this room, at its Plopper
 // position (PET_POSITIONS[room][petKey] in 1376×768 base px, center anchor).
@@ -19,11 +19,26 @@ export default function RoomPets({ room, sw, sh, onPetPress }) {
   const { ownedPets = [], petPlacements = {} } = state.player;
   const spots = PET_POSITIONS[room] ?? {};
 
+  // Strays have no hand-laid spot yet: they take the spot of a shop pet you don't have
+  // out in this room, standing on its feet line.
+  const shown = (k) => ownedPets.includes(k) && (petPlacements[k] === room || petPlacements[k] === 'all');
+  const free = Object.keys(spots).filter((k) => !shown(k) && !STRAYS[k]);
+  const strayCount = {};
+  const spotFor = (petKey) => {
+    if (spots[petKey]) return spots[petKey];
+    if (!STRAYS[petKey]) return null;
+    const idx = (strayCount.n = (strayCount.n ?? -1) + 1);
+    const base = spots[free[idx % Math.max(1, free.length)]];
+    if (!base) return null;
+    const w = base.w * 0.85;
+    return { x: base.x, y: base.y + base.h / 2 - (w / STRAYS[petKey].aspect) / 2, w, h: w / STRAYS[petKey].aspect, flip: base.flip, z: base.z };
+  };
+
   return (
     <>
       {ownedPets.map((petKey) => {
         if (!DEBUG_SHOW_ALL && petPlacements[petKey] !== room && petPlacements[petKey] !== 'all') return null;
-        const p = spots[petKey];
+        const p = spotFor(petKey);
         const img = PET_IMAGES[petKey];
         if (!p || !img) return null;
         const cx = (p.x / PET_BASE.w) * sw;

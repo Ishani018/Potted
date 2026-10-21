@@ -143,7 +143,7 @@ function Remedies() {
 function KeepingAway() {
   const scented = Object.entries(SCENT_SHIELD);
   // Pets whose perk is about bugs.
-  const helpers = Object.values(PETS).filter((p) => {
+  const helpers = Object.values(PETS).filter((p) => !p.stray).filter((p) => {
     const r = p.effect?.room;
     return r && (r.pestChance < 1 || r.autoCatch > 0 || r.pestRewardMult > 1);
   });

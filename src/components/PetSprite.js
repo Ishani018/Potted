@@ -4,15 +4,16 @@ import { PET_IMAGES } from '../engine/assets';
 import { PixelText } from './Pixel';
 
 // Pets that are drawn asleep: slow breathing + floating "Z", no hopping.
-const SLEEPERS = { koazy: true, ebonyandivory: true };
+const SLEEPERS = { koazy: true, ebonyandivory: true, smoky: true };
 
 // An animated pet. Breathes (squash/stretch anchored at its feet), and sleepers drift a little "Z". Each pet gets its own random phase so a
 // room full of pets never moves in lockstep. Layout (position/size) is the
 // caller's job — this fills a w×h box.
-export default function PetSprite({ petKey, w, h, flip, children }) {
+// source: draw this picture instead of the pet's usual one; asleep: force sleeping (or awake).
+export default function PetSprite({ petKey, w, h, flip, children, source, asleep: asleepProp }) {
   const breath = useRef(new Animated.Value(0)).current;
   const zz = useRef(new Animated.Value(0)).current;
-  const asleep = !!SLEEPERS[petKey];
+  const asleep = asleepProp ?? !!SLEEPERS[petKey];
 
   useEffect(() => {
     const phase = Math.random() * 1200;
@@ -32,7 +33,7 @@ export default function PetSprite({ petKey, w, h, flip, children }) {
       clearTimeout(start);
       breathLoop.stop(); zzLoop && zzLoop.stop();
     };
-  }, [petKey]);
+  }, [petKey, asleep]);
 
   const amp = asleep ? 0.03 : 0.035;
   const scaleY = breath.interpolate({ inputRange: [0, 1], outputRange: [1, 1 + amp] });
@@ -47,7 +48,7 @@ export default function PetSprite({ petKey, w, h, flip, children }) {
     <View style={{ width: w, height: h }}>
       <Animated.View style={{ width: w, height: h, transform: [{ translateY: plant }, { scaleY }, { scaleX }] }}>
         <Image
-          source={PET_IMAGES[petKey]}
+          source={source ?? PET_IMAGES[petKey]}
           style={{ width: w, height: h, transform: flip ? [{ scaleX: -1 }] : undefined }}
           resizeMode="contain"
         />
