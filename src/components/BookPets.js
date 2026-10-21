@@ -6,7 +6,7 @@ import { PETS, FED_BOOST, formatDuration, knownPetKeys, CUSTOMERS, STRAYS } from
 import { isFed } from '../engine/petEffects';
 import PetSprite from './PetSprite';
 import BookFrame from './BookFrame';
-import { BookTabs, BookButton, bookStyles as b, INK, PIXEL_FONT, BODY } from './BookParts';
+import { BookTabs, BookButton, bookStyles as b, INK, PIXEL_FONT, BODY, HEAD } from './BookParts';
 
 // Flower book → Pets. A portrait card for every pet. Pets you've adopted are in
 // colour; the rest are silhouettes. The card shows their perk and (for your pets)
@@ -63,13 +63,13 @@ export default function BookPets({ tab, setTab }) {
       )}
       right={(
         <ScrollView style={b.pageInner} contentContainerStyle={b.detail} showsVerticalScrollIndicator={false}>
-          <View style={[b.hero, { width: 120, height: 92 }]}>
-            <View style={[b.glow, !has && b.glowLocked, { width: 82, height: 82, borderRadius: 41 }]} />
+          <View style={[b.hero, { width: 120, height: 80 }]}>
+            <View style={[b.glow, !has && b.glowLocked, { width: 72, height: 72, borderRadius: 36 }]} />
             {has ? (
-              <PetSprite petKey={selected} w={84} h={78} />
+              <PetSprite petKey={selected} w={78} h={70} />
             ) : (
               <>
-                <Image source={PET_IMAGES[selected]} style={[{ width: 80, height: 74 }, b.silhouette]} resizeMode="contain" />
+                <Image source={PET_IMAGES[selected]} style={[{ width: 74, height: 68 }, b.silhouette]} resizeMode="contain" />
                 <Text style={[b.tileQ, { fontSize: 22 }]}>?</Text>
               </>
             )}
@@ -142,9 +142,9 @@ const s = StyleSheet.create({
   card: { width: '23%', aspectRatio: 0.88 },
   tileImg: { width: '92%', height: '92%' },
   perk: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'stretch', marginTop: 2, marginBottom: 2, paddingHorizontal: 4 },
-  perkIcon: { width: 34, height: 32 },
-  perkTitle: { fontFamily: PIXEL_FONT, color: '#3f7a2e', fontSize: 8, marginBottom: 2 },
-  perkDesc: { fontFamily: BODY, color: INK, fontSize: 13, lineHeight: 14 },
+  perkIcon: { width: 28, height: 27 },
+  perkTitle: { fontFamily: HEAD, color: '#3f7a2e', fontSize: 16, marginBottom: 1 },
+  perkDesc: { fontFamily: BODY, color: INK, fontSize: 12.5, lineHeight: 13 },
   row: { flexDirection: 'row', gap: 6 },
   renameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
   input: {

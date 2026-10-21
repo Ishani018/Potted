@@ -43,3 +43,4 @@ assets/*
 !assets/fonts/
 assets/fonts/*
 !assets/fonts/PatrickHand-Regular.ttf
+!assets/fonts/Almendra-Regular.ttf

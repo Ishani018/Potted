@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Image, ScrollView, StyleSheet, Platform } from 'react-native';
-import { POTTED_PLANT_IMAGES, TRADE_IMAGES, PET_IMAGES, PETFOOD_IMAGES } from '../engine/assets';
+import { POTTED_PLANT_IMAGES, TRADE_IMAGES, PET_IMAGES, PETFOOD_IMAGES, UI_IMAGES, FOSTER_BG } from '../engine/assets';
 import { PEST_IMAGES } from '../engine/pestImages';
 import {
   PEST_INFO, PEST_CONFIG, FLOWER_GROWTH, GROWTH_TIMERS, HERBALIST, HERBALIST_TRADES, REMEDIES,
@@ -8,6 +8,7 @@ import {
   PET_FOOD, FED_BOOST, FED_MAX_HOURS, STRAY_MS, STRAY_MAX,
 } from '../constants/gameData';
 import RemedyIcon from './RemedyIcon';
+import HerbalistSprite from './HerbalistSprite';
 import BookFrame from './BookFrame';
 
 // The flower book's care chapter: how to look after your plants and pets, over four spreads.
@@ -21,6 +22,7 @@ const INK = '#4a2a10';
 const SOFT = '#8a6a40';
 const PIXEL_FONT = 'PressStart2P';
 const BODY = Platform.select({ web: "'PatrickHand', Georgia, serif", default: 'PatrickHand' });
+const HEAD = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 
 function Block({ title, children }) {
   return (
@@ -37,6 +39,21 @@ const hoursRange = () => {
   return [Math.min(...hs), Math.max(...hs)];
 };
 const fmtH = (h) => formatDuration(h * 3600000);
+const flowerPic = (k) => TRADE_IMAGES[TRADE_FLOWERS[k]?.img];
+
+// A picture on the left, a short caption on the right.
+function Pic({ src, size = 34, title, children }) {
+  return (
+    <View style={styles.itemRow}>
+      <View style={{ width: size, alignItems: 'center' }}>{src}</View>
+      <View style={{ flex: 1 }}>
+        {title ? <Text style={styles.bugName}>{title}</Text> : null}
+        {children}
+      </View>
+    </View>
+  );
+}
+const Img = ({ source, w, h }) => <Image source={source} style={{ width: w, height: h ?? w }} resizeMode="contain" />;
 
 // ── Spread 1 ──────────────────────────────────────────────────────────────────
 function Watering() {
@@ -51,7 +68,9 @@ function Watering() {
   return (
     <>
       <Block title="Watering">
-        <P>Drag the watering can over a plant and hold it there. Every watering grows the plant one stage.</P>
+        <Pic src={<Img source={UI_IMAGES.wateringcan1} w={40} h={36} />} size={48}>
+          <P>Drag the can over a plant and hold it there. Each drink grows it one stage.</P>
+        </Pic>
         <View style={styles.stageRow}>
           {stages.map((s, i) => (
             <View key={s.label} style={styles.stage}>
@@ -61,23 +80,31 @@ function Watering() {
             </View>
           ))}
         </View>
-        <P>A blue drop above a plant means it is thirsty and ready for the next drink. How long that takes depends on the flower: {fmtH(lo)} for the quickest, {fmtH(hi)} for the slowest. Each flower's own page tells you.</P>
+        <Pic src={<Img source={UI_IMAGES.waterdrop} w={26} h={30} />} size={48}>
+          <P>A blue drop means it is thirsty. Waits run from {fmtH(lo)} to {fmtH(hi)}, depending on the flower.</P>
+        </Pic>
       </Block>
     </>
   );
 }
 
-
 function WiltingHarvest() {
   const coins = GROWTH_TIMERS.hangingPassiveCoins;
+  const daisy = POTTED_PLANT_IMAGES.daisy ?? [];
   return (
     <>
       <Block title="Wilting">
-        <P>If a plant stays thirsty for a whole day it droops and turns pale. Water it and it perks right back up. Plants never die, and a plant in full bloom never wilts.</P>
+        <Pic src={<View style={{ opacity: 0.55 }}><Img source={daisy[2]} w={36} h={42} /></View>} size={48}>
+          <P>Thirsty for a whole day, a plant droops. Water it and it perks up. Plants never die.</P>
+        </Pic>
       </Block>
       <Block title="Harvesting">
-        <P>At full bloom, tap the plant and choose Harvest. Shelf flowers give you flowers to sell at the market, tie into bouquets or hand to customers.</P>
-        <P>Hanging plants earn {coins.amount} coins every {fmtH(coins.interval / 3600000)} while they bloom. Harvesting one gives a flower instead, and the coins stop.</P>
+        <Pic src={<Img source={flowerPic('daisy')} w={36} h={42} />} size={48}>
+          <P>At full bloom, tap the plant and Harvest it for the market, bouquets or customers.</P>
+        </Pic>
+        <Pic src={<Img source={UI_IMAGES.goldcoins} w={34} h={34} />} size={48}>
+          <P>Hanging plants earn {coins.amount} coins every {fmtH(coins.interval / 3600000)} while they bloom.</P>
+        </Pic>
       </Block>
     </>
   );
@@ -88,14 +115,14 @@ function Bugs() {
   return (
     <>
       <Block title="Bugs">
-        <P>A bug stops its plant growing until it is gone. {PEST_CONFIG.handClearing ? `Clearing one by hand pays ${PEST_CONFIG.reward} coins and a little XP:` : "Only the herbalist's remedies clear them. You might meet:"}</P>
+        <P>A bug stops its plant growing until it is gone. {PEST_CONFIG.handClearing ? `Clear one by hand for ${PEST_CONFIG.reward} coins.` : "Only remedies clear them."}</P>
       </Block>
       {kinds.map((k) => {
         const info = PEST_INFO[k];
         return (
           <View key={k} style={styles.bugRow}>
             <View style={styles.bugImgBox}>
-              <Image source={PEST_IMAGES[k]} style={{ width: 44, height: 44 * info.aspect }} resizeMode="contain" />
+              <Image source={PEST_IMAGES[k]} style={{ width: 46, height: 46 * info.aspect }} resizeMode="contain" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.bugName}>{info.name}</Text>
@@ -115,27 +142,26 @@ function Remedies() {
   return (
     <>
       <Block title={`${HERBALIST.name}'s remedies`}>
-        <P>{HERBALIST.name} waits at Home. She never sells anything, but she is happy to help a good gardener.</P>
-        <View style={styles.itemRow}>
-          <RemedyIcon kind="balm" size={30} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.bugName}>{REMEDIES.balm.name}</Text>
-            <Text style={styles.small}>{REMEDIES.balm.desc} She gives you one free every day.</Text>
-          </View>
-        </View>
-        <View style={styles.itemRow}>
-          <RemedyIcon kind="sachet" size={30} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.bugName}>{REMEDIES.sachet.name}</Text>
-            <Text style={styles.small}>Keeps one growing plant bug-free for {SACHET_MS / 3600000} hours, even while you are away.</Text>
-          </View>
-        </View>
+        <Pic src={<RemedyIcon kind="balm" size={42} />} size={48} title={REMEDIES.balm.name}>
+          <Text style={styles.small}>{REMEDIES.balm.desc} One free every day.</Text>
+        </Pic>
+        <Pic src={<RemedyIcon kind="sachet" size={42} />} size={48} title={REMEDIES.sachet.name}>
+          <Text style={styles.small}>Keeps a growing plant bug-free for {SACHET_MS / 3600000} hours, even while you are away.</Text>
+        </Pic>
       </Block>
       <Block title="Swaps">
         {HERBALIST_TRADES.map((t) => (
-          <Text key={t.id} style={styles.swap}>
-            {Object.entries(t.give).map(([k, n]) => `${n} ${flowerName(k)}`).join(' + ')}  ›  {REMEDIES[t.get].name}
-          </Text>
+          <View key={t.id} style={styles.swapRow}>
+            {Object.entries(t.give).map(([k, n]) => (
+              <View key={k} style={styles.swapGive}>
+                <Text style={styles.swapN}>{n}</Text>
+                <Img source={flowerPic(k)} w={24} h={26} />
+              </View>
+            ))}
+            <Text style={styles.swapArrow}>›</Text>
+            <RemedyIcon kind={t.get} size={30} />
+            <Text style={styles.small}>{REMEDIES[t.get].name}</Text>
+          </View>
         ))}
       </Block>
     </>
@@ -152,26 +178,18 @@ function KeepingAway() {
   return (
     <>
       <Block title="Scented flowers">
-        <P>Some flowers smell too sweet for bugs. In full bloom they keep bugs away from the whole room.</P>
+        <P>In bloom they guard the whole room.</P>
         {scented.map(([k, mult]) => (
-          <View key={k} style={styles.itemRow}>
-            {TRADE_IMAGES[TRADE_FLOWERS[k]?.img] && <Image source={TRADE_IMAGES[TRADE_FLOWERS[k].img]} style={styles.flowerImg} resizeMode="contain" />}
-            <View style={{ flex: 1 }}>
-              <Text style={styles.bugName}>{flowerName(k)}</Text>
-              <Text style={styles.small}>{Math.round((1 - mult) * 100)}% fewer bugs in its room</Text>
-            </View>
-          </View>
+          <Pic key={k} src={<Img source={flowerPic(k)} w={26} h={28} />} size={32} title={flowerName(k)}>
+            <Text style={styles.small}>{Math.round((1 - mult) * 100)}% fewer bugs</Text>
+          </Pic>
         ))}
       </Block>
       <Block title="Pet helpers">
         {helpers.map((p) => (
-          <View key={p.key} style={styles.itemRow}>
-            {PET_IMAGES[p.key] && <Image source={PET_IMAGES[p.key]} style={styles.flowerImg} resizeMode="contain" />}
-            <View style={{ flex: 1 }}>
-              <Text style={styles.bugName}>{p.name}</Text>
-              <Text style={styles.small}>{PET_SHORT[p.key] ?? p.effect.desc}</Text>
-            </View>
-          </View>
+          <Pic key={p.key} src={<Img source={PET_IMAGES[p.key]} w={30} h={26} />} size={34} title={p.name}>
+            <Text style={styles.small}>{PET_SHORT[p.key] ?? p.effect.desc}</Text>
+          </Pic>
         ))}
       </Block>
     </>
@@ -182,11 +200,23 @@ function UsingRemedies() {
   return (
     <>
       <Block title="Using a remedy">
-        <P>Open the little bag at the bottom-left. Tap a remedy to pick it up, then tap the plant to use it on. Tap it again to put it back.</P>
-        <P>A Bug Balm only works on a plant that has a bug. A Scent Sachet goes on a plant that is still growing, and hangs there until it wears off.</P>
-      </Block>
-      <Block title="Before you leave">
-        <P>Bugs keep coming while you are away. Hang a Sachet on your favourite plants and keep a scented flower in bloom.</P>
+        <View style={styles.herbRow}>
+          <View style={styles.herbPic}>
+            <HerbalistSprite height={92} bob={false} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <P>Open the little bag at the bottom-left of a garden room.</P>
+          </View>
+        </View>
+        <Pic src={<View style={{ flexDirection: 'row', gap: 2 }}><RemedyIcon kind="balm" size={26} /><RemedyIcon kind="sachet" size={26} /></View>} size={56}>
+          <P>Tap a remedy to pick it up, then tap the plant. Tap it again to put it back.</P>
+        </Pic>
+        <Pic src={<RemedyIcon kind="balm" size={30} />} size={56} title="Balm">
+          <Text style={styles.small}>Only works on a plant with a bug.</Text>
+        </Pic>
+        <Pic src={<RemedyIcon kind="sachet" size={30} />} size={56} title="Sachet">
+          <Text style={styles.small}>Goes on a growing plant and hangs there until it wears off.</Text>
+        </Pic>
       </Block>
     </>
   );
@@ -199,20 +229,23 @@ function Feeding() {
   return (
     <>
       <Block title="Feeding your pets">
-        <P>Pets work fine when they are hungry, but a fed pet's perk is {FED_BOOST}x as strong.</P>
-        <P>Buy food in the pet shop's food aisle (the button at the bottom right), then pick who eats it.</P>
-        {examples.map((f) => (
-          <View key={f.key} style={styles.itemRow}>
-            <Image source={PETFOOD_IMAGES[f.key]} style={styles.foodImg} resizeMode="contain" />
-            <View style={{ flex: 1 }}>
+        <P>A fed pet's perk is {FED_BOOST}x as strong. Buy food in the pet shop's food aisle, then pick who eats it.</P>
+        <View style={styles.foodRow}>
+          {examples.map((f) => (
+            <View key={f.key} style={styles.foodCard}>
+              <Img source={PETFOOD_IMAGES[f.key]} w={44} h={52} />
               <Text style={styles.bugName}>{f.name}</Text>
-              <Text style={styles.small}>{f.price} coins keeps a pet fed for {f.hours}h</Text>
+              <View style={styles.coinLine}>
+                <Img source={UI_IMAGES.goldcoins} w={13} />
+                <Text style={styles.small}>{f.price}</Text>
+              </View>
+              <Text style={styles.small}>{f.hours}h fed</Text>
             </View>
-          </View>
-        ))}
+          ))}
+        </View>
       </Block>
       <Block title="Good to know">
-        <P>Food stacks up, to at most {FED_MAX_HOURS}h. Litter and puppy pads look after every cat or every dog at once.</P>
+        <P>Food stacks up to {FED_MAX_HOURS}h. Litter and pads look after every cat or dog at once.</P>
       </Block>
     </>
   );
@@ -222,12 +255,15 @@ function FosterCenter() {
   return (
     <>
       <Block title="The Foster Center">
-        <P>Customers find strays and bring them to the Foster Center, the back room of the pet shop.</P>
-        <P>A new one turns up about every {STRAY_MS / 3600000} hours. Up to {STRAY_MAX} wait at once, so adopting one makes room for the next.</P>
-      </Block>
-      <Block title="Adopting">
-        <P>Tap an animal to read where it was found and what it can do. Older animals cost less and have calm, steady perks.</P>
-        <P>Once adopted, a pet lives in your rooms like any other, and you can rename it in the Pets pages. Its finder is written on its card.</P>
+        <View style={styles.fosterPic}>
+          <Image source={FOSTER_BG} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+        </View>
+        <Pic src={<Img source={UI_IMAGES.pcPaw} w={24} />} size={30}>
+          <P>Customers bring strays here, about one every {STRAY_MS / 3600000}h. Up to {STRAY_MAX} wait at once.</P>
+        </Pic>
+        <Pic src={<Img source={UI_IMAGES.goldcoins} w={24} />} size={30}>
+          <P>Tap one to read its story, then adopt it. Older animals cost less and have calm perks.</P>
+        </Pic>
       </Block>
     </>
   );
@@ -273,26 +309,36 @@ const styles = StyleSheet.create({
   scroll: { paddingBottom: 6 },
 
   block: { marginBottom: 4 },
-  heading: { fontFamily: PIXEL_FONT, fontSize: 8, color: '#5a7a2a', marginBottom: 3 },
-  body: { fontFamily: BODY, color: INK, fontSize: 14, lineHeight: 16, marginBottom: 3 },
+  heading: { fontFamily: HEAD, fontSize: 18, color: '#5a7a2a', marginBottom: 1 },
+  body: { fontFamily: BODY, color: INK, fontSize: 14, lineHeight: 15, marginBottom: 2 },
   small: { fontFamily: BODY, color: SOFT, fontSize: 12.5, lineHeight: 13 },
-  swap: { fontFamily: BODY, color: INK, fontSize: 14, lineHeight: 16 },
 
   stageRow: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 3 },
   stage: { alignItems: 'center', flex: 1 },
-  stageImg: { width: 32, height: 38 },
-  arrow: { position: 'absolute', right: -4, top: 14, color: SOFT, fontFamily: BODY, fontSize: 16 },
+  stageImg: { width: 36, height: 42 },
+  arrow: { position: 'absolute', right: -4, top: 16, color: SOFT, fontFamily: BODY, fontSize: 18 },
 
   // plain entries with a hairline between them, no boxes
   bugRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     paddingVertical: 2, marginBottom: 2, borderBottomWidth: 1, borderBottomColor: 'rgba(160,120,60,0.35)',
   },
-  bugImgBox: { width: 52, alignItems: 'center', justifyContent: 'center' },
-  bugName: { fontFamily: BODY, color: INK, fontSize: 15, marginBottom: 0 },
+  bugImgBox: { width: 54, alignItems: 'center', justifyContent: 'center' },
+  bugName: { fontFamily: HEAD, color: INK, fontSize: 15, lineHeight: 16 },
 
   itemRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },
-  flowerImg: { width: 24, height: 24 },
-  foodImg: { width: 30, height: 34 },
 
+  herbRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  herbPic: { width: 70, height: 92, overflow: 'hidden', alignItems: 'center' },
+
+  swapRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 3 },
+  swapGive: { flexDirection: 'row', alignItems: 'center' },
+  swapN: { fontFamily: BODY, color: INK, fontSize: 14, marginRight: 1 },
+  swapArrow: { fontFamily: HEAD, color: SOFT, fontSize: 20, marginHorizontal: 1 },
+
+  foodRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
+  foodCard: { flex: 1, alignItems: 'center' },
+  coinLine: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+
+  fosterPic: { height: 84, borderRadius: 6, overflow: 'hidden', borderWidth: 2, borderColor: '#b8793a', marginBottom: 4 },
 });

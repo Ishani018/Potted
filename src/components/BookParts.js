@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { Image } from 'react-native';
 import { PixelButton } from './Pixel';
+import { UI_IMAGES } from '../engine/assets';
 import { useBook } from './BookNav';
 
 // Shared pieces for the flower book's pages.
@@ -10,6 +12,8 @@ export const INK = '#4a2a10';
 export const SOFT = '#8a6a40';
 export const PAPER = '#f3e3c0';
 export const PIXEL_FONT = 'PressStart2P';
+// headings: Almendra, a calligraphic face with a storybook, spell-book feel
+export const HEAD = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 export const BODY = Platform.select({ web: "'PatrickHand', Georgia, serif", default: 'PatrickHand' });
 
 // The chapter title at the top of a left page: small pixel lettering between two
@@ -17,12 +21,14 @@ export const BODY = Platform.select({ web: "'PatrickHand', Georgia, serif", defa
 // arrows, a swipe, or the contents page, so there are no tabs.)
 export function BookTabs() {
   const book = useBook();
-  const title = (book?.info?.title ?? '').toUpperCase();
+  const title = book?.info?.title ?? '';
   return (
     <View style={s.tabs}>
       <View style={s.titleRow}>
         <View style={s.rule} />
+        <Image source={UI_IMAGES.pcLeaf} style={[s.leaf, { transform: [{ scaleX: -1 }] }]} resizeMode="contain" />
         <Text style={s.titleTxt}>{title}</Text>
+        <Image source={UI_IMAGES.pcLeaf} style={s.leaf} resizeMode="contain" />
         <View style={s.rule} />
       </View>
     </View>
@@ -61,11 +67,11 @@ export const bookStyles = StyleSheet.create({
   tileQ: { position: 'absolute', fontFamily: PIXEL_FONT, fontSize: 14, color: '#fbf0cf', textShadowColor: '#5a4630', textShadowRadius: 2 },
   silhouette: { tintColor: '#4a3a28', opacity: 0.4 },
   detail: { alignItems: 'center', paddingBottom: 8 },
-  name: { fontFamily: PIXEL_FONT, fontSize: 10, color: INK, marginBottom: 4, textAlign: 'center' },
+  name: { fontFamily: HEAD, fontSize: 21, color: INK, marginBottom: 1, textAlign: 'center' },
   sub: { fontFamily: BODY, color: SOFT, fontSize: 13, textAlign: 'center', marginBottom: 3 },
   blurb: { fontFamily: BODY, color: INK, fontSize: 14, textAlign: 'center', marginBottom: 3, lineHeight: 16 },
   note: { fontFamily: BODY, color: '#5a7a2a', fontSize: 13, textAlign: 'center', marginBottom: 4, lineHeight: 15 },
-  label: { fontFamily: PIXEL_FONT, fontSize: 7, color: '#5a7a2a', marginTop: 3, marginBottom: 3 },
+  label: { fontFamily: HEAD, fontSize: 15, color: '#5a7a2a', marginTop: 3, marginBottom: 2 },
   // a short line of plain text under a name (replaces the little label pills)
   tagline: { fontFamily: BODY, color: SOFT, fontSize: 13, textAlign: 'center', marginBottom: 4 },
   hero: { alignItems: 'center', justifyContent: 'center', marginBottom: 2 },
@@ -77,5 +83,6 @@ const s = StyleSheet.create({
   tabs: { marginBottom: 6 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   rule: { flex: 1, height: 1, backgroundColor: 'rgba(122,62,26,0.45)' },
-  titleTxt: { fontFamily: PIXEL_FONT, fontSize: 8, color: '#7a3e1a' },
+  titleTxt: { fontFamily: HEAD, fontSize: 19, color: '#7a3e1a', letterSpacing: 0.5 },
+  leaf: { width: 14, height: 14 },
 });

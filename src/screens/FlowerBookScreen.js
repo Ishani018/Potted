@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES, UI_IMAGES, TRADE_IMAGES } from '../engine/assets';
+import { POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES, UI_IMAGES, TRADE_IMAGES, PET_IMAGES, PAINTING_IMAGES } from '../engine/assets';
 import {
   FLOWER_BOOK, POTTED_FLOWERS, HANGING_PLANTS, BOUQUET_RECIPES, TRADE_FLOWERS, seedType,
   FLOWER_GROWTH, formatDuration, seedUnlockLevel, playerLevel, CUSTOMERS, knownPetKeys,
@@ -13,7 +13,8 @@ import BookFrame from '../components/BookFrame';
 import BookCustomers from '../components/BookCustomers';
 import BookPets from '../components/BookPets';
 import BookPaintings from '../components/BookPaintings';
-import { BookTabs, BODY, SOFT } from '../components/BookParts';
+import { BookTabs, BODY, HEAD, SOFT } from '../components/BookParts';
+import Portrait from '../components/Portrait';
 import { BookProvider, useBook, CHAPTERS } from '../components/BookNav';
 
 // Flower book — an open journal you turn page by page (arrows, swipe, or the
@@ -73,6 +74,20 @@ export default function FlowerBookScreen({ navigation, route }) {
   );
 }
 
+// A little picture for each chapter on the contents page.
+function chapterIcon(key) {
+  const box = { width: 30, height: 30 };
+  switch (key) {
+    case 'flowers': return <Image source={flowerArt(FLOWER_BOOK[0].key)} style={box} resizeMode="contain" />;
+    case 'bouquets': return <Image source={UI_IMAGES.bouquetmixed} style={box} resizeMode="contain" />;
+    case 'care': return <Image source={UI_IMAGES.wateringcan1} style={box} resizeMode="contain" />;
+    case 'customers': return <Portrait customerKey="clara" size={30} />;
+    case 'pets': return <Image source={PET_IMAGES.george} style={box} resizeMode="contain" />;
+    case 'paintings': return <Image source={PAINTING_IMAGES.beachpainting} style={box} resizeMode="contain" />;
+    default: return null;
+  }
+}
+
 // Left page: the book's title and what you've collected. Right page: the contents.
 function ContentsPages({ found, bouquetsFound }) {
   const { state } = useGame();
@@ -89,12 +104,18 @@ function ContentsPages({ found, bouquetsFound }) {
     <BookFrame
       left={(
         <View style={styles.coverPage}>
-          <Text style={styles.coverSmall}>THE</Text>
-          <Text style={styles.coverTitle}>FLOWER</Text>
-          <Text style={styles.coverTitle}>BOOK</Text>
-          <View style={styles.coverRule} />
-          <Text style={styles.coverSub}>a gardener's journal</Text>
-          <Image source={bloomImage(FLOWER_BOOK[0].key)} style={styles.coverArt} resizeMode="contain" />
+          <Text style={styles.coverSmall}>The</Text>
+          <Text style={styles.coverTitle}>Flower Book</Text>
+          <View style={styles.coverRule}>
+            <Image source={UI_IMAGES.pcLeaf} style={[styles.coverLeaf, { transform: [{ scaleX: -1 }] }]} resizeMode="contain" />
+            <Text style={styles.coverSub}>a gardener's journal</Text>
+            <Image source={UI_IMAGES.pcLeaf} style={styles.coverLeaf} resizeMode="contain" />
+          </View>
+          <View style={styles.coverArtRow}>
+            <Image source={PET_IMAGES.george} style={styles.coverPet} resizeMode="contain" />
+            <Image source={UI_IMAGES.bouquetmixed} style={styles.coverBouquet} resizeMode="contain" />
+            <Image source={bloomImage(FLOWER_BOOK[0].key)} style={styles.coverBloom} resizeMode="contain" />
+          </View>
           <Text style={styles.coverHint}>turn the page, or swipe</Text>
         </View>
       )}
@@ -103,6 +124,7 @@ function ContentsPages({ found, bouquetsFound }) {
           <Text style={styles.contentsHead}>CONTENTS</Text>
           {CHAPTERS.map((c) => (
             <TouchableOpacity key={c.key} onPress={() => goTo(c.page)} activeOpacity={0.6} style={styles.contentsRow}>
+              <View style={styles.contentsIcon}>{chapterIcon(c.key)}</View>
               <Text style={styles.contentsName}>{c.title}</Text>
               <View style={styles.leader} />
               <Text style={styles.contentsCount}>{counts[c.key] ?? ''}</Text>
@@ -320,18 +342,23 @@ const PAPER = '#f3e3c0';
 
 const styles = StyleSheet.create({
   coverPage: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  coverSmall: { fontFamily: PIXEL_FONT, fontSize: 8, color: SOFT, marginBottom: 6 },
-  coverTitle: { fontFamily: PIXEL_FONT, fontSize: 20, color: '#7a3e1a', lineHeight: 28 },
-  coverRule: { width: 90, height: 2, backgroundColor: 'rgba(122,62,26,0.5)', marginVertical: 8 },
+  coverSmall: { fontFamily: HEAD, fontSize: 18, color: SOFT, marginBottom: 0 },
+  coverTitle: { fontFamily: HEAD, fontSize: 40, color: '#7a3e1a', lineHeight: 44 },
+  coverRule: { flexDirection: 'row', alignItems: 'center', gap: 6, marginVertical: 4 },
+  coverLeaf: { width: 18, height: 18 },
   coverSub: { fontFamily: BODY, fontSize: 16, color: INK, marginBottom: 8 },
-  coverArt: { width: 74, height: 74, marginBottom: 6 },
+  coverArtRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 2, marginVertical: 8 },
+  coverPet: { width: 62, height: 56 },
+  coverBouquet: { width: 78, height: 84 },
+  coverBloom: { width: 62, height: 70 },
   coverHint: { fontFamily: BODY, fontSize: 12.5, color: SOFT },
-  contentsHead: { fontFamily: PIXEL_FONT, fontSize: 10, color: '#7a3e1a', textAlign: 'center', marginTop: 4, marginBottom: 14 },
-  contentsRow: { flexDirection: 'row', alignItems: 'flex-end', paddingVertical: 7 },
-  contentsName: { fontFamily: BODY, fontSize: 17, color: INK },
+  contentsHead: { fontFamily: HEAD, fontSize: 26, color: '#7a3e1a', textAlign: 'center', marginTop: 0, marginBottom: 8 },
+  contentsRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 3 },
+  contentsIcon: { width: 34, alignItems: 'center', marginRight: 6 },
+  contentsName: { fontFamily: HEAD, fontSize: 21, color: INK },
   leader: { flex: 1, marginHorizontal: 6, marginBottom: 4, borderBottomWidth: 2, borderStyle: 'dotted', borderColor: 'rgba(122,62,26,0.4)' },
   contentsCount: { fontFamily: BODY, fontSize: 13, color: SOFT, marginRight: 8, marginBottom: 1 },
-  contentsPage: { fontFamily: PIXEL_FONT, fontSize: 8, color: '#7a3e1a', width: 14, textAlign: 'right', marginBottom: 3 },
+  contentsPage: { fontFamily: HEAD, fontSize: 18, color: '#7a3e1a', width: 20, textAlign: 'right' },
   root: { flex: 1, backgroundColor: '#2a1608', alignItems: 'center', justifyContent: 'center' },
   backImg: { width: '100%', height: '100%' },
 
@@ -360,16 +387,16 @@ const styles = StyleSheet.create({
   silhouette: { tintColor: '#4a3a28', opacity: 0.4 },
 
   detail: { alignItems: 'center', paddingBottom: 8 },
-  hero: { width: 110, height: 84, alignItems: 'center', justifyContent: 'center', marginBottom: 1 },
+  hero: { width: 110, height: 68, alignItems: 'center', justifyContent: 'center', marginBottom: 1 },
   heroGlow: {
-    position: 'absolute', width: 78, height: 78, borderRadius: 39,
+    position: 'absolute', width: 64, height: 64, borderRadius: 32,
     backgroundColor: '#fbeab0', borderWidth: 3, borderColor: '#ecd48a',
   },
   heroGlowLocked: { backgroundColor: '#e6d6b0', borderColor: '#d2bd90' },
-  heroImg: { width: 72, height: 72 },
+  heroImg: { width: 60, height: 60 },
   heroSpark: { position: 'absolute', fontSize: 14, color: '#e0a830' },
   heroQ: { position: 'absolute', fontFamily: PIXEL_FONT, fontSize: 26, color: '#fbf0cf', textShadowColor: '#5a4630', textShadowRadius: 3 },
-  name: { fontFamily: PIXEL_FONT, fontSize: 10, color: INK, marginBottom: 4, textAlign: 'center' },
+  name: { fontFamily: HEAD, fontSize: 21, color: INK, marginBottom: 1, textAlign: 'center' },
   tagline: { fontFamily: BODY, color: '#8a6a40', fontSize: 13, textAlign: 'center', marginBottom: 4 },
 
   stageRow: { flexDirection: 'row', justifyContent: 'center', gap: 5, marginBottom: 5 },

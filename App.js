@@ -43,6 +43,7 @@ export default function App() {
     PressStart2P: require('./assets/fonts/PressStart2P-Regular.ttf'),
     // Handwritten body text for the flower book (Patrick Hand, SIL Open Font License)
     PatrickHand: require('./assets/fonts/PatrickHand-Regular.ttf'),
+    Almendra: require('./assets/fonts/Almendra-Regular.ttf'),
   });
 
   const onLayout = useCallback((e) => {
