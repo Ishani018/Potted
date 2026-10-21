@@ -45,7 +45,6 @@ export default function BookPaintings({ tab, setTab }) {
                     {!mine && <Text style={b.tileQ}>?</Text>}
                     {hung === k && <Text style={s.hungStar}>✦</Text>}
                   </View>
-                  <Text numberOfLines={1} style={[b.tileName, !mine && b.tileNameLocked]}>{mine ? PAINTINGS[k].name : '???'}</Text>
                 </TouchableOpacity>
               );
             })}

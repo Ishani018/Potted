@@ -44,7 +44,6 @@ export default function BookCustomers({ tab, setTab }) {
                 >
                   <TileFrame state={k === selected ? 'selected' : isMet ? 'found' : 'empty'} />
                   <Portrait customerKey={k} size={44} silhouette={!isMet} />
-                  <Text numberOfLines={1} style={[b.tileName, !isMet && b.tileNameLocked]}>{isMet ? CUSTOMERS[k].name : '???'}</Text>
                 </TouchableOpacity>
               );
             })}

@@ -60,7 +60,6 @@ export default function BookPets({ tab, setTab }) {
                     <Image source={PET_IMAGES[k]} style={[s.tileImg, !mine && b.silhouette]} resizeMode="contain" />
                     {!mine && <Text style={b.tileQ}>?</Text>}
                   </View>
-                  <Text numberOfLines={1} style={[b.tileName, !mine && b.tileNameLocked]}>{mine ? shown(k) : '???'}</Text>
                 </TouchableOpacity>
               );
             })}

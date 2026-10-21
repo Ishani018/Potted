@@ -61,14 +61,14 @@ export const bookStyles = StyleSheet.create({
   grid: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignContent: 'center', gap: 5 },
   // the card itself is a painted picture (TileFrame) behind the tile's contents
   tile: {
-    paddingTop: 8, paddingBottom: 6, paddingHorizontal: 6,
+    paddingTop: 10, paddingBottom: 10, paddingHorizontal: 9,
     alignItems: 'center', justifyContent: 'space-between',
   },
   tileFound: {},
   tileSel: {},
   tileArt: { flex: 1, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center' },
-  tileName: { fontFamily: BODY, color: INK, fontSize: 12, maxWidth: '74%', alignSelf: 'flex-start', marginLeft: 5, marginBottom: 1 },
-  tileNameLocked: { color: '#a08860' },
+  // names live on the right-hand page; a tile only carries the picture (and a seed level when locked)
+  tileLevel: { position: 'absolute', bottom: 9, alignSelf: 'center', fontFamily: BODY, color: '#5a3410', fontSize: 12 },
   tileQ: { position: 'absolute', fontFamily: PIXEL_FONT, fontSize: 14, color: '#fbf0cf', textShadowColor: '#5a4630', textShadowRadius: 2 },
   silhouette: { tintColor: '#4a3a28', opacity: 0.4 },
   detail: { alignItems: 'center', paddingBottom: 8 },

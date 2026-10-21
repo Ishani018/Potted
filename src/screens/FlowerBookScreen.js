@@ -208,18 +208,19 @@ function FlowerBookPages({ navigation }) {
                   activeOpacity={0.75}
                 >
                   <TileFrame state={isSel ? 'selected' : isFound ? 'found' : seedLocked ? 'locked' : 'empty'} />
-                  <View style={styles.tileArt}>
-                    <Image
-                      source={flowerArt(f.key)}
-                      style={[styles.tileImg, !isFound && styles.silhouette]}
-                      resizeMode="contain"
-                    />
-                    {!isFound && <Text style={styles.tileQ}>?</Text>}
-                    {isFound && <Text style={styles.tileStar}>✦</Text>}
-                  </View>
-                  <Text numberOfLines={1} style={[styles.tileName, !isFound && styles.tileNameLocked]}>
-                    {isFound ? flowerName(f.key) : seedLocked ? `Lv ${seedUnlockLevel(f.key)}` : '???'}
-                  </Text>
+                  {/* a wax-sealed (level-locked) card shows no picture; the seal is the picture */}
+                  {!seedLocked && (
+                    <View style={styles.tileArt}>
+                      <Image
+                        source={flowerArt(f.key)}
+                        style={[styles.tileImg, !isFound && styles.silhouette]}
+                        resizeMode="contain"
+                      />
+                      {!isFound && <Text style={styles.tileQ}>?</Text>}
+                      {isFound && <Text style={styles.tileStar}>✦</Text>}
+                    </View>
+                  )}
+                  {seedLocked && <Text style={styles.tileLevel}>Lv {seedUnlockLevel(f.key)}</Text>}
                 </TouchableOpacity>
               );
             })}
@@ -390,7 +391,7 @@ const styles = StyleSheet.create({
   progress: { fontFamily: BODY, color: '#8a6a40', fontSize: 13, textAlign: 'center', marginBottom: 3 },
   grid: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignContent: 'center', gap: 5 },
   tile: {
-    width: '23%', aspectRatio: 0.88, paddingTop: 8, paddingBottom: 6, paddingHorizontal: 6,
+    width: '23%', aspectRatio: 0.88, paddingTop: 10, paddingBottom: 10, paddingHorizontal: 9,
     alignItems: 'center', justifyContent: 'space-between',
   },
   tileFound: {},
@@ -399,8 +400,8 @@ const styles = StyleSheet.create({
   tileImg: { width: '92%', height: '92%' },
   tileQ: { position: 'absolute', fontFamily: PIXEL_FONT, fontSize: 14, color: '#fbf0cf', textShadowColor: '#5a4630', textShadowRadius: 2 },
   tileStar: { position: 'absolute', right: 5, top: 0, fontSize: 9, color: '#e0a830' },
-  tileName: { fontFamily: BODY, color: INK, fontSize: 12, maxWidth: '74%', alignSelf: 'flex-start', marginLeft: 5, marginBottom: 1 },
-  tileNameLocked: { color: '#a08860' },
+  // names live on the right-hand page; a tile only carries the picture (and a seed level when locked)
+  tileLevel: { position: 'absolute', bottom: 9, alignSelf: 'center', fontFamily: BODY, color: '#5a3410', fontSize: 12 },
   silhouette: { tintColor: '#4a3a28', opacity: 0.4 },
 
   detail: { alignItems: 'center', paddingBottom: 8 },
