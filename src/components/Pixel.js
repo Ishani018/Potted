@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { BOOK_BUTTONS } from '../engine/assets';
 
 // Shared pixel-art look, matching the trading board / map signs:
 // Press Start 2P text (white fill, black outline) on warm wood + cream panels.
@@ -38,22 +39,29 @@ export function PixelPanel({ style, children, cream }) {
   );
 }
 
-// Chunky pixel button (text label). tone: 'green' | 'wood'
+// Painted button (text label on a flowered frame). tone: 'green' | 'wood' | 'red'.
+// The frame is three pictures: left cap, stretchy middle, right cap.
 export function PixelButton({ label, onPress, tone = 'green', disabled, style, size = 11 }) {
-  const green = tone === 'green';
+  const art = BOOK_BUTTONS[tone] ?? BOOK_BUTTONS.green;
+  const H = Math.max(30, Math.round(size * 2.8));
+  const capW = Math.round(H * art.cap);
   return (
     <TouchableOpacity
       activeOpacity={0.8}
       onPress={onPress}
       disabled={disabled}
       style={[
-        styles.btn,
-        { backgroundColor: green ? COLORS.green : COLORS.woodDark, borderColor: green ? COLORS.greenEdge : COLORS.woodEdge },
+        { height: H, minWidth: capW * 2 + 24, alignItems: 'center', justifyContent: 'center' },
         disabled && { opacity: 0.45 },
         style,
       ]}
     >
-      <PixelText size={size}>{label}</PixelText>
+      <Image source={art.l} style={{ position: 'absolute', left: 0, top: 0, width: capW, height: H }} resizeMode="stretch" pointerEvents="none" />
+      <Image source={art.m} style={{ position: 'absolute', left: capW, right: capW, top: 0, height: H }} resizeMode="stretch" pointerEvents="none" />
+      <Image source={art.r} style={{ position: 'absolute', right: 0, top: 0, width: capW, height: H }} resizeMode="stretch" pointerEvents="none" />
+      <View style={{ paddingHorizontal: Math.round(capW * 1.05) + 2 }}>
+        <PixelText size={size}>{label}</PixelText>
+      </View>
     </TouchableOpacity>
   );
 }

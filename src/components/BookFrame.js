@@ -3,6 +3,7 @@ import { View, Image, Text, TouchableOpacity, Animated, Platform, StyleSheet } f
 import { BOOK_IMG } from '../engine/assets';
 import { useLayout } from '../context/LayoutContext';
 import { useBook } from './BookNav';
+import { BOOK_ARROWS } from '../engine/assets';
 
 const PIXEL_FONT = 'PressStart2P';
 // A swipe across the page would otherwise start selecting text on web (and cancel the turn).
@@ -63,12 +64,12 @@ export default function BookFrame({ left, right }) {
       </Animated.View>
       {book && (
         <View style={[rect(PAGES.pager), styles.center, styles.pager]}>
-          <TouchableOpacity disabled={book.page === 0} onPress={() => book.flip(-1)} style={[styles.arrowBtn, book.page === 0 && styles.off]}>
-            <Text style={styles.arrow}>{'<'}</Text>
+          <TouchableOpacity accessibilityLabel="Previous page" disabled={book.page === 0} onPress={() => book.flip(-1)} style={[styles.arrowBtn, book.page === 0 && styles.off]}>
+            <Image source={BOOK_ARROWS.left} style={styles.arrowImg} resizeMode="contain" />
           </TouchableOpacity>
           <Text style={styles.pageNum}>{book.page + 1} / {book.total}</Text>
-          <TouchableOpacity disabled={book.page === book.total - 1} onPress={() => book.flip(1)} style={[styles.arrowBtn, book.page === book.total - 1 && styles.off]}>
-            <Text style={styles.arrow}>{'>'}</Text>
+          <TouchableOpacity accessibilityLabel="Next page" disabled={book.page === book.total - 1} onPress={() => book.flip(1)} style={[styles.arrowBtn, book.page === book.total - 1 && styles.off]}>
+            <Image source={BOOK_ARROWS.right} style={styles.arrowImg} resizeMode="contain" />
           </TouchableOpacity>
         </View>
       )}
@@ -81,7 +82,7 @@ const styles = StyleSheet.create({
   pager: { flexDirection: 'row', gap: 10 },
   arrowBtn: { paddingHorizontal: 10, paddingVertical: 4 },
   off: { opacity: 0.25 },
-  arrow: { fontFamily: PIXEL_FONT, color: '#7a3e1a', fontSize: 11 },
+  arrowImg: { width: 30, height: 26 },
   pageNum: { fontFamily: PIXEL_FONT, color: '#8a6a40', fontSize: 7 },
   shade: { ...StyleSheet.absoluteFillObject, backgroundColor: '#5a3410' },
 });

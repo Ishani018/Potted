@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   toggle: { minWidth: 92 },
   volume: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  step: { paddingHorizontal: 12, paddingVertical: 6 },
+  step: {},
   bar: { flexDirection: 'row', gap: 3 },
   seg: { width: 11, height: 18, borderRadius: 2, backgroundColor: '#2a1608', borderWidth: 1, borderColor: COLORS.woodEdge },
   segOn: { backgroundColor: '#7ad05a', borderColor: COLORS.greenEdge },

@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     position: 'absolute', zIndex: 13, alignItems: 'center', paddingVertical: 4,
     backgroundColor: COLORS.woodDark, borderWidth: 3, borderColor: COLORS.woodEdge, borderRadius: 4,
   },
-  qtyBtn: { paddingHorizontal: 12, paddingVertical: 6 },
+  qtyBtn: {},
   actionRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
 
   btnRow: { position: 'absolute', bottom: 16, alignSelf: 'center', flexDirection: 'row', gap: 12, zIndex: 25 },

@@ -50,7 +50,7 @@ export function BookButton({ label, onPress, on, disabled, style }) {
       tone={on ? 'green' : 'wood'}
       disabled={disabled}
       size={7}
-      style={[{ paddingHorizontal: 10, paddingVertical: 7 }, style]}
+      style={style}
     />
   );
 }

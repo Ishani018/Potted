@@ -97,7 +97,7 @@ export default function HerbalistCorner({ sw, sh }) {
                         <RemedyIcon kind={t.get} size={28} />
                         <PixelText size={7}>{REMEDIES[t.get].name.toUpperCase()}</PixelText>
                       </View>
-                      <PixelButton label="SWAP" size={8} disabled={!ok} onPress={() => dispatch({ type: 'TRADE_REMEDY', id: t.id })} style={{ paddingHorizontal: 10, paddingVertical: 7 }} />
+                      <PixelButton label="SWAP" size={8} disabled={!ok} onPress={() => dispatch({ type: 'TRADE_REMEDY', id: t.id })} />
                     </View>
                   );
                 })}
