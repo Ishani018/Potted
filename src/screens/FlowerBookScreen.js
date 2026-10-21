@@ -4,7 +4,7 @@ import { useGame } from '../context/GameContext';
 import { POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES, UI_IMAGES, TRADE_IMAGES } from '../engine/assets';
 import {
   FLOWER_BOOK, POTTED_FLOWERS, HANGING_PLANTS, BOUQUET_RECIPES, TRADE_FLOWERS, seedType,
-  FLOWER_GROWTH, formatDuration, seedUnlockLevel,
+  FLOWER_GROWTH, formatDuration, seedUnlockLevel, playerLevel,
 } from '../constants/gameData';
 import BouquetArt from '../components/BouquetArt';
 import BackSign from '../components/BackSign';
@@ -47,6 +47,12 @@ function bloomImage(key) {
   return stages[stages.length - 1].img;
 }
 
+// Close-up of just the bloom (the market art) — fills a tile far better than the
+// whole potted plant, which is mostly empty space. Falls back to the plant image.
+function flowerArt(key) {
+  return TRADE_IMAGES[TRADE_FLOWERS[key]?.img] ?? bloomImage(key);
+}
+
 export default function FlowerBookScreen({ navigation, route }) {
   const { state } = useGame();
   const book = state.player.flowerBook ?? {};
@@ -55,6 +61,7 @@ export default function FlowerBookScreen({ navigation, route }) {
   const [selected, setSelected] = useState(FLOWER_BOOK[0].key);
   const [selectedRecipe, setSelectedRecipe] = useState(BOUQUET_RECIPES[0].id);
 
+  const level = playerLevel(state.player);
   const found = FLOWER_BOOK.filter((f) => book[f.key]).length;
   const entry = FLOWER_BOOK.find((f) => f.key === selected);
   const record = book[selected];
@@ -83,19 +90,26 @@ export default function FlowerBookScreen({ navigation, route }) {
             {FLOWER_BOOK.map((f) => {
               const isFound = !!book[f.key];
               const isSel = f.key === selected;
+              const seedLocked = !isFound && level < seedUnlockLevel(f.key);
               return (
                 <TouchableOpacity
                   key={f.key}
-                  style={[styles.tile, isSel && styles.tileSel]}
+                  style={[styles.tile, isFound && styles.tileFound, isSel && styles.tileSel]}
                   onPress={() => setSelected(f.key)}
                   activeOpacity={0.75}
                 >
-                  <Image
-                    source={bloomImage(f.key)}
-                    style={[styles.tileImg, !isFound && styles.silhouette]}
-                    resizeMode="contain"
-                  />
-                  {!isFound && <Text style={styles.tileQ}>?</Text>}
+                  <View style={styles.tileArt}>
+                    <Image
+                      source={flowerArt(f.key)}
+                      style={[styles.tileImg, !isFound && styles.silhouette]}
+                      resizeMode="contain"
+                    />
+                    {!isFound && <Text style={styles.tileQ}>?</Text>}
+                    {isFound && <Text style={styles.tileStar}>✦</Text>}
+                  </View>
+                  <Text numberOfLines={1} style={[styles.tileName, !isFound && styles.tileNameLocked]}>
+                    {isFound ? flowerName(f.key) : seedLocked ? `Lv ${seedUnlockLevel(f.key)}` : '???'}
+                  </Text>
                 </TouchableOpacity>
               );
             })}
@@ -107,6 +121,24 @@ export default function FlowerBookScreen({ navigation, route }) {
         {/* ── Right page: selected flower ──────────────────────────────── */}
         <View style={[styles.page, styles.pageRight]}>
           <ScrollView contentContainerStyle={styles.detail} showsVerticalScrollIndicator={false}>
+            {/* Big close-up of the bloom on a soft glow */}
+            <View style={styles.hero}>
+              <View style={[styles.heroGlow, !unlocked && styles.heroGlowLocked]} />
+              <Image
+                source={flowerArt(selected)}
+                style={[styles.heroImg, !unlocked && styles.silhouette]}
+                resizeMode="contain"
+              />
+              {unlocked ? (
+                <>
+                  <Text style={[styles.heroSpark, { left: '8%', top: '12%' }]}>✦</Text>
+                  <Text style={[styles.heroSpark, { right: '10%', top: '4%', fontSize: 11 }]}>✦</Text>
+                  <Text style={[styles.heroSpark, { right: '6%', bottom: '14%', fontSize: 9 }]}>✦</Text>
+                </>
+              ) : (
+                <Text style={styles.heroQ}>?</Text>
+              )}
+            </View>
             <Text style={styles.name}>{unlocked ? flowerName(selected) : '???'}</Text>
 
             <View style={styles.chipRow}>
@@ -144,8 +176,12 @@ export default function FlowerBookScreen({ navigation, route }) {
               </>
             ) : (
               <>
-                <Image source={bloomImage(selected)} style={[styles.lockedImg, styles.silhouette]} resizeMode="contain" />
                 <Text style={styles.lockedHint}>Grow one to full bloom to fill in this page.</Text>
+                <Text style={styles.lockedLevel}>
+                  {level >= seedUnlockLevel(selected)
+                    ? 'The seeds are waiting for you at the nursery.'
+                    : `Its seeds unlock at level ${seedUnlockLevel(selected)}.`}
+                </Text>
               </>
             )}
           </ScrollView>
@@ -261,16 +297,30 @@ const styles = StyleSheet.create({
   progress: { color: '#8a6a40', fontSize: 11, textAlign: 'center', marginBottom: 8 },
   grid: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignContent: 'center', gap: 6 },
   tile: {
-    width: '22%', aspectRatio: 1, borderRadius: 8,
+    width: '22%', aspectRatio: 0.9, borderRadius: 8, paddingTop: 4, paddingBottom: 3,
     backgroundColor: '#e8d4a8', borderWidth: 1.5, borderColor: '#c9a86a',
-    alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'space-between',
   },
+  tileFound: { backgroundColor: '#fbf0cf', borderColor: '#d8b872' },
   tileSel: { borderColor: '#5a8a2a', borderWidth: 2.5, backgroundColor: '#eef0c8' },
-  tileImg: { width: '82%', height: '82%' },
-  tileQ: { position: 'absolute', fontFamily: PIXEL_FONT, fontSize: 12, color: PAPER },
-  silhouette: { tintColor: '#5a4630', opacity: 0.55 },
+  tileArt: { flex: 1, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center' },
+  tileImg: { width: '92%', height: '92%' },
+  tileQ: { position: 'absolute', fontFamily: PIXEL_FONT, fontSize: 14, color: '#fbf0cf', textShadowColor: '#5a4630', textShadowRadius: 2 },
+  tileStar: { position: 'absolute', right: 5, top: 0, fontSize: 9, color: '#e0a830' },
+  tileName: { color: INK, fontSize: 9, fontWeight: 'bold', maxWidth: '94%' },
+  tileNameLocked: { color: '#a08860' },
+  silhouette: { tintColor: '#4a3a28', opacity: 0.4 },
 
   detail: { alignItems: 'center', paddingBottom: 8 },
+  hero: { width: 150, height: 130, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+  heroGlow: {
+    position: 'absolute', width: 118, height: 118, borderRadius: 59,
+    backgroundColor: '#fbeab0', borderWidth: 3, borderColor: '#ecd48a',
+  },
+  heroGlowLocked: { backgroundColor: '#e6d6b0', borderColor: '#d2bd90' },
+  heroImg: { width: 112, height: 112 },
+  heroSpark: { position: 'absolute', fontSize: 14, color: '#e0a830' },
+  heroQ: { position: 'absolute', fontFamily: PIXEL_FONT, fontSize: 26, color: '#fbf0cf', textShadowColor: '#5a4630', textShadowRadius: 3 },
   name: { fontFamily: PIXEL_FONT, fontSize: 13, color: INK, marginBottom: 8, textAlign: 'center' },
   chipRow: { flexDirection: 'row', gap: 6, marginBottom: 8 },
   chip: { borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1 },
@@ -288,6 +338,6 @@ const styles = StyleSheet.create({
   stats: { borderTopWidth: 1, borderTopColor: '#c9a86a', paddingTop: 6, alignSelf: 'stretch', alignItems: 'center' },
   stat: { color: '#8a6a40', fontSize: 10 },
 
-  lockedImg: { width: 90, height: 110, marginVertical: 8 },
   lockedHint: { color: '#8a6a40', fontSize: 11, textAlign: 'center', fontStyle: 'italic' },
+  lockedLevel: { color: '#a08860', fontSize: 10, textAlign: 'center', marginTop: 6 },
 });
