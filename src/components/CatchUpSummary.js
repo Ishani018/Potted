@@ -69,7 +69,7 @@ export default function CatchUpSummary({ hidden }) {
             </View>
           )}
 
-          <PixelButton label="LET'S GO!" size={9} onPress={() => dispatch({ type: 'DISMISS_SUMMARY' })} style={{ marginTop: 8 }} />
+          <PixelButton label="LET'S GO!" size={11} onPress={() => dispatch({ type: 'DISMISS_SUMMARY' })} style={{ marginTop: 8 }} />
         </View>
       </View>
     </View>
@@ -85,10 +85,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
     alignItems: 'center', justifyContent: 'center', zIndex: 9500,
   },
-  card: { width: 330, height: 430 },
-  cardArt: { position: 'absolute', width: 330, height: 430 },
-  paper: { position: 'absolute', left: 46, right: 50, top: 54, height: 252, alignItems: 'center' },
-  title: { fontFamily: HEAD, fontSize: 26, color: '#4a2a10', lineHeight: 28 },
+  card: { width: 366, height: 486 },
+  cardArt: { position: 'absolute', width: 366, height: 486 },
+  paper: { position: 'absolute', left: 62, right: 62, top: 78, height: 262, alignItems: 'center' },
+  title: { fontFamily: HEAD, fontSize: 28, color: '#4a2a10', lineHeight: 28 },
   sub: { fontFamily: BODY, color: '#8a6a40', fontSize: 15, marginBottom: 6 },
   row: {
     alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 8,

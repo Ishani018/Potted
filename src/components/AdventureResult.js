@@ -34,7 +34,7 @@ export default function AdventureResult() {
             </View>
           ))}
           {res.full && <Text style={styles.note}>Your bag was full, so a seed stayed behind.</Text>}
-          <PixelButton label="NICE!" size={9} onPress={() => dispatch({ type: 'CLOSE_ADVENTURE' })} style={{ marginTop: 6 }} />
+          <PixelButton label="NICE!" size={11} onPress={() => dispatch({ type: 'CLOSE_ADVENTURE' })} style={{ marginTop: 10 }} />
         </View>
       </View>
     </View>
@@ -43,14 +43,15 @@ export default function AdventureResult() {
 
 const styles = StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center', zIndex: 9500 },
-  card: { width: 330, height: 430 },
-  art: { position: 'absolute', width: 330, height: 430 },
-  paper: { position: 'absolute', left: 46, right: 50, top: 50, height: 256, alignItems: 'center' },
-  title: { fontFamily: HEAD, fontSize: 24, color: '#4a2a10', lineHeight: 26 },
-  box: { width: 64, height: 56, marginVertical: 2 },
-  sub: { fontFamily: BODY, color: '#8a6a40', fontSize: 14 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
-  icon: { width: 24, height: 24 },
-  line: { fontFamily: HEAD, fontSize: 16, color: '#4a2a10' },
-  note: { fontFamily: BODY, color: '#7a4a18', fontSize: 13, marginTop: 3, textAlign: 'center' },
+  // the painted card is 573×760; the writing sits on its inner paper, clear of the corner flowers and ribbon
+  card: { width: 366, height: 486 },
+  art: { position: 'absolute', width: 366, height: 486 },
+  paper: { position: 'absolute', left: 62, right: 62, top: 78, height: 262, alignItems: 'center' },
+  title: { fontFamily: HEAD, fontSize: 26, color: '#4a2a10', lineHeight: 30 },
+  box: { width: 84, height: 74, marginTop: 4 },
+  sub: { fontFamily: BODY, color: '#8a6a40', fontSize: 16, marginTop: 2 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
+  icon: { width: 30, height: 30 },
+  line: { fontFamily: HEAD, fontSize: 21, color: '#4a2a10' },
+  note: { fontFamily: BODY, color: '#7a4a18', fontSize: 14, marginTop: 4, textAlign: 'center' },
 });
