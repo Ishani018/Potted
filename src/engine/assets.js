@@ -112,6 +112,10 @@ export const PET_IMAGES = {
   smoky:         require('../../assets/foster/smoky.png'),
   maple:         require('../../assets/foster/maple.png'),
   clover:        require('../../assets/foster/clover.png'),
+  pudding:       require('../../assets/foster/pudding.png'),
+  whisper:       require('../../assets/foster/whisper.png'),
+  inky:          require('../../assets/foster/inky.png'),
+  mocha:         require('../../assets/foster/mocha.png'),
 };
 // Biscuit naps on the foster beds.
 export const FOSTER_REST_IMAGES = { biscuit: require('../../assets/foster/biscuitsleep.png') };
@@ -213,6 +217,7 @@ export const PERK_ICONS = {
 Object.assign(PERK_ICONS, {
   biscuit: PERK_ICONS.martin, marmalade: PERK_ICONS.tiger, honey: PERK_ICONS.koazy, soot: PERK_ICONS.aki,
   cloud: PERK_ICONS.cherry, smoky: PERK_ICONS.koazy, maple: PERK_ICONS.brownie, clover: PERK_ICONS.milk,
+  pudding: PERK_ICONS.george, whisper: PERK_ICONS.martin, inky: PERK_ICONS.tiger, mocha: PERK_ICONS.oreo,
 });
 
 // ─── Trade flower images (market) ─────────────────────────────────────────────

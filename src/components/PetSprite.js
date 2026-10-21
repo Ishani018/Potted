@@ -4,7 +4,7 @@ import { PET_IMAGES } from '../engine/assets';
 import { PixelText } from './Pixel';
 
 // Pets that are drawn asleep: slow breathing + floating "Z", no hopping.
-const SLEEPERS = { koazy: true, ebonyandivory: true, smoky: true };
+const SLEEPERS = { koazy: true, ebonyandivory: true, smoky: true, inky: true };
 
 // An animated pet. Breathes (squash/stretch anchored at its feet), and sleepers drift a little "Z". Each pet gets its own random phase so a
 // room full of pets never moves in lockstep. Layout (position/size) is the

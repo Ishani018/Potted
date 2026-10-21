@@ -200,7 +200,8 @@ export const PET_FOOD = [
 ];
 
 // ── Strays at the Foster Center ───────────────────────────────────────────────
-// Customers find strays and bring them to the pet shop's Foster Center. Each one
+// Customers find strays and bring them to the pet shop's Foster Center. The seniors
+// (senior: true) are older animals looking for a quiet home. Each one
 // takes an empty seat (FOSTER_SEATS) until you adopt it; adopting works like any
 // other pet (they're added to PETS below). New strays turn up every STRAY_MS while
 // there is a free seat, up to STRAY_MAX at a time. aspect = image width / height,
@@ -248,6 +249,18 @@ export const STRAYS = {
   clover:    { key: 'clover',    name: 'Clover',    breed: 'Rabbit',        species: 'rabbit', price: 130, aspect: 265 / 300, fw: 85,
     found: (n) => `${n} found a rabbit nibbling the clover by the garden gate.`,
     effect: { title: 'Lucky Foot', desc: 'Harvests in its room have a 15% chance of an extra flower.', room: { harvestLuck: 0.15 } } },
+  pudding:   { key: 'pudding',   name: 'Pudding',   breed: 'Senior Spaniel',   species: 'dog', price: 90,  aspect: 300 / 132, fw: 150, senior: true,
+    found: (n) => `${n} found Pudding waiting patiently at the bus stop, greying around the muzzle and in no hurry at all.`,
+    effect: { title: 'Gentle Soul', desc: 'Bugs are 30% less likely in its room.', room: { pestChance: 0.7 } } },
+  whisper:   { key: 'whisper',   name: 'Whisper',   breed: 'Senior Longhair',  species: 'cat', price: 100, aspect: 300 / 144, fw: 150, senior: true,
+    found: (n) => `${n} met an old longhaired cat who had clearly seen everything and was still unimpressed.`,
+    effect: { title: 'Old Wisdom', desc: 'Plants in its room take 1.75x as long to wilt.', room: { wiltMult: 1.75 } } },
+  inky:      { key: 'inky',      name: 'Inky',      breed: 'Senior Tuxedo Cat', species: 'cat', price: 110, aspect: 300 / 141, fw: 140, asleep: true, senior: true,
+    found: (n) => `${n} found Inky snoozing in a shop doorway, a tuxedo cat who had long ago earned a good nap.`,
+    effect: { title: 'Night Prowler', desc: 'Sometimes catches bugs in its room for you.', room: { autoCatch: 0.15 } } },
+  mocha:     { key: 'mocha',     name: 'Mocha',     breed: 'Poodle Pup',       species: 'dog', price: 150, aspect: 300 / 193, fw: 105,
+    found: (n) => `${n} was greeted by a chocolate-brown pup who grinned the whole way to the shop.`,
+    effect: { title: 'Happy Helper', desc: 'Shooing bugs in its room pays 1.5x.', room: { pestRewardMult: 1.5 } } },
 };
 export const STRAY_KEYS = Object.keys(STRAYS);
 for (const [k, st] of Object.entries(STRAYS)) {

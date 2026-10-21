@@ -48,7 +48,7 @@ export default function BookPets({ tab, setTab }) {
                   key={k}
                   activeOpacity={0.8}
                   onPress={() => pick(k)}
-                  style={[b.tile, mine && b.tileFound, k === selected && b.tileSel, s.card, KEYS.length > 12 && { width: '18%' }]}
+                  style={[b.tile, mine && b.tileFound, k === selected && b.tileSel, s.card, KEYS.length > 20 ? { width: '14.8%' } : KEYS.length > 12 && { width: '18%' }]}
                 >
                   <View style={b.tileArt}>
                     <Image source={PET_IMAGES[k]} style={[s.tileImg, !mine && b.silhouette]} resizeMode="contain" />
