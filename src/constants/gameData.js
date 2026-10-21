@@ -164,6 +164,42 @@ export const PETS = {
     effect: { title: 'Bonded Pair',      desc: 'Plants in its room are ready to water 15% sooner and get 25% fewer bugs.', room: { cooldownMult: 0.85, pestChance: 0.75 } } },
 };
 
+// ── Pet food aisle ────────────────────────────────────────────────────────────
+// Everything on the shelves is buyable. A "fed" pet gets its perk doubled until
+// the food wears off (hours stack up to FED_MAX_HOURS). Nothing bad happens to a
+// hungry pet. for = which pets can eat/use it. scope 'one' = you choose a pet,
+// 'species' = every owned pet of that kind (litter and pads keep the whole
+// household happy). Row/col place it on the aisle shelves.
+export const PET_SPECIES = {
+  george: 'cat', koazy: 'cat', martin: 'cat', tiger: 'cat', milk: 'cat', oreo: 'cat', ebonyandivory: 'cat',
+  storm: 'dog', brownie: 'dog', aki: 'dog', cherry: 'dog',
+};
+export const FED_BOOST = 2;        // perk strength while fed
+export const FED_MAX_HOURS = 72;
+export const PET_FOOD = [
+  // row 1: bagged food
+  { key: 'dogfood',    name: 'Dog Food',        price: 30, hours: 24, for: 'dog', scope: 'one', row: 0, col: 0 },
+  { key: 'catfood',    name: 'Cat Food',        price: 30, hours: 24, for: 'cat', scope: 'one', row: 0, col: 1 },
+  { key: 'puppyfood',  name: 'Puppy Food',      price: 40, hours: 30, for: 'dog', scope: 'one', row: 0, col: 2 },
+  { key: 'kittenfood', name: 'Kitten Food',     price: 40, hours: 30, for: 'cat', scope: 'one', row: 0, col: 3 },
+  { key: 'grainfree',  name: 'Grain Free',      price: 60, hours: 36, for: 'dog', scope: 'one', row: 0, col: 4 },
+  { key: 'seniorcare', name: 'Senior Care',     price: 60, hours: 36, for: 'any', scope: 'one', row: 0, col: 5 },
+  // row 2: tins and treats
+  { key: 'wetcat',     name: 'Wet Food (Cat)',  price: 20, hours: 12, for: 'cat', scope: 'one', row: 1, col: 0 },
+  { key: 'wetdog',     name: 'Wet Food (Dog)',  price: 20, hours: 12, for: 'dog', scope: 'one', row: 1, col: 1 },
+  { key: 'biscuits',   name: 'Biscuits',        price: 12, hours: 8,  for: 'dog', scope: 'one', row: 1, col: 2 },
+  { key: 'treats',     name: 'Cat Treats',      price: 12, hours: 8,  for: 'cat', scope: 'one', row: 1, col: 3 },
+  { key: 'dental',     name: 'Dental Treats',   price: 25, hours: 16, for: 'any', scope: 'one', row: 1, col: 4 },
+  { key: 'training',   name: 'Training Treats', price: 25, hours: 16, for: 'dog', scope: 'one', row: 1, col: 5 },
+  // row 3: litter, pads and grooming
+  { key: 'catlitter',  name: 'Cat Litter',      price: 35, hours: 24, for: 'cat', scope: 'species', row: 2, col: 0 },
+  { key: 'clumping',   name: 'Clumping Litter', price: 50, hours: 36, for: 'cat', scope: 'species', row: 2, col: 1 },
+  { key: 'puppypads',  name: 'Puppy Pads',      price: 35, hours: 24, for: 'dog', scope: 'species', row: 2, col: 2 },
+  { key: 'wipes',      name: 'Pet Wipes',       price: 15, hours: 12, for: 'any', scope: 'one', row: 2, col: 3 },
+  { key: 'deodoriser', name: 'Deodoriser Spray', price: 22, hours: 18, for: 'any', scope: 'one', row: 2, col: 4 },
+  { key: 'shampoo',    name: 'Pet Shampoo',     price: 30, hours: 24, for: 'any', scope: 'one', row: 2, col: 5 },
+];
+
 // ── Pre-determined pet positions per room ─────────────────────────────────────
 // Laid out in Plopper (1376×768 base, sprite CENTER anchor). A pet shows at its
 // room's spot only when the player has PLACED it there (petPlacements[key]===room).
@@ -456,6 +492,7 @@ export const INITIAL_PLAYER_STATE = {
   bouquetBook: {},   // recipeId → { made, firstAt } — secret bouquet recipes found
   bouquetsSold: 0,
   petGifts: {},      // petKey → day key of the last daily gift
+  petCare: {},       // petKey → time (ms) its food wears off; fed pets get a stronger perk
 };
 
 // ── Flower book ───────────────────────────────────────────────────────────────

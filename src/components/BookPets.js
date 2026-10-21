@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, Image, ScrollView, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { PET_IMAGES, PERK_ICONS } from '../engine/assets';
-import { PETS } from '../constants/gameData';
+import { PETS, FED_BOOST, formatDuration } from '../constants/gameData';
+import { isFed } from '../engine/petEffects';
 import PetSprite from './PetSprite';
 import BookFrame from './BookFrame';
 import { BookTabs, BookButton, bookStyles as b, INK, PIXEL_FONT, BODY } from './BookParts';
@@ -75,6 +76,14 @@ export default function BookPets({ tab, setTab }) {
 
           <Text style={b.name}>{has ? shown(selected) : '???'}</Text>
           <Text style={b.sub}>{pet.breed}{has && names[selected] ? ` · ${pet.name}` : ''}</Text>
+
+          {has && (
+            <Text style={[b.tagline, { color: isFed(state.player, selected) ? '#3f7a2e' : '#a08860' }]}>
+              {isFed(state.player, selected)
+                ? `✦ Fed, perk ${FED_BOOST}x for ${formatDuration(state.player.petCare[selected] - Date.now())}`
+                : '✦ Hungry, try the pet food aisle'}
+            </Text>
+          )}
 
           {pet.effect && (
             <View style={s.perk}>

@@ -7,6 +7,7 @@ import {
   seedType, evaluateBouquet, bouquetPaper,
   XP_CONFIG, levelInfo, playerLevel, seedUnlockLevel, unlocksAtLevel, TRADE_FLOWERS, CUSTOMERS,
   roomScentShield, HERBALIST, HERBALIST_TRADES, REMEDIES, SACHET_MS, isShielded,
+  PET_FOOD, PET_SPECIES, FED_MAX_HOURS,
 } from '../constants/gameData';
 import { roomPetEffects, globalPetEffects, pestRewardFor, placedPets, dayKey } from '../engine/petEffects';
 import { rollCustomerOrders, hashString, bouquetFillsOrder, hasStaleOrders } from '../engine/customers';
@@ -120,7 +121,7 @@ function givePetGifts(player, inventory, now, rand) {
   let coins = player.coins;
   let inv = inventory;
   const notices = [];
-  for (const { key, effect } of placedPets(player)) {
+  for (const { key, effect } of placedPets(player, now)) {
     const daily = effect.daily;
     if (!daily || gifts[key] === today) continue;
     gifts[key] = today;
@@ -131,16 +132,16 @@ function givePetGifts(player, inventory, now, rand) {
       coins += n;
       notices.push(`${name} fetched ${n} coins for you!`);
     }
-    if (daily.seed) {
+    for (let i = 0; i < (daily.seed === true ? 1 : daily.seed ?? 0); i++) {
       if (inv.length >= INVENTORY_CAP) {
         notices.push(`${name} dug up a seed, but your inventory is full.`);
-      } else {
-        const keys = [...Object.keys(POTTED_FLOWERS), ...Object.keys(HANGING_PLANTS)];
-        const flowerKey = keys[Math.floor(rand() * keys.length)];
-        const seedName = POTTED_FLOWERS[flowerKey]?.name ?? HANGING_PLANTS[flowerKey]?.name;
-        inv = [...inv, { id: `inv_${now}_${key}`, flowerKey }];
-        notices.push(`${name} dug up a ${seedName} seed!`);
+        break;
       }
+      const keys = [...Object.keys(POTTED_FLOWERS), ...Object.keys(HANGING_PLANTS)];
+      const flowerKey = keys[Math.floor(rand() * keys.length)];
+      const seedName = POTTED_FLOWERS[flowerKey]?.name ?? HANGING_PLANTS[flowerKey]?.name;
+      inv = [...inv, { id: `inv_${now}_${key}_${i}`, flowerKey }];
+      notices.push(`${name} dug up a ${seedName} seed!`);
     }
   }
   return { player: { ...player, coins, petGifts: gifts }, inventory: inv, notices };
@@ -184,7 +185,7 @@ function reducer(state, action) {
     case 'TICK': {
       const now = action.now;
       const rand = action.seed != null ? makeRand(action.seed) : null;
-      const eff = roomPetEffects(state.player);
+      const eff = roomPetEffects(state.player, now);
       // Full-bloom marigolds / jasmine make pests less likely anywhere in their room.
       const shield = roomScentShield(state.slots);
       for (const room of Object.keys(shield)) {
@@ -585,6 +586,27 @@ function reducer(state, action) {
       };
     }
 
+    // Buy something from the pet food aisle and give it to a pet. 'one' items go to
+    // action.petKey; 'species' items (litter, pads) to every owned pet of that kind.
+    // Fed time stacks on top of what's left, up to FED_MAX_HOURS.
+    case 'FEED_PET': {
+      const item = PET_FOOD.find((f) => f.key === action.itemKey);
+      if (!item || state.player.coins < item.price) return state;
+      const now = action.now ?? Date.now();
+      const owned = state.player.ownedPets ?? [];
+      const fits = (k) => PETS[k] && (item.for === 'any' || PET_SPECIES[k] === item.for);
+      const targets = item.scope === 'species'
+        ? owned.filter(fits)
+        : owned.filter((k) => k === action.petKey && fits(k));
+      if (targets.length === 0) return state;
+      const care = { ...(state.player.petCare ?? {}) };
+      for (const k of targets) {
+        const from = Math.max(now, care[k] ?? 0);
+        care[k] = Math.min(from + item.hours * 3600000, now + FED_MAX_HOURS * 3600000);
+      }
+      return { ...state, player: { ...state.player, coins: state.player.coins - item.price, petCare: care } };
+    }
+
     // Give an owned pet a custom name (empty = back to its default name).
     case 'NAME_PET': {
       const { petKey, name } = action;
@@ -616,6 +638,8 @@ function reducer(state, action) {
       delete placements[petKey];
       const petNames = { ...(state.player.petNames ?? {}) };
       delete petNames[petKey];
+      const petCare = { ...(state.player.petCare ?? {}) };
+      delete petCare[petKey];
       return {
         ...state,
         player: {
@@ -624,6 +648,7 @@ function reducer(state, action) {
           ownedPets: state.player.ownedPets.filter((k) => k !== petKey),
           petPlacements: placements,
           petNames,
+          petCare,
         },
       };
     }

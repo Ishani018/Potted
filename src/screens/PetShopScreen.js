@@ -103,6 +103,10 @@ export default function PetShopScreen({ navigation }) {
         onInventory={() => setInvOpen(true)}
       />
 
+      <View style={styles.foodBtn}>
+        <PixelButton label="PET FOOD >" tone="wood" size={8} onPress={() => navigation.navigate('PetFood')} />
+      </View>
+
       {selected && <AdoptModal petKey={selected} onClose={() => setSelected(null)} />}
 
       {invOpen && (
@@ -118,6 +122,8 @@ const styles = StyleSheet.create({
 
   // Sign floating above each pet (centred, overflowing the sprite box upward)
   tagWrap: { position: 'absolute', left: -40, right: -40, top: -22, alignItems: 'center', zIndex: 50 },
+
+  foodBtn: { position: 'absolute', right: 16, bottom: 12, zIndex: 30 },
 
   modalOverlay: {
     ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.65)',

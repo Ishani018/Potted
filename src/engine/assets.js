@@ -224,6 +224,29 @@ export const INVENTORY_BG = require('../../assets/ui_comps/inventory.png');
 export const MAP_BG = require('../../assets/ui_comps/mapoftown.png');
 export const HOME_BG = require('../../assets/homeinsidescreen.png');
 export const PETSHOP_BG = require('../../assets/petshop.png');
+// ─── Pet food aisle ───────────────────────────────────────────────────────────
+export const PETFOOD_BG = require('../../assets/petfood/aisle.png');
+export const PETFOOD_IMAGES = {
+  dogfood: require('../../assets/petfood/dogfood.png'),
+  catfood: require('../../assets/petfood/catfood.png'),
+  puppyfood: require('../../assets/petfood/puppyfood.png'),
+  kittenfood: require('../../assets/petfood/kittenfood.png'),
+  grainfree: require('../../assets/petfood/grainfree.png'),
+  seniorcare: require('../../assets/petfood/seniorcare.png'),
+  wetcat: require('../../assets/petfood/wetcat.png'),
+  wetdog: require('../../assets/petfood/wetdog.png'),
+  biscuits: require('../../assets/petfood/biscuits.png'),
+  treats: require('../../assets/petfood/treats.png'),
+  dental: require('../../assets/petfood/dental.png'),
+  training: require('../../assets/petfood/training.png'),
+  catlitter: require('../../assets/petfood/catlitter.png'),
+  clumping: require('../../assets/petfood/clumping.png'),
+  puppypads: require('../../assets/petfood/puppypads.png'),
+  wipes: require('../../assets/petfood/wipes.png'),
+  deodoriser: require('../../assets/petfood/deodoriser.png'),
+  shampoo: require('../../assets/petfood/shampoo.png'),
+};
+
 export const TRADE_BG = require('../../assets/flowertradeshop.png');   // market exterior (scales)
 export const TRADING_BG = require('../../assets/tradingscreen.png');    // the 6-slot trade page
 export const BOUQUET_BG = require('../../assets/bouquetshop.png');   // bouquet table screen
