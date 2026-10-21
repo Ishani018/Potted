@@ -7,7 +7,7 @@ import {
   seedType, evaluateBouquet, bouquetPaper,
   XP_CONFIG, levelInfo, playerLevel, seedUnlockLevel, unlocksAtLevel, TRADE_FLOWERS, CUSTOMERS,
   roomScentShield, HERBALIST, HERBALIST_TRADES, REMEDIES, SACHET_MS, isShielded,
-  PET_FOOD, PET_SPECIES, FED_MAX_HOURS,
+  PET_FOOD, PET_SPECIES, FED_MAX_HOURS, fosterCenterOpen,
 } from '../constants/gameData';
 import { maybeArriveStray } from '../engine/strays';
 import { roomPetEffects, globalPetEffects, pestRewardFor, placedPets, dayKey } from '../engine/petEffects';
@@ -578,7 +578,7 @@ function reducer(state, action) {
       if (state.player.coins < price) return state;
       if ((state.player.ownedPets ?? []).includes(petKey)) return state;
       // Adopt and auto-place in the current room (user can reassign later).
-      return {
+      const next = {
         ...state,
         player: {
           ...state.player,
@@ -590,6 +590,11 @@ function reducer(state, action) {
           petFound: { ...(state.player.petFound ?? {}), ...(state.player.strays ?? []).filter((s) => s.key === petKey).reduce((o, s) => ({ ...o, [petKey]: s.finder }), {}) },
         },
       };
+      // adopting enough strays opens the bigger foster centre
+      if (!fosterCenterOpen(state.player) && fosterCenterOpen(next.player)) {
+        return { ...next, notices: [...state.notices, { id: `center_${Date.now()}`, text: 'Word is spreading! The Foster Center is now open at the pet shop.' }] };
+      }
+      return next;
     }
 
     // Buy something from the pet food aisle and give it to a pet. 'one' items go to

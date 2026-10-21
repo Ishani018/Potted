@@ -115,7 +115,10 @@ export const PET_IMAGES = {
 };
 // Biscuit naps on the foster beds.
 export const FOSTER_REST_IMAGES = { biscuit: require('../../assets/foster/biscuitsleep.png') };
-export const FOSTER_BG = require('../../assets/foster/corner.png');
+export const FOSTER_BGS = {
+  corner: require('../../assets/foster/corner.png'),
+  center: require('../../assets/foster/center.png'),
+};
 
 // ─── UI ──────────────────────────────────────────────────────────────────────
 export const UI_IMAGES = {
