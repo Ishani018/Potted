@@ -172,7 +172,7 @@ export default function TradingScreen({ navigation }) {
 
       <ScreenHud
         sw={sw} sh={sh}
-        onSettings={() => navigation.navigate('Room')}
+        onSettings={() => navigation.navigate('Settings')}
         onMap={() => navigation.navigate('Map')}
       />
 

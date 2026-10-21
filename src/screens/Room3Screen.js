@@ -256,7 +256,7 @@ export default function Room3Screen({ navigation }) {
         {/* Standard HUD — settings (TL) + map (TR) + inventory (BL) */}
         <ScreenHud
           sw={sw} sh={sh}
-          onSettings={() => navigation.navigate('Room')}
+          onSettings={() => navigation.navigate('Settings')}
           onMap={() => navigation.navigate('Map')}
           onInventory={() => setInvOpen(true)}
           onBook={() => navigation.navigate('FlowerBook')}

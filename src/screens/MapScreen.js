@@ -38,7 +38,7 @@ export default function MapScreen({ navigation }) {
       ))}
 
       {/* Standard HUD — settings (top-left). Map has no inventory button. */}
-      <ScreenHud sw={sw} sh={sh} onSettings={() => navigation.navigate('Room')} onBook={() => navigation.navigate('FlowerBook')} />
+      <ScreenHud sw={sw} sh={sh} onSettings={() => navigation.navigate('Settings')} onBook={() => navigation.navigate('FlowerBook')} />
     </View>
   );
 }

@@ -225,7 +225,6 @@ export default function CareGuide({ tabs }) {
       left={(
         <View style={{ flex: 1 }}>
           {tabs}
-          <Text style={styles.title}>Care Guide</Text>
           <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
             <Left />
           </ScrollView>
@@ -242,7 +241,6 @@ export default function CareGuide({ tabs }) {
 }
 
 const styles = StyleSheet.create({
-  title: { fontFamily: PIXEL_FONT, fontSize: 12, color: INK, textAlign: 'center', marginBottom: 4 },
   scroll: { paddingBottom: 6 },
 
   block: { marginBottom: 6 },

@@ -450,6 +450,7 @@ export const INITIAL_PLAYER_STATE = {
   xp: 0,             // total experience — level is derived (see levelInfo)
   customers: null,   // { day, list: [orders] } — today's florist orders (engine/customers)
   customersServed: 0,
+  customerBook: {},  // customerKey → { served, firstAt } — who you've met at the florist
   remedies: { balm: 0, sachet: 0 },  // herbalist remedies in the bag
   herbalistDay: null,                // day key of the last free daily balm
   bouquetBook: {},   // recipeId → { made, firstAt } — secret bouquet recipes found
@@ -556,6 +557,7 @@ export function evaluateBouquet(keys, bonus = 1, paper = 'plain') {
 export const CUSTOMERS = {
   clara: {
     key: 'clara', name: 'Clara', desc: 'Girl with long wavy auburn hair and a cream bow, olive floral skirt, brown satchel.',
+    bio: "Always has a book in her bag and a plan for one more cosy corner.",
     look: { skin: '#f1c9a0', hair: '#8a3a1c', outfit: '#7a8a46' },
     likes: ['rose', 'peony', 'petunia'],
     askFlowers: "I'm decorating my reading nook! Could I have {qty} {flower}?",
@@ -564,6 +566,7 @@ export const CUSTOMERS = {
   },
   theo: {
     key: 'theo', name: 'Theo', desc: 'Curly-haired student in a green hoodie and brown trousers, flower tote bag.',
+    bio: "A student with a very small flat and very big plans for it.",
     look: { skin: '#f0c49a', hair: '#3a2416', outfit: '#3f6a3a' },
     likes: ['daisy', 'snapdragon', 'poppy'],
     askFlowers: 'My flat is so dull. Could I get {qty} {flower}, please?',
@@ -572,6 +575,7 @@ export const CUSTOMERS = {
   },
   iris: {
     key: 'iris', name: 'Iris', desc: 'Woman with a messy bun, cream cardigan, lilac floral skirt, brown satchel.',
+    bio: "Hosts the best tea parties in town and never forgets a favourite.",
     look: { skin: '#eebf94', hair: '#3a2a22', outfit: '#a98bd0' },
     likes: ['hydrenga', 'jasmine', 'petunia'],
     askFlowers: "I'm hosting a tea party! Might I have {qty} {flower}?",
@@ -580,6 +584,7 @@ export const CUSTOMERS = {
   },
   posy: {
     key: 'posy', name: 'Posy', desc: 'Small laughing girl in a pink dress with a daisy in her wavy brown hair.',
+    bio: "Collects flowers for crowns, secrets and shiny pebbles.",
     look: { skin: '#f4cfa8', hair: '#7a4a2a', outfit: '#f2a0b8' },
     likes: ['daisy', 'poppy', 'marigold'],
     askFlowers: 'Can I have {qty} {flower}? I want to make a flower crown!',
@@ -588,6 +593,7 @@ export const CUSTOMERS = {
   },
   walt: {
     key: 'walt', name: 'Grandpa Walt', desc: 'Old man in a flat cap, round glasses, white moustache, brown tweed jacket, walking cane.',
+    bio: "Grew prize marigolds for forty years. He will tell you all about them.",
     look: { skin: '#f0c9a6', hair: '#d8d8d8', outfit: '#7a5a2a' },
     likes: ['marigold', 'rose', 'snapdragon'],
     askFlowers: 'Back in my day I grew these myself. {qty} {flower}, if you please.',
@@ -596,6 +602,7 @@ export const CUSTOMERS = {
   },
   finn: {
     key: 'finn', name: 'Finn', desc: 'Boy in a beige cap, brown overalls and green sneakers, mid-stride, big grin.',
+    bio: "Runs everywhere, saves every coin, and loves his mum's garden.",
     look: { skin: '#f2c8a0', hair: '#6a4426', outfit: '#7a4a24' },
     likes: ['poppy', 'marigold', 'daisy'],
     askFlowers: "My mum's garden needs help! Do you have {qty} {flower}?",
@@ -604,6 +611,7 @@ export const CUSTOMERS = {
   },
   marisol: {
     key: 'marisol', name: 'Marisol', desc: 'Woman with long curly auburn hair, gold hoops, black top, wide blue jeans, black satchel.',
+    bio: "A photographer who sees a perfect picture in every petal.",
     look: { skin: '#e8b48a', hair: '#9a3a1c', outfit: '#6a90b8' },
     likes: ['Bougainvillea', 'petunia', 'poppy'],
     askFlowers: "I'm styling a photoshoot. {qty} {flower}, and quickly!",
@@ -612,6 +620,7 @@ export const CUSTOMERS = {
   },
   ben: {
     key: 'ben', name: 'Gardener Ben', desc: 'Bearded man with glasses and messy hair, cream shirt, green apron with brass buttons.',
+    bio: "Looks after the town greenhouse and knows every plant by first name.",
     look: { skin: '#eebf94', hair: '#4a3020', outfit: '#3d5a2a' },
     likes: ['stringofpearls', 'Philodendron', 'snapdragon'],
     askFlowers: 'My greenhouse is short of a few things. {qty} {flower}, please?',
@@ -620,6 +629,7 @@ export const CUSTOMERS = {
   },
   nori: {
     key: 'nori', name: 'Nori', desc: 'Girl with long black hair, white bow and headphones, cream sweater, olive cargo trousers, tote bag.',
+    bio: "Studies with headphones on and has a plant on every shelf.",
     look: { skin: '#f0cfae', hair: '#1c1418', outfit: '#6a7a3a' },
     likes: ['jasmine', 'Philodendron', 'stringofpearls', 'Bougainvillea'],
     askFlowers: 'Plants for my study space! {qty} {flower}, please.',

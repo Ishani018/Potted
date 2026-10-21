@@ -6,7 +6,7 @@ import { COLORS } from './Pixel';
 
 // A square face portrait of a customer sprite: the sprite is scaled and shifted so
 // the box frames head and shoulders, whatever the figure's size in its canvas.
-export default function Portrait({ customerKey, size = 64 }) {
+export default function Portrait({ customerKey, size = 64, silhouette = false }) {
   const f = SPRITE_FRAMING[customerKey] ?? DEFAULT_FRAMING;
   const inner = size - 6;                              // inside the 3px border
   const regionTop = Math.max(0, f.top - 0.015);
@@ -19,7 +19,7 @@ export default function Portrait({ customerKey, size = 64 }) {
       backgroundColor: '#e8d4a8', borderWidth: 3, borderColor: COLORS.woodEdge,
     }}>
       <View style={{ position: 'absolute', left: inner / 2 - f.cx * displayW, top: -regionTop * displayH }}>
-        <CustomerSprite customerKey={customerKey} height={displayH} bob={false} />
+        <CustomerSprite customerKey={customerKey} height={displayH} bob={false} silhouette={silhouette} />
       </View>
     </View>
   );

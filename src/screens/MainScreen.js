@@ -1,15 +1,13 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
-import { Audio } from 'expo-av';
 import { MAIN_BG, UI_IMAGES } from '../engine/assets';
-
-const MUSIC = require('../../assets/Sunlight_on_the_Sprouts.mp3');
+import { ensureMusic, setMusicOn, getAudioPrefs, subscribeAudio, loadAudioPrefs } from '../engine/audio';
 
 export default function MainScreen({ navigation }) {
-  const soundRef = useRef(null);
-  const mutedRef = useRef(false);          // read inside async without stale closure
-  const [muted, setMuted] = useState(false);
   const { width: sw } = useWindowDimensions();
+  // Music is one shared player (engine/audio) — settings controls the same one.
+  const [audio, setAudio] = useState(getAudioPrefs());
+  useEffect(() => subscribeAudio(setAudio), []);
 
   // ── PLAY button — EDIT THESE TWO to resize/move ──────────────────────────────
   const PLAY_SCALE = 0.24; // fraction of screen width (bigger number = bigger button)
@@ -19,42 +17,11 @@ export default function MainScreen({ navigation }) {
   const playW = Math.round(sw * PLAY_SCALE);
   const playH = Math.round(playW / 2.2);
 
-  // Create the looping music (once) and start it. Safe to call repeatedly — if the
-  // sound already exists it just resumes. We do NOT unload on unmount so it carries
-  // into the game. Autoplay may be blocked until a user gesture; PLAY also calls
-  // this, so the music is guaranteed to start by the time you enter the game.
-  const ensureMusic = async () => {
-    try {
-      if (soundRef.current) {
-        await soundRef.current.playAsync();
-        return;
-      }
-      await Audio.setAudioModeAsync({
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: false,
-      });
-      const { sound } = await Audio.Sound.createAsync(
-        MUSIC,
-        { shouldPlay: true, isLooping: true, volume: 1.0, isMuted: mutedRef.current },
-      );
-      soundRef.current = sound;
-    } catch (e) {
-      console.error('Audio failed:', e?.message ?? e);
-    }
-  };
+  // Load the saved volume / on-off, then best-effort autoplay (works on native;
+  // may be blocked on web until PLAY).
+  useEffect(() => { loadAudioPrefs().then(ensureMusic); }, []);
 
-  // Best-effort autoplay on mount (works on native; may be blocked on web).
-  useEffect(() => { ensureMusic(); }, []);
-
-  const toggleMute = async () => {
-    const next = !muted;
-    setMuted(next);
-    mutedRef.current = next;
-    await ensureMusic();             // also starts music if autoplay was blocked
-    if (soundRef.current) {
-      try { await soundRef.current.setIsMutedAsync(next); } catch { }
-    }
-  };
+  const toggleMute = () => setMusicOn(!audio.musicOn);
 
   // TODO: play a short click SFX here once a click sound asset is added.
   const handlePlay = async () => {
@@ -67,17 +34,17 @@ export default function MainScreen({ navigation }) {
       <Image source={MAIN_BG} style={styles.bg} resizeMode="cover" />
 
       {/* Top-left: settings */}
-      <TouchableOpacity style={styles.settingsBtn} activeOpacity={0.8} onPress={() => navigation.navigate('Room')}>
+      <TouchableOpacity style={styles.settingsBtn} activeOpacity={0.8} onPress={() => navigation.navigate('Settings')}>
         <Image source={UI_IMAGES.settings} style={styles.cornerImg} resizeMode="contain" />
       </TouchableOpacity>
 
       {/* Top-right: info + sound (placeholders) */}
       <View style={styles.topRight}>
-        <TouchableOpacity style={styles.cornerBtn} activeOpacity={0.8} onPress={() => navigation.navigate('Room')}>
+        <TouchableOpacity style={styles.cornerBtn} activeOpacity={0.8} onPress={() => navigation.navigate('Settings')}>
           <Image source={UI_IMAGES.info} style={styles.cornerImg} resizeMode="contain" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.cornerBtn} activeOpacity={0.8} onPress={toggleMute}>
-          <Image source={muted ? UI_IMAGES.mutedsound : UI_IMAGES.sound} style={styles.cornerImg} resizeMode="contain" />
+          <Image source={audio.musicOn ? UI_IMAGES.sound : UI_IMAGES.mutedsound} style={styles.cornerImg} resizeMode="contain" />
         </TouchableOpacity>
       </View>
 

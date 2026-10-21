@@ -9,7 +9,8 @@ import { CUSTOMERS } from '../constants/gameData';
 // the sprite is 2:3 (w:h). Bobs gently like it's waiting at the counter.
 export const SPRITE_ASPECT = 2 / 3;
 
-export default function CustomerSprite({ customerKey, height = 200, bob = true, happy = false }) {
+// silhouette: draw it as a dark shape (a customer you haven't met yet)
+export default function CustomerSprite({ customerKey, height = 200, bob = true, happy = false, silhouette = false }) {
   const c = CUSTOMERS[customerKey];
   const w = height * SPRITE_ASPECT;
   const y = useRef(new Animated.Value(0)).current;
@@ -45,7 +46,7 @@ export default function CustomerSprite({ customerKey, height = 200, bob = true, 
   return (
     <Animated.View style={{ width: w, height, transform: [{ translateY: Animated.add(y, hop) }] }}>
       {img ? (
-        <Image source={img} style={{ width: w, height }} resizeMode="contain" />
+        <Image source={img} style={[{ width: w, height }, silhouette && { tintColor: '#4a3a28', opacity: 0.45 }]} resizeMode="contain" />
       ) : (
         <View style={{ width: w, height, alignItems: 'center' }}>
           {/* soft ground shadow */}

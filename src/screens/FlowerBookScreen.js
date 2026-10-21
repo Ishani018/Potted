@@ -10,13 +10,21 @@ import BouquetArt from '../components/BouquetArt';
 import BackSign from '../components/BackSign';
 import CareGuide from '../components/CareGuide';
 import BookFrame from '../components/BookFrame';
+import BookCustomers from '../components/BookCustomers';
+import BookPets from '../components/BookPets';
+import BookPaintings from '../components/BookPaintings';
+import { BookTabs } from '../components/BookParts';
 
-// Flower book — an open two-page journal with three tabs (Flowers, Bouquets, Care).
+// Flower book — an open two-page journal with six tabs: Flowers, Bouquets, Care,
+// Customers, Pets and Paintings.
 // Flowers: every flower (silhouettes until discovered); a page unlocks the first
 // time that flower reaches full bloom (see WATER_PLANT).
 // Bouquets: the secret bouquet recipes; one unlocks the first time it's tied
 // and sold at the market (see SELL_BOUQUET). Locked ones show only a hint.
 // Care: a guide to looking after plants — watering, bugs, remedies (CareGuide).
+// Customers / Pets / Paintings: portrait cards for the florist's visitors, your
+// pets (choose where they live, rename them) and the gallery's paintings (hang
+// one in the Balcony frame). These used to live in settings.
 
 const PIXEL_FONT = 'PressStart2P';
 
@@ -75,21 +83,26 @@ export default function FlowerBookScreen({ navigation, route }) {
     <View style={styles.root}>
       <BackSign onPress={() => navigation.goBack()} />
 
-      {tab === 'care' ? (
-        <CareGuide tabs={<Tabs tab={tab} setTab={setTab} />} />
+      {tab === 'customers' ? (
+        <BookCustomers tab={tab} setTab={setTab} />
+      ) : tab === 'pets' ? (
+        <BookPets tab={tab} setTab={setTab} />
+      ) : tab === 'paintings' ? (
+        <BookPaintings tab={tab} setTab={setTab} />
+      ) : tab === 'care' ? (
+        <CareGuide tabs={<BookTabs tab={tab} setTab={setTab} />} />
       ) : tab === 'bouquets' ? (
         <BouquetPages
           found={bouquetBook}
           selected={selectedRecipe}
           onSelect={setSelectedRecipe}
-          tabs={<Tabs tab={tab} setTab={setTab} />}
+          tabs={<BookTabs tab={tab} setTab={setTab} />}
         />
       ) : (
       <BookFrame
         left={(
         <View style={styles.pageInner}>
-          <Tabs tab={tab} setTab={setTab} />
-          <Text style={styles.title}>Flower Book</Text>
+          <BookTabs tab={tab} setTab={setTab} />
           <Text style={styles.progress}>{found} / {FLOWER_BOOK.length} discovered</Text>
           <View style={styles.grid}>
             {FLOWER_BOOK.map((f) => {
@@ -194,18 +207,6 @@ export default function FlowerBookScreen({ navigation, route }) {
   );
 }
 
-function Tabs({ tab, setTab }) {
-  return (
-    <View style={styles.tabs}>
-      {[['flowers', 'Flowers'], ['bouquets', 'Bouquets'], ['care', 'Care']].map(([key, label]) => (
-        <TouchableOpacity key={key} style={[styles.tab, tab === key && styles.tabOn]} onPress={() => setTab(key)}>
-          <Text style={[styles.tabTxt, tab === key && styles.tabTxtOn]}>{label}</Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-}
-
 // Bouquet tab: left page lists the recipes, right page shows the selected one.
 function BouquetPages({ found, selected, onSelect, tabs }) {
   const recipe = BOUQUET_RECIPES.find((r) => r.id === selected);
@@ -216,7 +217,6 @@ function BouquetPages({ found, selected, onSelect, tabs }) {
       left={(
       <View style={styles.pageInner}>
         {tabs}
-        <Text style={styles.title}>Bouquets</Text>
         <Text style={styles.progress}>{count} / {BOUQUET_RECIPES.length} recipes found</Text>
         <View style={styles.grid}>
           {BOUQUET_RECIPES.map((r) => {
@@ -278,16 +278,10 @@ const styles = StyleSheet.create({
   // The page is painted (BookFrame); this just sits inside its content area.
   pageInner: { flex: 1 },
 
-  tabs: { flexDirection: 'row', justifyContent: 'center', gap: 5, marginBottom: 4 },
-  tab: { paddingHorizontal: 9, paddingVertical: 2, borderRadius: 8, borderWidth: 1, borderColor: '#c9a86a' },
-  tabOn: { backgroundColor: '#7a3e1a', borderColor: '#7a3e1a' },
-  tabTxt: { color: '#8a6a40', fontSize: 10, fontWeight: 'bold' },
-  tabTxtOn: { color: PAPER },
   recipeTile: { width: '29%' },
   recipeQ: { fontFamily: PIXEL_FONT, fontSize: 16, color: '#b89a6a' },
   recipeBigQ: { fontFamily: PIXEL_FONT, fontSize: 40, color: '#c9a86a', marginVertical: 14 },
   recipeImg: { width: 34, height: 34 },
-  title: { fontFamily: PIXEL_FONT, fontSize: 12, color: INK, textAlign: 'center', marginBottom: 2 },
   progress: { color: '#8a6a40', fontSize: 10, textAlign: 'center', marginBottom: 4 },
   grid: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignContent: 'center', gap: 5 },
   tile: {

@@ -21,7 +21,7 @@ import PetShopScreen from './src/screens/PetShopScreen';
 import TradeScreen from './src/screens/TradeScreen';
 import TradingScreen from './src/screens/TradingScreen';
 import GalleryScreen from './src/screens/GalleryScreen';
-import RoomScreen from './src/screens/RoomScreen';
+import SettingsScreen from './src/screens/SettingsScreen';
 import FlowerBookScreen from './src/screens/FlowerBookScreen';
 import BouquetScreen from './src/screens/BouquetScreen';
 import PetRoomScreen from './src/screens/PetRoomScreen';
@@ -73,7 +73,7 @@ export default function App() {
                   <Stack.Screen name="Trade" component={TradeScreen} />
                   <Stack.Screen name="Trading" component={TradingScreen} />
                   <Stack.Screen name="Gallery" component={GalleryScreen} />
-                  <Stack.Screen name="Room" component={RoomScreen} />
+                  <Stack.Screen name="Settings" component={SettingsScreen} />
                   <Stack.Screen name="FlowerBook" component={FlowerBookScreen} />
                   <Stack.Screen name="Bouquet" component={BouquetScreen} />
                   <Stack.Screen name="PetRoom" component={PetRoomScreen} />

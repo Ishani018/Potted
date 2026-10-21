@@ -81,6 +81,7 @@ function grantXp(state, amount) {
 function completeOrder(state, order, message) {
   const list = state.player.customers.list.map((o) => (o.id === order.id ? { ...o, done: true } : o));
   const inventory = addSeed(state.inventory, order.seed, `c_${order.id}`);
+  const met = state.player.customerBook?.[order.customer];
   const gotSeed = order.seed && inventory.length > state.inventory.length;
   const seedName = order.seed ? (POTTED_FLOWERS[order.seed]?.name ?? HANGING_PLANTS[order.seed]?.name) : '';
   const next = {
@@ -90,6 +91,11 @@ function completeOrder(state, order, message) {
       ...state.player,
       customers: { ...state.player.customers, list },
       customersServed: (state.player.customersServed ?? 0) + 1,
+      // the customers page in the flower book fills in as you serve people
+      customerBook: {
+        ...(state.player.customerBook ?? {}),
+        [order.customer]: { served: (met?.served ?? 0) + 1, firstAt: met?.firstAt ?? Date.now() },
+      },
     },
     notices: [...state.notices, {
       id: `cust_${order.id}_${Date.now()}`,
@@ -160,6 +166,13 @@ function buildAwaySummary(before, after, awayMs, coins) {
 
 function reducer(state, action) {
   switch (action.type) {
+
+    // Settings → START OVER: back to a brand-new game (the saved copy is overwritten
+    // by the next autosave).
+    case 'RESET_GAME': {
+      const now = Date.now();
+      return { ...initialState, initialized: true, lastSeen: now, lastPassiveTick: now, notices: [] };
+    }
 
     case 'LOAD': {
       return { ...state, ...action.payload, initialized: true };
@@ -577,7 +590,7 @@ function reducer(state, action) {
       const { petKey, name } = action;
       if (!(state.player.ownedPets ?? []).includes(petKey)) return state;
       const names = { ...(state.player.petNames ?? {}) };
-      const clean = (name ?? '').trim().slice(0, 12);
+      const clean = (name ?? '').trim().slice(0, 12).trim();
       if (clean) names[petKey] = clean; else delete names[petKey];
       return { ...state, player: { ...state.player, petNames: names } };
     }
