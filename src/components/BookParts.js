@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Image } from 'react-native';
 import { PixelButton } from './Pixel';
-import { UI_IMAGES } from '../engine/assets';
+import { BOOK_BANNER } from '../engine/assets';
 import { useBook } from './BookNav';
 
 // Shared pieces for the flower book's pages.
@@ -16,6 +16,17 @@ export const PIXEL_FONT = 'PressStart2P';
 export const HEAD = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 export const BODY = Platform.select({ web: "'PatrickHand', Georgia, serif", default: 'PatrickHand' });
 
+// A title lettered on the painted parchment ribbon.
+export function RibbonTitle({ children, width = 196, size = 19 }) {
+  const height = width * 0.2 + 6;
+  return (
+    <View style={{ width, height, alignSelf: 'center', alignItems: 'center', justifyContent: 'center' }}>
+      <Image source={BOOK_BANNER} style={{ position: 'absolute', width, height }} resizeMode="stretch" />
+      <Text style={[s.titleTxt, { fontSize: size }]} numberOfLines={1}>{children}</Text>
+    </View>
+  );
+}
+
 // The chapter title at the top of a left page: small pixel lettering between two
 // little rules, like a heading written into a journal. (Pages are turned with the
 // arrows, a swipe, or the contents page, so there are no tabs.)
@@ -24,13 +35,7 @@ export function BookTabs() {
   const title = book?.info?.title ?? '';
   return (
     <View style={s.tabs}>
-      <View style={s.titleRow}>
-        <View style={s.rule} />
-        <Image source={UI_IMAGES.pcLeaf} style={[s.leaf, { transform: [{ scaleX: -1 }] }]} resizeMode="contain" />
-        <Text style={s.titleTxt}>{title}</Text>
-        <Image source={UI_IMAGES.pcLeaf} style={s.leaf} resizeMode="contain" />
-        <View style={s.rule} />
-      </View>
+      <RibbonTitle width={196}>{title}</RibbonTitle>
     </View>
   );
 }
@@ -54,15 +59,15 @@ export const bookStyles = StyleSheet.create({
   pageInner: { flex: 1 },
   progress: { fontFamily: BODY, color: SOFT, fontSize: 13, textAlign: 'center', marginBottom: 3 },
   grid: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignContent: 'center', gap: 5 },
+  // the card itself is a painted picture (TileFrame) behind the tile's contents
   tile: {
-    borderRadius: 8, paddingTop: 3, paddingBottom: 2,
-    backgroundColor: '#e8d4a8', borderWidth: 1.5, borderColor: '#c9a86a',
+    paddingTop: 8, paddingBottom: 6, paddingHorizontal: 6,
     alignItems: 'center', justifyContent: 'space-between',
   },
-  tileFound: { backgroundColor: '#fbf0cf', borderColor: '#d8b872' },
-  tileSel: { borderColor: '#5a8a2a', borderWidth: 2.5, backgroundColor: '#eef0c8' },
+  tileFound: {},
+  tileSel: {},
   tileArt: { flex: 1, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center' },
-  tileName: { fontFamily: BODY, color: INK, fontSize: 12, maxWidth: '96%' },
+  tileName: { fontFamily: BODY, color: INK, fontSize: 12, maxWidth: '74%', alignSelf: 'flex-start', marginLeft: 5, marginBottom: 1 },
   tileNameLocked: { color: '#a08860' },
   tileQ: { position: 'absolute', fontFamily: PIXEL_FONT, fontSize: 14, color: '#fbf0cf', textShadowColor: '#5a4630', textShadowRadius: 2 },
   silhouette: { tintColor: '#4a3a28', opacity: 0.4 },
@@ -80,7 +85,7 @@ export const bookStyles = StyleSheet.create({
 });
 
 const s = StyleSheet.create({
-  tabs: { marginBottom: 6 },
+  tabs: { marginBottom: 4 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   rule: { flex: 1, height: 1, backgroundColor: 'rgba(122,62,26,0.45)' },
   titleTxt: { fontFamily: HEAD, fontSize: 19, color: '#7a3e1a', letterSpacing: 0.5 },

@@ -4,6 +4,7 @@ import { useGame } from '../context/GameContext';
 import { PAINTING_IMAGES } from '../engine/assets';
 import { PAINTINGS } from '../constants/gameData';
 import BookFrame from './BookFrame';
+import TileFrame from './TileFrame';
 import { BookTabs, BookButton, bookStyles as b } from './BookParts';
 
 // Flower book → Paintings. Every painting at the gallery; the ones you own are in
@@ -38,6 +39,7 @@ export default function BookPaintings({ tab, setTab }) {
                   onPress={() => setSelected(k)}
                   style={[b.tile, mine && b.tileFound, k === selected && b.tileSel, s.card]}
                 >
+                  <TileFrame state={k === selected ? 'selected' : mine ? 'found' : 'empty'} />
                   <View style={b.tileArt}>
                     <Image source={PAINTING_IMAGES[k]} style={[s.tileImg, !mine && b.silhouette]} resizeMode="contain" />
                     {!mine && <Text style={b.tileQ}>?</Text>}

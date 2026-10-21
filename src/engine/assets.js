@@ -305,3 +305,12 @@ export const HERBALIST_IMAGES = {
 // The open book (cropped to the book itself, transparent outside it). Text goes in
 // the page areas defined in components/BookFrame.js. Ships with the repo.
 export const BOOK_IMG = require('../../assets/book/flowerbook.png');
+// Painted page cards for the book's tiles, the title ribbon and a vine divider.
+export const BOOK_TILES = {
+  empty:    require('../../assets/book/tile_empty.png'),
+  found:    require('../../assets/book/tile_found.png'),
+  selected: require('../../assets/book/tile_selected.png'),
+  locked:   require('../../assets/book/tile_locked.png'),
+};
+export const BOOK_BANNER = require('../../assets/book/banner.png');
+export const BOOK_DIVIDER = require('../../assets/book/divider.png');

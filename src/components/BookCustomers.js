@@ -5,6 +5,7 @@ import { TRADE_IMAGES } from '../engine/assets';
 import { CUSTOMERS, TRADE_FLOWERS } from '../constants/gameData';
 import Portrait from './Portrait';
 import BookFrame from './BookFrame';
+import TileFrame from './TileFrame';
 import { BookTabs, bookStyles as b, INK, BODY } from './BookParts';
 
 // Flower book → Customers. A portrait card for everyone who visits the florist.
@@ -41,7 +42,8 @@ export default function BookCustomers({ tab, setTab }) {
                   onPress={() => setSelected(k)}
                   style={[b.tile, isMet && b.tileFound, k === selected && b.tileSel, s.card]}
                 >
-                  <Portrait customerKey={k} size={50} silhouette={!isMet} />
+                  <TileFrame state={k === selected ? 'selected' : isMet ? 'found' : 'empty'} />
+                  <Portrait customerKey={k} size={44} silhouette={!isMet} />
                   <Text numberOfLines={1} style={[b.tileName, !isMet && b.tileNameLocked]}>{isMet ? CUSTOMERS[k].name : '???'}</Text>
                 </TouchableOpacity>
               );

@@ -6,6 +6,7 @@ import { PETS, FED_BOOST, formatDuration, knownPetKeys, CUSTOMERS, STRAYS } from
 import { isFed } from '../engine/petEffects';
 import PetSprite from './PetSprite';
 import BookFrame from './BookFrame';
+import TileFrame from './TileFrame';
 import { BookTabs, BookButton, bookStyles as b, INK, PIXEL_FONT, BODY, HEAD } from './BookParts';
 
 // Flower book → Pets. A portrait card for every pet. Pets you've adopted are in
@@ -50,6 +51,7 @@ export default function BookPets({ tab, setTab }) {
                   onPress={() => pick(k)}
                   style={[b.tile, mine && b.tileFound, k === selected && b.tileSel, s.card, KEYS.length > 20 ? { width: '14.8%' } : KEYS.length > 12 && { width: '18%' }]}
                 >
+                  <TileFrame state={k === selected ? 'selected' : mine ? 'found' : 'empty'} />
                   <View style={b.tileArt}>
                     <Image source={PET_IMAGES[k]} style={[s.tileImg, !mine && b.silhouette]} resizeMode="contain" />
                     {!mine && <Text style={b.tileQ}>?</Text>}

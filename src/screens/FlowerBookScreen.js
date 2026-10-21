@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES, UI_IMAGES, TRADE_IMAGES, PET_IMAGES, PAINTING_IMAGES } from '../engine/assets';
+import { POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES, UI_IMAGES, TRADE_IMAGES, PET_IMAGES, PAINTING_IMAGES, BOOK_DIVIDER } from '../engine/assets';
 import {
   FLOWER_BOOK, POTTED_FLOWERS, HANGING_PLANTS, BOUQUET_RECIPES, TRADE_FLOWERS, seedType,
   FLOWER_GROWTH, formatDuration, seedUnlockLevel, playerLevel, CUSTOMERS, knownPetKeys,
@@ -13,8 +13,9 @@ import BookFrame from '../components/BookFrame';
 import BookCustomers from '../components/BookCustomers';
 import BookPets from '../components/BookPets';
 import BookPaintings from '../components/BookPaintings';
-import { BookTabs, BODY, HEAD, SOFT } from '../components/BookParts';
+import { BookTabs, RibbonTitle, BODY, HEAD, SOFT } from '../components/BookParts';
 import Portrait from '../components/Portrait';
+import TileFrame from '../components/TileFrame';
 import { BookProvider, useBook, CHAPTERS } from '../components/BookNav';
 
 // Flower book — an open journal you turn page by page (arrows, swipe, or the
@@ -106,11 +107,8 @@ function ContentsPages({ found, bouquetsFound }) {
         <View style={styles.coverPage}>
           <Text style={styles.coverSmall}>The</Text>
           <Text style={styles.coverTitle}>Flower Book</Text>
-          <View style={styles.coverRule}>
-            <Image source={UI_IMAGES.pcLeaf} style={[styles.coverLeaf, { transform: [{ scaleX: -1 }] }]} resizeMode="contain" />
-            <Text style={styles.coverSub}>a gardener's journal</Text>
-            <Image source={UI_IMAGES.pcLeaf} style={styles.coverLeaf} resizeMode="contain" />
-          </View>
+          <Text style={styles.coverSub}>a gardener's journal</Text>
+          <Image source={BOOK_DIVIDER} style={styles.coverDivider} resizeMode="contain" />
           <View style={styles.coverArtRow}>
             <Image source={PET_IMAGES.george} style={styles.coverPet} resizeMode="contain" />
             <Image source={UI_IMAGES.bouquetmixed} style={styles.coverBouquet} resizeMode="contain" />
@@ -121,7 +119,7 @@ function ContentsPages({ found, bouquetsFound }) {
       )}
       right={(
         <View style={styles.pageInner}>
-          <Text style={styles.contentsHead}>CONTENTS</Text>
+          <View style={{ marginTop: 2, marginBottom: 8 }}><RibbonTitle width={236} size={24}>Contents</RibbonTitle></View>
           {CHAPTERS.map((c) => (
             <TouchableOpacity key={c.key} onPress={() => goTo(c.page)} activeOpacity={0.6} style={styles.contentsRow}>
               <View style={styles.contentsIcon}>{chapterIcon(c.key)}</View>
@@ -192,6 +190,7 @@ function FlowerBookPages({ navigation }) {
                   onPress={() => setSelected(f.key)}
                   activeOpacity={0.75}
                 >
+                  <TileFrame state={isSel ? 'selected' : isFound ? 'found' : seedLocked ? 'locked' : 'empty'} />
                   <View style={styles.tileArt}>
                     <Image
                       source={flowerArt(f.key)}
@@ -297,6 +296,7 @@ function BouquetPages({ found, selected, onSelect, tabs }) {
                 onPress={() => onSelect(r.id)}
                 activeOpacity={0.75}
               >
+                <TileFrame state={r.id === selected ? 'selected' : got ? 'found' : 'empty'} />
                 {got ? <BouquetArt flowers={r.flowers} size={50} fancy /> : <Text style={styles.recipeQ}>?</Text>}
               </TouchableOpacity>
             );
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
   coverSmall: { fontFamily: HEAD, fontSize: 18, color: SOFT, marginBottom: 0 },
   coverTitle: { fontFamily: HEAD, fontSize: 40, color: '#7a3e1a', lineHeight: 44 },
   coverRule: { flexDirection: 'row', alignItems: 'center', gap: 6, marginVertical: 4 },
-  coverLeaf: { width: 18, height: 18 },
+  coverDivider: { width: 200, height: 20, marginTop: 4 },
   coverSub: { fontFamily: BODY, fontSize: 16, color: INK, marginBottom: 8 },
   coverArtRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 2, marginVertical: 8 },
   coverPet: { width: 62, height: 56 },
@@ -372,17 +372,16 @@ const styles = StyleSheet.create({
   progress: { fontFamily: BODY, color: '#8a6a40', fontSize: 13, textAlign: 'center', marginBottom: 3 },
   grid: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignContent: 'center', gap: 5 },
   tile: {
-    width: '23%', aspectRatio: 0.88, borderRadius: 8, paddingTop: 4, paddingBottom: 3,
-    backgroundColor: '#e8d4a8', borderWidth: 1.5, borderColor: '#c9a86a',
+    width: '23%', aspectRatio: 0.88, paddingTop: 8, paddingBottom: 6, paddingHorizontal: 6,
     alignItems: 'center', justifyContent: 'space-between',
   },
-  tileFound: { backgroundColor: '#fbf0cf', borderColor: '#d8b872' },
-  tileSel: { borderColor: '#5a8a2a', borderWidth: 2.5, backgroundColor: '#eef0c8' },
+  tileFound: {},
+  tileSel: {},
   tileArt: { flex: 1, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center' },
   tileImg: { width: '92%', height: '92%' },
   tileQ: { position: 'absolute', fontFamily: PIXEL_FONT, fontSize: 14, color: '#fbf0cf', textShadowColor: '#5a4630', textShadowRadius: 2 },
   tileStar: { position: 'absolute', right: 5, top: 0, fontSize: 9, color: '#e0a830' },
-  tileName: { fontFamily: BODY, color: INK, fontSize: 12, maxWidth: '96%' },
+  tileName: { fontFamily: BODY, color: INK, fontSize: 12, maxWidth: '74%', alignSelf: 'flex-start', marginLeft: 5, marginBottom: 1 },
   tileNameLocked: { color: '#a08860' },
   silhouette: { tintColor: '#4a3a28', opacity: 0.4 },
 
