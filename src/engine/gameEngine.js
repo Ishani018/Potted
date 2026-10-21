@@ -1,4 +1,4 @@
-import { GROWTH_TIMERS, PEST_CONFIG, growthCooldownMs } from '../constants/gameData';
+import { GROWTH_TIMERS, PEST_CONFIG, growthCooldownMs, pickPestType } from '../constants/gameData';
 
 // ─── Slot factory ─────────────────────────────────────────────────────────────
 export function createEmptySlot(slotId, room, type, hasPot = false) {
@@ -12,7 +12,7 @@ export function createEmptySlot(slotId, room, type, hasPot = false) {
     lastWatered: null,
     wilting: false,
     _budWatered: false,
-    pest: null, // 'aphid' | 'beetle' while a pest is on the plant
+    pest: null, // pest type (see PEST_INFO) while a pest is on the plant
     hasPot, // true only when explicitly placed by user via PLACE_POT
   };
 }
@@ -129,8 +129,7 @@ function canGetPest(slot) {
 function maybeSpawnPest(slot, rand, eff) {
   const chance = PEST_CONFIG.chancePerTick * (eff?.pestChance ?? 1);
   if (!canGetPest(slot) || rand() >= chance) return slot;
-  const types = PEST_CONFIG.types;
-  return { ...slot, pest: types[Math.floor(rand() * types.length)] };
+  return { ...slot, pest: pickPestType(rand) };
 }
 
 // Pests that arrived while the game was closed: each growing plant gets one
@@ -141,7 +140,7 @@ export function spawnPestsOffline(slots, minutes, rand, effByRoom) {
     const chance = PEST_CONFIG.chancePerTick * (effByRoom?.[slot.room]?.pestChance ?? 1);
     const p = 1 - Math.pow(1 - chance, minutes);
     updated[id] = canGetPest(slot) && rand() < p
-      ? { ...slot, pest: PEST_CONFIG.types[Math.floor(rand() * PEST_CONFIG.types.length)] }
+      ? { ...slot, pest: pickPestType(rand) }
       : slot;
   }
   return updated;

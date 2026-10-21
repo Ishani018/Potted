@@ -22,9 +22,11 @@ assets/
 !readme_assets/
 !readme_assets/**
 
-# Florist customer sprites ship with the repo (the shop needs them to run).
+# Florist customer and pest sprites ship with the repo (the shop needs them to run).
 # Everything else in assets/ stays local.
 !assets/
 assets/*
 !assets/customers/
 !assets/customers/*.png
+!assets/pests/
+!assets/pests/*.png

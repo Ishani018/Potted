@@ -9,10 +9,11 @@ import { CUSTOMERS } from '../constants/gameData';
 // the sprite is 2:3 (w:h). Bobs gently like it's waiting at the counter.
 export const SPRITE_ASPECT = 2 / 3;
 
-export default function CustomerSprite({ customerKey, height = 200, bob = true }) {
+export default function CustomerSprite({ customerKey, height = 200, bob = true, happy = false }) {
   const c = CUSTOMERS[customerKey];
   const w = height * SPRITE_ASPECT;
   const y = useRef(new Animated.Value(0)).current;
+  const hop = useRef(new Animated.Value(0)).current;   // happy bounce
 
   useEffect(() => {
     if (!bob) return undefined;
@@ -26,12 +27,23 @@ export default function CustomerSprite({ customerKey, height = 200, bob = true }
     return () => loop.stop();
   }, [bob, height]);
 
+  // Happy: two quick hops with a little squash on landing.
+  useEffect(() => {
+    if (!happy) { hop.setValue(0); return undefined; }
+    const up = (to) => Animated.timing(hop, { toValue: to, duration: 160, easing: Easing.out(Easing.quad), useNativeDriver: true });
+    const anim = Animated.sequence([
+      up(-height * 0.07), up(0), Animated.delay(40), up(-height * 0.07), up(0),
+    ]);
+    anim.start();
+    return () => anim.stop();
+  }, [happy, height]);
+
   const img = CUSTOMER_IMAGES[customerKey];
   const look = c?.look ?? { skin: '#f1c9a0', hair: '#4a3020', outfit: '#6a8aa8' };
   const head = height * 0.26;
 
   return (
-    <Animated.View style={{ width: w, height, transform: [{ translateY: y }] }}>
+    <Animated.View style={{ width: w, height, transform: [{ translateY: Animated.add(y, hop) }] }}>
       {img ? (
         <Image source={img} style={{ width: w, height }} resizeMode="contain" />
       ) : (

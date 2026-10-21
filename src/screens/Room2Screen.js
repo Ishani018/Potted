@@ -6,7 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useGame } from '../context/GameContext';
 import { BACKGROUNDS, UI_IMAGES, PAINTING_IMAGES, PET_IMAGES, HANGING_PLANT_IMAGES, POTTED_PLANT_IMAGES, SEED_IMAGES } from '../engine/assets';
 import { getSnapPoints, WATERING_CAN_POSITIONS, DECOR_POSITIONS, POT_SOURCE_POSITIONS, scalePoint } from '../engine/snapPoints';
-import { getCurrentSeason, seedType, heldSeedHint, PETS } from '../constants/gameData';
+import { getCurrentSeason, seedType, heldSeedHint, PETS, pestInfo } from '../constants/gameData';
 import { pestRewardFor } from '../engine/petEffects';
 import { useToast } from '../components/Toast';
 import { projectSize, projectPoint } from '../engine/project';
@@ -89,7 +89,7 @@ export default function Room2Screen({ navigation }) {
   }, [dispatch]);
 
   const handleWater = useCallback((slotId) => {
-    if (slots[slotId]?.pest) { showToast('Shoo the bug away first!'); return; }
+    if (slots[slotId]?.pest) { showToast(`${pestInfo(slots[slotId].pest).name} on it! ${pestInfo(slots[slotId].pest).verb.toLowerCase()} first`); return; }
     dispatch({ type: 'WATER_PLANT', slotId });
   }, [dispatch, slots, showToast]);
 

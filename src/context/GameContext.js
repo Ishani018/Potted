@@ -6,6 +6,7 @@ import {
   POTTED_FLOWERS, HANGING_PLANTS, PETS, ROOM_NAMES,
   seedType, evaluateBouquet, bouquetPaper,
   XP_CONFIG, levelInfo, playerLevel, seedUnlockLevel, unlocksAtLevel, TRADE_FLOWERS, CUSTOMERS,
+  roomScentShield,
 } from '../constants/gameData';
 import { roomPetEffects, globalPetEffects, pestRewardFor, placedPets, dayKey } from '../engine/petEffects';
 import { rollCustomerOrders, hashString, bouquetFillsOrder, hasStaleOrders } from '../engine/customers';
@@ -170,6 +171,11 @@ function reducer(state, action) {
       const now = action.now;
       const rand = action.seed != null ? makeRand(action.seed) : null;
       const eff = roomPetEffects(state.player);
+      // Full-bloom marigolds / jasmine make pests less likely anywhere in their room.
+      const shield = roomScentShield(state.slots);
+      for (const room of Object.keys(shield)) {
+        eff[room] = { ...eff[room], pestChance: eff[room].pestChance * shield[room] };
+      }
       const gap = now - (state.lastSeen ?? state.lastPassiveTick ?? now);
       let updatedSlots = tickAllSlots(state.slots, now, rand, eff);
       const gapMinutes = Math.min(Math.floor(gap / 60000) - 1, CATCH_UP.maxPestMinutes);

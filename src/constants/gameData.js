@@ -60,8 +60,53 @@ export function heldSeedHint(flowerKey, roomTypes) {
 export const PEST_CONFIG = {
   chancePerTick: 0.012,   // ≈ one pest per plant every ~80 min of play
   reward: 3,
-  types: ['aphid', 'beetle'],
+  // How often each pest shows up (relative weights).
+  weights: { aphid: 30, caterpillar: 25, snail: 20, moth: 15, ladybug: 10 },
 };
+
+// Each pest is cleared with its own little action (see components/Pest.js):
+//   rub = scrub it off by swiping over it, hold = press and hold to lift it off,
+//   drag = pull it away from the plant, catch = tap it 3 times as it flutters,
+//   tap = tap to send it off. aspect = sprite height / width.
+export const PEST_INFO = {
+  aphid:       { name: 'Aphids',      action: 'rub',   hint: 'RUB!',   verb: 'RUB THEM OFF',        aspect: 0.753 },
+  caterpillar: { name: 'Caterpillar', action: 'hold',  hint: 'HOLD!',  verb: 'HOLD TO LIFT IT OFF', aspect: 0.597 },
+  snail:       { name: 'Snail',       action: 'drag',  hint: 'DRAG!',  verb: 'DRAG IT AWAY',        aspect: 0.7 },
+  moth:        { name: 'Moth',        action: 'catch', hint: 'CATCH!', verb: 'CATCH IT (3 TAPS)',   aspect: 0.7 },
+  ladybug:     { name: 'Ladybug',     action: 'tap',   hint: 'TAP!',   verb: 'TAP TO SEND IT OFF',  aspect: 0.8 },
+};
+
+// Unknown types (older saves had 'beetle') behave like the easy tap-to-clear pest.
+export function pestInfo(type) {
+  return PEST_INFO[type] ?? PEST_INFO.ladybug;
+}
+
+// Pick a pest type by weight. rand: () => [0,1).
+export function pickPestType(rand) {
+  const entries = Object.entries(PEST_CONFIG.weights);
+  let roll = rand() * entries.reduce((sum, [, w]) => sum + w, 0);
+  for (const [type, w] of entries) {
+    roll -= w;
+    if (roll < 0) return type;
+  }
+  return entries[0][0];
+}
+
+// Scented flowers keep bugs off: each full-bloom one multiplies the chance of a
+// pest turning up anywhere in its room by this (never below SCENT_FLOOR).
+export const SCENT_SHIELD = { marigold: 0.6, jasmine: 0.8 };
+export const SCENT_FLOOR = 0.35;
+
+// { [room]: multiplier } from the full-bloom scented flowers in each room.
+export function roomScentShield(slots) {
+  const out = {};
+  for (const slot of Object.values(slots)) {
+    const mult = SCENT_SHIELD[slot.flowerKey];
+    if (!mult || slot.stage < (GROWTH_TIMERS.maxStage[slot.type] ?? 3)) continue;
+    out[slot.room] = Math.max(SCENT_FLOOR, (out[slot.room] ?? 1) * mult);
+  }
+  return out;
+}
 
 export const WALL_COLORS = {
   room1: ['white'],
@@ -414,13 +459,13 @@ export const FLOWER_BOOK = [
   { key: 'daisy',          season: 'spring', blurb: 'A cheerful little bloom that opens with the sun and closes at dusk.',                tip: 'The easiest flower to grow — a great first harvest.' },
   { key: 'snapdragon',     season: 'spring', blurb: 'Squeeze a blossom and it opens like a tiny dragon\'s mouth.',                       tip: 'Tall stems — give it a spot with headroom on the shelf.' },
   { key: 'poppy',          season: 'summer', blurb: 'Papery petals that flutter in the slightest breeze.',                               tip: 'Poppies sell well when the market is short on red.' },
-  { key: 'marigold',       season: 'autumn', blurb: 'Warm golden pom-poms. Gardeners say pests dislike their scent.',                    tip: 'Keep an eye out for bugs — shoo them to keep it growing.' },
+  { key: 'marigold',       season: 'autumn', blurb: 'Warm golden pom-poms. Gardeners say pests dislike their scent.',                    tip: 'Bugs hate its scent: a full-bloom marigold keeps them off the whole room.' },
   { key: 'peony',          season: 'spring', blurb: 'Big, ruffled, and fragrant. A peony bloom is worth the wait.',                      tip: 'A valuable flower — check the market for a good day to sell.' },
   { key: 'hydrenga',       season: 'summer', blurb: 'Clusters of tiny flowers form one big puffy bloom.',                                tip: 'One of the priciest potted flowers at the market.' },
   { key: 'rose',           season: 'summer', blurb: 'The classic. Every gardener\'s pride and joy.',                                    tip: 'The most valuable shelf flower — save the best price days for roses.' },
   { key: 'stringofpearls', season: 'summer', blurb: 'Trailing strands of round, bead-like leaves.',                                     tip: 'Grows in hanging pots only.' },
   { key: 'Philodendron',   season: 'autumn', blurb: 'Glossy heart-shaped leaves that tumble over the pot\'s edge.',                     tip: 'Grows in hanging pots only.' },
-  { key: 'jasmine',        season: 'summer', blurb: 'Tiny white stars with a sweet evening scent.',                                     tip: 'Grows in hanging pots only.' },
+  { key: 'jasmine',        season: 'summer', blurb: 'Tiny white stars with a sweet evening scent.',                                     tip: 'Its scent keeps some bugs off the room once in full bloom. Hanging pots only.' },
   { key: 'petunia',        season: 'spring', blurb: 'Trumpet-shaped blooms that spill down in a colourful cascade.',                     tip: 'Grows in hanging pots only.' },
   { key: 'Bougainvillea',  season: 'summer', blurb: 'Bright paper-like bracts in hot pink — a burst of colour.',                         tip: 'Grows in hanging pots only.' },
 ];

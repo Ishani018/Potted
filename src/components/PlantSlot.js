@@ -116,10 +116,11 @@ export default function PlantSlot({ slot, position, onPress, onPestPress, baseWi
   const thirsty = isThirsty(slot) && !slot.pest;
   const drop = Math.round(Math.max(imgW * 0.26, 18)); // water-drop badge size
   // Pest sits on the foliage: size from the un-scaled pot width so it's the same
-  // on every flower; PEST_X/PEST_Y are fractions of the plant box.
-  const pestSize = Math.round(projectSize(isPotted ? 30 : 34, sw, sh));
-  const PEST_X = 0.62;
-  const PEST_Y = isPotted ? 0.45 : 0.5;
+  // on every flower (base px, scaled to the screen); PEST_X/PEST_Y are fractions
+  // of the plant box for the pest's centre.
+  const pestSize = Math.round(projectSize(isPotted ? 58 : 64, sw, sh));
+  const PEST_X = 0.55;
+  const PEST_Y = isPotted ? 0.42 : 0.5;
 
   // Use raw responder instead of TouchableOpacity so the watering can's pan
   // gesture always wins — TouchableOpacity intercepts drags and causes a jump.
@@ -156,9 +157,9 @@ export default function PlantSlot({ slot, position, onPress, onPestPress, baseWi
         <Pest
           type={slot.pest}
           size={pestSize}
-          left={imgW * PEST_X - pestSize / 2}
-          top={imgH * PEST_Y - pestSize / 2}
-          onPress={() => onPestPress && onPestPress(slot)}
+          cx={imgW * PEST_X}
+          cy={imgH * PEST_Y}
+          onClear={() => onPestPress && onPestPress(slot)}
         />
       )}
     </View>

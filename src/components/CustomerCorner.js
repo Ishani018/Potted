@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { TRADE_IMAGES, SEED_IMAGES, UI_IMAGES } from '../engine/assets';
@@ -18,17 +18,50 @@ const CUSTOMER_SPOT = { x: 130, feetY: 640, h: 290 };
 export default function CustomerCorner({ sw, sh }) {
   const { state, dispatch } = useGame();
   const [open, setOpen] = useState(false);
-  if (!sw || !sh) return null;
+  // After you serve someone they stay a moment, hop for joy and say thanks.
+  const [farewell, setFarewell] = useState(null);   // { customer, line }
+  const prevOrder = useRef(null);
+  const farewellTimer = useRef(null);
 
-  const orders = openOrders(state.player);
-  const order = orders[0];
-  if (!order) return null;
+  const order = openOrders(state.player)[0];
+  const list = state.player.customers?.list ?? [];
+
+  useEffect(() => {
+    const prev = prevOrder.current;
+    if (prev && prev.id !== order?.id && list.find((o) => o.id === prev.id)?.done) {
+      setOpen(false);
+      setFarewell({ customer: prev.customer, line: CUSTOMERS[prev.customer]?.thanks ?? '' });
+      if (farewellTimer.current) clearTimeout(farewellTimer.current);
+      farewellTimer.current = setTimeout(() => setFarewell(null), 2200);
+    }
+    prevOrder.current = order ?? null;
+  }, [order?.id]);
+
+  useEffect(() => () => farewellTimer.current && clearTimeout(farewellTimer.current), []);
+
+  if (!sw || !sh) return null;
+  if (!order && !farewell) return null;
 
   const scale = sw / PLOPPER_W;
   const h = CUSTOMER_SPOT.h * (sh / PLOPPER_H);
   const w = h * SPRITE_ASPECT;
   const left = CUSTOMER_SPOT.x * scale - w / 2;
   const top = CUSTOMER_SPOT.feetY * (sh / PLOPPER_H) - h;
+
+  // Just served: the happy customer + their thank-you, until the next one steps up.
+  if (farewell) {
+    const bubbleW = Math.min(200, sw - 16);
+    return (
+      <View style={{ position: 'absolute', left, top, width: w, height: h, zIndex: 20, pointerEvents: 'none' }}>
+        <CustomerSprite customerKey={farewell.customer} height={h} happy />
+        <View style={[styles.thanks, { width: bubbleW, left: Math.max(8 - left, w / 2 - bubbleW / 2), top: -Math.max(44, h * 0.16) }]}>
+          <PixelText size={7} color="#5a3410" style={{ lineHeight: 12 }}>{farewell.line}</PixelText>
+        </View>
+        <PixelText size={Math.max(9, Math.round(h * 0.07))} color={COLORS.gold} style={{ position: 'absolute', left: -4, top: h * 0.05 }}>✦</PixelText>
+        <PixelText size={Math.max(8, Math.round(h * 0.06))} color={COLORS.gold} style={{ position: 'absolute', right: -2, top: h * 0.02 }}>✦</PixelText>
+      </View>
+    );
+  }
 
   const c = CUSTOMERS[order.customer];
   const harvested = state.player.harvestedFlowers ?? {};
@@ -117,6 +150,10 @@ export default function CustomerCorner({ sw, sh }) {
 }
 
 const styles = StyleSheet.create({
+  thanks: {
+    position: 'absolute', backgroundColor: '#fbf0cf', borderRadius: 4, borderWidth: 3, borderColor: COLORS.woodEdge,
+    paddingHorizontal: 8, paddingVertical: 6,
+  },
   bubble: {
     position: 'absolute', top: -6, right: -4,
     backgroundColor: COLORS.woodDark, borderWidth: 3, borderColor: COLORS.woodEdge, borderRadius: 4,
