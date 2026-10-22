@@ -340,7 +340,7 @@ function Wrapped({ art, picks, left, top, w, h, ribbon, bow, fx }) {
   React.useEffect(() => { Animated.timing(o, { toValue: 1, duration: 380, useNativeDriver: false }).start(); }, []);
   const FAN = [{ x: 0.32, y: 0.27, r: '-14deg' }, { x: 0.68, y: 0.27, r: '14deg' }, { x: 0.5, y: 0.17, r: '0deg' }];
   const fz = w * 0.46;
-  const rw = w * 0.40, rh = rw / RIBBON_ASPECT, wy = top + h * WAIST - rh * 0.4;
+  const rw = w * 0.25, rh = w * 0.12, wy = top + h * WAIST + w * 0.015;
   return (
     <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: o }}>
       <Image source={art} style={[{ position: 'absolute', left, top, width: w, height: h }, SOFT]} resizeMode="contain" />
@@ -348,8 +348,8 @@ function Wrapped({ art, picks, left, top, w, h, ribbon, bow, fx }) {
         <Image key={i} source={TRADE_IMAGES[TRADE_FLOWERS[k].img]} resizeMode="contain"
           style={{ position: 'absolute', left: left + w * FAN[i].x - fz / 2, top: top + h * FAN[i].y - fz / 2, width: fz, height: fz, transform: [{ rotate: FAN[i].r }], zIndex: i === 2 ? 3 : 2 }} />
       ))}
-      {ribbon && <TiedRibbon x={left + (w - rw) / 2} y={wy} w={rw} source={ribbon} />}
-      {bow && <Image source={bow} resizeMode="contain" style={[{ position: 'absolute', left: left + w * 0.5 - fx(62), top: wy + rh * 0.6 - fx(44), width: fx(124), height: fx(94), zIndex: 9 }, SOFT]} />}
+      {ribbon && <TiedRibbon x={left + (w - rw) / 2} y={wy} w={rw} h={rh} source={ribbon} />}
+      {bow && <Image source={bow} resizeMode="contain" style={[{ position: 'absolute', left: left + w * 0.5 - fx(58), top: wy - fx(42), width: fx(116), height: fx(88), zIndex: 9 }, SOFT]} />}
     </Animated.View>
   );
 }
@@ -535,38 +535,34 @@ function Shade({ side, peak, wide = false }) {
 }
 
 // The tied ribbon lying across the paper: it sweeps in from the left.
-function TiedRibbon({ x, y, w, source }) {
-  // The ribbon wraps round the neck: a flat strip is cut into thin slices and each slice is
-  // lowered along an arc, so the band curves like it is going round a cylinder seen from a bit
-  // above. The wrap sweeps in left to right, then two short tails hang from the knot.
-  const N = 36;
+function TiedRibbon({ x, y, w, h, source }) {
+  // The ribbon wraps round the neck (the twine). It is a band as wide as the neck and thick enough
+  // to read as ribbon, cut from the middle of your strip so the pattern isn't stretched. It is
+  // sliced and each slice is bent along an arc, and the slices near the ends are squeezed
+  // thinner so the band seems to turn away round the back. It winds in left to right.
+  const N = 30;
   const sweep = useRef(new Animated.Value(0)).current;
   React.useEffect(() => { Animated.timing(sweep, { toValue: 1, duration: 520, useNativeDriver: false }).start(); }, []);
-  const rh = w / RIBBON_ASPECT;                          // the ribbon pictures are 1000×~89
-  const sag = rh * 1.1;                                  // how far the middle dips below the ends
+  const rh = h;                                           // band thickness
+  const imgW = rh * RIBBON_ASPECT;                        // the strip scaled to that thickness (much wider than the band)
+  const crop = (imgW - w) / 2;                            // we show its middle
+  const sag = rh * 0.22;                                  // how far the middle dips below the ends
   const sw = w / N;
-  const tailW = w * 0.26, tailH = rh * 0.96;
   return (
-    <View pointerEvents="none" style={{ position: 'absolute', left: x, top: y - rh / 2 - sag * 0.2, width: w, height: rh + sag, zIndex: 8 }}>
-      {/* the two ends hanging from the knot, behind the band */}
-      {[-1, 1].map((d) => (
-        <View key={d} style={{ position: 'absolute', left: w / 2 - tailW / 2 + d * w * 0.05, top: sag + rh * 0.35 + tailW * 0.32, width: tailW, height: tailH, overflow: 'hidden',
-          transform: [{ translateX: -tailW * 0.5 }, { rotate: `${d * 74}deg` }, { translateX: tailW * 0.5 }], opacity: 1 }}>
-          <Image source={source} style={[{ width: w, height: rh, left: d < 0 ? 0 : -(w - tailW) }]} resizeMode="stretch" />
-        </View>
-      ))}
+    <View pointerEvents="none" style={{ position: 'absolute', left: x, top: y - rh / 2 - sag * 0.25, width: w, height: rh + sag, zIndex: 8 }}>
       {Array.from({ length: N }, (_, i) => {
         const t = (i + 0.5) / N;
-        const dy = Math.sin(Math.PI * t) * sag;
-        // each slice also leans with the arc so the band meets itself smoothly
-        const lean = Math.cos(Math.PI * t) * Math.PI * sag / w;     // slope of the arc
+        const arc = Math.sin(Math.PI * t);
+        const dy = arc * sag;
+        const sh = rh * (0.62 + 0.38 * Math.sqrt(arc));     // thinner towards the ends
+        const slope = Math.atan(Math.cos(Math.PI * t) * Math.PI * sag / w);
         return (
           <Animated.View key={i} style={{
-            position: 'absolute', left: i * sw, top: dy, width: sw + 0.8, height: rh, overflow: 'hidden',
+            position: 'absolute', left: i * sw, top: dy + (rh - sh) / 2, width: sw + 0.8, height: sh, overflow: 'hidden',
             opacity: sweep.interpolate({ inputRange: [i / N, (i + 1) / N], outputRange: [0, 1], extrapolate: 'clamp' }),
-            transform: [{ rotate: `${Math.atan(lean) * 0.8}rad` }],
+            transform: [{ rotate: `${slope * 0.35}rad` }],
           }}>
-            <Image source={source} style={{ position: 'absolute', left: -i * sw, top: 0, width: w, height: rh }} resizeMode="stretch" />
+            <Image source={source} style={{ position: 'absolute', left: -i * sw - crop, top: (sh - rh) / 2, width: imgW, height: rh }} resizeMode="stretch" />
           </Animated.View>
         );
       })}
