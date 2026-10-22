@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, Animated, Easing, PanResponder, Platform, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { BOUQUET_BG, TRADE_IMAGES, UI_IMAGES, MAKE_IMAGES, BOW_IMAGES, ORDER_ART, BOOK_STAMP, CUSTOMER_IMAGES, CUSTOMER_POSES } from '../engine/assets';
+import { BOUQUET_BG, TRADE_IMAGES, UI_IMAGES, MAKE_IMAGES, BOW_IMAGES, ORDER_ART, BOX_IMAGES, BOOK_STAMP, CUSTOMER_IMAGES, CUSTOMER_POSES } from '../engine/assets';
 import {
   TRADE_FLOWERS, BOUQUET_FLOWERS, BOUQUET_SIZE, BOUQUET_RECIPES, BOUQUET_PAPERS, bouquetPaper, evaluateBouquet, playerLevel, CUSTOMERS,
   RIBBON_NAMES, orderGrade,
@@ -81,12 +81,16 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const HEAD = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 const BODY = Platform.select({ web: "'PatrickHand', Georgia, serif", default: 'PatrickHand' });
 
-export default function BouquetScreen({ navigation }) {
+export default function BouquetScreen({ navigation, route }) {
   const { state, dispatch } = useGame();
   const harvested = state.player.harvestedFlowers ?? {};
   const found = state.player.bouquetBook ?? {};
   const [box, setBox] = useState({ w: 0, h: 0 });
-  const [step, setStep] = useState(0);              // 0 paper .. 3 tie, 4 bow, 5 give
+  // Packing a flower order: no paper, no ribbon. Flowers go into an open box on the mat, the box closes,
+  // and it goes back to the counter (route.params.pack = the order's id).
+  const packId = route?.params?.pack ?? null;
+  const [boxLid, setBoxLid] = useState('open');          // 'open' | 'closing' | 'closed'
+  const [step, setStep] = useState(packId ? 1 : 0);     // 0 paper .. 3 tie, 4 bow, 5 give
   const [bow, setBow] = useState(null);            // the bow on the ribbon: { color, i } into BOW_IMAGES
   const [picks, setPicks] = useState([]);
   const [chosenPaper, setPaper] = useState('plain');
@@ -110,14 +114,16 @@ export default function BouquetScreen({ navigation }) {
 
   const left = (key) => (harvested[key] ?? 0) - picks.filter((k) => k === key).length;
   // an order that names its flowers: only those can go in, and no more than it asks for
-  const wantCombo = (openOrders(state.player).find((o) => o.type === 'bouquet') ?? {}).combo ?? null;
+  const packOrder = packId ? (state.player.customers?.list ?? []).find((o) => o.id === packId && o.type === 'flowers') ?? null : null;
+  const wantCombo = packOrder ? null : ((openOrders(state.player).find((o) => o.type === 'bouquet') ?? {}).combo ?? null);
   const remainingCombo = wantCombo ? (() => { const pool = [...picks]; return wantCombo.filter((k) => { const i = pool.indexOf(k); if (i >= 0) { pool.splice(i, 1); return false; } return true; }); })() : null;
   const needs = (key) => (wantCombo ? wantCombo.filter((k) => k === key).length - picks.filter((k) => k === key).length : 1);
   const owned = BOUQUET_FLOWERS.filter((k) => (harvested[k] ?? 0) > 0 && TRADE_FLOWERS[k]);
   const pages = 1;
   const page = 0;
   const shown = BOUQUET_FLOWERS.filter((k) => TRADE_FLOWERS[k]);   // one fixed bucket per flower, empty until you have some
-  const full = picks.length === BOUQUET_SIZE;
+  const size = packOrder ? packOrder.qty : BOUQUET_SIZE;
+  const full = picks.length === size;
   const petMult = globalPetEffects(state.player).bouquetMult;
   const result = full ? evaluateBouquet(picks, petMult, paper) : null;
   const isNewRecipe = !!result?.recipe && !found[result.recipe.id];
@@ -137,6 +143,17 @@ export default function BouquetScreen({ navigation }) {
   const addFlower = (key) => { if (!full && left(key) > 0 && needs(key) > 0 && step === 1) setPicks((p) => [...p, key]); };
   const undo = () => setPicks((p) => p.slice(0, -1));
   const goFold = () => { if (full) setStep(2); };
+  // close the box and take it back to the counter
+  const closeBox = () => {
+    if (!full || boxLid !== 'open') return;
+    setBoxLid('closing');
+    setTimeout(() => setBoxLid('closed'), 380);
+    setTimeout(() => {
+      const given = picks;
+      setPicks([]); setBoxLid('open');
+      navigation.navigate('Counter', { deliverBox: { orderId: packOrder.id, given } });
+    }, 1000);
+  };
   const onFolded = (side, wasNeat) => {
     if (!wasNeat) setNeat(false);
     if (!firstFold.current) firstFold.current = side;
@@ -169,7 +186,8 @@ export default function BouquetScreen({ navigation }) {
   const pw = fx(PAPER_BOX.w), ph = fy(PAPER_BOX.h), pLeft = fx(CX) - pw / 2, pTop = fy(PAPER_BOX.top);
   // the wrapped bouquet sits in the middle of that same box
   const ww = fx(WRAP_W), wh = ww * WRAP_ASPECT, wx = (pw - ww) / 2, wy = (ph - wh) / 2;
-  const prompt = step === 0 ? 'Drag a sheet off the stack onto the mat.'
+  const flowerWord = packOrder ? flowerName(packOrder.flowerKey) : '';
+  const prompt = packOrder ? (full ? (boxLid === 'open' ? 'Close the box and take it to the counter.' : '') : `Put ${packOrder.qty - picks.length} ${(packOrder.qty - picks.length) === 1 ? flowerWord : (/[^aeiou]y$/i.test(flowerWord) ? flowerWord.slice(0, -1) + 'ies' : flowerWord + 's')} in the box.`) : step === 0 ? 'Drag a sheet off the stack onto the mat.'
     : step === 1 ? (full ? 'Lovely! Now fold it.' : (wantCombo ? `Add ${comboText({ combo: remainingCombo })} onto the paper.` : `Drag ${BOUQUET_SIZE - picks.length} more flower${BOUQUET_SIZE - picks.length === 1 ? '' : 's'} onto the paper.`))
     : step === 2 ? 'Swipe each side over to wrap the stems.'
     : step === 3 ? 'Pull a ribbon from a spool onto the paper.'
@@ -183,7 +201,7 @@ export default function BouquetScreen({ navigation }) {
       {sw > 0 && (
         <>
           {/* ── 0: the paper stack at the top: tap it to change paper, drag a sheet onto the mat ── */}
-          {step === 0 && (
+          {!packOrder && step === 0 && (
             <PaperStack
               paper={paper} chosen={chosenPaper} level={level} coins={coins}
               onCycle={(id) => setPaper(id)} onChoose={() => setStep(1)}
@@ -192,7 +210,15 @@ export default function BouquetScreen({ navigation }) {
           )}
 
           {/* ── the sheet on the mat: flowers, flaps, ribbon ── */}
-          {step >= 1 && step <= 5 && (
+          {packOrder && (
+            <View pointerEvents="none" style={{ position: 'absolute', left: pLeft - pw * 0.04, top: pTop + ph * 0.08, width: pw * 1.08, height: pw * 1.08 * 0.75, zIndex: 6 }}>
+              <Image source={boxLid === 'open' ? BOX_IMAGES.open : boxLid === 'closing' ? BOX_IMAGES.closing : BOX_IMAGES.top} style={{ position: 'absolute', width: '100%', height: '100%' }} resizeMode="contain" />
+              {boxLid === 'open' && picks.map((k, i) => (
+                <Image key={i} source={TRADE_IMAGES[TRADE_FLOWERS[k].img]} resizeMode="contain" style={{ position: 'absolute', left: `${22 + i * 20}%`, top: '30%', width: '30%', height: '40%', ...SOFT }} />
+              ))}
+            </View>
+          )}
+          {!packOrder && step >= 1 && step <= 5 && (
             <HandOver
               enabled={step === 5} home={{ x: pLeft + pw / 2, y: pTop + ph / 2 }} style={{ position: 'absolute', left: pLeft, top: pTop, width: pw, height: ph }}
               tray={{ x: fx(TRAY.cx), y: fy(TRAY.cy), w: fx(TRAY.w), h: fy(TRAY.h) }} onDrop={giveOver}
@@ -271,7 +297,7 @@ export default function BouquetScreen({ navigation }) {
           )}
 
           {/* the order slip and the prompt along the bottom of the table */}
-          {want && (
+          {want && !packOrder && (
             <>
               {/* the customer, in the round frame at the left of the painted strip */}
               <View pointerEvents="none" style={{ position: 'absolute', left: fx(243), top: fy(623), width: fx(100), height: fx(100), borderRadius: fx(50), overflow: 'hidden', zIndex: 10 }}>
@@ -305,7 +331,13 @@ export default function BouquetScreen({ navigation }) {
 
           {/* buttons, right column (beside the scissors) */}
           <View style={{ position: 'absolute', left: fx(1160), top: fy(316), width: fx(170), alignItems: 'center', gap: fy(4), zIndex: 30 }}>
-            {step === 1 && (
+            {packOrder && (
+              <>
+                <PixelButton onPress={closeBox} disabled={!full || boxLid !== 'open'} size={fs(8, 6)} label="CLOSE THE BOX" style={{ alignSelf: 'stretch' }} />
+                <PixelButton onPress={undo} disabled={picks.length === 0 || boxLid !== 'open'} tone="wood" size={fs(7, 6)} scale={0.7} label="UNDO" style={{ alignSelf: 'stretch' }} />
+              </>
+            )}
+            {!packOrder && step === 1 && (
               <>
                 <PixelButton onPress={goFold} disabled={!full} size={fs(9, 7)} label="FOLD IT" style={{ alignSelf: 'stretch' }} />
                 <PixelButton onPress={undo} disabled={picks.length === 0} tone="wood" size={fs(7, 6)} scale={0.7} label="UNDO" style={{ alignSelf: 'stretch' }} />
@@ -317,7 +349,7 @@ export default function BouquetScreen({ navigation }) {
             {step === 5 && result && (
               <PixelButton onPress={giveOver} size={fs(8, 6)} label={order ? 'GIVE IT' : 'SELL IT'} style={{ alignSelf: 'stretch' }} />
             )}
-            {step > 0 && step < 5 && (
+            {!packOrder && step > 0 && step < 5 && (
               <PixelButton onPress={resetAll} tone="wood" size={fs(7, 6)} scale={0.7} label="START OVER" style={{ alignSelf: 'stretch' }} />
             )}
           </View>

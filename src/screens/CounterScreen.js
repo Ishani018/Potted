@@ -114,8 +114,7 @@ export default function CounterScreen({ navigation, route }) {
     if (taking) return;
     setTaking(true);
     Animated.timing(stub, { toValue: 1, duration: 520, easing: Easing.in(Easing.cubic), useNativeDriver: false }).start(() => {
-      if (toBox) { setMode('pack'); setPacked([]); setBoxState('open'); }
-      else navigation.navigate('Bouquet');
+      navigation.navigate('Bouquet', toBox ? { pack: order.id } : undefined);
       later(() => { setTaking(false); stub.setValue(0); }, 400);
     });
   };
@@ -131,6 +130,15 @@ export default function CounterScreen({ navigation, route }) {
       if (deliver.perfect) { setPerfect(deliver.payout); later(() => setPerfect(0), 1900); }
     }, 900);
   }, [deliver]);
+  // a closed box packed at the workstation arrives: set it on the counter, then the customer reacts
+  const deliverBox = route?.params?.deliverBox;
+  useEffect(() => {
+    if (!deliverBox) return;
+    navigation.setParams({ deliverBox: undefined });
+    setMode('pack'); setPlacing({ pic: BOX_IMAGES.iso }); drop.setValue(0);
+    Animated.timing(drop, { toValue: 1, duration: 520, easing: Easing.out(Easing.bounce), useNativeDriver: false }).start();
+    later(() => dispatch({ type: 'DELIVER_FLOWERS', id: deliverBox.orderId, given: deliverBox.given }), 900);
+  }, [deliverBox]);
   const dropInBox = (flowerKey) => {
     if (!order || order.type !== 'flowers' || boxState !== 'open') return;
     if (packed.length >= order.qty) return;
@@ -308,20 +316,6 @@ export default function CounterScreen({ navigation, route }) {
                 <Image key={i} source={TRADE_IMAGES[TRADE_FLOWERS[k].img]} resizeMode="contain" style={{ position: 'absolute', left: `${22 + i * 22}%`, top: '32%', width: '30%', height: '40%' }} />
               ))}
             </View>
-          )}
-          {phase === 'ask' && order?.type === 'flowers' && !placing && boxState === 'open' && (
-            <>
-              <View pointerEvents="none" style={[styles.tray, { left: fx(1060), top: fy(690), width: fx(560), height: fy(200) }]}>
-                <Text style={styles.trayHint}>{`Put ${order.qty} ${order.qty > 1 ? flowerName(order.flowerKey) + 's' : flowerName(order.flowerKey)} in the box`.replace('ys ', 'ies ').replace(/ys in/, 'ies in')}</Text>
-              </View>
-              {Object.keys(harvested).filter((k) => harvested[k] > 0 && TRADE_FLOWERS[k]).slice(0, 6).map((k, i) => (
-                <TrayFlower key={k} flowerKey={k} count={(harvested[k] ?? 0) - packed.filter((x) => x === k).length} x={1105 + i * 90} y={830} size={78} fx={fx} fy={fy}
-                  onDrop={(key, px, py, moved) => {
-                    const inBox = Math.abs(px - BOX_SPOT.x) < BOX_SPOT.w * 0.55 && Math.abs(py - BOX_SPOT.y) < BOX_SPOT.w * 0.4;
-                    if (inBox || moved < 8) dropInBox(key);
-                  }} />
-              ))}
-            </>
           )}
         </>
       )}
