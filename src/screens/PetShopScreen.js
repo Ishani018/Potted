@@ -8,7 +8,6 @@ import { PETS, ROOM_NAMES, playerLevel } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
 import PetSprite from '../components/PetSprite';
-import TagLabel from '../components/TagLabel';
 import { AdoptModal } from '../components/PetCard';
 import { PixelText, PixelPanel, PixelButton, COLORS, PIXEL_FONT } from '../components/Pixel';
 
@@ -26,8 +25,8 @@ const ART_W = 1677, ART_H = 938;
 // The player level at which each arch opens (until then it is faded and cannot be entered).
 const ARCH_LEVEL = { food: 2, foster: 3 };
 const ARCHES = [
-  { id: 'foster', go: 'Foster', title: 'Foster', sub: 'home', level: ARCH_LEVEL.foster, x0: 1272, y0: 70, x1: 1440, y1: 548 },
-  { id: 'food', go: 'PetFood', title: 'Food', sub: 'aisle', level: ARCH_LEVEL.food, x0: 1472, y0: 12, x1: 1677, y1: 548 },
+  { id: 'foster', go: 'Foster', title: 'Foster', sub: 'home', level: ARCH_LEVEL.foster, x0: 1300, y0: 78, x1: 1424, y1: 548 },
+  { id: 'food', go: 'PetFood', title: 'Food', sub: 'aisle', level: ARCH_LEVEL.food, x0: 1500, y0: 62, x1: 1677, y1: 548 },
 ];
 
 export const SHOP_PETS = [
@@ -128,9 +127,9 @@ export default function PetShopScreen({ navigation }) {
           >
             {locked && <View pointerEvents="none" style={styles.archLocked} />}
             {!locked && <View pointerEvents="none" style={[styles.archGlow, { borderTopLeftRadius: 999, borderTopRightRadius: 999, opacity: on ? 1 : 0 }]} />}
-            <View pointerEvents="none" style={[styles.archTag, { transform: [{ scale: on ? 0.74 : 0.62 }], opacity: locked && !on ? 0.75 : 1 }]}>
-              <TagLabel title={locked ? `Level ${a.level}` : a.title} sub={locked ? 'locked' : a.sub} />
-            </View>
+            {locked && on && (
+              <View pointerEvents="none" style={styles.archHint}><PixelText size={7} color="#fff6df">LEVEL {a.level}</PixelText></View>
+            )}
           </Pressable>
         );
       })}
@@ -151,9 +150,9 @@ const styles = StyleSheet.create({
   // Sign floating above each pet (centred, overflowing the sprite box upward)
   tagWrap: { position: 'absolute', left: -40, right: -40, top: -22, alignItems: 'center', zIndex: 50 },
 
-  archLocked: { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, borderTopLeftRadius: 999, borderTopRightRadius: 999, backgroundColor: 'rgba(252,238,196,0.66)' },
+  archLocked: { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, borderTopLeftRadius: 999, borderTopRightRadius: 999, backgroundColor: 'rgba(252,238,196,0.62)' },
+  archHint: { position: 'absolute', left: 0, right: 0, top: '38%', alignItems: 'center' },
   archGlow: { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,236,170,0.22)', borderWidth: 3, borderColor: 'rgba(255,240,190,0.55)' },
-  archTag: { position: 'absolute', left: 0, right: 0, top: '22%', alignItems: 'center' },
 
   modalOverlay: {
     ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.65)',
