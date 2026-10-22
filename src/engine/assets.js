@@ -161,6 +161,7 @@ export const SHOP_IMAGES = {
 // Bouquet-making: the flat kraft sheet (700×617) and two wavy ribbons (red, pink).
 export const MAKE_IMAGES = {
   paper: require('../../assets/shop/paper_kraft.png'),
+  paperFancy: require('../../assets/shop/paper_fancy.png'),
   ribbonRed: require('../../assets/shop/ribbon_red.png'),
   ribbonPink: require('../../assets/shop/ribbon_pink.png'),
 };
@@ -326,7 +327,9 @@ export const PETFOOD_IMAGES = {
 export const TRADE_BG = require('../../assets/flowertradeshop.png');   // market exterior (scales)
 export const TRADING_BG = require('../../assets/tradingscreen.png');    // the 6-slot trade page
 export const COUNTER_BG = require('../../assets/shop/counter.png');   // florist counter seen from behind the till (1678×937)
-export const BOUQUET_BG = require('../../assets/bouquetshop.png');   // bouquet table screen
+// The bouquet workspace seen from above (1536×1024, zoomed-in version). workspace_wide.png is the
+// same scene pulled back a little; swap the line to try it.
+export const BOUQUET_BG = require('../../assets/shop/workspace_zoom.png');
 export const PETROOM_BG = require('../../assets/petroom.png');       // pet lounge (beds)
 export const GALLERY_BG = require('../../assets/gallery.png');
 export const LOADING_BG = require('../../assets/loadingshop.png');
