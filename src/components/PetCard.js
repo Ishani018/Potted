@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, TextInput, StyleSheet, Platform } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { useLayout } from '../context/LayoutContext';
-import { PETCARD_IMAGES, PERK_ICONS } from '../engine/assets';
+import { PETCARD_IMAGES, PETCARD_GRASS, PERK_ICONS } from '../engine/assets';
 import { PETS, ROOM_NAMES } from '../constants/gameData';
 import PetSprite from './PetSprite';
 import { PIXEL_FONT } from './Pixel';
@@ -32,6 +32,17 @@ const F = {
   coinBox:  { l: 0.0675, t: 0.847, w: 0.326, h: 0.116 },
   button:   { l: 0.418, t: 0.847, w: 0.466, h: 0.116 },
 };
+
+// A pet sitting on its grass patch: the patch is wider than the pet, the pet's feet land on it.
+function OnGrass({ petKey, w, h, winW }) {
+  const gw = Math.min(winW * 0.8, w * 1.75), gh = gw * (146 / 620);
+  return (
+    <View style={{ width: gw, height: h + gh * 0.35, alignItems: 'center', justifyContent: 'flex-end' }}>
+      <Image source={PETCARD_GRASS} style={{ position: 'absolute', bottom: 0, width: gw, height: gh }} resizeMode="stretch" />
+      <View style={{ width: w, height: h, marginBottom: gh * 0.30 }}><PetSprite petKey={petKey} w={w} h={h} /></View>
+    </View>
+  );
+}
 
 export function AdoptModal({ petKey, onClose, story }) {
   const { state, dispatch } = useGame();
@@ -136,9 +147,7 @@ export function AdoptModal({ petKey, onClose, story }) {
             </View>
           ) : manage ? (
             <View style={{ flex: 1, alignItems: 'center' }}>
-              <View style={{ width: winW * 0.4, height: winH * 0.5 }}>
-                <PetSprite petKey={petKey} w={winW * 0.4} h={winH * 0.5} />
-              </View>
+              <OnGrass petKey={petKey} winW={winW} w={winW * 0.36} h={winH * 0.4} />
               {/* two big choices, no cramped room picker */}
               <View style={{ flexDirection: 'row', gap: winW * 0.04, marginTop: winH * 0.03, alignSelf: 'stretch', paddingHorizontal: winW * 0.04 }}>
                 {[['all', 'EVERY ROOM'], [null, 'TUCK AWAY']].map(([val, label]) => {
@@ -153,9 +162,7 @@ export function AdoptModal({ petKey, onClose, story }) {
             </View>
           ) : (
             <View style={{ flex: 1, alignItems: 'center' }}>
-              <View style={{ width: winW * 0.6, height: winH * (story ? 0.56 : 0.9) }}>
-                <PetSprite petKey={petKey} w={winW * 0.6} h={winH * (story ? 0.56 : 0.9)} />
-              </View>
+              <OnGrass petKey={petKey} winW={winW} w={winW * 0.5} h={winH * (story ? 0.44 : 0.7)} />
               {story ? <Text style={[s.body, { fontSize: fz(0.028), lineHeight: fz(0.038), textAlign: 'center', marginTop: winH * 0.02, paddingHorizontal: winW * 0.02 }]} numberOfLines={3}>{story}</Text> : null}
             </View>
           )}
