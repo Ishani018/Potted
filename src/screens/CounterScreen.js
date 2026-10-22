@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
   inner: { position: 'absolute', left: '14%', right: '15%', top: '17%', bottom: '13%', justifyContent: 'space-between' },
   fillImg: { position: 'absolute', left: 0, top: 0, width: '100%', height: '100%' },
   go: { justifyContent: 'center', alignItems: 'center' },
-  goTxt: { fontFamily: 'PressStart2P', fontSize: 8, color: '#f7efd2' },
+  goTxt: { fontFamily: HEAD, fontSize: 17, color: '#fbf3da', textShadowColor: 'rgba(40,24,6,0.85)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 },
   slip: { position: 'absolute', left: 0, top: 0, width: '100%', height: '100%' },
   tail: { position: 'absolute', left: -14, top: 120, width: 0, height: 0, borderTopWidth: 12, borderBottomWidth: 12, borderRightWidth: 18, borderTopColor: 'transparent', borderBottomColor: 'transparent', borderRightColor: '#7a3e1a' },
   who: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },

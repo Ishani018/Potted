@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { BOOK_BUTTONS } from '../engine/assets';
 
 // Shared pixel-art look, matching the trading board / map signs:
@@ -60,7 +60,7 @@ export function PixelButton({ label, onPress, tone = 'green', disabled, style, s
       <Image source={art.m} style={{ position: 'absolute', left: capW, right: capW, top: 0, height: H }} resizeMode="stretch" pointerEvents="none" />
       <Image source={art.r} style={{ position: 'absolute', right: 0, top: 0, width: capW, height: H }} resizeMode="stretch" pointerEvents="none" />
       <View style={{ paddingHorizontal: Math.round(capW * 1.05) + 2 }}>
-        <PixelText size={size}>{label}</PixelText>
+        <Text style={[styles.label, { fontSize: Math.round(size * 1.9) }]} numberOfLines={1}>{label}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -77,6 +77,12 @@ export function PixelToast({ message }) {
 }
 
 const styles = StyleSheet.create({
+  // Button labels use the same soft serif as the painted pop-ups (not the pixel font).
+  label: {
+    fontFamily: Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' }),
+    color: '#fbf3da', textAlign: 'center',
+    textShadowColor: 'rgba(40,24,6,0.85)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
+  },
   // One border per box: a single dark edge, flat fill. Nested cream panels get a
   // soft edge only (no second dark frame) so boxes inside boxes don't stack borders.
   panel: {
