@@ -141,7 +141,7 @@ export default function CounterScreen({ navigation }) {
         <View style={{ position: 'absolute', left: 0, top: 0, width: sw, height: fy(COUNTER_TOP), overflow: 'hidden', zIndex: 5 }} pointerEvents="none">
           <Animated.View
             style={{
-              position: 'absolute', opacity: gone,
+              position: 'absolute', opacity: phase === 'ask' || phase === 'happy' ? 0 : gone,
               left: fx(DOOR.x),
               width: Animated.multiply(height, SPRITE_ASPECT * sh / H),
               height: Animated.multiply(height, sh / H),
@@ -158,7 +158,15 @@ export default function CounterScreen({ navigation }) {
       )}
 
       {sw > 0 && cur && phase !== 'in' && phase !== 'out' && (
-        <View style={[styles.bubbleWrap, { left: fx(880), top: fy(50), width: fx(780) }]}>
+        <>
+        {/* the shop goes hazy while you read the order */}
+        <View style={styles.haze} />
+        {/* the customer's head peeks in at the bottom left */}
+        <View pointerEvents="none" style={{ position: 'absolute', left: fx(10), bottom: 0, width: fx(430), height: fx(360), overflow: 'hidden', zIndex: 18 }}>
+          <Image source={(CUSTOMER_POSES[order.customer] || {})[phase === 'happy' ? 'hold' : 'think'] || CUSTOMER_IMAGES[order.customer]}
+            style={{ position: 'absolute', left: 0, top: fx(14), width: fx(430), height: fx(645) }} resizeMode="contain" />
+        </View>
+        <View style={[styles.bubbleWrap, { left: (sw - fx(780)) / 2, top: (sh - fx(780) * 593 / 900) / 2 - fy(8), width: fx(780), transform: [{ scale: 1.28 }] }]}>
           <View style={[styles.bubble, { width: fx(780), height: fx(780) * 593 / 900 }]}>
             <Image source={ORDER_ART.card} style={styles.slip} resizeMode="stretch" />
             {phase === 'happy' ? (
@@ -205,6 +213,7 @@ export default function CounterScreen({ navigation }) {
             )}
           </View>
         </View>
+      </>
       )}
 
       {sw > 0 && !cur && (
@@ -233,6 +242,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#2a1608' },
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
   bubbleWrap: { position: 'absolute', zIndex: 20 },
+  haze: { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, zIndex: 15, backgroundColor: 'rgba(48,30,14,0.5)', ...(Platform.OS === 'web' ? { backdropFilter: 'blur(5px)', WebkitBackdropFilter: 'blur(5px)' } : {}) },
   bubble: { alignItems: 'stretch' },
   inner: { position: 'absolute', left: '14%', right: '15%', top: '17%', bottom: '13%', justifyContent: 'space-between' },
   fillImg: { position: 'absolute', left: 0, top: 0, width: '100%', height: '100%' },
