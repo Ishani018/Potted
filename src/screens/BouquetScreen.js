@@ -191,9 +191,9 @@ export default function BouquetScreen({ navigation, route }) {
   const ww = fx(WRAP_W), wh = ww * WRAP_ASPECT, wx = (pw - ww) / 2, wy = (ph - wh) / 2;
   const flowerWord = packOrder ? flowerName(packOrder.flowerKey) : '';
   const prompt = packOrder ? (full ? (boxLid === 'open' ? 'Close the box and take it to the counter.' : '') : `Put ${packOrder.qty - picks.length} ${(packOrder.qty - picks.length) === 1 ? flowerWord : (/[^aeiou]y$/i.test(flowerWord) ? flowerWord.slice(0, -1) + 'ies' : flowerWord + 's')} in the box.`) : step === 0 ? 'Drag a sheet off the stack onto the mat.'
-    : step === 1 ? (full ? 'Lovely! Now choose a ribbon.' : (wantCombo ? `Add ${comboText({ combo: remainingCombo })} onto the paper.` : `Drag ${BOUQUET_SIZE - picks.length} more flower${BOUQUET_SIZE - picks.length === 1 ? '' : 's'} onto the paper.`))
+    : step === 1 ? (full ? 'Lovely! Now choose a ribbon.' : (wantCombo ? `Add ${comboText({ combo: remainingCombo })} into the box.` : `Drag ${BOUQUET_SIZE - picks.length} more flower${BOUQUET_SIZE - picks.length === 1 ? '' : 's'} into the box.`))
     : step === 2 ? 'Swipe each side over to wrap the stems.'
-    : step === 3 ? (tied ? 'Ribbon cut! Now tap Make bouquet.' : 'Pull a ribbon from a spool onto the paper.')
+    : step === 3 ? (tied ? 'Ribbon cut! Now tap Make bouquet.' : 'Pull a ribbon from a spool into the box.')
     : step === 4 ? (bow == null ? 'Drag a bow from the box onto the ribbon.' : 'Pretty! Drag another to swap, or tap Finish.')
     : (result ? `${isNewRecipe ? 'Something special...' : result.name}. Drag it onto the tray!` : '');
 
@@ -213,11 +213,15 @@ export default function BouquetScreen({ navigation, route }) {
           )}
 
           {/* ── the sheet on the mat: flowers, flaps, ribbon ── */}
-          {packOrder && (
+          {(packOrder || (step >= 1 && step <= 3 && !made)) && (
             <View pointerEvents="none" style={{ position: 'absolute', left: pLeft - pw * 0.04, top: pTop + ph * 0.08, width: pw * 1.08, height: pw * 1.08 * 0.75, zIndex: 6 }}>
               <Image source={boxLid === 'open' ? BOX_IMAGES.open : boxLid === 'closing' ? BOX_IMAGES.closing : BOX_IMAGES.top} style={{ position: 'absolute', width: '100%', height: '100%' }} resizeMode="contain" />
+              {!packOrder && (
+                <Image source={paper === 'layered' ? MAKE_IMAGES.wrapLayered : MAKE_IMAGES.paper} resizeMode="contain" style={{ position: 'absolute', left: '15%', top: '44%', width: '26%', height: '30%', transform: [{ rotate: '-8deg' }], ...SOFT }} />
+              )}
+              {!packOrder && tied && <RibbonCoil source={MAKE_IMAGES[ribbonKey]} style={{ position: 'absolute', left: '63%', top: '48%', width: '28%', height: '36%', zIndex: 5 }} />}
               {boxLid === 'open' && picks.map((k, i) => (
-                <Image key={i} source={TRADE_IMAGES[TRADE_FLOWERS[k].img]} resizeMode="contain" style={{ position: 'absolute', left: `${22 + i * 20}%`, top: '30%', width: '30%', height: '40%', ...SOFT }} />
+                <Image key={i} source={TRADE_IMAGES[TRADE_FLOWERS[k].img]} resizeMode="contain" style={{ position: 'absolute', left: `${14 + i * 17}%`, top: '18%', width: '32%', height: '42%', ...SOFT }} />
               ))}
             </View>
           )}
@@ -227,7 +231,7 @@ export default function BouquetScreen({ navigation, route }) {
               tray={{ x: fx(TRAY.cx), y: fy(TRAY.cy), w: fx(TRAY.w), h: fy(TRAY.h) }} onDrop={giveOver}
             >
               {/* the flat sheet with its flowers and flaps; it fades out once both flaps are over */}
-              <FadeOut hide={made}>
+              <FadeOut hide={true}>
                 <View style={{ width: pw, height: ph }} pointerEvents="none">
                   <SheetLayers paper={paper} w={pw} h={ph} shadow />
                 </View>
@@ -445,6 +449,22 @@ export function FlowerCluster({ keys, size }) {
     </View>
   );
 }
+
+// The ribbon you cut, rolled up into a coil: the ribbon's own colour in rings round a dark centre.
+function RibbonCoil({ source, style }) {
+  return (
+    <View style={[style, { alignItems: 'center', justifyContent: 'center' }, SOFT]}>
+      <View style={{ width: '100%', aspectRatio: 1, maxHeight: '100%', borderRadius: 999, overflow: 'hidden', borderWidth: 2, borderColor: 'rgba(60,34,12,0.55)' }}>
+        <Image source={source} resizeMode="stretch" style={{ position: 'absolute', width: '100%', height: '100%' }} />
+        {[0.78, 0.58, 0.38].map((r, i) => (
+          <View key={i} style={{ position: 'absolute', left: `${(1 - r) * 50}%`, top: `${(1 - r) * 50}%`, width: `${r * 100}%`, height: `${r * 100}%`, borderRadius: 999, borderWidth: 2, borderColor: 'rgba(60,34,12,0.32)' }} />
+        ))}
+        <View style={{ position: 'absolute', left: '36%', top: '36%', width: '28%', height: '28%', borderRadius: 999, backgroundColor: 'rgba(48,26,8,0.85)' }} />
+      </View>
+    </View>
+  );
+}
+
 
 // Fades its children out (and back) when `hide` changes.
 function FadeOut({ hide, children }) {
