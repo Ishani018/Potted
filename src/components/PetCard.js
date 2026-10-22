@@ -174,9 +174,6 @@ export function AdoptModal({ petKey, onClose, finder }) {
             <View style={{ width: W * 0.105, height: W * 0.105, borderRadius: W, overflow: 'hidden', borderWidth: 2, borderColor: '#b8793a', backgroundColor: '#f6e6c4' }}>
               <Portrait customerKey={finder} size={Math.round(W * 0.105)} bare />
             </View>
-            <View style={{ backgroundColor: 'rgba(255,246,223,0.85)', borderRadius: 8, paddingHorizontal: W * 0.014, paddingVertical: 1 }}>
-              <Text style={[s.body, { fontSize: fz(0.024), color: SOFT }]} numberOfLines={1}>Found by {CUSTOMERS[finder].name}</Text>
-            </View>
           </View>
         )}
 
