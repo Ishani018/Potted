@@ -449,7 +449,11 @@ function reducer(state, action) {
           bouquetsSold: (state.player.bouquetsSold ?? 0) + 1,
         },
       };
-      if (order) delivered = completeOrder(delivered, order, `${CUSTOMERS[order.customer].name} loved the bouquet! +${tip} tip`);
+      if (order) {
+        const upset = orderGrade(order, paper, ribbon).mult < 1;   // got neither the paper nor the ribbon they asked for
+        delivered = completeOrder(delivered, order, upset ? `${CUSTOMERS[order.customer].name} wasn't happy with the bouquet. +${tip} tip` : `${CUSTOMERS[order.customer].name} loved the bouquet! +${tip} tip`);
+        if (upset) delivered = { ...delivered, player: { ...delivered.player, customers: { ...delivered.player.customers, list: delivered.player.customers.list.map((o) => (o.id === order.id ? { ...o, upset: true } : o)) } } };
+      }
       return grantXp(delivered, Math.max(0, net) / XP_CONFIG.bouquetDivisor + (newRecipe ? XP_CONFIG.newRecipe : 0));
     }
 

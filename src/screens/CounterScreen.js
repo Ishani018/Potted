@@ -110,7 +110,7 @@ export default function CounterScreen({ navigation }) {
     if (!served || phase !== 'ask') return undefined;
     setPhase('happy');
     setTimeout(() => setPhase('out'), HAPPY_MS);
-    setCur((c) => ({ ...c, line: CUSTOMERS[c.order.customer]?.thanks ?? '' }));
+    setCur((c) => ({ ...c, line: list.find((o) => o.id === c.order.id)?.upset ? 'Hmph. That is not what I asked for.' : (CUSTOMERS[c.order.customer]?.thanks ?? '') }));
     const anim = Animated.sequence([
       hopLoop(2, 320),
       Animated.delay(HAPPY_MS - 640),
@@ -130,6 +130,7 @@ export default function CounterScreen({ navigation }) {
   useEffect(() => () => running.current && running.current.stop(), []);
 
   const order = cur?.order;
+  const upset = !!(cur && list.find((o) => o.id === cur.order.id)?.upset);
   const c = order ? CUSTOMERS[order.customer] : null;
   const harvested = state.player.harvestedFlowers ?? {};
   const have = order ? (harvested[order.flowerKey] ?? 0) : 0;
@@ -173,7 +174,7 @@ export default function CounterScreen({ navigation }) {
         <View style={styles.haze} />
         {/* the customer's head peeks in at the bottom left */}
         <View pointerEvents="none" style={{ position: 'absolute', left: fx(-20), bottom: 0, width: fx(640), height: fx(600), overflow: 'hidden', zIndex: 25 }}>
-          <Image source={(CUSTOMER_POSES[order.customer] || {})[phase === 'happy' ? 'hold' : 'think'] || CUSTOMER_IMAGES[order.customer]}
+          <Image source={(CUSTOMER_POSES[order.customer] || {})[phase === 'happy' ? (upset ? 'angry' : 'hold') : 'think'] || CUSTOMER_IMAGES[order.customer]}
             style={{ position: 'absolute', left: 0, top: fx(20), width: fx(640), height: fx(960) }} resizeMode="contain" />
         </View>
         <Animated.View style={[styles.bubbleWrap, { left: (sw - fx(780)) / 2, top: (sh - fx(780) * 593 / 900) / 2 - fy(8), width: fx(780), opacity: stub.interpolate({ inputRange: [0, 0.8, 1], outputRange: [1, 1, 0] }), transform: [{ translateY: stub.interpolate({ inputRange: [0, 1], outputRange: [0, sh * 0.55] }) }, { scale: stub.interpolate({ inputRange: [0, 1], outputRange: [1.28, 0.55] }) }, { rotate: stub.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-8deg'] }) }] }]}>
