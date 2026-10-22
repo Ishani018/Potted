@@ -20,7 +20,7 @@ import Portrait from '../components/Portrait';
 const W = 1678, H = 937;
 const DOOR = { x: 940, feetY: 478, h: 175 };         // where they step in
 const SPOT = { x: 740, feetY: 870, h: 720 };         // at the counter (feet are behind it)
-const COUNTER_TOP = 655;                              // y of the counter's top edge
+const COUNTER_TOP = 646;                              // y of the counter's top edge
 const HOPS = 5, HOP_MS = 300;                         // the walk in
 const HAPPY_MS = 1500;                                // joy hops + thanks before they leave
 
