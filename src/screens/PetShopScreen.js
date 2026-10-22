@@ -33,7 +33,7 @@ const ARCHES = [
 export const SHOP_PETS = [
   { key: 'tiger',     x: 806, y: 192, w: 87, h: 114, flip: false, z: 1 },
   { key: 'milk',      x: 735, y: 329, w: 82, h: 112, flip: false, z: 2 },
-  { key: 'ebonyandivory', x: 566, y: 365, w: 156, h: 97, flip: false, z: 3 },
+  { key: 'ebonyandivory', x: 566, y: 349, w: 134, h: 83, flip: false, z: 3 },
   { key: 'george',    x: 361, y: 372, w: 101, h: 113, flip: false, z: 4 },
   { key: 'martin',    x: 268, y: 344, w: 127, h: 183, flip: true, z: 5 },
   { key: 'aki',       x: 427, y: 459, w: 123, h: 146, flip: false, z: 6 },
