@@ -176,6 +176,7 @@ export const ORDER_ART = {
   pin_gold: require('../../assets/order/pin_gold.png'),
   perfect: require('../../assets/order/perfect.png'),
   notice: require('../../assets/order/notice.png'),
+  daydone: require('../../assets/order/daydone.png'),
   seal: require('../../assets/order/seal.png'),
   pin_rose: require('../../assets/order/pin_rose.png'),
   rose: require('../../assets/order/rose.png'),

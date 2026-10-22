@@ -52,6 +52,7 @@ const slot = (x0, y0, x1, y1) => ({
   width: `${((x1 - x0) / 900) * 100}%`, height: `${((y1 - y0) / 593) * 100}%`,
 });
 
+const DAYDONE_H = 460;   // height of the day-complete sign when it is 900 wide
 const BOX_SPOT = { x: 870, y: 800, w: 330 };            // the empty place on the counter where the box / bouquet goes (picture px)
 
 // A flower you can pick up from the tray and drop into the box. The drop point is worked out
@@ -330,10 +331,14 @@ export default function CounterScreen({ navigation, route }) {
       {perfect > 0 && <Celebration fx={fx} fy={fy} coins={perfect} />}
 
       {sw > 0 && !cur && (
-        <View pointerEvents="none" style={{ position: 'absolute', left: (sw - fx(760)) / 2, top: fy(230), width: fx(760), height: fx(760) * 113 / 489, zIndex: 40, alignItems: 'center', justifyContent: 'center' }}>
-          <Image source={ORDER_ART.banner} style={styles.slip} resizeMode="stretch" />
-          <Text style={styles.quietTxt} numberOfLines={2}>{done >= CUSTOMERS_PER_DAY ? 'All done for today. See you tomorrow!' : 'The shop is quiet right now.'}</Text>
-        </View>
+        done >= CUSTOMERS_PER_DAY ? (
+          <Animated.Image pointerEvents="none" source={ORDER_ART.daydone} resizeMode="contain" style={{ position: 'absolute', left: (sw - fx(620)) / 2, top: 0, width: fx(620), height: fx(620) * (DAYDONE_H / 900), zIndex: 40 }} />
+        ) : (
+          <View pointerEvents="none" style={{ position: 'absolute', left: (sw - fx(760)) / 2, top: fy(230), width: fx(760), height: fx(760) * 113 / 489, zIndex: 40, alignItems: 'center', justifyContent: 'center' }}>
+            <Image source={ORDER_ART.banner} style={styles.slip} resizeMode="stretch" />
+            <Text style={styles.quietTxt} numberOfLines={2}>The shop is quiet right now.</Text>
+          </View>
+        )
       )}
 
       <View style={styles.bottom}>
