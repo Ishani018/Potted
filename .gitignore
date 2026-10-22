@@ -44,6 +44,8 @@ assets/*
 !assets/customers/*.png
 !assets/customers/poses/
 !assets/customers/poses/*.png
+!assets/order/
+!assets/order/*.png
 !assets/pests/
 !assets/pests/*.png
 !assets/herbalist/

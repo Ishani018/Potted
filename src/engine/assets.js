@@ -153,6 +153,41 @@ export const PET_IMAGES = {
 // Biscuit naps on the foster beds.
 export const FOSTER_REST_IMAGES = { biscuit: require('../../assets/foster/biscuitsleep.png') };
 // Little shop and adventure stickers (cardboard box, pet backpack, bell, ribbon spool, lantern, plant).
+// The painted order card and its trimmings (cut from one sheet, transparent).
+export const ORDER_ART = {
+  banner: require('../../assets/order/banner.png'),
+  bar_cream: require('../../assets/order/bar_cream.png'),
+  bar_green: require('../../assets/order/bar_green.png'),
+  bar_pink: require('../../assets/order/bar_pink.png'),
+  blossom: require('../../assets/order/blossom.png'),
+  bow_cream: require('../../assets/order/bow_cream.png'),
+  bow_green: require('../../assets/order/bow_green.png'),
+  bow_green_loose: require('../../assets/order/bow_green_loose.png'),
+  bow_pink: require('../../assets/order/bow_pink.png'),
+  bow_pink_loose: require('../../assets/order/bow_pink_loose.png'),
+  card: require('../../assets/order/card.png'),
+  clothespin: require('../../assets/order/clothespin.png'),
+  daisy: require('../../assets/order/daisy.png'),
+  flowers: require('../../assets/order/flowers.png'),
+  leaves: require('../../assets/order/leaves.png'),
+  photo: require('../../assets/order/photo.png'),
+  pin_a: require('../../assets/order/pin_a.png'),
+  pin_b: require('../../assets/order/pin_b.png'),
+  pin_gold: require('../../assets/order/pin_gold.png'),
+  pin_rose: require('../../assets/order/pin_rose.png'),
+  rose: require('../../assets/order/rose.png'),
+  tag_bow: require('../../assets/order/tag_bow.png'),
+  tag_flower: require('../../assets/order/tag_flower.png'),
+  tag_round: require('../../assets/order/tag_round.png'),
+  tile_cream: require('../../assets/order/tile_cream.png'),
+  tile_green: require('../../assets/order/tile_green.png'),
+  tile_kraft: require('../../assets/order/tile_kraft.png'),
+  tulip: require('../../assets/order/tulip.png'),
+  washi_green: require('../../assets/order/washi_green.png'),
+  washi_green2: require('../../assets/order/washi_green2.png'),
+  washi_pink: require('../../assets/order/washi_pink.png'),
+};
+
 export const ORDER_SLIP = require('../../assets/shop/order_slip.png');
 export const SHOP_IMAGES = {
   box: require('../../assets/shop/box.png'), backpack: require('../../assets/shop/backpack.png'),

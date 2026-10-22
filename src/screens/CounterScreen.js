@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Image, Animated, Easing, Platform, StyleSheet } from 'react-native';
+import { View, Text, Image, Pressable, Animated, Easing, Platform, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { COUNTER_BG, CUSTOMER_IMAGES, CUSTOMER_POSES, TRADE_IMAGES, SEED_IMAGES, UI_IMAGES, BOOK_STAMP, MAKE_IMAGES, ORDER_SLIP, BOW_IMAGES } from '../engine/assets';
+import { COUNTER_BG, CUSTOMER_IMAGES, CUSTOMER_POSES, TRADE_IMAGES, SEED_IMAGES, UI_IMAGES, BOOK_STAMP, MAKE_IMAGES, ORDER_ART, BOW_IMAGES } from '../engine/assets';
 import { CUSTOMERS, TRADE_FLOWERS, CUSTOMERS_PER_DAY, BOUQUET_PAPERS, RIBBON_NAMES } from '../constants/gameData';
 import { openOrders, customerLine, flowerName } from '../engine/customers';
 import ScreenHud from '../components/ScreenHud';
@@ -138,9 +138,10 @@ export default function CounterScreen({ navigation }) {
       )}
 
       {sw > 0 && cur && phase !== 'in' && phase !== 'out' && (
-        <View style={[styles.bubbleWrap, { left: fx(1010), top: fy(110), width: fx(600) }]}>
-          <View style={[styles.bubble, { paddingHorizontal: fx(74), paddingTop: fy(76), paddingBottom: fy(62) }]}>
-            <Image source={ORDER_SLIP} style={styles.slip} resizeMode="stretch" />
+        <View style={[styles.bubbleWrap, { left: fx(900), top: fy(70), width: fx(760) }]}>
+          <View style={[styles.bubble, { width: fx(760), height: fx(760) * 459 / 651 }]}>
+            <Image source={ORDER_ART.card} style={styles.slip} resizeMode="stretch" />
+            <View style={styles.inner}>
             {phase === 'happy' ? (
               <View style={styles.doneRow}>
                 <Image source={BOOK_STAMP} style={styles.stamp} resizeMode="contain" />
@@ -149,13 +150,12 @@ export default function CounterScreen({ navigation }) {
             ) : (
               <>
                 <View style={styles.who}>
-                  <View style={styles.photo}><TileFrame state="empty" /><Portrait customerKey={order.customer} size={44} bare /></View>
+                  <View style={styles.photo}><Image source={ORDER_ART.photo} style={styles.fillImg} resizeMode="stretch" /><Portrait customerKey={order.customer} size={40} bare /></View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.name}>{c.name}</Text>
-                    <Text style={styles.count}>Customer {Math.min(done + 1, CUSTOMERS_PER_DAY)} of {CUSTOMERS_PER_DAY} today</Text>
+                    <Text style={styles.name}>{c.name}  <Text style={styles.count}>{Math.min(done + 1, CUSTOMERS_PER_DAY)}/{CUSTOMERS_PER_DAY}</Text></Text>
+                    <Text style={styles.say} numberOfLines={2}>{customerLine(order, 'short')}</Text>
                   </View>
                 </View>
-                <Text style={styles.say} numberOfLines={2}>{customerLine(order, 'short')}</Text>
                 {order.type === 'flowers' ? (
                   <View style={styles.orderRow}>
                     {art && <Image source={art} style={styles.flower} resizeMode="contain" />}
@@ -166,20 +166,20 @@ export default function CounterScreen({ navigation }) {
                 ) : (
                   <View style={styles.tiles}>
                     <View style={styles.tile}>
-                      <TileFrame state="empty" />
+                      <Image source={ORDER_ART.tile_cream} style={styles.fillImg} resizeMode="stretch" />
                       {art && <Image source={art} style={styles.tileImg} resizeMode="contain" />}
                       <Text style={styles.tileTxt} numberOfLines={1}>{flowerName(order.flowerKey)}</Text>
                     </View>
                     {order.paper && (
                       <View style={styles.tile}>
-                        <TileFrame state="empty" />
+                        <Image source={ORDER_ART.tile_cream} style={styles.fillImg} resizeMode="stretch" />
                         <Image source={PAPER_ART[order.paper] || MAKE_IMAGES.paper} style={styles.tileImg} resizeMode="contain" />
                         <Text style={styles.tileTxt} numberOfLines={1}>{BOUQUET_PAPERS[order.paper]?.name}</Text>
                       </View>
                     )}
                     {order.ribbon && (
                       <View style={styles.tile}>
-                        <TileFrame state="empty" />
+                        <Image source={ORDER_ART.tile_cream} style={styles.fillImg} resizeMode="stretch" />
                         <Image source={(BOW_IMAGES[BOW_COLOR[order.ribbon]] || [])[0] || MAKE_IMAGES[order.ribbon]} style={styles.tileImg} resizeMode="contain" />
                         <Text style={styles.tileTxt} numberOfLines={1}>{RIBBON_NAMES[order.ribbon]}</Text>
                       </View>
@@ -187,19 +187,23 @@ export default function CounterScreen({ navigation }) {
                   </View>
                 )}
                 <View style={styles.reward}>
+                  <Image source={ORDER_ART.bar_cream} style={styles.fillImg} resizeMode="stretch" />
                   <Image source={UI_IMAGES.goldcoins} style={styles.coin} resizeMode="contain" />
                   <Text style={styles.pay}>{order.type === 'flowers' ? order.coins : `price + up to ${Math.round(order.tip * 1.5)} tip`}</Text>
                   <Text style={styles.xp}>+{order.xp} xp</Text>
                   {order.seed && SEED_IMAGES[order.seed] && <Image source={SEED_IMAGES[order.seed]} style={styles.seed} resizeMode="contain" />}
                 </View>
-                {order.type === 'flowers' ? (
-                  <PixelButton label={canGive ? 'GIVE FLOWERS' : 'NOT ENOUGH YET'} size={8} disabled={!canGive}
-                    onPress={() => dispatch({ type: 'FULFILL_CUSTOMER', id: order.id })} style={{ marginTop: 6 }} />
-                ) : (
-                  <PixelButton label="TO THE BOUQUET TABLE" size={8} onPress={() => navigation.navigate('Bouquet')} style={{ marginTop: 6 }} />
-                )}
+                <Pressable
+                  disabled={order.type === 'flowers' && !canGive}
+                  onPress={() => (order.type === 'flowers' ? dispatch({ type: 'FULFILL_CUSTOMER', id: order.id }) : navigation.navigate('Bouquet'))}
+                  style={[styles.go, order.type === 'flowers' && !canGive && { opacity: 0.55 }]}
+                >
+                  <Image source={ORDER_ART.bar_green} style={styles.fillImg} resizeMode="stretch" />
+                  <Text style={styles.goTxt}>{order.type === 'flowers' ? (canGive ? 'GIVE FLOWERS' : 'NOT ENOUGH YET') : 'TO THE BOUQUET TABLE'}</Text>
+                </Pressable>
               </>
             )}
+            </View>
           </View>
         </View>
       )}
@@ -231,18 +235,22 @@ const styles = StyleSheet.create({
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
   bubbleWrap: { position: 'absolute', zIndex: 20 },
   bubble: { alignItems: 'stretch' },
+  inner: { position: 'absolute', left: '14%', right: '10%', top: '17%', bottom: '13%', justifyContent: 'space-between' },
+  fillImg: { position: 'absolute', left: 0, top: 0, width: '100%', height: '100%' },
+  go: { height: 30, justifyContent: 'center', alignItems: 'center' },
+  goTxt: { fontFamily: 'PressStart2P', fontSize: 8, color: '#f7efd2' },
   slip: { position: 'absolute', left: 0, top: 0, width: '100%', height: '100%' },
   tail: { position: 'absolute', left: -14, top: 120, width: 0, height: 0, borderTopWidth: 12, borderBottomWidth: 12, borderRightWidth: 18, borderTopColor: 'transparent', borderBottomColor: 'transparent', borderRightColor: '#7a3e1a' },
   who: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
-  name: { fontFamily: HEAD, fontSize: 20, color: '#4a2a10' },
+  name: { fontFamily: HEAD, fontSize: 18, color: '#4a2a10' },
   count: { fontFamily: BODY, fontSize: 12.5, color: '#8a6a40' },
-  say: { fontFamily: BODY, fontSize: 15, color: '#4a2a10', lineHeight: 17, flex: 1 },
-  photo: { width: 54, height: 54, alignItems: 'center', justifyContent: 'center' },
+  say: { fontFamily: BODY, fontSize: 14, color: '#4a2a10', lineHeight: 15 },
+  photo: { width: 58, height: 58, alignItems: 'center', justifyContent: 'center' },
   tiles: { flexDirection: 'row', gap: 8, marginTop: 6 },
-  tile: { flex: 1, height: 82, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 4 },
-  tileImg: { position: 'absolute', top: 7, width: 52, height: 48 },
+  tile: { flex: 1, height: 66, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 4 },
+  tileImg: { position: 'absolute', top: 6, width: 42, height: 36 },
   tileTxt: { fontFamily: HEAD, fontSize: 13, color: '#6a4a28' },
-  reward: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6, backgroundColor: 'rgba(176,200,130,0.5)', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
+  reward: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 18, height: 26 },
   orderRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   flower: { width: 30, height: 32 },
   want: { fontFamily: HEAD, fontSize: 17, color: '#3f7a2e' },
