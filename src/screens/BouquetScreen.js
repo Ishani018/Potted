@@ -190,7 +190,7 @@ export default function BouquetScreen({ navigation, route }) {
   // the wrapped bouquet sits in the middle of that same box
   const ww = fx(WRAP_W), wh = ww * WRAP_ASPECT, wx = (pw - ww) / 2, wy = (ph - wh) / 2;
   const flowerWord = packOrder ? flowerName(packOrder.flowerKey) : '';
-  const prompt = packOrder ? (full ? (boxLid === 'open' ? 'Close the box and take it to the counter.' : '') : `Put ${packOrder.qty - picks.length} ${(packOrder.qty - picks.length) === 1 ? flowerWord : (/[^aeiou]y$/i.test(flowerWord) ? flowerWord.slice(0, -1) + 'ies' : flowerWord + 's')} in the box.`) : step === 0 ? 'Drag a sheet off the stack onto the mat.'
+  const prompt = packOrder ? (full ? (boxLid === 'open' ? 'Close the box and take it to the counter.' : '') : `Put ${packOrder.qty - picks.length} ${(packOrder.qty - picks.length) === 1 ? flowerWord : (/[^aeiou]y$/i.test(flowerWord) ? flowerWord.slice(0, -1) + 'ies' : flowerWord + 's')} in the box.`) : step === 0 ? 'Drag a sheet off the stack into the box.'
     : step === 1 ? (full ? 'Lovely! Now choose a ribbon.' : (wantCombo ? `Add ${comboText({ combo: remainingCombo })} into the box.` : `Drag ${BOUQUET_SIZE - picks.length} more flower${BOUQUET_SIZE - picks.length === 1 ? '' : 's'} into the box.`))
     : step === 2 ? 'Swipe each side over to wrap the stems.'
     : step === 3 ? (tied ? 'Ribbon cut! Now tap Make bouquet.' : 'Pull a ribbon from a spool into the box.')
@@ -213,10 +213,10 @@ export default function BouquetScreen({ navigation, route }) {
           )}
 
           {/* ── the sheet on the mat: flowers, flaps, ribbon ── */}
-          {(packOrder || (step >= 1 && step <= 3 && !made)) && (
+          {(packOrder || (step <= 3 && !made)) && (
             <View pointerEvents="none" style={{ position: 'absolute', left: pLeft - pw * 0.04, top: pTop + ph * 0.08, width: pw * 1.08, height: pw * 1.08 * 0.75, zIndex: 6 }}>
               <Image source={boxLid === 'open' ? BOX_IMAGES.open : boxLid === 'closing' ? BOX_IMAGES.closing : BOX_IMAGES.top} style={{ position: 'absolute', width: '100%', height: '100%' }} resizeMode="contain" />
-              {!packOrder && (
+              {!packOrder && step >= 1 && (
                 <Image source={paper === 'layered' ? MAKE_IMAGES.wrapLayered : MAKE_IMAGES.paper} resizeMode="contain" style={{ position: 'absolute', left: '15%', top: '44%', width: '26%', height: '30%', transform: [{ rotate: '-8deg' }], ...SOFT }} />
               )}
               {!packOrder && tied && <RibbonCoil source={MAKE_IMAGES[ribbonKey]} style={{ position: 'absolute', left: '63%', top: '48%', width: '28%', height: '36%', zIndex: 5 }} />}
@@ -338,7 +338,7 @@ export default function BouquetScreen({ navigation, route }) {
               ))}
             </>
           )}
-          <View style={[styles.prompt, { left: fx(541), width: fx(547), top: fy(step >= 3 ? 554 : 203) }]} pointerEvents="none">
+          <View style={[styles.prompt, { left: fx(541), width: fx(547), top: fy(step >= 3 ? 554 : step === 0 ? 236 : 203) }]} pointerEvents="none">
             <Text style={styles.promptTxt} numberOfLines={1}>{prompt}</Text>
           </View>
 
