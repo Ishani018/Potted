@@ -367,7 +367,7 @@ export const INVENTORY_BG = require('../../assets/ui_comps/inventory.png');
 // ─── New screen backgrounds ───────────────────────────────────────────────────
 export const MAP_BG = require('../../assets/ui_comps/mapoftown.png');
 export const HOME_BG = require('../../assets/homeinsidescreen.png');
-export const PETSHOP_BG = require('../../assets/petshop.png');
+export const PETSHOP_BG = require('../../assets/petshop/shop_arches.png');
 // ─── Pet food aisle ───────────────────────────────────────────────────────────
 export const PETFOOD_BG = require('../../assets/petfood/aisle.png');
 export const PETFOOD_IMAGES = {

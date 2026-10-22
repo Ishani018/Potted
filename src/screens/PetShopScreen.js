@@ -8,6 +8,7 @@ import { PETS, ROOM_NAMES } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
 import PetSprite from '../components/PetSprite';
+import TagLabel from '../components/TagLabel';
 import { AdoptModal } from '../components/PetCard';
 import { PixelText, PixelPanel, PixelButton, COLORS, PIXEL_FONT } from '../components/Pixel';
 
@@ -20,18 +21,25 @@ const PLOPPER_H = 768;
 // ── Pet positions in petshop.png — base 1376×768 coords, sprite CENTER anchor ─
 // Laid out visually in Plopper. x/y = center, w = width (base px), flip = mirror,
 // z = stack order (low = back). Projected to screen via projectPoint/projectSize.
+// The painted shop (1677x938) has two arches on the right; tap one to walk through.
+const ART_W = 1677, ART_H = 938;
+const ARCHES = [
+  { id: 'foster', go: 'Foster', title: 'Foster', sub: 'home', x0: 1272, y0: 70, x1: 1440, y1: 590 },
+  { id: 'food', go: 'PetFood', title: 'Food', sub: 'aisle', x0: 1472, y0: 12, x1: 1677, y1: 590 },
+];
+
 export const SHOP_PETS = [
-  { key: 'tiger',         x: 870,  y: 181, w: 108, h: 141, flip: false, z: 1 },
-  { key: 'koazy',         x: 261,  y: 621, w: 148, h: 85,  flip: false, z: 2 },
-  { key: 'brownie',       x: 978,  y: 488, w: 137, h: 149, flip: false, z: 3 },
-  { key: 'aki',           x: 421,  y: 487, w: 136, h: 161, flip: false, z: 4 },
-  { key: 'cherry',        x: 1263, y: 609, w: 126, h: 70,  flip: false, z: 5 },
-  { key: 'oreo',          x: 1152, y: 723, w: 170, h: 76,  flip: false, z: 6 },
-  { key: 'ebonyandivory', x: 531,  y: 359, w: 142, h: 88,  flip: false, z: 7 },
-  { key: 'george',        x: 319,  y: 366, w: 96,  h: 108, flip: false, z: 8 },
-  { key: 'martin',        x: 241,  y: 369, w: 114, h: 165, flip: true,  z: 9 },
-  { key: 'milk',          x: 780,  y: 332, w: 94,  h: 129, flip: true,  z: 10 },
-  { key: 'storm',         x: 1198, y: 483, w: 108, h: 144, flip: false, z: 11 },
+  { key: 'tiger',         x: 726, y: 78, w: 108, h: 141, flip: false, z: 1 },
+  { key: 'koazy',         x: 263, y: 602, w: 148, h: 85,  flip: false, z: 2 },
+  { key: 'brownie',       x: 878, y: 565, w: 137, h: 149, flip: false, z: 3 },
+  { key: 'aki',           x: 583, y: 557, w: 136, h: 161, flip: false, z: 4 },
+  { key: 'cherry',        x: 1214, y: 602, w: 126, h: 70,  flip: false, z: 5 },
+  { key: 'oreo',          x: 1141, y: 712, w: 170, h: 76,  flip: false, z: 6 },
+  { key: 'ebonyandivory', x: 501, y: 360, w: 142, h: 88,  flip: false, z: 7 },
+  { key: 'george',        x: 271, y: 360, w: 96,  h: 108, flip: false, z: 8 },
+  { key: 'martin',        x: 574, y: 282, w: 114, h: 165, flip: true,  z: 9 },
+  { key: 'milk',          x: 788, y: 209, w: 94,  h: 129, flip: true,  z: 10 },
+  { key: 'storm',         x: 1182, y: 508, w: 108, h: 144, flip: false, z: 11 },
 ];
 
 
@@ -103,10 +111,22 @@ export default function PetShopScreen({ navigation }) {
         onInventory={() => setInvOpen(true)}
       />
 
-      <View style={styles.foodBtn}>
-        <PixelButton label="FOSTER CENTER" tone="wood" size={8} onPress={() => navigation.navigate('Foster')} />
-        <PixelButton label="PET FOOD >" tone="wood" size={8} onPress={() => navigation.navigate('PetFood')} />
-      </View>
+      {/* the two arches on the right: the Foster Home and the Pet Food aisle */}
+      {sw > 0 && ARCHES.map((a) => {
+        const on = hovered === a.id;
+        return (
+          <Pressable
+            key={a.id}
+            style={{ position: 'absolute', left: (a.x0 / ART_W) * sw, top: (a.y0 / ART_H) * sh, width: ((a.x1 - a.x0) / ART_W) * sw, height: ((a.y1 - a.y0) / ART_H) * sh, zIndex: 40 }}
+            onHoverIn={() => setHovered(a.id)}
+            onHoverOut={() => setHovered((h) => (h === a.id ? null : h))}
+            onPress={() => navigation.navigate(a.go)}
+          >
+            <View pointerEvents="none" style={[styles.archGlow, { borderTopLeftRadius: 999, borderTopRightRadius: 999, opacity: on ? 1 : 0 }]} />
+            <View pointerEvents="none" style={[styles.archTag, { transform: [{ scale: on ? 0.74 : 0.62 }] }]}><TagLabel title={a.title} sub={a.sub} /></View>
+          </Pressable>
+        );
+      })}
 
       {selected && <AdoptModal petKey={selected} onClose={() => setSelected(null)} />}
 
@@ -124,7 +144,8 @@ const styles = StyleSheet.create({
   // Sign floating above each pet (centred, overflowing the sprite box upward)
   tagWrap: { position: 'absolute', left: -40, right: -40, top: -22, alignItems: 'center', zIndex: 50 },
 
-  foodBtn: { position: 'absolute', right: 16, bottom: 12, zIndex: 30, flexDirection: 'row', gap: 8 },
+  archGlow: { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,236,170,0.22)', borderWidth: 3, borderColor: 'rgba(255,240,190,0.55)' },
+  archTag: { position: 'absolute', left: 0, right: 0, top: '22%', alignItems: 'center' },
 
   modalOverlay: {
     ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.65)',
