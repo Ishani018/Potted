@@ -225,7 +225,7 @@ export default function BouquetScreen({ navigation }) {
               {/* once folded it is the wrapped bouquet: the wrapper, the flowers in its opening, the ribbon and bow */}
               {step >= 3 && (
                 <Wrapped
-                  art={step >= 5 ? bouquetPic(picks, paper) : MAKE_IMAGES[paper === 'layered' ? 'wrapLayered' : 'wrapKraft']} reveal={step >= 5} left={wx} top={wy} w={ww} h={wh} fx={fx}
+                  picks={picks} art={step >= 5 ? bouquetPic(picks, paper) : MAKE_IMAGES[paper === 'layered' ? 'wrapLayered' : 'wrapKraft']} reveal={step >= 5} left={wx} top={wy} w={ww} h={wh} fx={fx}
                   ribbon={tied ? MAKE_IMAGES[ribbonKey] : null}
                   bow={bow != null ? BOW_IMAGES[bow.color][bow.i] : null}
                 />
@@ -411,7 +411,7 @@ function FadeOut({ hide, children }) {
 
 // The wrapped bouquet: the folded wrapper picture, the three flowers blooming out of its
 // opening, then the ribbon round the waist (where the twine is) and the bow on the ribbon.
-function Wrapped({ art, reveal, left, top, w, h, ribbon, bow, fx }) {
+function Wrapped({ art, reveal, picks, left, top, w, h, ribbon, bow, fx }) {
   const o = useRef(new Animated.Value(0)).current;
   React.useEffect(() => { if (!reveal) { Animated.timing(o, { toValue: 1, duration: 380, useNativeDriver: false }).start(); } }, []);
   // the finished bouquet is only shown at the very end: a short pop when it is revealed
@@ -422,6 +422,17 @@ function Wrapped({ art, reveal, left, top, w, h, ribbon, bow, fx }) {
     <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: o }}>
       <View style={{ position: 'absolute', left: left + w * 0.18, top: top + h * 0.9, width: w * 0.64, height: h * 0.12, borderRadius: w, backgroundColor: 'rgba(60,30,8,0.28)', ...(Platform.OS === 'web' ? { filter: 'blur(7px)' } : {}) }} />
       <Animated.Image source={art} style={[{ position: 'absolute', left, top, width: w, height: h, transform: [{ scale: pop.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) }] }, SOFT]} resizeMode="contain" />
+      {/* before the reveal the blooms you picked peek out of the wrapper's opening (cut off at its rim) */}
+      {!reveal && (
+        <View pointerEvents="none" style={{ position: 'absolute', left: left - w * 0.1, top: top - h * 0.2, width: w * 1.2, height: h * 0.2 + h * 0.3, overflow: 'hidden', zIndex: 2 }}>
+          {picks.map((k, i) => {
+            const pos = [{ x: 0.34, y: 0.2, r: '-14deg' }, { x: 0.66, y: 0.2, r: '14deg' }, { x: 0.5, y: 0.1, r: '0deg' }][i % 3];
+            const fz = w * 0.4;
+            return <Image key={i} source={TRADE_IMAGES[TRADE_FLOWERS[k].img]} resizeMode="contain"
+              style={[{ position: 'absolute', left: w * 0.1 + w * pos.x - fz / 2, top: h * 0.2 + h * (pos.y - 0.02) - fz / 2, width: fz, height: fz, transform: [{ rotate: pos.r }], zIndex: i === 2 ? 3 : 2 }, SOFT]} />;
+          })}
+        </View>
+      )}
       {ribbon && <TiedRibbon x={left + (w - rw) / 2} y={wy} w={rw} h={rh} source={ribbon} />}
       {bow && <Image source={bow} resizeMode="contain" style={[{ position: 'absolute', left: left + w * 0.5 - fx(58), top: wy - fx(42), width: fx(116), height: fx(88), zIndex: 9 }, SOFT]} />}
     </Animated.View>

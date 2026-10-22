@@ -68,6 +68,16 @@ export default function CounterScreen({ navigation }) {
   const t = useRef(new Animated.Value(0)).current;       // 0 = at the door, 1 = at the counter
   const hop = useRef(new Animated.Value(0)).current;     // 0..-1 of a hop
   const gone = useRef(new Animated.Value(1)).current;    // opacity
+  const stub = useRef(new Animated.Value(0)).current;    // 0 = order stub up, 1 = taken down (going to the workstation)
+  const [taking, setTaking] = useState(false);
+  const takeDown = () => {
+    if (taking) return;
+    setTaking(true);
+    Animated.timing(stub, { toValue: 1, duration: 520, easing: Easing.in(Easing.cubic), useNativeDriver: false }).start(() => {
+      navigation.navigate('Bouquet');
+      setTimeout(() => { setTaking(false); stub.setValue(0); }, 400);
+    });
+  };
   const running = useRef(null);
 
   const hopLoop = (n, ms) => {
@@ -162,11 +172,11 @@ export default function CounterScreen({ navigation }) {
         {/* the shop goes hazy while you read the order */}
         <View style={styles.haze} />
         {/* the customer's head peeks in at the bottom left */}
-        <View pointerEvents="none" style={{ position: 'absolute', left: fx(-20), bottom: 0, width: fx(640), height: fx(600), overflow: 'hidden', zIndex: 18 }}>
+        <View pointerEvents="none" style={{ position: 'absolute', left: fx(-20), bottom: 0, width: fx(640), height: fx(600), overflow: 'hidden', zIndex: 25 }}>
           <Image source={(CUSTOMER_POSES[order.customer] || {})[phase === 'happy' ? 'hold' : 'think'] || CUSTOMER_IMAGES[order.customer]}
             style={{ position: 'absolute', left: 0, top: fx(20), width: fx(640), height: fx(960) }} resizeMode="contain" />
         </View>
-        <View style={[styles.bubbleWrap, { left: (sw - fx(780)) / 2, top: (sh - fx(780) * 593 / 900) / 2 - fy(8), width: fx(780), transform: [{ scale: 1.28 }] }]}>
+        <Animated.View style={[styles.bubbleWrap, { left: (sw - fx(780)) / 2, top: (sh - fx(780) * 593 / 900) / 2 - fy(8), width: fx(780), opacity: stub.interpolate({ inputRange: [0, 0.8, 1], outputRange: [1, 1, 0] }), transform: [{ translateY: stub.interpolate({ inputRange: [0, 1], outputRange: [0, sh * 0.55] }) }, { scale: stub.interpolate({ inputRange: [0, 1], outputRange: [1.28, 0.55] }) }, { rotate: stub.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-8deg'] }) }] }]}>
           <View style={[styles.bubble, { width: fx(780), height: fx(780) * 593 / 900 }]}>
             <Image source={ORDER_ART.card} style={styles.slip} resizeMode="stretch" />
             {phase === 'happy' ? (
@@ -206,13 +216,13 @@ export default function CounterScreen({ navigation }) {
                   <PixelButton
                     label={order.type === 'flowers' ? (canGive ? 'GIVE FLOWERS' : 'NOT ENOUGH YET') : 'TO THE BOUQUET TABLE'}
                     size={7} scale={0.62} disabled={order.type === 'flowers' && !canGive}
-                    onPress={() => (order.type === 'flowers' ? dispatch({ type: 'FULFILL_CUSTOMER', id: order.id }) : navigation.navigate('Bouquet'))}
+                    onPress={() => (order.type === 'flowers' ? dispatch({ type: 'FULFILL_CUSTOMER', id: order.id }) : takeDown())}
                   />
                 </View>
               </>
             )}
           </View>
-        </View>
+        </Animated.View>
       </>
       )}
 
