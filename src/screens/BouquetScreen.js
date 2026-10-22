@@ -44,7 +44,10 @@ function SheetLayers({ paper, w, h, shadow = false }) {
   }
   return <Image source={paper === 'fancy' ? MAKE_IMAGES.paperFancy : MAKE_IMAGES.paper} style={[{ width: w, height: h }, shadow && SOFT]} resizeMode="stretch" />;
 }
-const RIBBON = { plain: 'ribbonRed', layered: 'ribbonRed', fancy: 'ribbonPink' };
+// The spools on the ribbon tray you can pull from (base units; the others have no ribbon art yet)
+const SPOOLS = [
+  { x: 1136, y: 152, key: 'ribbonRed' }, { x: 1192, y: 152, key: 'ribbonPink' }, { x: 1136, y: 272, key: 'ribbonPink' },
+];
 const PAPER_ASPECT = 700 / 617;
 const RIBBON_ASPECT = 10;                            // the ribbon pictures are 1000×100
 const MAT = { x0: 419, y0: 232, x1: 1066, y1: 705 };  // the wooden work mat
@@ -77,6 +80,7 @@ export default function BouquetScreen({ navigation }) {
   const firstFold = useRef(null);               // which flap went over first (it ends up underneath)
   const [neat, setNeat] = useState(true);           // stays true while every swipe is steady
   const [binPage, setBinPage] = useState(0);
+  const [ribbonKey, setRibbonKey] = useState('ribbonRed');
   const [notice, notify] = useNotice(3000);
   const coins = state.player.coins;
   const level = playerLevel(state.player);
@@ -107,7 +111,7 @@ export default function BouquetScreen({ navigation }) {
   const payout = result ? result.net + neatBonus + (order ? order.tip : 0) : 0;
 
   // ── step helpers ──
-  const resetAll = () => { firstFold.current = null; setStep(0); setPicks([]); setFolded({ left: false, right: false }); setTied(false); setNeat(true); };
+  const resetAll = () => { firstFold.current = null; setStep(0); setPicks([]); setFolded({ left: false, right: false }); setTied(false); setNeat(true); setRibbonKey('ribbonRed'); };
   const choosePaper = (id) => { setPaper(id); setStep(1); };
   const addFlower = (key) => { if (!full && left(key) > 0 && step === 1) setPicks((p) => [...p, key]); };
   const undo = () => setPicks((p) => p.slice(0, -1));
@@ -119,7 +123,7 @@ export default function BouquetScreen({ navigation }) {
     setFolded(next);
     if (next.left && next.right) setTimeout(() => setStep(3), 350);
   };
-  const onTied = (wasNeat) => { if (!wasNeat) setNeat(false); setTied(true); setTimeout(() => setStep(4), 600); };
+  const onTied = (wasNeat, key) => { if (!wasNeat) setNeat(false); setRibbonKey(key); setTied(true); setTimeout(() => setStep(4), 900); };
   const giveOver = () => {
     if (!result) return;
     dispatch({ type: 'SELL_BOUQUET', flowers: picks, paper, customerId: order ? order.id : null, neat });
@@ -136,10 +140,10 @@ export default function BouquetScreen({ navigation }) {
 
   const foundCount = BOUQUET_RECIPES.filter((r) => found[r.id]).length;
   const pw = fx(PAPER_BOX.w), ph = fy(PAPER_BOX.h), pLeft = fx(CX) - pw / 2, pTop = fy(PAPER_BOX.top);
-  const prompt = step === 0 ? 'Pick a sheet of paper to begin.'
+  const prompt = step === 0 ? 'Drag a sheet off the stack onto the mat.'
     : step === 1 ? (full ? 'Lovely! Now fold it.' : `Drag ${BOUQUET_SIZE - picks.length} more flower${BOUQUET_SIZE - picks.length === 1 ? '' : 's'} onto the paper.`)
     : step === 2 ? 'Swipe each side over to wrap the stems.'
-    : step === 3 ? 'Drag the ribbon across to tie it.'
+    : step === 3 ? 'Pull a ribbon from a spool onto the paper.'
     : (result ? `${isNewRecipe ? 'Something special...' : result.name}. Drag it onto the tray!` : '');
 
   return (
@@ -148,24 +152,14 @@ export default function BouquetScreen({ navigation }) {
 
       {sw > 0 && (
         <>
-          {/* ── 0: three sheets lie on the mat to choose from ── */}
-          {step === 0 && Object.values(BOUQUET_PAPERS).map((p, i) => {
-            const locked = level < p.level;
-            const cantAfford = locked || coins < p.cost;
-            const sw0 = fx(150), sh0 = sw0 / PAPER_ASPECT;
-            return (
-              <TouchableOpacity
-                key={p.id}
-                activeOpacity={0.85}
-                onPress={cantAfford ? undefined : () => choosePaper(p.id)}
-                style={[styles.sheetBtn, { left: fx(CX + (i - 1) * 190) - sw0 / 2, top: fy(CY - 70), width: sw0, transform: [{ rotate: ['-3deg', '1deg', '4deg'][i] }] }, cantAfford && { opacity: 0.45 }]}
-              >
-                <SheetLayers paper={p.id} w={sw0} h={sh0} shadow />
-                <Text style={styles.sheetName}>{p.name}</Text>
-                <Text style={styles.sheetCost}>{locked ? `Level ${p.level}` : p.cost > 0 ? `${p.cost} coins` : 'Free'}</Text>
-              </TouchableOpacity>
-            );
-          })}
+          {/* ── 0: the paper stack at the top: tap it to change paper, drag a sheet onto the mat ── */}
+          {step === 0 && (
+            <PaperStack
+              paper={paper} chosen={chosenPaper} level={level} coins={coins}
+              onCycle={(id) => setPaper(id)} onChoose={() => setStep(1)}
+              box={{ x: fx(480), y: 0, w: fx(487), h: fy(190) }} matTop={fy(MAT.y0)} fx={fx} fy={fy}
+            />
+          )}
 
           {/* ── the sheet on the mat: flowers, flaps, ribbon ── */}
           {step >= 1 && step <= 3 && (
@@ -193,8 +187,17 @@ export default function BouquetScreen({ navigation }) {
                     active={step === 2 && !folded.right} done={folded.right} reach={fx(250)} onDone={(n) => onFolded('right', n)} />
                 </>
               )}
-              {step === 3 && <Ribbon x={-pw * 0.04} y={fy(FLAP_TOP - PAPER_BOX.top + 70)} w={pw * 1.08} source={MAKE_IMAGES[RIBBON[paper]]} fy={fy} done={tied} onDone={onTied} />}
+              {tied && <TiedRibbon x={-pw * 0.04} y={fy(FLAP_TOP - PAPER_BOX.top + 70)} w={pw * 1.08} source={MAKE_IMAGES[ribbonKey]} />}
             </View>
+          )}
+
+          {/* ── 3: pull a ribbon off a spool and let go over the middle of the paper ── */}
+          {step === 3 && !tied && (
+            <SpoolPull
+              spools={SPOOLS.map((sp) => ({ ...sp, x: fx(sp.x), y: fy(sp.y), r: fx(34) }))}
+              target={{ left: pLeft, top: pTop, w: pw, h: ph, waist: fy(FLAP_TOP + 70) }}
+              onTie={(key, wasNeat) => onTied(wasNeat, key)} fy={fy}
+            />
           )}
 
           {/* ── 4: the finished bouquet: drag it onto the tray ── */}
@@ -393,7 +396,6 @@ function Flap({ side, w, h, top, paper, paperTop, flapTop, pw, ph, z, active, do
   );
 }
 
-// The ribbon: drag across the waist; it unrolls behind your finger and bows.
 // A soft gradient made of thin strips: darkest at the fold (the flap's inner edge), fading out.
 function Shade({ side, peak, wide = false }) {
   const N = 40;
@@ -408,33 +410,109 @@ function Shade({ side, peak, wide = false }) {
   );
 }
 
-function Ribbon({ x, y, w, source, fy, done, onDone }) {
-  const prog = useRef(new Animated.Value(done ? 1 : 0)).current;
-  const wob = useRef({ max: 0 });
-  const pan = useRef(PanResponder.create({
-    onStartShouldSetPanResponder: () => !done,
-    onMoveShouldSetPanResponder: () => !done,
-    onPanResponderGrant: () => { wob.current.max = 0; },
-    onPanResponderMove: (_, g) => { wob.current.max = Math.max(wob.current.max, Math.abs(g.dy)); prog.setValue(clamp(g.dx / (w * 0.9), 0, 1)); },
-    onPanResponderRelease: (_, g) => {
-      if (g.dx / (w * 0.9) > 0.85) { Animated.timing(prog, { toValue: 1, duration: 120, useNativeDriver: false }).start(() => onDone(wob.current.max < fy(26))); }
-      else Animated.spring(prog, { toValue: 0, friction: 7, useNativeDriver: false }).start();
-    },
-  })).current;
-  const barW = prog.interpolate({ inputRange: [0, 1], outputRange: [0, w] });
-  const rh = w / RIBBON_ASPECT;                          // the ribbon picture is 1000×100
+// The tied ribbon lying across the paper: it sweeps in from the left.
+function TiedRibbon({ x, y, w, source }) {
+  const sweep = useRef(new Animated.Value(0)).current;
+  React.useEffect(() => { Animated.timing(sweep, { toValue: 1, duration: 380, useNativeDriver: false }).start(); }, []);
+  const rh = w / RIBBON_ASPECT;                          // the ribbon pictures are 1000×100
   return (
-    <View style={{ position: 'absolute', left: x, top: y - rh / 2, width: w, height: rh, zIndex: 8 }} {...pan.panHandlers}>
-      {/* the ribbon is revealed left to right behind your finger */}
-      <Animated.View style={{ position: 'absolute', left: 0, top: 0, height: rh, width: barW, overflow: 'hidden' }} pointerEvents="none">
-        <Image source={source} style={{ width: w, height: rh }} resizeMode="stretch" />
-      </Animated.View>
-      {!done && (
-        <Animated.Text pointerEvents="none" style={[styles.swipe, { left: 14, top: rh * 0.15, fontSize: 16, opacity: prog.interpolate({ inputRange: [0, 0.08], outputRange: [1, 0], extrapolate: 'clamp' }) }]}>
-          drag the ribbon {'>>'}
-        </Animated.Text>
+    <Animated.View pointerEvents="none" style={{ position: 'absolute', left: x, top: y - rh / 2, height: rh, width: sweep.interpolate({ inputRange: [0, 1], outputRange: [0, w] }), overflow: 'hidden', zIndex: 8 }}>
+      <Image source={source} style={[{ width: w, height: rh }, SOFT]} resizeMode="stretch" />
+    </Animated.View>
+  );
+}
+
+// The ribbon tray: pull a ribbon off a spool (it stretches from the spool to your finger)
+// and let go over the middle of the paper. Letting go close to the waist line is neat.
+function SpoolPull({ spools, target, onTie, fy }) {
+  const [pull, setPull] = useState(null);                 // { sx, sy, x, y, key }
+  const pulse = useRef(new Animated.Value(0)).current;
+  React.useEffect(() => {
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(pulse, { toValue: 1, duration: 700, useNativeDriver: false }),
+      Animated.timing(pulse, { toValue: 0, duration: 700, useNativeDriver: false }),
+    ]));
+    loop.start();
+    return () => loop.stop();
+  }, []);
+  const cfg = useRef({});
+  cfg.current = { target, onTie, fy };
+  const makePan = (sp) => PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderGrant: () => setPull({ sx: sp.x, sy: sp.y, x: sp.x, y: sp.y, key: sp.key }),
+    onPanResponderMove: (_, g) => setPull({ sx: sp.x, sy: sp.y, x: sp.x + g.dx, y: sp.y + g.dy, key: sp.key }),
+    onPanResponderRelease: (_, g) => {
+      const t = cfg.current.target, x = sp.x + g.dx, y = sp.y + g.dy;
+      setPull(null);
+      const onPaper = x > t.left && x < t.left + t.w && y > t.top && y < t.top + t.h;
+      if (onPaper) cfg.current.onTie(sp.key, Math.abs(y - t.waist) < cfg.current.fy(60));
+    },
+    onPanResponderTerminate: () => setPull(null),
+  });
+  const pans = useRef(spools.map(makePan)).current;
+  const len = pull ? Math.hypot(pull.x - pull.sx, pull.y - pull.sy) : 0;
+  const ang = pull ? Math.atan2(pull.y - pull.sy, pull.x - pull.sx) : 0;
+  const RH = 26;
+  return (
+    <>
+      {spools.map((sp, i) => (
+        <View key={i} {...pans[i].panHandlers} style={{ position: 'absolute', left: sp.x - sp.r, top: sp.y - sp.r, width: sp.r * 2, height: sp.r * 2, zIndex: 40 }}>
+          <Animated.View pointerEvents="none" style={{ flex: 1, borderRadius: sp.r, borderWidth: 3, borderColor: '#fff3d6', opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.15, 0.7] }) }} />
+        </View>
+      ))}
+      {pull && len > 6 && (
+        <View pointerEvents="none" style={{ position: 'absolute', left: (pull.sx + pull.x) / 2 - len / 2, top: (pull.sy + pull.y) / 2 - RH / 2, width: len, height: RH, zIndex: 45, transform: [{ rotate: `${ang}rad` }] }}>
+          <Image source={MAKE_IMAGES[pull.key]} style={[{ width: len, height: RH }, SOFT]} resizeMode="stretch" />
+        </View>
       )}
-    </View>
+    </>
+  );
+}
+
+// The stack of paper at the top. Tap it to change the kind of paper, drag a sheet off the top
+// of the stack down onto the work mat to start.
+function PaperStack({ paper, chosen, level, coins, onCycle, onChoose, box, matTop, fx, fy }) {
+  const ids = Object.keys(BOUQUET_PAPERS);
+  const drag = useRef(new Animated.ValueXY()).current;
+  const [lifted, setLifted] = useState(false);
+  const cfg = useRef({});
+  cfg.current = { chosen, level, coins, onCycle, onChoose, matTop, box };
+  const pan = useRef(PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderGrant: () => setLifted(true),
+    onPanResponderMove: (_, g) => drag.setValue({ x: g.dx, y: g.dy }),
+    onPanResponderRelease: (_, g) => {
+      setLifted(false);
+      const c = cfg.current;
+      const moved = Math.hypot(g.dx, g.dy);
+      if (moved < 8) {
+        // tap: the next paper you can use
+        const usableId = (id) => coins >= BOUQUET_PAPERS[id].cost && level >= BOUQUET_PAPERS[id].level;
+        let i = ids.indexOf(c.chosen);
+        for (let n = 0; n < ids.length; n++) { i = (i + 1) % ids.length; if (usableId(ids[i])) { c.onCycle(ids[i]); break; } }
+      } else if (c.box.y + c.box.h / 2 + g.dy > c.matTop) {
+        c.onChoose();
+      }
+      Animated.spring(drag, { toValue: { x: 0, y: 0 }, friction: 7, useNativeDriver: false }).start();
+    },
+    onPanResponderTerminate: () => { setLifted(false); Animated.spring(drag, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start(); },
+  })).current;
+  const info = bouquetPaper(paper);
+  const gw = fx(190), gh = gw / PAPER_ASPECT;
+  return (
+    <>
+      <View {...pan.panHandlers} style={{ position: 'absolute', left: box.x, top: box.y, width: box.w, height: box.h, zIndex: 30 }} />
+      {lifted && (
+        <Animated.View pointerEvents="none" style={{ position: 'absolute', left: box.x + box.w / 2 - gw / 2, top: box.y + box.h / 2 - gh / 2, width: gw, zIndex: 60, transform: drag.getTranslateTransform() }}>
+          <SheetLayers paper={paper} w={gw} h={gh} shadow />
+        </Animated.View>
+      )}
+      <View pointerEvents="none" style={{ position: 'absolute', left: box.x, top: box.h - fy(6), width: box.w, alignItems: 'center', zIndex: 31 }}>
+        <Text style={styles.stackLabel}>{info.name} paper · {info.cost > 0 ? `${info.cost} coins` : 'free'}  (tap to change)</Text>
+      </View>
+    </>
   );
 }
 
@@ -452,7 +530,7 @@ const styles = StyleSheet.create({
   ticket: { position: 'absolute', flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fbf0cf', borderRadius: 12, borderWidth: 3, borderColor: '#7a3e1a', paddingHorizontal: 10, paddingVertical: 6, zIndex: 10 },
   ticketName: { fontFamily: HEAD, fontSize: 15, color: '#4a2a10' },
   ticketTxt: { fontFamily: BODY, fontSize: 13.5, color: '#5a3a1a' },
-  sheetBtn: { position: 'absolute', alignItems: 'center' },
+  stackLabel: { fontFamily: HEAD, fontSize: 15, color: '#fff3d6', textAlign: 'center', textShadowColor: '#2a1608', textShadowRadius: 4 },
   hint: { position: 'absolute', textAlign: 'center', fontFamily: HEAD, fontSize: 18, color: '#3a2008', textShadowColor: 'rgba(255,240,200,0.7)', textShadowRadius: 0, textShadowOffset: { width: 1, height: 1 } },
   sheet: {
     position: 'absolute', alignItems: 'center', justifyContent: 'center', borderRadius: 3, borderWidth: 3, borderColor: 'rgba(90,52,16,0.55)',
