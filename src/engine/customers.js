@@ -30,7 +30,8 @@ export function comboText(order) {
   if (!order.combo) return null;
   const n = {};
   order.combo.forEach((k) => { n[k] = (n[k] || 0) + 1; });
-  const parts = Object.keys(n).map((k) => (n[k] > 1 ? `${n[k]} ${flowerName(k)}s` : flowerName(k)));
+  const plural = (w) => (/[^aeiou]y$/i.test(w) ? `${w.slice(0, -1)}ies` : `${w}s`);
+  const parts = Object.keys(n).map((k) => (n[k] > 1 ? `${n[k]} ${plural(flowerName(k))}` : flowerName(k)));
   return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}` : parts[0];
 }
 
@@ -39,7 +40,7 @@ export function customerLine(order, which = 'ask') {
   if (which === 'thanks') return c.thanks;
   const qty = order.qty;
   const name = flowerName(order.flowerKey);
-  const plural = qty > 1 ? `${name}s` : name;
+  const plural = qty > 1 ? (/[^aeiou]y$/i.test(name) ? `${name.slice(0, -1)}ies` : `${name}s`) : name;
   const template = order.type === 'flowers' ? c.askFlowers : c.askBouquet;
   const line = template
     .replace('{qty}', String(qty))
