@@ -14,21 +14,19 @@ import InventoryOverlay from '../components/InventoryOverlay';
 const PLOPPER_W = 1376;
 const PLOPPER_H = 768;
 // The paintings hang from the café wall (two rows under the four hooks).
-// Four hooks on the café wall; the eight paintings take turns: one set of four today, the other tomorrow.
 // which café picture is used: 'a' (open room) or 'b' (closer in, bar and tables)
 export const CAFE = 'b';
-const HOOKS = { a: [588, 712, 840, 960], b: [625, 757, 893, 1025] };
-const HOOK_Y = { a: 262, b: 262 };
-const BAR = { a: { x: 222, top: 441, feet: 563 }, b: { x: 212, top: 437, feet: 560 } };
+const BAR = { a: { x: 222, top: 441, feet: 563 }, b: { x: 212, top: 437, feet: 560 } };   // where Ben stands, per picture
+// All eight paintings hang as tiny frames along the high beam, up by the ceiling.
 const WALL_ITEMS = [
-  { key: 'sleepingpuppypainting',hx: 0, y: 291, w: 62, h: 59, z: 1, set: 0 },
-  { key: 'tabbycatpainting',  hx: 1, y: 291, w: 62, h: 59, z: 2, set: 0 },
-  { key: 'campfirepainting',  hx: 2, y: 291, w: 62, h: 59, z: 3, set: 0 },
-  { key: 'picnic',            hx: 3, y: 293, w: 62, h: 62, z: 4, set: 0 },
-  { key: 'beachpainting',     hx: 0, y: 292, w: 62, h: 60, z: 5, set: 1 },
-  { key: 'womanportraitpainting',hx: 1, y: 291, w: 62, h: 59, z: 6, set: 1 },
-  { key: 'weddingpainting',   hx: 2, y: 291, w: 62, h: 59, z: 7, set: 1 },
-  { key: 'newbaby',           hx: 3, y: 293, w: 62, h: 62, z: 8, set: 1 },
+  { key: 'sleepingpuppypainting',  x: 540, y: 86, w: 38, h: 36, z: 1 },
+  { key: 'tabbycatpainting',       x: 620, y: 86, w: 38, h: 36, z: 2 },
+  { key: 'campfirepainting',       x: 700, y: 86, w: 38, h: 36, z: 3 },
+  { key: 'picnic',                 x: 780, y: 86, w: 38, h: 38, z: 4 },
+  { key: 'beachpainting',          x: 860, y: 86, w: 38, h: 37, z: 5 },
+  { key: 'womanportraitpainting',  x: 940, y: 86, w: 38, h: 36, z: 6 },
+  { key: 'weddingpainting',        x: 1020, y: 86, w: 38, h: 36, z: 7 },
+  { key: 'newbaby',                x: 1100, y: 86, w: 38, h: 38, z: 8 },
 ];
 
 // ── Buy modal ─────────────────────────────────────────────────────────────────
@@ -90,7 +88,6 @@ export default function GalleryScreen({ navigation }) {
   const [selected, setSelected] = useState(null);
   const [invOpen, setInvOpen] = useState(false);
   const [notice, notify] = useNotice();
-  const todaySet = Math.floor(Date.now() / 86400000) % 2;   // which four paintings are up today
   const [box, setBox] = useState({ w: 0, h: 0 });
   const sw = box.w, sh = box.h;
 
@@ -102,8 +99,8 @@ export default function GalleryScreen({ navigation }) {
       <Image source={GALLERY_BGS[CAFE]} style={styles.bg} resizeMode="stretch" />
 
       {/* Paintings on the wall (Plopper base-px coords) — tap to view/buy */}
-      {WALL_ITEMS.filter((it) => it.set === todaySet).map(({ key, hx, y, w, h, z }) => {
-        const cx = (HOOKS[CAFE][hx] / PLOPPER_W) * sw;
+      {WALL_ITEMS.map(({ key, x, y, w, h, z }) => {
+        const cx = (x / PLOPPER_W) * sw;
         const cy = (y / PLOPPER_H) * sh;
         const iw = (w / PLOPPER_W) * sw;
         const ih = (h / PLOPPER_H) * sh;
@@ -111,6 +108,7 @@ export default function GalleryScreen({ navigation }) {
           <TouchableOpacity
             key={key}
             style={{ position: 'absolute', left: cx - iw / 2, top: cy - ih / 2, width: iw, height: ih, zIndex: z }}
+            hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
             activeOpacity={0.8}
             onPress={() => setSelected(key)}
           >
