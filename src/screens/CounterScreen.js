@@ -19,7 +19,7 @@ import Portrait from '../components/Portrait';
 // top edge so their lower half is hidden behind the counter.
 const W = 1678, H = 937;
 const DOOR = { x: 940, feetY: 478, h: 175 };         // where they step in
-const SPOT = { x: 745, feetY: 800, h: 560 };         // at the counter (feet are behind it)
+const SPOT = { x: 740, feetY: 870, h: 720 };         // at the counter (feet are behind it)
 const COUNTER_TOP = 655;                              // y of the counter's top edge
 const HOPS = 5, HOP_MS = 300;                         // the walk in
 const HAPPY_MS = 1500;                                // joy hops + thanks before they leave
@@ -134,7 +134,7 @@ export default function CounterScreen({ navigation }) {
       )}
 
       {sw > 0 && cur && phase !== 'in' && phase !== 'out' && (
-        <View style={[styles.bubbleWrap, { left: fx(905), top: fy(95), width: fx(470) }]}>
+        <View style={[styles.bubbleWrap, { left: fx(1010), top: fy(110), width: fx(480) }]}>
           <View style={styles.bubble}>
             {phase === 'happy' ? (
               <View style={styles.doneRow}>
