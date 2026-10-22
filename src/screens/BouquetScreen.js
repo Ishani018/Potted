@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, Animated, Easing, PanResponder, Platform, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { BOUQUET_BG, TRADE_IMAGES, UI_IMAGES, MAKE_IMAGES, BOW_IMAGES, ORDER_ART, CUSTOMER_IMAGES, CUSTOMER_POSES } from '../engine/assets';
+import { BOUQUET_BG, TRADE_IMAGES, UI_IMAGES, MAKE_IMAGES, BOW_IMAGES, ORDER_ART, BOOK_STAMP, CUSTOMER_IMAGES, CUSTOMER_POSES } from '../engine/assets';
 import {
   TRADE_FLOWERS, BOUQUET_SIZE, BOUQUET_RECIPES, BOUQUET_PAPERS, bouquetPaper, evaluateBouquet, playerLevel, CUSTOMERS,
   RIBBON_NAMES, orderGrade,
@@ -71,7 +71,7 @@ const BINS = [
   { x: 92, y: 490 }, { x: 266, y: 488 }, { x: 435, y: 490 },
 ];
 const BIN_D = 160;
-const STRIP_SLOTS = [611, 701, 790, 882, 974];   // left edges of the five painted slots on the order strip
+const STRIP_SLOTS = [606, 700, 794, 888, 982];   // left edges of the five painted slots on the order strip
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const HEAD = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 const BODY = Platform.select({ web: "'PatrickHand', Georgia, serif", default: 'PatrickHand' });
@@ -265,11 +265,11 @@ export default function BouquetScreen({ navigation }) {
           {want && (
             <>
               {/* the customer, in the round frame at the left of the painted strip */}
-              <View pointerEvents="none" style={{ position: 'absolute', left: fx(268), top: fy(612), width: fx(104), height: fx(104), borderRadius: fx(52), overflow: 'hidden', zIndex: 10 }}>
-                <Image source={(CUSTOMER_POSES[want.customer] || {}).think || CUSTOMER_IMAGES[want.customer]} style={{ position: 'absolute', width: fx(200), height: fx(300), left: -fx(48), top: -fx(58) }} resizeMode="contain" />
+              <View pointerEvents="none" style={{ position: 'absolute', left: fx(243), top: fy(623), width: fx(100), height: fx(100), borderRadius: fx(50), overflow: 'hidden', zIndex: 10 }}>
+                <Image source={(CUSTOMER_POSES[want.customer] || {}).think || CUSTOMER_IMAGES[want.customer]} style={{ position: 'absolute', width: fx(190), height: fx(285), left: -fx(45), top: -fx(55) }} resizeMode="contain" />
               </View>
-              <Text pointerEvents="none" style={[styles.stripName, { left: fx(394), top: fy(626), width: fx(190) }]} numberOfLines={1}>{CUSTOMERS[want.customer].name}</Text>
-              <Text pointerEvents="none" style={[styles.stripSub, { left: fx(394), top: fy(668), width: fx(190) }]} numberOfLines={1}>{step === 5 && result ? `${payout} coins${grade && grade.perfect ? ' · Perfect' : neat ? ' · Neat' : ''}` : `${flowerName(want.flowerKey)} bouquet`}</Text>
+              <Text pointerEvents="none" style={[styles.stripName, { left: fx(392), top: fy(642), width: fx(190) }]} numberOfLines={1}>{CUSTOMERS[want.customer].name}</Text>
+              <Text pointerEvents="none" style={[styles.stripSub, { left: fx(392), top: fy(678), width: fx(190) }]} numberOfLines={1}>{step === 5 && result ? `${payout} coins${grade && grade.perfect ? ' · Perfect' : neat ? ' · Neat' : ''}` : `${flowerName(want.flowerKey)} bouquet`}</Text>
               {[
                 { src: TRADE_IMAGES[TRADE_FLOWERS[want.flowerKey]?.img], ok: picks.includes(want.flowerKey) },
                 want.paper && { src: { plain: MAKE_IMAGES.paper, layered: MAKE_IMAGES.wrapLayered }[want.paper] || MAKE_IMAGES.paper, ok: step >= 1 && paper === want.paper },
@@ -277,12 +277,13 @@ export default function BouquetScreen({ navigation }) {
                 want.ribbon && { src: (BOW_IMAGES[BOW_COLOR[want.ribbon]] || [])[0], ok: bow != null && bow.color === BOW_COLOR[want.ribbon] },
                 { src: UI_IMAGES.goldcoins, label: `+${want.tip}` },
               ].map((it, i) => it && (
-                <View key={i} pointerEvents="none" style={{ position: 'absolute', left: fx(STRIP_SLOTS[i]), top: fy(630), width: fx(76), height: fy(76), alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
+                <View key={i} pointerEvents="none" style={{ position: 'absolute', left: fx(STRIP_SLOTS[i]), top: fy(633), width: fx(76), height: fx(76), alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
+                  <Image source={ORDER_ART.tile_cream} style={styles.ticketBg} resizeMode="stretch" />
                   {it.strip
-                    ? <Image source={it.src} style={{ width: fx(58), height: fx(58) / RIBBON_ASPECT * 1.6 }} resizeMode="stretch" />
-                    : <Image source={it.src} style={{ width: fx(54), height: fx(54) }} resizeMode="contain" />}
+                    ? <Image source={it.src} style={{ width: fx(52), height: fx(52) / RIBBON_ASPECT * 1.8 }} resizeMode="stretch" />
+                    : <Image source={it.src} style={{ width: fx(48), height: fx(48), marginBottom: it.label ? fx(8) : 0 }} resizeMode="contain" />}
                   {it.label ? <Text style={styles.stripTip}>{it.label}</Text> : null}
-                  {it.ok && <View style={styles.tick}><Text style={styles.tickTxt}>✓</Text></View>}
+                  {it.ok && <Image source={BOOK_STAMP} style={{ position: 'absolute', right: -fx(8), top: -fx(8), width: fx(26), height: fx(26) }} resizeMode="contain" />}
                 </View>
               ))}
             </>
@@ -773,7 +774,7 @@ const styles = StyleSheet.create({
   dotNow: { backgroundColor: '#fbf0cf', borderColor: '#c9780a' },
   stepTxt: { fontFamily: HEAD, fontSize: 14, color: '#d9c39a', textShadowColor: '#2a1608', textShadowRadius: 3 },
   stepTxtNow: { color: '#fff3d6' },
-  stripName: { position: 'absolute', fontFamily: HEAD, fontSize: 19, color: '#4a2a10', zIndex: 10 },
+  stripName: { position: 'absolute', fontFamily: HEAD, fontSize: 17, color: '#4a2a10', zIndex: 10 },
   stripSub: { position: 'absolute', fontFamily: HEAD, fontSize: 14, color: '#7a5a30', zIndex: 10 },
   stripTip: { position: 'absolute', bottom: 0, fontFamily: HEAD, fontSize: 13, color: '#6a4a18' },
   ticket: { position: 'absolute', flexDirection: 'row', alignItems: 'center', gap: 8, zIndex: 10 },
