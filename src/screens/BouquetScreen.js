@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, Animated, PanResponder, Platform, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { BOUQUET_BG, TRADE_IMAGES, UI_IMAGES, MAKE_IMAGES, BOW_IMAGES, ORDER_SLIP, CUSTOMER_IMAGES, CUSTOMER_POSES } from '../engine/assets';
+import { BOUQUET_BG, TRADE_IMAGES, UI_IMAGES, MAKE_IMAGES, BOW_IMAGES, ORDER_ART, CUSTOMER_IMAGES, CUSTOMER_POSES } from '../engine/assets';
 import {
   TRADE_FLOWERS, BOUQUET_SIZE, BOUQUET_RECIPES, BOUQUET_PAPERS, bouquetPaper, evaluateBouquet, playerLevel, CUSTOMERS,
   RIBBON_NAMES, orderGrade,
@@ -253,25 +253,20 @@ export default function BouquetScreen({ navigation }) {
 
           {/* the order slip and the prompt along the bottom of the table */}
           {want && (
-            <View style={[styles.ticket, { left: fx(405), top: fy(676), width: fx(340), paddingHorizontal: fx(34), paddingVertical: fy(22) }]} pointerEvents="none">
-              <Image source={ORDER_SLIP} style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%' }} resizeMode="stretch" />
-              <View style={{ width: fx(44), height: fx(44), overflow: 'hidden' }}>
-                <Image source={(CUSTOMER_POSES[want.customer] || {}).think || CUSTOMER_IMAGES[want.customer]} style={{ position: 'absolute', width: fx(104), height: fx(156), left: -fx(30), top: -fx(34) }} resizeMode="contain" />
+            <View style={[styles.ticket, { left: fx(395), top: fy(688), width: fx(450), height: fx(450) * 113 / 489 }]} pointerEvents="none">
+              <Image source={ORDER_ART.banner} style={styles.ticketBg} resizeMode="stretch" />
+              <View style={{ width: fx(46), height: fx(46), overflow: 'hidden', marginLeft: fx(34) }}>
+                <Image source={(CUSTOMER_POSES[want.customer] || {}).think || CUSTOMER_IMAGES[want.customer]} style={{ position: 'absolute', width: fx(106), height: fx(159), left: -fx(30), top: -fx(34) }} resizeMode="contain" />
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.ticketTxt} numberOfLines={1}><Text style={styles.ticketName}>{CUSTOMERS[want.customer].name.split(' ').pop()}</Text>: {flowerName(want.flowerKey)} bouquet</Text>
-                {want.paper && (
-                  <View style={styles.ticketRow}>
-                    <Text style={[styles.ticketSub, step >= 1 && paper === want.paper && styles.ok]} numberOfLines={1}>{BOUQUET_PAPERS[want.paper]?.name}</Text>
-                    <Image source={MAKE_IMAGES[want.ribbon]} style={{ width: fx(40), height: fx(40) / RIBBON_ASPECT, marginHorizontal: 6 }} resizeMode="stretch" />
-                    <Text style={[styles.ticketSub, tied && ribbonKey === want.ribbon && styles.ok]} numberOfLines={1}>{RIBBON_NAMES[want.ribbon]}</Text>
-                  </View>
-                )}
+              <Text style={styles.ticketName} numberOfLines={1}>{CUSTOMERS[want.customer].name.split(' ').pop()}</Text>
+              <View style={styles.ticketTiles}>
+                <TicketTile fx={fx} source={TRADE_IMAGES[TRADE_FLOWERS[want.flowerKey]?.img]} />
+                {want.paper && <TicketTile fx={fx} source={{ plain: MAKE_IMAGES.paper, layered: MAKE_IMAGES.wrapLayered, fancy: MAKE_IMAGES.paperFancy }[want.paper] || MAKE_IMAGES.paper} ok={step >= 1 && paper === want.paper} />}
+                {want.ribbon && <TicketTile fx={fx} source={(BOW_IMAGES[BOW_COLOR[want.ribbon]] || [])[0] || MAKE_IMAGES[want.ribbon]} ok={tied && ribbonKey === want.ribbon} />}
               </View>
-              <Image source={TRADE_IMAGES[TRADE_FLOWERS[want.flowerKey]?.img]} style={{ width: fx(30), height: fx(30) }} resizeMode="contain" />
             </View>
           )}
-          <View style={[styles.prompt, { left: fx(want ? 735 : 520), width: fx(want ? 450 : 560), top: fy(706) }]} pointerEvents="none">
+          <View style={[styles.prompt, { left: fx(want ? 860 : 520), width: fx(want ? 320 : 560), top: fy(706) }]} pointerEvents="none">
             <Text style={styles.promptTxt} numberOfLines={2}>{prompt}</Text>
           </View>
 
@@ -536,6 +531,17 @@ function Shade({ side, peak, wide = false }) {
   );
 }
 
+// One item on the order strip: a little framed picture, ticked once you have it right.
+function TicketTile({ source, ok, fx }) {
+  return (
+    <View style={{ width: fx(46), height: fx(46), alignItems: 'center', justifyContent: 'center' }}>
+      <Image source={ORDER_ART.tile_cream} style={styles.ticketBg} resizeMode="stretch" />
+      <Image source={source} style={{ width: fx(34), height: fx(34) }} resizeMode="contain" />
+      {ok && <View style={styles.tick}><Text style={styles.tickTxt}>✓</Text></View>}
+    </View>
+  );
+}
+
 // The tied ribbon lying across the paper: it sweeps in from the left.
 function TiedRibbon({ x, y, w, h, source }) {
   // The ribbon wraps round the neck (the twine). It is a band as wide as the neck and thick enough
@@ -678,6 +684,10 @@ const styles = StyleSheet.create({
   stepTxt: { fontFamily: HEAD, fontSize: 14, color: '#d9c39a', textShadowColor: '#2a1608', textShadowRadius: 3 },
   stepTxtNow: { color: '#fff3d6' },
   ticket: { position: 'absolute', flexDirection: 'row', alignItems: 'center', gap: 8, zIndex: 10 },
+  ticketBg: { position: 'absolute', left: 0, top: 0, width: '100%', height: '100%' },
+  ticketTiles: { flexDirection: 'row', gap: 6, marginLeft: 6 },
+  tick: { position: 'absolute', right: -3, top: -3, width: 16, height: 16, borderRadius: 8, backgroundColor: '#4d8a36', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#f7efd2' },
+  tickTxt: { color: '#f7efd2', fontSize: 10, fontWeight: 'bold' },
   ticketName: { fontFamily: HEAD, fontSize: 15, color: '#4a2a10' },
   ticketRow: { flexDirection: 'row', alignItems: 'center', marginTop: 1 },
   ticketSub: { fontFamily: BODY, fontSize: 12.5, color: '#8a6a40' },
