@@ -366,7 +366,7 @@ export const NURSERY_BG = require('../../assets/nursery.jpeg');
 export const INVENTORY_BG = require('../../assets/ui_comps/inventory.png');
 
 // ─── New screen backgrounds ───────────────────────────────────────────────────
-export const MAP_BG = require('../../assets/ui_comps/mapoftown.png');
+export const MAP_BG = require('../../assets/ui_comps/mapoftown_v2.png');
 export const HOME_BG = require('../../assets/homeinsidescreen.png');
 // The pet shop in three states: both doors shut, the Pet Food door open, both doors open.
 export const PETSHOP_BG = require('../../assets/petshop/shop_closed.png');

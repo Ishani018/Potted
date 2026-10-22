@@ -16,7 +16,7 @@ const BUTTONS = [
   { label: 'HOME',    dest: 'Home',    x: 111,  y: 516 },
   { label: 'ADOPT',   dest: 'PetShop', x: 855,  y: 200 },
   { label: 'GALLERY', dest: 'Gallery', x: 761,  y: 587 },
-  { label: 'FLORIST', dest: 'Counter', x: 1092, y: 190 },
+  { label: 'FLORIST', dest: 'Counter', x: 1100, y: 214 },
 ];
 
 export default function MapScreen({ navigation }) {
