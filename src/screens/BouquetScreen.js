@@ -1,41 +1,54 @@
-import React, { useState } from 'react';
-import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { View, Text, Image, TouchableOpacity, Animated, Easing, PanResponder, Platform, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { BOUQUET_BG, TRADE_IMAGES, UI_IMAGES } from '../engine/assets';
 import {
-  TRADE_FLOWERS, BOUQUET_SIZE, BOUQUET_RECIPES, BOUQUET_PAPERS, bouquetPaper, evaluateBouquet, playerLevel,
+  TRADE_FLOWERS, BOUQUET_SIZE, BOUQUET_RECIPES, BOUQUET_PAPERS, bouquetPaper, evaluateBouquet, playerLevel, CUSTOMERS,
 } from '../constants/gameData';
 import { globalPetEffects } from '../engine/petEffects';
 import BouquetArt from '../components/BouquetArt';
 import ScreenHud from '../components/ScreenHud';
-import { openOrders, bouquetFillsOrder, CUSTOMERS } from '../engine/customers';
-import { PixelText, PixelButton, COLORS } from '../components/Pixel';
+import Portrait from '../components/Portrait';
+import { openOrders, bouquetFillsOrder, flowerName } from '../engine/customers';
+import { PixelText, PixelButton } from '../components/Pixel';
 import { useNotice } from '../components/PurchaseNotice';
 
-// Bouquet table — you work ON the workshop table (cosy florist bg, 1376×768 base):
-//   • three paper sheets laid out on the left of the table — tap one to choose
-//     (a fancier sheet raises the price but costs coins each time)
-//   • the bouquet takes shape in the middle, flowers blooming from the wrapper
-//   • your harvested flowers lie in a row along the front edge — tap to add
-//   • tie & sell on the right (shows what you actually earn); UNDO takes the
-//     last flower back
-// Recipes live in the garden journal (button top-right).
+// Bouquet table: you make the bouquet by hand, one step at a time (relaxed, no timer).
+//   1 PAPER   tap a sheet; it slides onto the work table
+//   2 FLOWERS drag three flowers from the buckets onto the paper (or tap them)
+//   3 FOLD    swipe the left flap over, then the right flap
+//   4 TIE     drag the ribbon across the middle, then it bows itself
+//   5 GIVE    hand it to the waiting customer (or sell it at the market)
+// A bouquet that is folded and tied neatly (steady swipes) sells for 10% more.
+// All positions are in the 1376×768 base space of the table picture.
 const PLOPPER_W = 1376;
 const PLOPPER_H = 768;
 const PAPER_IMG = { plain: 'bouquetempty', layered: 'bouquetmixed', fancy: 'bouquetfancy' };
-const PAPER_TILT = { plain: '-5deg', layered: '0deg', fancy: '5deg' };
+const SHEET = { plain: '#dcb985', layered: '#ead2a6', fancy: '#f3d4de' };   // flat paper colours
+const EDGE = '#7a4a22';
+const STEPS = ['PAPER', 'FLOWERS', 'FOLD', 'TIE', 'GIVE'];
+const CX = 790;                                   // centre of the work area
+const PAPER_BOX = { w: 270, h: 330, top: 300 };   // the flat sheet (tall, stems at the bottom)
+const FLAP_TOP = 400;                              // the flaps cover the lower part, blooms stay visible
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const HEAD = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
+const BODY = Platform.select({ web: "'PatrickHand', Georgia, serif", default: 'PatrickHand' });
 
 export default function BouquetScreen({ navigation }) {
   const { state, dispatch } = useGame();
   const harvested = state.player.harvestedFlowers ?? {};
   const found = state.player.bouquetBook ?? {};
   const [box, setBox] = useState({ w: 0, h: 0 });
+  const [step, setStep] = useState(0);              // 0 paper .. 4 give
   const [picks, setPicks] = useState([]);
   const [chosenPaper, setPaper] = useState('plain');
+  const [folded, setFolded] = useState({ left: false, right: false });
+  const [tied, setTied] = useState(false);
+  const firstFold = useRef(null);               // which flap went over first (it ends up underneath)
+  const [neat, setNeat] = useState(true);           // stays true while every swipe is steady
   const [notice, notify] = useNotice(3000);
   const coins = state.player.coins;
   const level = playerLevel(state.player);
-  // If the chosen sheet is locked or you can't afford it any more, use free kraft.
   const usable = (p) => coins >= p.cost && level >= p.level;
   const paper = usable(bouquetPaper(chosenPaper)) ? chosenPaper : 'plain';
 
@@ -46,40 +59,55 @@ export default function BouquetScreen({ navigation }) {
 
   const left = (key) => (harvested[key] ?? 0) - picks.filter((k) => k === key).length;
   const owned = Object.keys(harvested).filter((k) => harvested[k] > 0 && TRADE_FLOWERS[k]);
-
   const full = picks.length === BOUQUET_SIZE;
   const petMult = globalPetEffects(state.player).bouquetMult;
   const result = full ? evaluateBouquet(picks, petMult, paper) : null;
   const isNewRecipe = !!result?.recipe && !found[result.recipe.id];
-  const previewName = !result ? 'PICK 3 FLOWERS' : isNewRecipe ? 'SOMETHING SPECIAL...' : result.name.toUpperCase();
-  const foundCount = BOUQUET_RECIPES.filter((r) => found[r.id]).length;
 
-  // A waiting customer who wants a bouquet like this one gets it instead of the market.
+  // The waiting customer (if they want a bouquet) is shown as a ticket; the bouquet is
+  // delivered to them when it has the flower they asked for.
+  const want = openOrders(state.player).find((o) => o.type === 'bouquet') ?? null;
   const order = full ? openOrders(state.player).find((o) => bouquetFillsOrder(o, picks)) : null;
-  const customerName = order ? CUSTOMERS[order.customer].name.split(' ').pop().toUpperCase() : '';
-  const payout = result ? result.net + (order ? order.tip : 0) : 0;
+  const customerName = order ? CUSTOMERS[order.customer].name : '';
+  const neatBonus = result && neat ? Math.round(Math.max(0, result.net) * 0.1) : 0;
+  const payout = result ? result.net + neatBonus + (order ? order.tip : 0) : 0;
 
-  const add = (key) => { if (!full && left(key) > 0) setPicks([...picks, key]); };
-  const sell = () => {
+  // ── step helpers ──
+  const resetAll = () => { firstFold.current = null; setStep(0); setPicks([]); setFolded({ left: false, right: false }); setTied(false); setNeat(true); };
+  const choosePaper = (id) => { setPaper(id); setStep(1); };
+  const addFlower = (key) => { if (!full && left(key) > 0 && step === 1) setPicks((p) => [...p, key]); };
+  const undo = () => setPicks((p) => p.slice(0, -1));
+  const goFold = () => { if (full) setStep(2); };
+  const onFolded = (side, wasNeat) => {
+    if (!wasNeat) setNeat(false);
+    if (!firstFold.current) firstFold.current = side;
+    const next = { ...folded, [side]: true };
+    setFolded(next);
+    if (next.left && next.right) setTimeout(() => setStep(3), 350);
+  };
+  const onTied = (wasNeat) => { if (!wasNeat) setNeat(false); setTied(true); setTimeout(() => setStep(4), 500); };
+  const giveOver = () => {
     if (!result) return;
-    dispatch({ type: 'SELL_BOUQUET', flowers: picks, paper, customerId: order ? order.id : null });
-    const earned = order ? `${customerName} paid ${payout} coins.` : `You earned ${result.net} coins.`;
+    dispatch({ type: 'SELL_BOUQUET', flowers: picks, paper, customerId: order ? order.id : null, neat });
+    const earned = order ? `${customerName} paid ${payout} coins.` : `You earned ${result.net + neatBonus} coins.`;
     notify({
       icon: UI_IMAGES[PAPER_IMG[paper]],
-      title: isNewRecipe ? `New recipe: ${result.name}!` : `Sold ${result.name}!`,
+      title: isNewRecipe ? `New recipe: ${result.name}!` : `Made ${result.name}!`,
       subtitle: isNewRecipe ? `Saved to your garden journal. ${earned}` : earned,
     });
-    setPicks([]);
+    const toCounter = !!order;
+    resetAll();
+    if (toCounter) setTimeout(() => navigation.navigate('Counter'), 900);
   };
 
+  const foundCount = BOUQUET_RECIPES.filter((r) => found[r.id]).length;
   const art = fx(340);
   const rowN = Math.max(owned.length, 1);
   const gap = Math.min(fx(96), fx(700) / rowN);
-  // Shrink the flower tiles when there are many so they never overlap.
   const bunchW = Math.min(fx(66), gap - fx(6));
-  const bunchH = bunchW * 0.8;
   const rowW = gap * owned.length;
   const rowLeft = fx(700) - rowW / 2;
+  const pw = fx(PAPER_BOX.w), ph = fy(PAPER_BOX.h), pLeft = fx(CX) - pw / 2, pTop = fy(PAPER_BOX.top);
 
   return (
     <View style={styles.root} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
@@ -87,99 +115,130 @@ export default function BouquetScreen({ navigation }) {
 
       {sw > 0 && (
         <>
-          {/* ── Papers laid out on the table ─────────────────────────── */}
-          <PixelText size={fs(10, 6)} style={[styles.label, { left: fx(250), width: fx(380), top: fy(452) }]}>CHOOSE PAPER</PixelText>
-          {Object.values(BOUQUET_PAPERS).map((p, i) => {
-            const on = paper === p.id;
-            const locked = level < p.level;
-            const cantAfford = locked || coins < p.cost;
-            const cx = fx(300 + i * 130);
-            return (
-              <TouchableOpacity
-                key={p.id}
-                activeOpacity={0.85}
-                onPress={cantAfford ? undefined : () => setPaper(p.id)}
-                style={[
-                  styles.sheet,
-                  { left: cx - fx(58), top: fy(478) - (on ? fy(10) : 0), width: fx(116), height: fy(170), transform: [{ rotate: PAPER_TILT[p.id] }] },
-                  on && styles.sheetOn,
-                  cantAfford && { opacity: 0.45 },
-                ]}
-              >
-                <Image source={UI_IMAGES[PAPER_IMG[p.id]]} style={{ width: fx(92), height: fy(106) }} resizeMode="contain" />
-                <PixelText size={fs(8, 6)} color="#5a3410" style={styles.dark}>{p.name.toUpperCase()}</PixelText>
-                {/* price of one sheet (used up each time you tie a bouquet) */}
-                {locked ? (
-                  <PixelText size={fs(7, 5)} color="#8a5a24" style={styles.dark}>LV {p.level}</PixelText>
-                ) : p.cost > 0 ? (
-                  <View style={styles.sheetCost}>
-                    <Image source={UI_IMAGES.goldcoins} style={{ width: fx(14), height: fx(14) }} resizeMode="contain" />
-                    <PixelText size={fs(8, 6)} color="#8a5a24" style={styles.dark}>{p.cost}</PixelText>
-                  </View>
-                ) : (
-                  <PixelText size={fs(7, 5)} color="#8a5a24" style={styles.dark}>FREE</PixelText>
-                )}
-                {on && <View style={styles.tick}><PixelText size={fs(8, 6)}>✓</PixelText></View>}
-              </TouchableOpacity>
-            );
-          })}
-
-          {/* ── The bouquet on the table ─────────────────────────────── */}
-          <View pointerEvents="none" style={{ position: 'absolute', left: fx(790) - art / 2, top: fy(300), width: art }}>
-            <BouquetArt flowers={[picks[0], picks[1], picks[2]]} size={art} tier={paper} />
-          </View>
-          <View style={[styles.namePlate, { left: fx(790) - fx(150), width: fx(300), top: fy(640) }]}>
-            <PixelText size={fs(10, 6)}>{previewName}</PixelText>
-          </View>
-
-          {/* ── Flowers along the front edge ─────────────────────────── */}
-          {owned.length === 0 && (
-            <PixelText size={fs(8, 6)} style={[styles.label, { left: fx(250), width: fx(700), top: fy(700) }]}>
-              NO HARVESTED FLOWERS YET - GROW SOME FIRST!
-            </PixelText>
-          )}
-          {owned.map((key, i) => {
-            const n = left(key);
-            return (
-              <TouchableOpacity
-                key={key}
-                activeOpacity={0.75}
-                onPress={() => add(key)}
-                style={[styles.bunch, { left: rowLeft + i * gap + (gap - bunchW) / 2, top: fy(704), width: bunchW, height: bunchH }, (n <= 0 || full) && { opacity: 0.4 }]}
-              >
-                <Image source={TRADE_IMAGES[TRADE_FLOWERS[key].img]} style={{ width: bunchW * 0.7, height: bunchW * 0.7 }} resizeMode="contain" />
-                <View style={styles.badge}><PixelText size={fs(8, 6)}>{n}</PixelText></View>
-              </TouchableOpacity>
-            );
-          })}
-
-          {/* ── Tie & sell ───────────────────────────────────────────── */}
-          <View style={{ position: 'absolute', left: fx(960), top: fy(520), width: fx(200), alignItems: 'center', gap: fy(10) }}>
-            {result && (
-              <View style={styles.price}>
-                <Image source={UI_IMAGES.goldcoins} style={{ width: fx(24), height: fx(24) }} resizeMode="contain" />
-                <PixelText size={fs(14, 8)} color={COLORS.gold}>{payout}</PixelText>
+          {/* step strip */}
+          <View style={[styles.steps, { top: fy(62), left: fx(CX) - fx(260), width: fx(520) }]} pointerEvents="none">
+            {STEPS.map((s, i) => (
+              <View key={s} style={styles.stepItem}>
+                <View style={[styles.dot, i < step && styles.dotDone, i === step && styles.dotNow]} />
+                <Text style={[styles.stepTxt, i === step && styles.stepTxtNow]}>{s.charAt(0) + s.slice(1).toLowerCase()}</Text>
               </View>
-            )}
-            {/* only shown when you picked a paid paper: what the sheet costs */}
-            {result && result.paperCost > 0 && (
-              <PixelText size={fs(7, 5)} style={{ textAlign: 'center' }}>PAPER -{result.paperCost}</PixelText>
-            )}
-            <PixelButton
-              onPress={full ? sell : undefined}
-              disabled={!full}
-              size={fs(10, 7)}
-              label={order ? `FOR ${customerName}` : 'TIE & SELL'}
-              style={{ alignSelf: 'stretch' }}
+            ))}
+          </View>
+
+          {/* the customer's ticket */}
+          {want && (
+            <View style={[styles.ticket, { left: fx(215), top: fy(108), width: fx(300) }]} pointerEvents="none">
+              <Portrait customerKey={want.customer} size={fx(40)} bare />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.ticketName}>{CUSTOMERS[want.customer].name} wants</Text>
+                <Text style={styles.ticketTxt}>a bouquet with {flowerName(want.flowerKey)}</Text>
+              </View>
+              <Image source={TRADE_IMAGES[TRADE_FLOWERS[want.flowerKey]?.img]} style={{ width: fx(34), height: fx(34) }} resizeMode="contain" />
+            </View>
+          )}
+
+          {/* ── 1: choose a sheet (they lie on the left of the table) ── */}
+          {step === 0 && (
+            <>
+              <Text style={[styles.hint, { left: fx(200), width: fx(420), top: fy(436) }]}>Choose a sheet of paper</Text>
+              {Object.values(BOUQUET_PAPERS).map((p, i) => {
+                const locked = level < p.level;
+                const cantAfford = locked || coins < p.cost;
+                return (
+                  <TouchableOpacity
+                    key={p.id}
+                    activeOpacity={0.85}
+                    onPress={cantAfford ? undefined : () => choosePaper(p.id)}
+                    style={[styles.sheet, { left: fx(220 + i * 140), top: fy(470), width: fx(116), height: fy(170), backgroundColor: SHEET[p.id], transform: [{ rotate: ['-4deg', '1deg', '5deg'][i] }] }, cantAfford && { opacity: 0.45 }]}
+                  >
+                    <Image source={UI_IMAGES[PAPER_IMG[p.id]]} style={{ width: fx(92), height: fy(106) }} resizeMode="contain" />
+                    <Text style={styles.sheetName}>{p.name}</Text>
+                    <Text style={styles.sheetCost}>{locked ? `Level ${p.level}` : p.cost > 0 ? `${p.cost} coins` : 'Free'}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </>
+          )}
+
+          {/* ── the work table: flat sheet, flowers, flaps, ribbon ── */}
+          {step >= 1 && step <= 3 && (
+            <View style={{ position: 'absolute', left: pLeft, top: pTop, width: pw, height: ph }} pointerEvents="box-none">
+              <View style={[styles.flat, { width: pw, height: ph, backgroundColor: SHEET[paper] }]} pointerEvents="none">
+                <View style={styles.crease} />
+              </View>
+              {/* the flowers lie on the paper, blooms toward the top */}
+              {picks.map((k, i) => {
+                const pos = [{ x: 0.3, y: 0.2, r: '-14deg' }, { x: 0.7, y: 0.2, r: '14deg' }, { x: 0.5, y: 0.1, r: '0deg' }][i];
+                const sz = fx(112);
+                return (
+                  <Image key={i} source={TRADE_IMAGES[TRADE_FLOWERS[k].img]} pointerEvents="none"
+                    style={{ position: 'absolute', left: pw * pos.x - sz / 2, top: ph * pos.y - sz / 2, width: sz, height: sz, transform: [{ rotate: pos.r }], zIndex: 3 }} resizeMode="contain" />
+                );
+              })}
+              {step >= 2 && (
+                <>
+                  <Flap side="left" w={pw / 2} h={fy(PAPER_BOX.top + PAPER_BOX.h - FLAP_TOP)} top={fy(FLAP_TOP - PAPER_BOX.top)} color={SHEET[paper]} z={firstFold.current === 'left' || !firstFold.current ? 6 : 7}
+                    active={step === 2 && !folded.left} done={folded.left} reach={fx(210)} onDone={(n) => onFolded('left', n)} />
+                  <Flap side="right" w={pw / 2} h={fy(PAPER_BOX.top + PAPER_BOX.h - FLAP_TOP)} top={fy(FLAP_TOP - PAPER_BOX.top)} color={SHEET[paper]} z={firstFold.current === 'right' ? 6 : 7}
+                    active={step === 2 && !folded.right} done={folded.right} reach={fx(210)} onDone={(n) => onFolded('right', n)} />
+                </>
+              )}
+              {step === 3 && <Ribbon x={0} y={fy(FLAP_TOP - PAPER_BOX.top + 70)} w={pw} fx={fx} fy={fy} done={tied} onDone={onTied} />}
+            </View>
+          )}
+
+          {/* ── 5: the finished bouquet ── */}
+          {step === 4 && (
+            <View pointerEvents="none" style={{ position: 'absolute', left: fx(CX) - art / 2, top: fy(290), width: art }}>
+              <BouquetArt flowers={[picks[0], picks[1], picks[2]]} size={art} tier={paper} />
+            </View>
+          )}
+
+          {/* the prompt for this step */}
+          <View style={[styles.prompt, { left: fx(CX) - fx(190), width: fx(380), top: fy(640) }]} pointerEvents="none">
+            <Text style={styles.promptTxt}>
+              {step === 0 ? 'Pick a sheet of paper to begin.'
+                : step === 1 ? (full ? 'Lovely! Now fold it.' : `Drag ${BOUQUET_SIZE - picks.length} more flower${BOUQUET_SIZE - picks.length === 1 ? '' : 's'} onto the paper.`)
+                : step === 2 ? 'Swipe each side over to wrap the stems.'
+                : step === 3 ? 'Drag the ribbon across to tie it.'
+                : result ? `${isNewRecipe ? 'Something special...' : result.name}` : ''}
+            </Text>
+          </View>
+
+          {/* flowers in their buckets along the front edge (drag them up onto the paper) */}
+          {step === 1 && owned.length === 0 && (
+            <Text style={[styles.hint, { left: fx(250), width: fx(700), top: fy(696), color: '#fbf0cf' }]}>No harvested flowers yet. Grow some first!</Text>
+          )}
+          {step === 1 && owned.map((key, i) => (
+            <Bunch
+              key={key + i} flowerKey={key} count={left(key)} size={bunchW} disabled={full || left(key) <= 0}
+              x={rowLeft + i * gap + (gap - bunchW) / 2} y={fy(704)} dropAbove={fy(660)}
+              onAdd={() => addFlower(key)} fs={fs}
             />
-            <PixelButton
-              onPress={() => setPicks(picks.slice(0, -1))}
-              disabled={picks.length === 0}
-              tone="wood"
-              size={fs(8, 6)}
-              label="UNDO"
-              style={{ alignSelf: 'stretch' }}
-            />
+          ))}
+
+          {/* buttons */}
+          <View style={{ position: 'absolute', left: fx(960), top: fy(500), width: fx(210), alignItems: 'center', gap: fy(10) }}>
+            {step === 1 && (
+              <>
+                <PixelButton onPress={goFold} disabled={!full} size={fs(10, 7)} label="FOLD IT" style={{ alignSelf: 'stretch' }} />
+                <PixelButton onPress={undo} disabled={picks.length === 0} tone="wood" size={fs(8, 6)} label="UNDO" style={{ alignSelf: 'stretch' }} />
+              </>
+            )}
+            {step === 4 && result && (
+              <>
+                <View style={styles.price}>
+                  <Image source={UI_IMAGES.goldcoins} style={{ width: fx(24), height: fx(24) }} resizeMode="contain" />
+                  <Text style={styles.priceTxt}>{payout}</Text>
+                </View>
+                {neat && <Text style={styles.neat}>Neat work! +10%</Text>}
+                {result.paperCost > 0 && <Text style={styles.small}>paper -{result.paperCost}</Text>}
+                <PixelButton onPress={giveOver} size={fs(10, 7)} label={order ? `GIVE TO ${customerName.toUpperCase()}` : 'SELL IT'} style={{ alignSelf: 'stretch' }} />
+              </>
+            )}
+            {step > 0 && step < 4 && (
+              <PixelButton onPress={resetAll} tone="wood" size={fs(8, 6)} label="START OVER" style={{ alignSelf: 'stretch' }} />
+            )}
           </View>
         </>
       )}
@@ -192,8 +251,6 @@ export default function BouquetScreen({ navigation }) {
       >
         <PixelText size={fs(8, 6)}>RECIPES {foundCount}/{BOUQUET_RECIPES.length}</PixelText>
       </TouchableOpacity>
-
-      {/* Customers now come to the counter (their own screen) */}
       <TouchableOpacity
         style={[styles.recipeBtn, { right: fx(40), top: fy(150), paddingHorizontal: fx(10), paddingVertical: fy(8) }]}
         onPress={() => navigation.navigate('Counter')}
@@ -212,40 +269,141 @@ export default function BouquetScreen({ navigation }) {
   );
 }
 
+// A bunch of flowers in a bucket: tap to add, or drag it up onto the paper.
+function Bunch({ flowerKey, count, size, disabled, x, y, dropAbove, onAdd, fs }) {
+  const drag = useRef(new Animated.ValueXY()).current;
+  const [lifted, setLifted] = useState(false);
+  const cfg = useRef({});
+  cfg.current = { disabled, dropAbove, onAdd, y };
+  const pan = useRef(PanResponder.create({
+    onStartShouldSetPanResponder: () => !cfg.current.disabled,
+    onMoveShouldSetPanResponder: () => !cfg.current.disabled,
+    onPanResponderGrant: () => setLifted(true),
+    onPanResponderMove: (_, g) => drag.setValue({ x: g.dx, y: g.dy }),
+    onPanResponderRelease: (_, g) => {
+      setLifted(false);
+      const moved = Math.hypot(g.dx, g.dy);
+      const droppedHigh = cfg.current.y + g.dy < cfg.current.dropAbove;
+      if (moved < 8 || droppedHigh) cfg.current.onAdd();
+      Animated.spring(drag, { toValue: { x: 0, y: 0 }, friction: 7, useNativeDriver: false }).start();
+    },
+    onPanResponderTerminate: () => { setLifted(false); Animated.spring(drag, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start(); },
+  })).current;
+  return (
+    <Animated.View
+      {...pan.panHandlers}
+      style={[styles.bunch, { left: x, top: y, width: size, height: size * 0.8, zIndex: lifted ? 50 : 5, opacity: disabled ? 0.4 : 1, transform: drag.getTranslateTransform() }]}
+    >
+      <Image source={TRADE_IMAGES[TRADE_FLOWERS[flowerKey].img]} style={{ width: size * (lifted ? 1.15 : 0.7), height: size * (lifted ? 1.15 : 0.7) }} resizeMode="contain" pointerEvents="none" />
+      <View style={styles.badge}><PixelText size={fs(8, 6)}>{count}</PixelText></View>
+    </Animated.View>
+  );
+}
+
+// One side of the wrapping paper. Swipe it across the middle; it follows your finger,
+// lands flat over the stems if you pass halfway, otherwise springs back. A steady
+// (mostly horizontal) swipe counts as neat.
+function Flap({ side, w, h, top, color, z, active, done, reach, onDone }) {
+  const p = useRef(new Animated.Value(done ? 1 : 0)).current;   // 0 open .. 1 folded over
+  const cfg = useRef({});
+  cfg.current = { active, reach, onDone };
+  const pan = useRef(PanResponder.create({
+    onStartShouldSetPanResponder: () => cfg.current.active,
+    onMoveShouldSetPanResponder: () => cfg.current.active,
+    onPanResponderMove: (_, g) => p.setValue(clamp((side === 'left' ? g.dx : -g.dx) / cfg.current.reach, 0, 1)),
+    onPanResponderRelease: (_, g) => {
+      const prog = clamp((side === 'left' ? g.dx : -g.dx) / cfg.current.reach, 0, 1);
+      if (prog > 0.5) {
+        const steady = Math.abs(g.dy) < Math.abs(g.dx) * 0.45 + 12;
+        Animated.timing(p, { toValue: 1, duration: 140, useNativeDriver: false }).start(() => cfg.current.onDone(steady));
+      } else Animated.spring(p, { toValue: 0, friction: 7, useNativeDriver: false }).start();
+    },
+  })).current;
+  // the flap pivots on the paper's centre line and flips over: scaleX 1 -> -1
+  const pivot = side === 'left' ? w / 2 : -w / 2;
+  const scaleX = p.interpolate({ inputRange: [0, 1], outputRange: [1, -1] });
+  const under = p.interpolate({ inputRange: [0, 0.5, 0.5001, 1], outputRange: [0, 0, 0.18, 0.18] });
+  return (
+    <Animated.View
+      {...pan.panHandlers}
+      style={{
+        position: 'absolute', top, left: side === 'left' ? 0 : w, width: w, height: h, zIndex: done ? z : 5,
+        pointerEvents: done ? 'none' : 'auto',
+        transform: [{ translateX: pivot }, { scaleX }, { translateX: -pivot }],
+      }}
+    >
+      <View style={[styles.flap, { backgroundColor: color, borderTopLeftRadius: side === 'left' ? 6 : 0, borderTopRightRadius: side === 'right' ? 6 : 0 }]} />
+      <Animated.View style={[styles.flap, { backgroundColor: '#3a2008', opacity: under }]} />
+      {active && <Text style={[styles.swipe, side === 'left' ? { right: 6 } : { left: 6 }]}>{side === 'left' ? '>>' : '<<'}</Text>}
+    </Animated.View>
+  );
+}
+
+// The ribbon: drag across the waist; it unrolls behind your finger and bows.
+function Ribbon({ x, y, w, fx, fy, done, onDone }) {
+  const prog = useRef(new Animated.Value(done ? 1 : 0)).current;
+  const wob = useRef({ max: 0 });
+  const pan = useRef(PanResponder.create({
+    onStartShouldSetPanResponder: () => !done,
+    onMoveShouldSetPanResponder: () => !done,
+    onPanResponderGrant: () => { wob.current.max = 0; },
+    onPanResponderMove: (_, g) => { wob.current.max = Math.max(wob.current.max, Math.abs(g.dy)); prog.setValue(clamp(g.dx / (w * 0.9), 0, 1)); },
+    onPanResponderRelease: (_, g) => {
+      if (g.dx / (w * 0.9) > 0.85) { Animated.timing(prog, { toValue: 1, duration: 120, useNativeDriver: false }).start(() => onDone(wob.current.max < fy(26))); }
+      else Animated.spring(prog, { toValue: 0, friction: 7, useNativeDriver: false }).start();
+    },
+  })).current;
+  const barW = prog.interpolate({ inputRange: [0, 1], outputRange: [0, w] });
+  const bow = prog.interpolate({ inputRange: [0, 0.9, 1], outputRange: [0, 0, 1] });
+  return (
+    <View style={{ position: 'absolute', left: x, top: y - fy(30), width: w, height: fy(60), zIndex: 8 }} {...pan.panHandlers}>
+      <Animated.View style={[styles.ribbon, { width: barW, top: fy(22) }]} />
+      <Animated.View style={[styles.bow, { left: w / 2 - fx(34), top: 0, opacity: bow, transform: [{ scale: bow }] }]}>
+        <View style={[styles.loop, { transform: [{ rotate: '-22deg' }] }]} />
+        <View style={[styles.loop, { transform: [{ rotate: '22deg' }] }]} />
+        <View style={styles.knot} />
+      </Animated.View>
+      {!done && <Text style={[styles.swipe, { left: 6, top: fy(10) }]}>drag ribbon {'>>'}</Text>}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#2a1608' },
+  // dragging over text must not start a text selection on web (it cancels the drag)
+  root: { flex: 1, backgroundColor: '#2a1608', ...(Platform.OS === 'web' ? { userSelect: 'none' } : null) },
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
-  label: { position: 'absolute', textAlign: 'center' },
-  dark: { textShadowColor: 'rgba(255,240,200,0.7)', textShadowRadius: 0, textShadowOffset: { width: 1, height: 1 } },
+  steps: { position: 'absolute', flexDirection: 'row', justifyContent: 'space-between', zIndex: 10 },
+  stepItem: { alignItems: 'center', gap: 2, flex: 1 },
+  dot: { width: 12, height: 12, borderRadius: 6, backgroundColor: 'rgba(251,240,207,0.35)', borderWidth: 2, borderColor: '#5a3410' },
+  dotDone: { backgroundColor: '#5a8a2a' },
+  dotNow: { backgroundColor: '#fbf0cf', borderColor: '#c9780a' },
+  stepTxt: { fontFamily: HEAD, fontSize: 14, color: '#d9c39a', textShadowColor: '#2a1608', textShadowRadius: 3 },
+  stepTxtNow: { color: '#fff3d6' },
+  ticket: { position: 'absolute', flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fbf0cf', borderRadius: 12, borderWidth: 3, borderColor: '#7a3e1a', paddingHorizontal: 10, paddingVertical: 6, zIndex: 10 },
+  ticketName: { fontFamily: HEAD, fontSize: 16, color: '#4a2a10' },
+  ticketTxt: { fontFamily: BODY, fontSize: 14, color: '#5a3a1a' },
+  hint: { position: 'absolute', textAlign: 'center', fontFamily: HEAD, fontSize: 18, color: '#3a2008', textShadowColor: 'rgba(255,240,200,0.7)', textShadowRadius: 0, textShadowOffset: { width: 1, height: 1 } },
   sheet: {
-    position: 'absolute', alignItems: 'center', justifyContent: 'center', borderRadius: 3,
-    backgroundColor: '#f3d9a4', borderWidth: 3, borderColor: 'rgba(90,52,16,0.55)',
+    position: 'absolute', alignItems: 'center', justifyContent: 'center', borderRadius: 3, borderWidth: 3, borderColor: 'rgba(90,52,16,0.55)',
     shadowColor: '#000', shadowOpacity: 0.35, shadowRadius: 4, shadowOffset: { width: 2, height: 3 },
   },
-  sheetOn: { borderColor: COLORS.green, backgroundColor: '#fff3d6' },
-  sheetCost: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  tick: {
-    position: 'absolute', top: -8, right: -8, backgroundColor: COLORS.green,
-    borderWidth: 2, borderColor: COLORS.greenEdge, borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1,
-  },
-  namePlate: {
-    position: 'absolute', alignItems: 'center', paddingVertical: 6,
-    backgroundColor: 'rgba(58,32,12,0.88)', borderWidth: 3, borderColor: COLORS.woodEdge, borderRadius: 4,
-  },
-  bunch: {
-    position: 'absolute', alignItems: 'center', justifyContent: 'center', borderRadius: 26,
-    backgroundColor: 'rgba(255,243,214,0.88)',
-  },
-  badge: {
-    position: 'absolute', right: -4, bottom: -4, backgroundColor: COLORS.woodDark,
-    borderWidth: 2, borderColor: COLORS.woodEdge, borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1,
-  },
-  price: {
-    flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6,
-    backgroundColor: 'rgba(58,32,12,0.88)', borderWidth: 3, borderColor: COLORS.woodEdge, borderRadius: 4,
-  },
-  recipeBtn: {
-    position: 'absolute', zIndex: 30, backgroundColor: COLORS.woodDark,
-    borderWidth: 3, borderColor: COLORS.woodEdge, borderRadius: 4,
-  },
+  sheetName: { fontFamily: HEAD, fontSize: 15, color: '#4a2a10' },
+  sheetCost: { fontFamily: BODY, fontSize: 13, color: '#8a5a24' },
+  flat: { borderRadius: 6, borderWidth: 3, borderColor: EDGE, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 6, shadowOffset: { width: 2, height: 4 } },
+  crease: { position: 'absolute', left: '50%', top: 6, bottom: 6, width: 1, backgroundColor: 'rgba(90,52,16,0.25)' },
+  flap: { ...StyleSheet.absoluteFillObject, borderWidth: 3, borderColor: EDGE, borderBottomLeftRadius: 4, borderBottomRightRadius: 4 },
+  swipe: { position: 'absolute', top: '45%', fontFamily: HEAD, fontSize: 22, color: '#5a3410' },
+  ribbon: { position: 'absolute', left: 0, height: 14, backgroundColor: '#d9506a', borderTopWidth: 2, borderBottomWidth: 2, borderColor: '#9a2a44', borderRadius: 3 },
+  bow: { position: 'absolute', width: 68, height: 50 },
+  loop: { position: 'absolute', top: 6, width: 34, height: 30, borderRadius: 16, backgroundColor: '#e8647c', borderWidth: 2, borderColor: '#9a2a44' },
+  knot: { position: 'absolute', left: 25, top: 16, width: 18, height: 18, borderRadius: 9, backgroundColor: '#c8405c', borderWidth: 2, borderColor: '#9a2a44' },
+  prompt: { position: 'absolute', alignItems: 'center', zIndex: 10 },
+  promptTxt: { fontFamily: HEAD, fontSize: 19, color: '#fff3d6', textAlign: 'center', textShadowColor: '#2a1608', textShadowRadius: 4 },
+  bunch: { position: 'absolute', alignItems: 'center', justifyContent: 'center', borderRadius: 26, backgroundColor: 'rgba(255,243,214,0.88)' },
+  badge: { position: 'absolute', right: -4, bottom: -4, backgroundColor: '#5a3410', borderWidth: 2, borderColor: '#2a1608', borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1 },
+  price: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: 'rgba(58,32,12,0.88)', borderWidth: 3, borderColor: '#2a1608', borderRadius: 4 },
+  priceTxt: { fontFamily: HEAD, fontSize: 24, color: '#ffd060' },
+  neat: { fontFamily: HEAD, fontSize: 16, color: '#cfe8a0', textShadowColor: '#2a1608', textShadowRadius: 3 },
+  small: { fontFamily: BODY, fontSize: 13, color: '#fff3d6', textShadowColor: '#2a1608', textShadowRadius: 3 },
+  recipeBtn: { position: 'absolute', zIndex: 30, backgroundColor: '#5a3410', borderWidth: 3, borderColor: '#2a1608', borderRadius: 4 },
 });

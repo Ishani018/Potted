@@ -415,7 +415,7 @@ function reducer(state, action) {
     // Tie BOUQUET_SIZE harvested flowers into a bouquet and sell it at once.
     // action: { flowers: [flowerKey, ...] }
     case 'SELL_BOUQUET': {
-      const { flowers, paper = 'plain', customerId = null } = action;
+      const { flowers, paper = 'plain', customerId = null, neat = false } = action;
       if (!Array.isArray(flowers) || flowers.length !== BOUQUET_SIZE) return state;
       // Delivering to a customer: the order must be open and the bouquet must fit it.
       const order = customerId ? state.player.customers?.list?.find((o) => o.id === customerId) : null;
@@ -435,12 +435,14 @@ function reducer(state, action) {
         bouquetBook[recipe.id] = { made: (prev?.made ?? 0) + 1, firstAt: prev?.firstAt ?? Date.now() };
       }
       const newRecipe = recipe && !state.player.bouquetBook?.[recipe.id];
+      // a neatly folded and tied bouquet sells for 10% more
+      const neatBonus = neat && net > 0 ? Math.round(net * 0.1) : 0;
       const tip = order ? order.tip : 0; // a customer pays the price plus a tip
       let delivered = {
         ...state,
         player: {
           ...state.player,
-          coins: state.player.coins + net + tip, // sale minus the paper used, plus any tip
+          coins: state.player.coins + net + neatBonus + tip, // sale minus the paper used, plus neat bonus and any tip
           harvestedFlowers: harvested,
           bouquetBook,
           bouquetsSold: (state.player.bouquetsSold ?? 0) + 1,
