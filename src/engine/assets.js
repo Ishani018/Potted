@@ -367,8 +367,13 @@ export const INVENTORY_BG = require('../../assets/ui_comps/inventory.png');
 // ─── New screen backgrounds ───────────────────────────────────────────────────
 export const MAP_BG = require('../../assets/ui_comps/mapoftown.png');
 export const HOME_BG = require('../../assets/homeinsidescreen.png');
-export const PETSHOP_BG = require('../../assets/petshop/shop_doors.png');            // the shop with both doors shut
-export const PETSHOP_OPEN = require('../../assets/petshop/shop_arches.png');         // same shop with the doors open (cropped in once unlocked)
+// The pet shop in three states: both doors shut, the Pet Food door open, both doors open.
+export const PETSHOP_BG = require('../../assets/petshop/shop_closed.png');
+export const PETSHOP_STATES = {
+  closed: PETSHOP_BG,
+  food: require('../../assets/petshop/shop_food_open.png'),
+  both: require('../../assets/petshop/shop_both_open.png'),
+};
 // ─── Pet food aisle ───────────────────────────────────────────────────────────
 export const PETFOOD_BG = require('../../assets/petfood/aisle.png');
 export const PETFOOD_IMAGES = {

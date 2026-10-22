@@ -3,7 +3,7 @@ import {
   View, Image, TouchableOpacity, Pressable, StyleSheet, TextInput, Animated, Easing,
 } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { PETSHOP_BG, PETSHOP_OPEN, PET_IMAGES, UI_IMAGES, BACKGROUNDS } from '../engine/assets';
+import { PETSHOP_STATES, PET_IMAGES, UI_IMAGES, BACKGROUNDS } from '../engine/assets';
 import { PETS, ROOM_NAMES, playerLevel } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
@@ -82,7 +82,7 @@ export default function PetShopScreen({ navigation }) {
 
   return (
     <View style={styles.root} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
-      <Image source={PETSHOP_BG} style={styles.bg} resizeMode="stretch" />
+      <Image source={level >= ARCH_LEVEL.foster ? PETSHOP_STATES.both : level >= ARCH_LEVEL.food ? PETSHOP_STATES.food : PETSHOP_STATES.closed} style={styles.bg} resizeMode="stretch" />
 
       {SHOP_PETS.filter((p) => !ownedPets.includes(p.key)).map(({ key, x, y, w, h, flip, z }) => {
         const cx = (x / PLOPPER_W) * sw;
@@ -125,12 +125,6 @@ export default function PetShopScreen({ navigation }) {
             onHoverOut={() => setHovered((h) => (h === a.id ? null : h))}
             onPress={() => { if (!locked) navigation.navigate(a.go); else { setHovered(a.id); setTimeout(() => setHovered((h) => (h === a.id ? null : h)), 1800); } }}
           >
-            {/* once unlocked the door stands open: that piece of the open picture is drawn over the shut one */}
-            {!locked && (
-              <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, overflow: 'hidden' }}>
-                <Image source={PETSHOP_OPEN} resizeMode="stretch" style={{ position: 'absolute', width: sw, height: sh, left: -(a.x0 / ART_W) * sw, top: -(a.y0 / ART_H) * sh }} />
-              </View>
-            )}
             {!locked && <View pointerEvents="none" style={[styles.archGlow, { borderTopLeftRadius: 999, borderTopRightRadius: 999, opacity: on ? 1 : 0 }]} />}
             {locked && on && (
               <View pointerEvents="none" style={styles.archHint}><PixelText size={7} color="#fff6df">LEVEL {a.level}</PixelText></View>
