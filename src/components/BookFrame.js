@@ -79,13 +79,7 @@ export default function BookFrame({ left, right }) {
       )}
       {book && (
         <View style={[rect(PAGES.pager), styles.center, styles.pager]}>
-          <TouchableOpacity accessibilityLabel="Previous page" disabled={book.page === 0} onPress={() => book.flip(-1)} style={[styles.arrowBtn, book.page === 0 && styles.off]}>
-            <Image source={BOOK_ARROWS.left} style={styles.arrowImg} resizeMode="contain" />
-          </TouchableOpacity>
           <Text style={styles.pageNum}>{book.page + 1} / {book.total}</Text>
-          <TouchableOpacity accessibilityLabel="Next page" disabled={book.page === book.total - 1} onPress={() => book.flip(1)} style={[styles.arrowBtn, book.page === book.total - 1 && styles.off]}>
-            <Image source={BOOK_ARROWS.right} style={styles.arrowImg} resizeMode="contain" />
-          </TouchableOpacity>
         </View>
       )}
     </View>
