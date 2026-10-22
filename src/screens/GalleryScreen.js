@@ -15,8 +15,8 @@ const PLOPPER_W = 1376;
 const PLOPPER_H = 768;
 // The paintings hang from the café wall (two rows under the four hooks).
 // which café picture is used: 'a' (open room) or 'b' (closer in, bar and tables)
-export const CAFE = 'c';
-const BAR = { a: { x: 222, top: 441, feet: 563 }, b: { x: 212, top: 437, feet: 560 }, c: { x: 175, top: 447, feet: 575 } };   // where Ben stands, per picture
+export const CAFE = 'd';
+const BAR = { a: { x: 222, top: 441, feet: 563 }, b: { x: 212, top: 437, feet: 560 }, c: { x: 175, top: 447, feet: 575 }, d: { x: 366, top: 461, feet: 556, h: 250 } };   // where Ben stands, per picture
 // A gallery wall: all eight paintings in a cluster of mixed sizes on the big empty wall.
 const WALL_ITEMS = [
   { key: 'sleepingpuppypainting',  x: 690, y: 236, w: 56, h: 54, z: 1 },
@@ -120,7 +120,7 @@ export default function GalleryScreen({ navigation }) {
       {/* Ben behind the bar: drawn above the picture but cut off at the counter's top edge */}
       {sw > 0 && (
         <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: sw, height: (BAR[CAFE].top / PLOPPER_H) * sh, overflow: 'hidden', zIndex: 20 }}>
-          <Image source={CUSTOMER_IMAGES.ben} resizeMode="contain" style={{ position: 'absolute', left: (BAR[CAFE].x / PLOPPER_W) * sw - (92 / PLOPPER_W) * sw, top: (BAR[CAFE].feet / PLOPPER_H) * sh - (276 / PLOPPER_H) * sh, width: (184 / PLOPPER_W) * sw, height: (276 / PLOPPER_H) * sh }} />
+          <Image source={CUSTOMER_IMAGES.ben} resizeMode="contain" style={{ position: 'absolute', left: (BAR[CAFE].x / PLOPPER_W) * sw - ((BAR[CAFE].h ?? 276) / 3 / PLOPPER_W) * sw, top: (BAR[CAFE].feet / PLOPPER_H) * sh - ((BAR[CAFE].h ?? 276) / PLOPPER_H) * sh, width: ((BAR[CAFE].h ?? 276) * 2 / 3 / PLOPPER_W) * sw, height: ((BAR[CAFE].h ?? 276) / PLOPPER_H) * sh }} />
         </View>
       )}
 
