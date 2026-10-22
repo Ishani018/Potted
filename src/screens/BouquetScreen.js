@@ -1,14 +1,13 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, Animated, PanResponder, Platform, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { BOUQUET_BG, TRADE_IMAGES, UI_IMAGES, MAKE_IMAGES, BOW_IMAGES, ORDER_SLIP } from '../engine/assets';
+import { BOUQUET_BG, TRADE_IMAGES, UI_IMAGES, MAKE_IMAGES, BOW_IMAGES, ORDER_SLIP, CUSTOMER_IMAGES, CUSTOMER_POSES } from '../engine/assets';
 import {
   TRADE_FLOWERS, BOUQUET_SIZE, BOUQUET_RECIPES, BOUQUET_PAPERS, bouquetPaper, evaluateBouquet, playerLevel, CUSTOMERS,
   RIBBON_NAMES, orderGrade,
 } from '../constants/gameData';
 import { globalPetEffects } from '../engine/petEffects';
 import ScreenHud from '../components/ScreenHud';
-import Portrait from '../components/Portrait';
 import { openOrders, bouquetFillsOrder, flowerName } from '../engine/customers';
 import { PixelText, PixelButton } from '../components/Pixel';
 import { useNotice } from '../components/PurchaseNotice';
@@ -256,7 +255,9 @@ export default function BouquetScreen({ navigation }) {
           {want && (
             <View style={[styles.ticket, { left: fx(405), top: fy(676), width: fx(340), paddingHorizontal: fx(34), paddingVertical: fy(22) }]} pointerEvents="none">
               <Image source={ORDER_SLIP} style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%' }} resizeMode="stretch" />
-              <Portrait customerKey={want.customer} size={fx(40)} bare />
+              <View style={{ width: fx(44), height: fx(44), overflow: 'hidden' }}>
+                <Image source={(CUSTOMER_POSES[want.customer] || {}).think || CUSTOMER_IMAGES[want.customer]} style={{ position: 'absolute', width: fx(104), height: fx(156), left: -fx(30), top: -fx(34) }} resizeMode="contain" />
+              </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.ticketTxt} numberOfLines={1}><Text style={styles.ticketName}>{CUSTOMERS[want.customer].name.split(' ').pop()}</Text>: {flowerName(want.flowerKey)} bouquet</Text>
                 {want.paper && (
