@@ -16,7 +16,7 @@ const PLOPPER_H = 768;
 // The paintings hang from the café wall (two rows under the four hooks).
 // which café picture is used: 'a' (open room) or 'b' (closer in, bar and tables)
 export const CAFE = 'd';
-const BAR = { a: { x: 222, top: 441, feet: 563 }, b: { x: 212, top: 437, feet: 560 }, c: { x: 175, top: 447, feet: 575 }, d: { x: 366, top: 461, feet: 556, h: 250 } };   // where Ben stands, per picture
+const BAR = { a: { x: 222, top: 441, feet: 563 }, b: { x: 212, top: 437, feet: 560 }, c: { x: 175, top: 447, feet: 575 }, d: { x: 372, top: 452, feet: 566, h: 250 } };   // where Ben stands, per picture
 // A gallery wall: all eight paintings in a cluster of mixed sizes on the big empty wall.
 const WALL_ITEMS = [
   { key: 'sleepingpuppypainting',  x: 690, y: 236, w: 56, h: 54, z: 1 },
