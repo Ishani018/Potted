@@ -356,11 +356,11 @@ function Celebration({ fx, fy, coins }) {
         }} />
       ))}
       <Animated.View style={{
-        position: 'absolute', left: fx(380), top: fy(250), width: fx(620), height: fx(620) * 113 / 489 + fx(10), alignItems: 'center', justifyContent: 'center',
+        position: 'absolute', left: fx(330), top: fy(210), width: fx(720), height: fx(720) * 372 / 900, alignItems: 'center',
         opacity: pop, transform: [{ scale: pop.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) }],
       }}>
-        <Image source={ORDER_ART.banner} style={{ position: 'absolute', width: '100%', height: '100%' }} resizeMode="stretch" />
-        <Text style={styles.perfect}>Perfect order!  +{coins}</Text>
+        <Image source={ORDER_ART.perfect} style={{ width: '100%', height: '100%' }} resizeMode="stretch" />
+        <Text style={styles.perfectCoins}>+{coins} coins</Text>
       </Animated.View>
     </View>
   );
@@ -752,7 +752,7 @@ const styles = StyleSheet.create({
   badge: { position: 'absolute', right: -4, bottom: -4, backgroundColor: '#5a3410', borderWidth: 2, borderColor: '#2a1608', borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1 },
   price: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: 'rgba(58,32,12,0.88)', borderWidth: 3, borderColor: '#2a1608', borderRadius: 4 },
   priceTxt: { fontFamily: HEAD, fontSize: 24, color: '#ffd060' },
-  perfect: { fontFamily: HEAD, fontSize: 26, color: '#4a2a10' },
+  perfectCoins: { fontFamily: HEAD, fontSize: 26, color: '#fff3c8', marginTop: 4, textShadowColor: '#3a2008', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4 },
   neat: { fontFamily: HEAD, fontSize: 16, color: '#cfe8a0', textShadowColor: '#2a1608', textShadowRadius: 3 },
   small: { fontFamily: BODY, fontSize: 13, color: '#fff3d6', textShadowColor: '#2a1608', textShadowRadius: 3 },
   recipeBtn: { position: 'absolute', zIndex: 30, backgroundColor: '#5a3410', borderWidth: 3, borderColor: '#2a1608', borderRadius: 4 },
