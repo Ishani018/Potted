@@ -546,7 +546,10 @@ function Bunch({ flowerKey, count, size, disabled, dim = true, x, y, dropRight, 
             }} />
         );
       })}
-      <Text pointerEvents="none" style={[styles.plate, { top: plateY - size * 0.11, width: size, fontSize: Math.max(10, size * 0.17) }]}>{count}</Text>
+      <View pointerEvents="none" style={[styles.plate, { top: plateY - size * 0.11, width: size, height: size * 0.22 }]}>
+        <Image source={src} resizeMode="contain" style={{ width: size * 0.2, height: size * 0.2, marginRight: size * 0.05 }} />
+        <Text style={{ fontFamily: HEAD, color: '#5a3a18', fontSize: Math.max(10, size * 0.17) }}>{count}</Text>
+      </View>
     </View>
   );
 }
@@ -801,7 +804,7 @@ const styles = StyleSheet.create({
   promptSub: { fontFamily: HEAD, fontSize: 14, color: '#cfe8a0', textAlign: 'center', textShadowColor: '#2a1608', textShadowRadius: 4, marginTop: 1 },
   promptTxt: { fontFamily: HEAD, fontSize: 15, lineHeight: 17, color: '#fff3d6', textAlign: 'center', textShadowColor: '#2a1608', textShadowRadius: 4 },
   bunch: { position: 'absolute' },
-  plate: { position: 'absolute', left: 0, textAlign: 'center', fontFamily: HEAD, color: '#5a3a18' },
+  plate: { position: 'absolute', left: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   badge: { position: 'absolute', right: -4, bottom: -4, backgroundColor: '#5a3410', borderWidth: 2, borderColor: '#2a1608', borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1 },
   price: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: 'rgba(58,32,12,0.88)', borderWidth: 3, borderColor: '#2a1608', borderRadius: 4 },
   priceTxt: { fontFamily: HEAD, fontSize: 24, color: '#ffd060' },
