@@ -51,16 +51,16 @@ const SPOOLS = [
 const PAPER_ASPECT = 700 / 617;
 const RIBBON_ASPECT = 11.2;                          // the ribbon pictures are 1000×~89
 const MAT = { x0: 535, y0: 196, x1: 1088, y1: 583 };  // the wooden work mat
-const CX = 807;                                       // centre of the sheet lying on the mat (it is painted into the picture)
-const CY = (MAT.y0 + MAT.y1) / 2 + 6;
-const PAPER_BOX = { w: 365, h: Math.round(365 / PAPER_ASPECT) };   // the sheet once it is on the mat
+const CX = 792;                                       // centre of the sheet lying on the mat (it is painted into the picture)
+const CY = 390;                                       // (the painted sheet is a little wider than it is tall; ours covers it)
+const PAPER_BOX = { w: 379, h: Math.round(379 / PAPER_ASPECT) };   // the sheet once it is on the mat
 PAPER_BOX.top = Math.round(CY - PAPER_BOX.h / 2);
 const FLAP_TOP = PAPER_BOX.top + Math.round(0.42 * PAPER_BOX.h);   // where the ribbon waist sits; the blooms stay above
 // ribbon -> the colour of bows that go with it
 const BOW_COLOR = { ribbonRed: 'red', ribbonPink: 'pink', ribbonCream: 'cream', ribbonPinkFloral: 'pinkfloral', ribbonGreen: 'green', ribbonCreamFloral: 'creamfloral' };
 const WRAP_ART = { plain: 'wrapKraft', layered: 'wrapLayered', fancy: 'wrapLayered' };
 const WRAP_ASPECT = 640 / 590;                                       // height / width of the wrapped-bouquet pictures
-const WRAP_W = 315;
+const WRAP_W = 330;
 const WAIST = 0.79;                                                  // where the twine sits, as a fraction of the wrapper's height
 const FOLD_DEG = 20;                                                // tilt of the diagonal fold lines
 const TRAY = { cx: 1247, cy: 562, w: 247, h: 169 };  // the hand-over tray, bottom right
@@ -292,11 +292,11 @@ export default function BouquetScreen({ navigation }) {
           </View>
 
           {/* buttons, right column (beside the scissors) */}
-          <View style={{ position: 'absolute', left: fx(1160), top: fy(330), width: fx(170), alignItems: 'center', gap: fy(8), zIndex: 30 }}>
+          <View style={{ position: 'absolute', left: fx(1160), top: fy(316), width: fx(170), alignItems: 'center', gap: fy(4), zIndex: 30 }}>
             {step === 1 && (
               <>
                 <PixelButton onPress={goFold} disabled={!full} size={fs(9, 7)} label="FOLD IT" style={{ alignSelf: 'stretch' }} />
-                <PixelButton onPress={undo} disabled={picks.length === 0} tone="wood" size={fs(7, 6)} label="UNDO" style={{ alignSelf: 'stretch' }} />
+                <PixelButton onPress={undo} disabled={picks.length === 0} tone="wood" size={fs(7, 6)} scale={0.7} label="UNDO" style={{ alignSelf: 'stretch' }} />
               </>
             )}
             {step === 4 && (
@@ -306,7 +306,7 @@ export default function BouquetScreen({ navigation }) {
               <PixelButton onPress={giveOver} size={fs(8, 6)} label={order ? 'GIVE IT' : 'SELL IT'} style={{ alignSelf: 'stretch' }} />
             )}
             {step > 0 && step < 5 && (
-              <PixelButton onPress={resetAll} tone="wood" size={fs(7, 6)} label="START OVER" style={{ alignSelf: 'stretch' }} />
+              <PixelButton onPress={resetAll} tone="wood" size={fs(7, 6)} scale={0.7} label="START OVER" style={{ alignSelf: 'stretch' }} />
             )}
           </View>
         </>
