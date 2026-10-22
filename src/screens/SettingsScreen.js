@@ -48,7 +48,7 @@ export default function SettingsScreen({ navigation }) {
             <View style={{ gap: 14 }}>
               <PixelText size={14} color={COLORS.gold} style={{ textAlign: 'center' }}>SETTINGS</PixelText>
 
-              {/* level, XP, today's weather and the next unlock live here now, not on every screen */}
+              {/* level, XP and the next unlock live here now, not on every screen */}
               <LevelBadge inline />
 
               {/* music on / off */}

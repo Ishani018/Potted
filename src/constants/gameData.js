@@ -307,26 +307,6 @@ for (const [k, st] of Object.entries(STRAYS)) {
   PET_SPECIES[k] = st.species;
 }
 
-// ── Daily weather ─────────────────────────────────────────────────────────────
-// Each calendar day has one kind of weather, the same for everyone and every room
-// (picked from the date). It nudges the same numbers pets do. room = effects like a
-// pet's `room` block (pestChance/cooldownMult multiply, harvestLuck adds).
-export const WEATHER = {
-  sunny:  { key: 'sunny',  name: 'Sunny',  weight: 3, desc: 'Hanging plants earn 25% more coins.',                  room: { hangingCoinMult: 1.25 } },
-  rainy:  { key: 'rainy',  name: 'Rainy',  weight: 2, desc: 'Plants are ready to water sooner, but bugs come out.', room: { cooldownMult: 0.8, pestChance: 1.5 } },
-  windy:  { key: 'windy',  name: 'Windy',  weight: 2, desc: 'The wind blows bugs away: 40% fewer.',                 room: { pestChance: 0.6 } },
-  cloudy: { key: 'cloudy', name: 'Cloudy', weight: 2, desc: 'Harvests have a 10% chance of an extra flower.',       room: { harvestLuck: 0.1 } },
-};
-// Weather for a day key like "2026-10-21" (see dayKey in engine/petEffects).
-export function weatherFor(dayKeyStr) {
-  let h = 2166136261;
-  for (let i = 0; i < dayKeyStr.length; i++) { h ^= dayKeyStr.charCodeAt(i); h = Math.imul(h, 16777619); }
-  const r = ((h >>> 0) / 4294967296) * Object.values(WEATHER).reduce((n, w) => n + w.weight, 0);
-  let acc = 0;
-  for (const w of Object.values(WEATHER)) { acc += w.weight; if (r < acc) return w; }
-  return WEATHER.sunny;
-}
-
 // ── Pre-determined pet positions per room ─────────────────────────────────────
 // Laid out in Plopper (1376×768 base, sprite CENTER anchor). A pet shows at its
 // room's spot only when the player has PLACED it there (petPlacements[key]===room).
