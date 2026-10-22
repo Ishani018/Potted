@@ -9,6 +9,7 @@ import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
 import PetSprite from '../components/PetSprite';
 import { AdoptModal } from '../components/PetCard';
+import PetTag from '../components/PetTag';
 import { PixelText, PixelPanel, PixelButton, COLORS, PIXEL_FONT } from '../components/Pixel';
 
 // Pets were laid out in Plopper on a 1376×768 canvas with the bg STRETCHED to
@@ -45,29 +46,6 @@ export const SHOP_PETS = [
 ];
 
 
-// Label over a pet — plain white outlined pixel text (like the map signs), shown
-// only while hovering that pet. It fades in and bobs gently.
-function PetTag({ label, show }) {
-  const fade = useRef(new Animated.Value(0)).current;
-  const bob = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.timing(fade, { toValue: show ? 1 : 0, duration: 160, useNativeDriver: true }).start();
-  }, [show]);
-  useEffect(() => {
-    const loop = Animated.loop(Animated.sequence([
-      Animated.timing(bob, { toValue: 1, duration: 800, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-      Animated.timing(bob, { toValue: 0, duration: 800, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-    ]));
-    loop.start();
-    return () => loop.stop();
-  }, []);
-  const y = bob.interpolate({ inputRange: [0, 1], outputRange: [0, -4] });
-  return (
-    <Animated.View pointerEvents="none" style={{ opacity: fade, transform: [{ translateY: y }] }}>
-      <PixelText size={10}>{label}</PixelText>
-    </Animated.View>
-  );
-}
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function PetShopScreen({ navigation }) {
@@ -108,6 +86,10 @@ export default function PetShopScreen({ navigation }) {
   return (
     <View style={styles.root} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
       <Image source={PETSHOP_STATES.closed} style={styles.bg} resizeMode="stretch" />
+      {/* hovering a door that can be opened pushes it ajar (its open picture shows faintly) */}
+      {hovered && !opening && ARCHES.some((a) => a.id === hovered && level >= a.level) && (
+        <Image source={PETSHOP_STATES[hovered]} style={[styles.bg, { opacity: 0.4 }]} resizeMode="stretch" pointerEvents="none" />
+      )}
       {/* the door you tapped swings open: its open picture fades in over the shut one */}
       {opening && (
         <Animated.Image source={PETSHOP_STATES[opening]} style={[styles.bg, { opacity: openFade }]} resizeMode="stretch" pointerEvents="none" />
@@ -154,7 +136,6 @@ export default function PetShopScreen({ navigation }) {
             onHoverOut={() => setHovered((h) => (h === a.id ? null : h))}
             onPress={() => tapDoor(a)}
           >
-            {!locked && !opening && <View pointerEvents="none" style={[styles.archGlow, { borderTopLeftRadius: 999, borderTopRightRadius: 999, opacity: on ? 1 : 0 }]} />}
                       </Pressable>
         );
       })}
@@ -191,7 +172,6 @@ const styles = StyleSheet.create({
   archLocked: { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, borderTopLeftRadius: 999, borderTopRightRadius: 999, backgroundColor: 'rgba(252,238,196,0.62)' },
   lockTitle: { fontFamily: Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' }), fontSize: 22, color: '#4a2a10', textAlign: 'center', fontWeight: 'bold' },
   lockSub: { fontFamily: Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' }), fontSize: 14, color: '#7a5030', textAlign: 'center', marginTop: 2 },
-  archGlow: { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,236,170,0.22)', borderWidth: 3, borderColor: 'rgba(255,240,190,0.55)' },
 
   modalOverlay: {
     ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.65)',

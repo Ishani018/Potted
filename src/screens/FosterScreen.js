@@ -7,7 +7,7 @@ import ScreenHud from '../components/ScreenHud';
 import InventoryOverlay from '../components/InventoryOverlay';
 import PetSprite from '../components/PetSprite';
 import { PixelText, PixelPanel, PixelButton } from '../components/Pixel';
-import TagLabel from '../components/TagLabel';
+import PetTag from '../components/PetTag';
 import { AdoptModal } from '../components/PetCard';
 
 // The Foster Center: the pet shop's big back room. Customers find strays and bring
@@ -60,9 +60,7 @@ export default function FosterScreen({ navigation }) {
             onPress={() => setPicked(stray)}
           >
             <PetSprite petKey={stray.key} w={w} h={h} source={rest} asleep={rest ? true : undefined} />
-            {on && (
-              <TagLabel title={def.name} sub={`${def.price} coins`} style={styles.tag} />
-            )}
+            <View style={styles.tagWrap} pointerEvents="none"><PetTag show={on} label="FOSTER" /></View>
           </Pressable>
         );
       })}
@@ -97,7 +95,7 @@ export default function FosterScreen({ navigation }) {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#1a1200' },
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
-  tag: { position: 'absolute', bottom: '100%', alignSelf: 'center', marginBottom: 2 },
+  tagWrap: { position: 'absolute', left: -40, right: -40, top: -22, alignItems: 'center', zIndex: 50 },
   empty: { position: 'absolute', left: 0, right: 0, top: '12%', alignItems: 'center', zIndex: 30 },
   back: { position: 'absolute', right: 16, bottom: 12, zIndex: 30, flexDirection: 'row', gap: 8, alignItems: 'center' },
   roomTitle: { position: 'absolute', left: 0, right: 0, top: 8, alignItems: 'center', zIndex: 30 },
