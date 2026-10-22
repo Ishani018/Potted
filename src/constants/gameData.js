@@ -705,6 +705,10 @@ export const BOUQUET_MIXED = { name: 'Mixed Bouquet', multiplier: 1.1 };
 export const BOUQUET_TRIO = { multiplier: 1.3 }; // 3 of the same flower
 // Secret recipes (order doesn't matter). Found ones are recorded in the book;
 // unfound ones show only their hint.
+// The nine flowers that go into bouquets (one bucket each on the bouquet table). Every other
+// flower is still grown and sold, just not used here.
+export const BOUQUET_FLOWERS = ['daisy', 'rose', 'peony', 'marigold', 'snapdragon', 'poppy', 'hydrenga', 'jasmine', 'petunia'];
+
 export const BOUQUET_RECIPES = [
   { id: 'sweetheart', name: 'Sweetheart',     flowers: ['rose', 'rose', 'peony'],          multiplier: 1.8, hint: 'Something for someone you love.' },
   { id: 'sunshine',   name: 'Sunshine',       flowers: ['daisy', 'marigold', 'poppy'],     multiplier: 1.6, hint: 'Three flowers as warm as the sun.' },
@@ -712,8 +716,8 @@ export const BOUQUET_RECIPES = [
   { id: 'summer',     name: 'Summer Breeze',  flowers: ['hydrenga', 'poppy', 'rose'],      multiplier: 1.7, hint: 'Three summer bloomers together.' },
   { id: 'harvest',    name: 'Harvest Moon',   flowers: ['marigold', 'marigold', 'snapdragon'], multiplier: 1.6, hint: 'Golden autumn colours under the moon.' },
   { id: 'wedding',    name: 'Wedding Day',    flowers: ['rose', 'peony', 'hydrenga'],      multiplier: 2.0, hint: 'The grandest flowers for the biggest day.' },
-  { id: 'cascade',    name: 'Garden Cascade', flowers: ['jasmine', 'petunia', 'Bougainvillea'],       multiplier: 1.8, hint: 'Everything that hangs and spills over the edge.' },
-  { id: 'trailing',   name: 'Trailing Vines', flowers: ['stringofpearls', 'Philodendron', 'jasmine'], multiplier: 1.6, hint: 'Long green strands with a sweet white finish.' },
+  { id: 'cascade',    name: 'Garden Cascade', flowers: ['jasmine', 'petunia', 'snapdragon'],       multiplier: 1.8, hint: 'Everything that spills over the edge of a pot.' },
+  { id: 'trailing',   name: 'Evening Garden', flowers: ['jasmine', 'petunia', 'peony'],               multiplier: 1.6, hint: 'Soft blooms that smell sweetest at dusk.' },
   { id: 'meadow',     name: 'Wild Meadow',    flowers: ['daisy', 'poppy', 'petunia'],                 multiplier: 1.6, hint: 'A little of the ground, a little of the sky.' },
 ];
 

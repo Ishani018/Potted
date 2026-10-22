@@ -1,6 +1,6 @@
 import {
   CUSTOMERS, CUSTOMERS_PER_DAY, POTTED_FLOWERS, HANGING_PLANTS, TRADE_FLOWERS,
-  SEED_UNLOCK_LEVEL, seedType, seedUnlockLevel, BOUQUET_PAPERS, RIBBON_KEYS, RIBBON_NAMES,
+  BOUQUET_FLOWERS, SEED_UNLOCK_LEVEL, seedType, seedUnlockLevel, BOUQUET_PAPERS, RIBBON_KEYS, RIBBON_NAMES,
 } from '../constants/gameData';
 
 // Daily florist orders. Rolled once per day (see TICK) and stored on the player
@@ -61,10 +61,11 @@ export function rollCustomerOrders(day, level, rand) {
   return keys.slice(0, CUSTOMERS_PER_DAY).map((customer, i) => {
     const c = CUSTOMERS[customer];
     // Only ask for flowers the player can already get (or is one level away).
-    const reachable = c.likes.filter((k) => seedUnlockLevel(k) <= level + 1);
+    const type = rand() < 0.6 ? 'flowers' : 'bouquet';
+    // (a bouquet only asks for one of the flowers that go into bouquets)
+    const reachable = c.likes.filter((k) => seedUnlockLevel(k) <= level + 1 && (type === 'flowers' || BOUQUET_FLOWERS.includes(k)));
     const flowerKey = pick(reachable.length ? reachable : ['daisy']);
     const base = TRADE_FLOWERS[flowerKey]?.base ?? 10;
-    const type = rand() < 0.6 ? 'flowers' : 'bouquet';
     // Hanging plants only give 1 flower per harvest, so ask for fewer.
     const maxQty = seedType(flowerKey) === 'hanging' ? 2 : 3;
     const qty = type === 'flowers' ? 1 + Math.floor(rand() * maxQty) : 1;
@@ -110,7 +111,7 @@ export function hasStaleOrders(customers) {
 
 // Does a tied bouquet (array of flower keys) satisfy this order?
 export function bouquetFillsOrder(order, flowers) {
-  return order.type === 'bouquet' && !order.done && flowers.includes(order.flowerKey);
+  return order.type === 'bouquet' && !order.done && (flowers.includes(order.flowerKey) || !BOUQUET_FLOWERS.includes(order.flowerKey));   // an old order for a flower that no longer goes in bouquets takes any bouquet
 }
 
 export { flowerName };

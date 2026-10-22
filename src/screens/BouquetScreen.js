@@ -3,7 +3,7 @@ import { View, Text, Image, TouchableOpacity, Animated, Easing, PanResponder, Pl
 import { useGame } from '../context/GameContext';
 import { BOUQUET_BG, TRADE_IMAGES, UI_IMAGES, MAKE_IMAGES, BOW_IMAGES, ORDER_ART, BOOK_STAMP, CUSTOMER_IMAGES, CUSTOMER_POSES } from '../engine/assets';
 import {
-  TRADE_FLOWERS, BOUQUET_SIZE, BOUQUET_RECIPES, BOUQUET_PAPERS, bouquetPaper, evaluateBouquet, playerLevel, CUSTOMERS,
+  TRADE_FLOWERS, BOUQUET_FLOWERS, BOUQUET_SIZE, BOUQUET_RECIPES, BOUQUET_PAPERS, bouquetPaper, evaluateBouquet, playerLevel, CUSTOMERS,
   RIBBON_NAMES, orderGrade,
 } from '../constants/gameData';
 import { globalPetEffects } from '../engine/petEffects';
@@ -104,10 +104,10 @@ export default function BouquetScreen({ navigation }) {
   const fs = (n, min = 6) => Math.max(min, Math.round(fx(n)));
 
   const left = (key) => (harvested[key] ?? 0) - picks.filter((k) => k === key).length;
-  const owned = Object.keys(harvested).filter((k) => harvested[k] > 0 && TRADE_FLOWERS[k]);
-  const pages = Math.max(1, Math.ceil(owned.length / BINS.length));
-  const page = Math.min(binPage, pages - 1);
-  const shown = owned.slice(page * BINS.length, (page + 1) * BINS.length);
+  const owned = BOUQUET_FLOWERS.filter((k) => (harvested[k] ?? 0) > 0 && TRADE_FLOWERS[k]);
+  const pages = 1;
+  const page = 0;
+  const shown = BOUQUET_FLOWERS.filter((k) => TRADE_FLOWERS[k]);   // one fixed bucket per flower, empty until you have some
   const full = picks.length === BOUQUET_SIZE;
   const petMult = globalPetEffects(state.player).bouquetMult;
   const result = full ? evaluateBouquet(picks, petMult, paper) : null;
