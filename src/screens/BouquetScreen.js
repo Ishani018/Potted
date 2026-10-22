@@ -96,6 +96,7 @@ export default function BouquetScreen({ navigation, route }) {
   const [chosenPaper, setPaper] = useState('plain');
   const [folded, setFolded] = useState({ left: false, right: false });
   const [tied, setTied] = useState(false);
+  const [made, setMade] = useState(false);              // the paper, flowers and ribbon have been turned into the bouquet
   const firstFold = useRef(null);               // which flap went over first (it ends up underneath)
   const [celebrate, setCelebrate] = useState(0);   // the perfect-order burst
   const [neat, setNeat] = useState(true);           // stays true while every swipe is steady
@@ -139,11 +140,12 @@ export default function BouquetScreen({ navigation, route }) {
   const payout = result ? result.net + neatBonus + (order ? Math.round(order.tip * grade.mult) : 0) : 0;
 
   // ── step helpers ──
-  const resetAll = () => { firstFold.current = null; setStep(0); setPicks([]); setFolded({ left: false, right: false }); setTied(false); setNeat(true); setRibbonKey('ribbonRed'); setBow(null); };
+  const resetAll = () => { firstFold.current = null; setStep(0); setPicks([]); setFolded({ left: false, right: false }); setTied(false); setMade(false); setNeat(true); setRibbonKey('ribbonRed'); setBow(null); };
   const choosePaper = (id) => { setPaper(id); setStep(1); };
   const addFlower = (key) => { if (!full && left(key) > 0 && needs(key) > 0 && step === 1) setPicks((p) => [...p, key]); };
   const undo = () => setPicks((p) => p.slice(0, -1));
-  const goFold = () => { if (full) setStep(2); };
+  const goFold = () => { if (full) setStep(3); };      // no folding any more: flowers, then a ribbon, then one tap makes the bouquet
+  const makeBouquet = () => { if (!tied || made) return; setMade(true); setTimeout(() => setStep(4), 450); };
   // close the box and take it back to the counter
   const closeBox = () => {
     if (!full || boxLid !== 'open') return;
@@ -162,7 +164,7 @@ export default function BouquetScreen({ navigation, route }) {
     setFolded(next);
     if (next.left && next.right) setTimeout(() => setStep(3), 350);
   };
-  const onTied = (wasNeat, key) => { if (!wasNeat) setNeat(false); setRibbonKey(key); setTied(true); setTimeout(() => setStep(4), 900); };
+  const onTied = (wasNeat, key) => { if (!wasNeat) setNeat(false); setRibbonKey(key); setTied(true); };
   const onBow = (pick) => setBow(pick);
   const giveOver = () => {
     if (!result) return;
@@ -189,9 +191,9 @@ export default function BouquetScreen({ navigation, route }) {
   const ww = fx(WRAP_W), wh = ww * WRAP_ASPECT, wx = (pw - ww) / 2, wy = (ph - wh) / 2;
   const flowerWord = packOrder ? flowerName(packOrder.flowerKey) : '';
   const prompt = packOrder ? (full ? (boxLid === 'open' ? 'Close the box and take it to the counter.' : '') : `Put ${packOrder.qty - picks.length} ${(packOrder.qty - picks.length) === 1 ? flowerWord : (/[^aeiou]y$/i.test(flowerWord) ? flowerWord.slice(0, -1) + 'ies' : flowerWord + 's')} in the box.`) : step === 0 ? 'Drag a sheet off the stack onto the mat.'
-    : step === 1 ? (full ? 'Lovely! Now fold it.' : (wantCombo ? `Add ${comboText({ combo: remainingCombo })} onto the paper.` : `Drag ${BOUQUET_SIZE - picks.length} more flower${BOUQUET_SIZE - picks.length === 1 ? '' : 's'} onto the paper.`))
+    : step === 1 ? (full ? 'Lovely! Now choose a ribbon.' : (wantCombo ? `Add ${comboText({ combo: remainingCombo })} onto the paper.` : `Drag ${BOUQUET_SIZE - picks.length} more flower${BOUQUET_SIZE - picks.length === 1 ? '' : 's'} onto the paper.`))
     : step === 2 ? 'Swipe each side over to wrap the stems.'
-    : step === 3 ? 'Pull a ribbon from a spool onto the paper.'
+    : step === 3 ? (tied ? 'Ribbon cut! Now tap Make bouquet.' : 'Pull a ribbon from a spool onto the paper.')
     : step === 4 ? (bow == null ? 'Drag a bow from the box onto the ribbon.' : 'Pretty! Drag another to swap, or tap Finish.')
     : (result ? `${isNewRecipe ? 'Something special...' : result.name}. Drag it onto the tray!` : '');
 
@@ -225,7 +227,7 @@ export default function BouquetScreen({ navigation, route }) {
               tray={{ x: fx(TRAY.cx), y: fy(TRAY.cy), w: fx(TRAY.w), h: fy(TRAY.h) }} onDrop={giveOver}
             >
               {/* the flat sheet with its flowers and flaps; it fades out once both flaps are over */}
-              <FadeOut hide={step >= 3}>
+              <FadeOut hide={made}>
                 <View style={{ width: pw, height: ph }} pointerEvents="none">
                   <SheetLayers paper={paper} w={pw} h={ph} shadow />
                 </View>
@@ -237,7 +239,10 @@ export default function BouquetScreen({ navigation, route }) {
                       style={{ position: 'absolute', left: pw * pos.x - sz / 2, top: ph * pos.y - sz / 2, width: sz, height: sz, transform: [{ rotate: pos.r }], zIndex: 3 }} resizeMode="contain" />
                   );
                 })}
-                {step >= 2 && (
+                {tied && !made && (
+                  <Image source={MAKE_IMAGES[ribbonKey]} pointerEvents="none" resizeMode="stretch" style={{ position: 'absolute', left: pw * 0.04, top: ph * 0.62, width: pw * 0.92, height: pw * 0.92 / RIBBON_ASPECT * 1.5, transform: [{ rotate: '-3deg' }], zIndex: 4, ...SOFT }} />
+                )}
+                {false && (
                   <>
                     <Flap side="left" paper={paper} pw={pw} ph={ph}
                       z={firstFold.current === 'left' || !firstFold.current ? 6 : 7}
@@ -250,7 +255,7 @@ export default function BouquetScreen({ navigation, route }) {
               </FadeOut>
 
               {/* once folded it is the wrapped bouquet: the wrapper, the flowers in its opening, the ribbon and bow */}
-              {step >= 3 && (
+              {made && (
                 <Wrapped
                   picks={picks} art={bouquetPic(picks, paper)} reveal={true} left={wx} top={wy} w={ww} h={wh} fx={fx}
                   ribbon={tied ? MAKE_IMAGES[ribbonKey] : null}
@@ -264,7 +269,7 @@ export default function BouquetScreen({ navigation, route }) {
           {step === 3 && !tied && (
             <SpoolPull
               spools={SPOOLS.map((sp) => ({ ...sp, x: fx(sp.x), y: fy(sp.y), r: fx(30) }))}
-              target={{ left: pLeft + wx, top: pTop + wy, w: ww, h: wh, waist: pTop + wy + WAIST * wh }}
+              target={{ left: pLeft, top: pTop, w: pw, h: ph, waist: pTop + ph * 0.66 }}
               onTie={(key, wasNeat) => onTied(wasNeat, key)} fy={fy}
             />
           )}
@@ -343,9 +348,12 @@ export default function BouquetScreen({ navigation, route }) {
             )}
             {!packOrder && step === 1 && (
               <>
-                <PixelButton onPress={goFold} disabled={!full} size={fs(9, 7)} label="FOLD IT" style={{ alignSelf: 'stretch' }} />
+                <PixelButton onPress={goFold} disabled={!full} size={fs(9, 7)} label="ADD RIBBON" style={{ alignSelf: 'stretch' }} />
                 <PixelButton onPress={undo} disabled={picks.length === 0} tone="wood" size={fs(7, 6)} scale={0.7} label="UNDO" style={{ alignSelf: 'stretch' }} />
               </>
+            )}
+            {!packOrder && step === 3 && tied && !made && (
+              <PixelButton onPress={makeBouquet} size={fs(8, 6)} label="MAKE BOUQUET" style={{ alignSelf: 'stretch' }} />
             )}
             {step === 4 && (
               <PixelButton onPress={() => setStep(5)} disabled={bow == null} size={fs(9, 7)} label="FINISH" style={{ alignSelf: 'stretch' }} />
