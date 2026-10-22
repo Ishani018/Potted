@@ -237,7 +237,7 @@ export default function CounterScreen({ navigation, route }) {
               ],
             }}
           >
-            <Image source={(CUSTOMER_POSES[order.customer] || {})[phase === 'in' ? 'wave' : phase === 'ask' ? 'think' : (upset ? 'angry' : 'hold')] || CUSTOMER_IMAGES[order.customer]} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+            <Image source={(CUSTOMER_POSES[order.customer] || {})[phase === 'in' ? 'wave' : phase === 'ask' ? 'think' : (upset ? 'angry' : (order.type === 'flowers' ? 'box' : 'hold'))] || CUSTOMER_IMAGES[order.customer]} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
           </Animated.View>
         </View>
       )}
