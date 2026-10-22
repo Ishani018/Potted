@@ -690,10 +690,11 @@ export const RIBBON_KEYS = Object.keys(RIBBON_NAMES);
 // ribbon. Both right = a perfect order (tip x1.5), one right = the full tip, none right
 // = a small tip (x0.4). Older saved orders with no paper/ribbon count as matching.
 export function orderGrade(order, paper, ribbon) {
-  const paperOk = !order?.paper || order.paper === paper;
+  // (an order for a paper that no longer exists, e.g. the old Fancy, counts as matching)
+  const paperOk = !order?.paper || !BOUQUET_PAPERS[order.paper] || order.paper === paper;
   const ribbonOk = !order?.ribbon || order.ribbon === ribbon;
   const hits = (paperOk ? 1 : 0) + (ribbonOk ? 1 : 0);
-  const asked = (order?.paper ? 1 : 0) + (order?.ribbon ? 1 : 0);
+  const asked = (order?.paper && BOUQUET_PAPERS[order.paper] ? 1 : 0) + (order?.ribbon ? 1 : 0);
   const perfect = asked > 0 && hits === asked;
   const mult = asked === 0 ? 1 : perfect ? 1.5 : hits > 0 ? 1 : 0.4;
   return { paperOk, ribbonOk, perfect, mult, label: asked === 0 ? '' : perfect ? 'Perfect order!' : hits > 0 ? 'Close enough' : 'Not what I asked for...' };
@@ -723,7 +724,6 @@ export const BOUQUET_RECIPES = [
 export const BOUQUET_PAPERS = {
   plain:   { id: 'plain',   name: 'Kraft',   bonus: 1.0, cost: 0,  level: 1 },
   layered: { id: 'layered', name: 'Layered', bonus: 1.1, cost: 6,  level: 3 },
-  fancy:   { id: 'fancy',   name: 'Fancy',   bonus: 1.2, cost: 14, level: 5 },
 };
 
 // Unknown ids fall back to plain kraft (free).

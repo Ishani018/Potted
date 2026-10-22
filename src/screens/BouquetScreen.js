@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, Animated, PanResponder, Platform, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Animated, Easing, PanResponder, Platform, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { BOUQUET_BG, TRADE_IMAGES, UI_IMAGES, MAKE_IMAGES, BOW_IMAGES, ORDER_ART, CUSTOMER_IMAGES, CUSTOMER_POSES } from '../engine/assets';
 import {
@@ -86,6 +86,7 @@ export default function BouquetScreen({ navigation }) {
   const [folded, setFolded] = useState({ left: false, right: false });
   const [tied, setTied] = useState(false);
   const firstFold = useRef(null);               // which flap went over first (it ends up underneath)
+  const [celebrate, setCelebrate] = useState(false);   // the perfect-order burst
   const [neat, setNeat] = useState(true);           // stays true while every swipe is steady
   const [binPage, setBinPage] = useState(0);
   const [ribbonKey, setRibbonKey] = useState('ribbonRed');
@@ -144,8 +145,10 @@ export default function BouquetScreen({ navigation }) {
       subtitle: isNewRecipe ? `Saved to your garden journal. ${earned}` : earned,
     });
     const toCounter = !!order;
+    const perfect = !!(order && grade && grade.perfect);
     resetAll();
-    if (toCounter) setTimeout(() => navigation.navigate('Counter'), 900);
+    if (perfect) { setCelebrate(true); setTimeout(() => setCelebrate(false), 1900); }
+    if (toCounter) setTimeout(() => navigation.navigate('Counter'), perfect ? 1900 : 900);
   };
 
   const foundCount = BOUQUET_RECIPES.filter((r) => found[r.id]).length;
@@ -260,7 +263,7 @@ export default function BouquetScreen({ navigation }) {
               </View>
               <Text style={styles.ticketName} numberOfLines={1}>{CUSTOMERS[want.customer].name.split(' ').pop()}</Text>
               <View style={styles.ticketTiles}>
-                <TicketTile fx={fx} source={TRADE_IMAGES[TRADE_FLOWERS[want.flowerKey]?.img]} />
+                <TicketTile fx={fx} source={TRADE_IMAGES[TRADE_FLOWERS[want.flowerKey]?.img]} ok={step >= 1 && picks.includes(want.flowerKey)} />
                 {want.paper && <TicketTile fx={fx} source={{ plain: MAKE_IMAGES.paper, layered: MAKE_IMAGES.wrapLayered, fancy: MAKE_IMAGES.paperFancy }[want.paper] || MAKE_IMAGES.paper} ok={step >= 1 && paper === want.paper} />}
                 {want.ribbon && <TicketTile fx={fx} source={(BOW_IMAGES[BOW_COLOR[want.ribbon]] || [])[0] || MAKE_IMAGES[want.ribbon]} ok={tied && ribbonKey === want.ribbon} />}
               </View>
@@ -317,8 +320,45 @@ export default function BouquetScreen({ navigation }) {
       </TouchableOpacity>
 
       {/* no settings button or level badge here: they would sit on top of the flower bins */}
+      {celebrate && <Celebration fx={fx} fy={fy} />}
       <ScreenHud sw={sw} sh={sh} onMap={() => navigation.navigate('Map')} />
       {notice}
+    </View>
+  );
+}
+
+// A shower of blossoms and leaves with a banner when an order is perfect.
+function Celebration({ fx, fy }) {
+  const N = 22;
+  const t = useRef(new Animated.Value(0)).current;
+  const pop = useRef(new Animated.Value(0)).current;
+  React.useEffect(() => {
+    Animated.timing(t, { toValue: 1, duration: 1800, easing: Easing.out(Easing.quad), useNativeDriver: false }).start();
+    Animated.spring(pop, { toValue: 1, friction: 5, useNativeDriver: false }).start();
+  }, []);
+  const bits = useRef(Array.from({ length: N }, (_, i) => ({
+    x: 120 + Math.random() * 1130, delay: Math.random() * 0.35, spin: (Math.random() - 0.5) * 360,
+    art: [ORDER_ART.daisy, ORDER_ART.blossom, ORDER_ART.leaves][i % 3], size: 26 + Math.random() * 26,
+  }))).current;
+  return (
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { zIndex: 60 }]}>
+      {bits.map((b, i) => (
+        <Animated.Image key={i} source={b.art} resizeMode="contain" style={{
+          position: 'absolute', left: fx(b.x), width: fx(b.size), height: fx(b.size),
+          opacity: t.interpolate({ inputRange: [0, 0.1, 0.85, 1], outputRange: [0, 1, 1, 0] }),
+          transform: [
+            { translateY: t.interpolate({ inputRange: [b.delay, 1], outputRange: [fy(-60), fy(820)], extrapolate: 'clamp' }) },
+            { rotate: t.interpolate({ inputRange: [0, 1], outputRange: ['0deg', `${b.spin}deg`] }) },
+          ],
+        }} />
+      ))}
+      <Animated.View style={{
+        position: 'absolute', left: fx(380), top: fy(250), width: fx(620), height: fx(620) * 113 / 489 + fx(10), alignItems: 'center', justifyContent: 'center',
+        opacity: pop, transform: [{ scale: pop.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) }],
+      }}>
+        <Image source={ORDER_ART.banner} style={{ position: 'absolute', width: '100%', height: '100%' }} resizeMode="stretch" />
+        <Text style={styles.perfect}>Perfect order!</Text>
+      </Animated.View>
     </View>
   );
 }
@@ -709,6 +749,7 @@ const styles = StyleSheet.create({
   badge: { position: 'absolute', right: -4, bottom: -4, backgroundColor: '#5a3410', borderWidth: 2, borderColor: '#2a1608', borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1 },
   price: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: 'rgba(58,32,12,0.88)', borderWidth: 3, borderColor: '#2a1608', borderRadius: 4 },
   priceTxt: { fontFamily: HEAD, fontSize: 24, color: '#ffd060' },
+  perfect: { fontFamily: HEAD, fontSize: 26, color: '#4a2a10' },
   neat: { fontFamily: HEAD, fontSize: 16, color: '#cfe8a0', textShadowColor: '#2a1608', textShadowRadius: 3 },
   small: { fontFamily: BODY, fontSize: 13, color: '#fff3d6', textShadowColor: '#2a1608', textShadowRadius: 3 },
   recipeBtn: { position: 'absolute', zIndex: 30, backgroundColor: '#5a3410', borderWidth: 3, borderColor: '#2a1608', borderRadius: 4 },
