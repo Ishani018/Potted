@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Image, TouchableOpacity, Animated, Easing, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { TRADE_IMAGES, SEED_IMAGES, UI_IMAGES } from '../engine/assets';
 import { CUSTOMERS, TRADE_FLOWERS, CUSTOMERS_PER_DAY } from '../constants/gameData';
@@ -23,6 +23,12 @@ export default function CustomerCorner({ sw, sh }) {
   const [farewell, setFarewell] = useState(null);   // { customer, line }
   const prevOrder = useRef(null);
   const farewellTimer = useRef(null);
+  // A new customer hops in from the left edge to the spot (feet on the floor), then the
+  // "!" appears and they can be tapped.
+  const walk = useRef(new Animated.Value(1)).current;     // 0 = off screen, 1 = at the spot
+  const hopY = useRef(new Animated.Value(0)).current;
+  const [arrived, setArrived] = useState(true);
+  const lastArrival = useRef(null);
 
   const order = openOrders(state.player)[0];
   const list = state.player.customers?.list ?? [];
@@ -39,6 +45,25 @@ export default function CustomerCorner({ sw, sh }) {
   }, [order?.id]);
 
   useEffect(() => () => farewellTimer.current && clearTimeout(farewellTimer.current), []);
+
+  useEffect(() => {
+    if (!order?.id || lastArrival.current === order.id) return undefined;
+    lastArrival.current = order.id;
+    setArrived(false);
+    walk.setValue(0); hopY.setValue(0);
+    const HOPS = 5, HOP_MS = 300;
+    const hops = [];
+    for (let i = 0; i < HOPS; i++) {
+      hops.push(Animated.timing(hopY, { toValue: -1, duration: HOP_MS / 2, easing: Easing.out(Easing.quad), useNativeDriver: false }));
+      hops.push(Animated.timing(hopY, { toValue: 0, duration: HOP_MS / 2, easing: Easing.in(Easing.quad), useNativeDriver: false }));
+    }
+    const anim = Animated.parallel([
+      Animated.timing(walk, { toValue: 1, duration: HOPS * HOP_MS, easing: Easing.linear, useNativeDriver: false }),
+      Animated.sequence(hops),
+    ]);
+    anim.start(({ finished }) => { if (finished) setArrived(true); });
+    return () => anim.stop();
+  }, [order?.id]);
 
   if (!sw || !sh) return null;
   if (!order && !farewell) return null;
@@ -78,10 +103,20 @@ export default function CustomerCorner({ sw, sh }) {
 
   return (
     <>
-      <TouchableOpacity activeOpacity={0.85} onPress={() => setOpen(true)} style={{ position: 'absolute', left, top, width: w, height: h, zIndex: 20 }}>
-        <CustomerSprite customerKey={order.customer} height={h} />
-        <View style={styles.bubble}><PixelText size={Math.max(8, Math.round(h * 0.07))} color={COLORS.gold}>!</PixelText></View>
-      </TouchableOpacity>
+      <Animated.View
+        style={{
+          position: 'absolute', left, top, width: w, height: h, zIndex: 20,
+          transform: [
+            { translateX: walk.interpolate({ inputRange: [0, 1], outputRange: [-(left + w), 0] }) },
+            { translateY: hopY.interpolate({ inputRange: [-1, 0], outputRange: [-h * 0.06, 0] }) },
+          ],
+        }}
+      >
+        <TouchableOpacity activeOpacity={0.85} disabled={!arrived} onPress={() => setOpen(true)} style={{ width: w, height: h }}>
+          <CustomerSprite customerKey={order.customer} height={h} bob={arrived} />
+          {arrived && <View style={styles.bubble}><PixelText size={Math.max(8, Math.round(h * 0.07))} color={COLORS.gold}>!</PixelText></View>}
+        </TouchableOpacity>
+      </Animated.View>
 
       {open && (
         <TouchableOpacity activeOpacity={1} style={styles.overlay} onPress={() => setOpen(false)}>
