@@ -3,7 +3,7 @@ import {
   View, Image, TouchableOpacity, Pressable, StyleSheet, TextInput, Animated, Easing,
 } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { PETSHOP_BG, PET_IMAGES, UI_IMAGES, BACKGROUNDS } from '../engine/assets';
+import { PETSHOP_BG, PETSHOP_OPEN, PET_IMAGES, UI_IMAGES, BACKGROUNDS } from '../engine/assets';
 import { PETS, ROOM_NAMES, playerLevel } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
@@ -25,8 +25,8 @@ const ART_W = 1677, ART_H = 938;
 // The player level at which each arch opens (until then it is faded and cannot be entered).
 const ARCH_LEVEL = { food: 2, foster: 3 };
 const ARCHES = [
-  { id: 'foster', go: 'Foster', title: 'Foster', sub: 'home', level: ARCH_LEVEL.foster, x0: 1300, y0: 78, x1: 1424, y1: 548 },
-  { id: 'food', go: 'PetFood', title: 'Food', sub: 'aisle', level: ARCH_LEVEL.food, x0: 1500, y0: 62, x1: 1677, y1: 548 },
+  { id: 'foster', go: 'Foster', title: 'Foster', sub: 'home', level: ARCH_LEVEL.foster, x0: 1262, y0: 52, x1: 1446, y1: 592 },
+  { id: 'food', go: 'PetFood', title: 'Food', sub: 'aisle', level: ARCH_LEVEL.food, x0: 1462, y0: 8, x1: 1677, y1: 600 },
 ];
 
 export const SHOP_PETS = [
@@ -125,7 +125,12 @@ export default function PetShopScreen({ navigation }) {
             onHoverOut={() => setHovered((h) => (h === a.id ? null : h))}
             onPress={() => { if (!locked) navigation.navigate(a.go); else { setHovered(a.id); setTimeout(() => setHovered((h) => (h === a.id ? null : h)), 1800); } }}
           >
-            {locked && <View pointerEvents="none" style={styles.archLocked} />}
+            {/* once unlocked the door stands open: that piece of the open picture is drawn over the shut one */}
+            {!locked && (
+              <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, overflow: 'hidden' }}>
+                <Image source={PETSHOP_OPEN} resizeMode="stretch" style={{ position: 'absolute', width: sw, height: sh, left: -(a.x0 / ART_W) * sw, top: -(a.y0 / ART_H) * sh }} />
+              </View>
+            )}
             {!locked && <View pointerEvents="none" style={[styles.archGlow, { borderTopLeftRadius: 999, borderTopRightRadius: 999, opacity: on ? 1 : 0 }]} />}
             {locked && on && (
               <View pointerEvents="none" style={styles.archHint}><PixelText size={7} color="#fff6df">LEVEL {a.level}</PixelText></View>
