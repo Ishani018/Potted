@@ -153,6 +153,7 @@ export const PET_IMAGES = {
 // Biscuit naps on the foster beds.
 export const FOSTER_REST_IMAGES = { biscuit: require('../../assets/foster/biscuitsleep.png') };
 // Little shop and adventure stickers (cardboard box, pet backpack, bell, ribbon spool, lantern, plant).
+export const ORDER_SLIP = require('../../assets/shop/order_slip.png');
 export const SHOP_IMAGES = {
   box: require('../../assets/shop/box.png'), backpack: require('../../assets/shop/backpack.png'),
   bell: require('../../assets/shop/bell.png'), spool: require('../../assets/shop/spool.png'),

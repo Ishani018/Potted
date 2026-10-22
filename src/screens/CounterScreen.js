@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Image, Animated, Easing, Platform, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { COUNTER_BG, CUSTOMER_IMAGES, TRADE_IMAGES, SEED_IMAGES, UI_IMAGES, BOOK_STAMP, MAKE_IMAGES } from '../engine/assets';
+import { COUNTER_BG, CUSTOMER_IMAGES, TRADE_IMAGES, SEED_IMAGES, UI_IMAGES, BOOK_STAMP, MAKE_IMAGES, ORDER_SLIP } from '../engine/assets';
 import { CUSTOMERS, TRADE_FLOWERS, CUSTOMERS_PER_DAY, BOUQUET_PAPERS, RIBBON_NAMES } from '../constants/gameData';
 import { openOrders, customerLine, flowerName } from '../engine/customers';
 import ScreenHud from '../components/ScreenHud';
@@ -134,8 +134,9 @@ export default function CounterScreen({ navigation }) {
       )}
 
       {sw > 0 && cur && phase !== 'in' && phase !== 'out' && (
-        <View style={[styles.bubbleWrap, { left: fx(1010), top: fy(110), width: fx(480) }]}>
-          <View style={styles.bubble}>
+        <View style={[styles.bubbleWrap, { left: fx(1010), top: fy(110), width: fx(600) }]}>
+          <View style={[styles.bubble, { paddingHorizontal: fx(74), paddingTop: fy(76), paddingBottom: fy(62) }]}>
+            <Image source={ORDER_SLIP} style={styles.slip} resizeMode="stretch" />
             {phase === 'happy' ? (
               <View style={styles.doneRow}>
                 <Image source={BOOK_STAMP} style={styles.stamp} resizeMode="contain" />
@@ -181,7 +182,6 @@ export default function CounterScreen({ navigation }) {
               </>
             )}
           </View>
-          <View style={styles.tail} />
         </View>
       )}
 
@@ -211,7 +211,8 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#2a1608' },
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
   bubbleWrap: { position: 'absolute', zIndex: 20 },
-  bubble: { backgroundColor: '#fbf0cf', borderRadius: 18, borderWidth: 3, borderColor: '#7a3e1a', paddingHorizontal: 14, paddingVertical: 10, alignItems: 'stretch' },
+  bubble: { alignItems: 'stretch' },
+  slip: { position: 'absolute', left: 0, top: 0, width: '100%', height: '100%' },
   tail: { position: 'absolute', left: -14, top: 120, width: 0, height: 0, borderTopWidth: 12, borderBottomWidth: 12, borderRightWidth: 18, borderTopColor: 'transparent', borderBottomColor: 'transparent', borderRightColor: '#7a3e1a' },
   who: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
   name: { fontFamily: HEAD, fontSize: 20, color: '#4a2a10' },

@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, Animated, PanResponder, Platform, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { BOUQUET_BG, TRADE_IMAGES, UI_IMAGES, MAKE_IMAGES, BOW_IMAGES } from '../engine/assets';
+import { BOUQUET_BG, TRADE_IMAGES, UI_IMAGES, MAKE_IMAGES, BOW_IMAGES, ORDER_SLIP } from '../engine/assets';
 import {
   TRADE_FLOWERS, BOUQUET_SIZE, BOUQUET_RECIPES, BOUQUET_PAPERS, bouquetPaper, evaluateBouquet, playerLevel, CUSTOMERS,
   RIBBON_NAMES, orderGrade,
@@ -254,7 +254,8 @@ export default function BouquetScreen({ navigation }) {
 
           {/* the order slip and the prompt along the bottom of the table */}
           {want && (
-            <View style={[styles.ticket, { left: fx(425), top: fy(692), width: fx(300) }]} pointerEvents="none">
+            <View style={[styles.ticket, { left: fx(405), top: fy(676), width: fx(340), paddingHorizontal: fx(34), paddingVertical: fy(22) }]} pointerEvents="none">
+              <Image source={ORDER_SLIP} style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%' }} resizeMode="stretch" />
               <Portrait customerKey={want.customer} size={fx(40)} bare />
               <View style={{ flex: 1 }}>
                 <Text style={styles.ticketTxt} numberOfLines={1}><Text style={styles.ticketName}>{CUSTOMERS[want.customer].name.split(' ').pop()}</Text>: {flowerName(want.flowerKey)} bouquet</Text>
@@ -675,7 +676,7 @@ const styles = StyleSheet.create({
   dotNow: { backgroundColor: '#fbf0cf', borderColor: '#c9780a' },
   stepTxt: { fontFamily: HEAD, fontSize: 14, color: '#d9c39a', textShadowColor: '#2a1608', textShadowRadius: 3 },
   stepTxtNow: { color: '#fff3d6' },
-  ticket: { position: 'absolute', flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fbf0cf', borderRadius: 12, borderWidth: 3, borderColor: '#7a3e1a', paddingHorizontal: 10, paddingVertical: 6, zIndex: 10 },
+  ticket: { position: 'absolute', flexDirection: 'row', alignItems: 'center', gap: 8, zIndex: 10 },
   ticketName: { fontFamily: HEAD, fontSize: 15, color: '#4a2a10' },
   ticketRow: { flexDirection: 'row', alignItems: 'center', marginTop: 1 },
   ticketSub: { fontFamily: BODY, fontSize: 12.5, color: '#8a6a40' },
