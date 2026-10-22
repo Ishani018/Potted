@@ -158,6 +158,16 @@ export const SHOP_IMAGES = {
   bell: require('../../assets/shop/bell.png'), spool: require('../../assets/shop/spool.png'),
   lantern: require('../../assets/shop/lantern.png'), plant: require('../../assets/shop/plant.png'),
 };
+// Bows, five or so shapes per ribbon colour (the box under the scissors holds them).
+export const BOW_IMAGES = {
+  red: [require('../../assets/bows/red_0.png'), require('../../assets/bows/red_1.png'), require('../../assets/bows/red_2.png'), require('../../assets/bows/red_3.png'), require('../../assets/bows/red_4.png')],
+  pink: [require('../../assets/bows/pink_0.png'), require('../../assets/bows/pink_1.png'), require('../../assets/bows/pink_2.png'), require('../../assets/bows/pink_3.png'), require('../../assets/bows/pink_4.png')],
+  cream: [require('../../assets/bows/cream_0.png'), require('../../assets/bows/cream_1.png'), require('../../assets/bows/cream_2.png'), require('../../assets/bows/cream_3.png'), require('../../assets/bows/cream_4.png')],
+  pinkfloral: [require('../../assets/bows/pinkfloral_0.png'), require('../../assets/bows/pinkfloral_1.png'), require('../../assets/bows/pinkfloral_2.png'), require('../../assets/bows/pinkfloral_3.png'), require('../../assets/bows/pinkfloral_4.png')],
+  green: [require('../../assets/bows/green_0.png'), require('../../assets/bows/green_1.png'), require('../../assets/bows/green_2.png'), require('../../assets/bows/green_3.png')],
+  creamfloral: [require('../../assets/bows/creamfloral_0.png'), require('../../assets/bows/creamfloral_1.png')],
+};
+
 // Bouquet-making: the flat kraft sheet (700×617) and two wavy ribbons (red, pink).
 export const MAKE_IMAGES = {
   paper: require('../../assets/shop/paper_kraft.png'),

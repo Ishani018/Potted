@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, Animated, PanResponder, Platform, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { BOUQUET_BG, TRADE_IMAGES, UI_IMAGES, MAKE_IMAGES } from '../engine/assets';
+import { BOUQUET_BG, TRADE_IMAGES, UI_IMAGES, MAKE_IMAGES, BOW_IMAGES } from '../engine/assets';
 import {
   TRADE_FLOWERS, BOUQUET_SIZE, BOUQUET_RECIPES, BOUQUET_PAPERS, bouquetPaper, evaluateBouquet, playerLevel, CUSTOMERS,
 } from '../constants/gameData';
@@ -57,6 +57,8 @@ const CY = (MAT.y0 + MAT.y1) / 2 + 6;
 const PAPER_BOX = { w: 430, h: Math.round(430 / PAPER_ASPECT) };   // the sheet once it is on the mat
 PAPER_BOX.top = Math.round(CY - PAPER_BOX.h / 2);
 const FLAP_TOP = PAPER_BOX.top + Math.round(0.42 * PAPER_BOX.h);   // where the ribbon waist sits; the blooms stay above
+// ribbon -> the colour of bows that go with it
+const BOW_COLOR = { ribbonRed: 'red', ribbonPink: 'pink', ribbonCream: 'cream', ribbonPinkFloral: 'pinkfloral', ribbonGreen: 'green', ribbonCreamFloral: 'creamfloral' };
 const FOLD_DEG = 20;                                                // tilt of the diagonal fold lines
 const TRAY = { cx: 1234, cy: 628, w: 250, h: 150 };  // the hand-over tray, bottom right
 // The eight bins down the left (basket, bucket, basket, bucket ...), centres in base space
@@ -74,7 +76,8 @@ export default function BouquetScreen({ navigation }) {
   const harvested = state.player.harvestedFlowers ?? {};
   const found = state.player.bouquetBook ?? {};
   const [box, setBox] = useState({ w: 0, h: 0 });
-  const [step, setStep] = useState(0);              // 0 paper .. 4 give
+  const [step, setStep] = useState(0);              // 0 paper .. 3 tie, 4 bow, 5 give
+  const [bow, setBow] = useState(null);            // the bow on the ribbon: an index into that colour's bows
   const [picks, setPicks] = useState([]);
   const [chosenPaper, setPaper] = useState('plain');
   const [folded, setFolded] = useState({ left: false, right: false });
@@ -113,7 +116,7 @@ export default function BouquetScreen({ navigation }) {
   const payout = result ? result.net + neatBonus + (order ? order.tip : 0) : 0;
 
   // ── step helpers ──
-  const resetAll = () => { firstFold.current = null; setStep(0); setPicks([]); setFolded({ left: false, right: false }); setTied(false); setNeat(true); setRibbonKey('ribbonRed'); };
+  const resetAll = () => { firstFold.current = null; setStep(0); setPicks([]); setFolded({ left: false, right: false }); setTied(false); setNeat(true); setRibbonKey('ribbonRed'); setBow(null); };
   const choosePaper = (id) => { setPaper(id); setStep(1); };
   const addFlower = (key) => { if (!full && left(key) > 0 && step === 1) setPicks((p) => [...p, key]); };
   const undo = () => setPicks((p) => p.slice(0, -1));
@@ -126,6 +129,7 @@ export default function BouquetScreen({ navigation }) {
     if (next.left && next.right) setTimeout(() => setStep(3), 350);
   };
   const onTied = (wasNeat, key) => { if (!wasNeat) setNeat(false); setRibbonKey(key); setTied(true); setTimeout(() => setStep(4), 900); };
+  const onBow = (idx) => setBow(idx);
   const giveOver = () => {
     if (!result) return;
     dispatch({ type: 'SELL_BOUQUET', flowers: picks, paper, customerId: order ? order.id : null, neat });
@@ -146,6 +150,7 @@ export default function BouquetScreen({ navigation }) {
     : step === 1 ? (full ? 'Lovely! Now fold it.' : `Drag ${BOUQUET_SIZE - picks.length} more flower${BOUQUET_SIZE - picks.length === 1 ? '' : 's'} onto the paper.`)
     : step === 2 ? 'Swipe each side over to wrap the stems.'
     : step === 3 ? 'Pull a ribbon from a spool onto the paper.'
+    : step === 4 ? (bow == null ? 'Drag a bow from the box onto the ribbon.' : 'Pretty! Drag another to swap, or tap Finish.')
     : (result ? `${isNewRecipe ? 'Something special...' : result.name}. Drag it onto the tray!` : '');
 
   return (
@@ -164,8 +169,11 @@ export default function BouquetScreen({ navigation }) {
           )}
 
           {/* ── the sheet on the mat: flowers, flaps, ribbon ── */}
-          {step >= 1 && step <= 3 && (
-            <View style={{ position: 'absolute', left: pLeft, top: pTop, width: pw, height: ph }} pointerEvents="box-none">
+          {step >= 1 && step <= 5 && (
+            <HandOver
+              enabled={step === 5} home={{ x: pLeft + pw / 2, y: pTop + ph / 2 }} style={{ position: 'absolute', left: pLeft, top: pTop, width: pw, height: ph }}
+              tray={{ x: fx(TRAY.cx), y: fy(TRAY.cy), w: fx(TRAY.w), h: fy(TRAY.h) }} onDrop={giveOver}
+            >
               <View style={{ width: pw, height: ph }} pointerEvents="none">
                 <SheetLayers paper={paper} w={pw} h={ph} shadow />
               </View>
@@ -188,7 +196,11 @@ export default function BouquetScreen({ navigation }) {
                 </>
               )}
               {tied && <TiedRibbon x={-pw * 0.04} y={fy(FLAP_TOP - PAPER_BOX.top + 70)} w={pw * 1.08} source={MAKE_IMAGES[ribbonKey]} />}
-            </View>
+              {bow != null && (
+                <Image source={BOW_IMAGES[BOW_COLOR[ribbonKey]][bow]} pointerEvents="none"
+                  style={[{ position: 'absolute', left: pw * 0.78 - fx(70), top: fy(FLAP_TOP - PAPER_BOX.top + 70) - fx(52), width: fx(140), height: fx(105), zIndex: 9 }, SOFT]} resizeMode="contain" />
+              )}
+            </HandOver>
           )}
 
           {/* ── 3: pull a ribbon off a spool and let go over the middle of the paper ── */}
@@ -200,11 +212,12 @@ export default function BouquetScreen({ navigation }) {
             />
           )}
 
-          {/* ── 4: the finished bouquet: drag it onto the tray ── */}
+          {/* ── 4: the box under the scissors holds the bows: drag one onto the ribbon ── */}
           {step === 4 && (
-            <FinishedBouquet
-              picks={picks} paper={paper} size={fx(300)} home={{ x: fx(CX), y: fy(CY) }}
-              tray={{ x: fx(TRAY.cx), y: fy(TRAY.cy), w: fx(TRAY.w), h: fy(TRAY.h) }} onDrop={giveOver}
+            <BowBox
+              colorKey={BOW_COLOR[ribbonKey]} onPlace={onBow}
+              tray={{ x: fx(TRAY.cx), y: fy(TRAY.cy), w: fx(TRAY.w), h: fy(TRAY.h) }}
+              target={{ left: pLeft, top: pTop, w: pw, h: ph }}
             />
           )}
 
@@ -247,7 +260,10 @@ export default function BouquetScreen({ navigation }) {
                 <PixelButton onPress={undo} disabled={picks.length === 0} tone="wood" size={fs(7, 6)} label="UNDO" style={{ alignSelf: 'stretch' }} />
               </>
             )}
-            {step === 4 && result && (
+            {step === 4 && (
+              <PixelButton onPress={() => setStep(5)} disabled={bow == null} size={fs(9, 7)} label="FINISH" style={{ alignSelf: 'stretch' }} />
+            )}
+            {step === 5 && result && (
               <>
                 <View style={styles.price}>
                   <Image source={UI_IMAGES.goldcoins} style={{ width: fx(22), height: fx(22) }} resizeMode="contain" />
@@ -258,7 +274,7 @@ export default function BouquetScreen({ navigation }) {
                 <PixelButton onPress={giveOver} size={fs(8, 6)} label={order ? 'GIVE IT' : 'SELL IT'} style={{ alignSelf: 'stretch' }} />
               </>
             )}
-            {step > 0 && step < 4 && (
+            {step > 0 && step < 5 && (
               <PixelButton onPress={resetAll} tone="wood" size={fs(7, 6)} label="START OVER" style={{ alignSelf: 'stretch' }} />
             )}
           </View>
@@ -288,30 +304,74 @@ export default function BouquetScreen({ navigation }) {
   );
 }
 
-// The finished bouquet on the mat. Drag it onto the tray (bottom right) to hand it over.
-function FinishedBouquet({ picks, paper, size, home, tray, onDrop }) {
+// The finished bouquet (the paper with its flowers, ribbon and bow) on the mat. When enabled,
+// drag it onto the tray (bottom right) to hand it over.
+function HandOver({ enabled, home, tray, onDrop, style, children }) {
   const drag = useRef(new Animated.ValueXY()).current;
   const cfg = useRef({});
-  cfg.current = { home, tray, onDrop };
+  cfg.current = { enabled, home, tray, onDrop };
   const pan = useRef(PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: () => true,
+    onStartShouldSetPanResponder: () => cfg.current.enabled,
+    onMoveShouldSetPanResponder: () => cfg.current.enabled,
     onPanResponderMove: (_, g) => drag.setValue({ x: g.dx, y: g.dy }),
     onPanResponderRelease: (_, g) => {
       const { home: h, tray: t } = cfg.current;
       const x = h.x + g.dx, y = h.y + g.dy;
-      const onTray = Math.abs(x - t.x) < t.w / 2 && Math.abs(y - t.y) < t.h / 2;
-      if (onTray) cfg.current.onDrop();
+      if (Math.abs(x - t.x) < t.w / 2 + 40 && Math.abs(y - t.y) < t.h / 2 + 40) cfg.current.onDrop();
       else Animated.spring(drag, { toValue: { x: 0, y: 0 }, friction: 7, useNativeDriver: false }).start();
     },
     onPanResponderTerminate: () => Animated.spring(drag, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start(),
   })).current;
   return (
-    <Animated.View
-      {...pan.panHandlers}
-      style={{ position: 'absolute', left: home.x - size / 2, top: home.y - size / 2, width: size, height: size, zIndex: 20, transform: drag.getTranslateTransform() }}
-    >
-      <BouquetArt flowers={[picks[0], picks[1], picks[2]]} size={size} tier={paper} />
+    <Animated.View {...pan.panHandlers} pointerEvents={enabled ? 'auto' : 'box-none'} style={[style, { zIndex: enabled ? 20 : 4, transform: drag.getTranslateTransform() }]}>
+      {children}
+    </Animated.View>
+  );
+}
+
+// The box under the scissors: three bows in the colour of your ribbon. Drag one onto the
+// bouquet; the slot it left fills with a fresh bow straight away.
+function BowBox({ colorKey, tray, target, onPlace }) {
+  const list = BOW_IMAGES[colorKey];
+  const [slots, setSlots] = useState(() => [0, 1, 2].map((i) => i % list.length));
+  const next = useRef(3 % list.length);
+  const refill = (slot) => setSlots((s) => { const n = [...s]; n[slot] = next.current; next.current = (next.current + 1) % list.length; return n; });
+  const SZ = tray.w * 0.34;
+  return (
+    <>
+      {slots.map((idx, slot) => (
+        <BowChip
+          key={slot + ':' + idx} source={list[idx]} size={SZ}
+          x={tray.x + (slot - 1) * (SZ * 0.96) - SZ / 2} y={tray.y - SZ * 0.38}
+          target={target} onDrop={() => { onPlace(idx); refill(slot); }}
+        />
+      ))}
+    </>
+  );
+}
+
+function BowChip({ source, size, x, y, target, onDrop }) {
+  const drag = useRef(new Animated.ValueXY()).current;
+  const [lifted, setLifted] = useState(false);
+  const cfg = useRef({});
+  cfg.current = { x, y, size, target, onDrop };
+  const pan = useRef(PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderGrant: () => setLifted(true),
+    onPanResponderMove: (_, g) => drag.setValue({ x: g.dx, y: g.dy }),
+    onPanResponderRelease: (_, g) => {
+      setLifted(false);
+      const c = cfg.current, t = c.target;
+      const cx = c.x + c.size / 2 + g.dx, cy = c.y + c.size * 0.4 + g.dy;
+      if (cx > t.left && cx < t.left + t.w && cy > t.top && cy < t.top + t.h) c.onDrop();
+      else Animated.spring(drag, { toValue: { x: 0, y: 0 }, friction: 7, useNativeDriver: false }).start();
+    },
+    onPanResponderTerminate: () => { setLifted(false); Animated.spring(drag, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start(); },
+  })).current;
+  return (
+    <Animated.View {...pan.panHandlers} style={{ position: 'absolute', left: x, top: y, width: size, height: size * 0.8, zIndex: lifted ? 60 : 40, transform: [...drag.getTranslateTransform(), { scale: lifted ? 1.25 : 1 }] }}>
+      <Image source={source} style={[{ width: '100%', height: '100%' }, lifted && SOFT]} resizeMode="contain" pointerEvents="none" />
     </Animated.View>
   );
 }

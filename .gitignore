@@ -28,6 +28,8 @@ assets/
 assets/*
 !assets/petshop/
 !assets/petshop/*.png
+!assets/bows/
+!assets/bows/*.png
 !assets/rare/
 !assets/rare/*.png
 !assets/shop/
