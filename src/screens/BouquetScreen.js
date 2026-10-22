@@ -55,7 +55,8 @@ const CX = (MAT.x0 + MAT.x1) / 2;                    // 742
 const CY = (MAT.y0 + MAT.y1) / 2 + 6;
 const PAPER_BOX = { w: 430, h: Math.round(430 / PAPER_ASPECT) };   // the sheet once it is on the mat
 PAPER_BOX.top = Math.round(CY - PAPER_BOX.h / 2);
-const FLAP_TOP = PAPER_BOX.top + Math.round(0.42 * PAPER_BOX.h);   // the flaps cover the stems; blooms stay clear
+const FLAP_TOP = PAPER_BOX.top + Math.round(0.42 * PAPER_BOX.h);   // where the ribbon waist sits; the blooms stay above
+const FOLD_DEG = 20;                                                // tilt of the diagonal fold lines
 const TRAY = { cx: 1234, cy: 628, w: 250, h: 150 };  // the hand-over tray, bottom right
 // The eight bins down the left (basket, bucket, basket, bucket ...), centres in base space
 const BINS = [
@@ -177,12 +178,10 @@ export default function BouquetScreen({ navigation }) {
               })}
               {step >= 2 && (
                 <>
-                  <Flap side="left" w={pw / 2} h={fy(PAPER_BOX.top + PAPER_BOX.h - FLAP_TOP)} top={fy(FLAP_TOP - PAPER_BOX.top)}
-                    paper={paper} paperTop={fy(PAPER_BOX.top)} flapTop={fy(FLAP_TOP)} pw={pw} ph={ph}
+                  <Flap side="left" paper={paper} pw={pw} ph={ph}
                     z={firstFold.current === 'left' || !firstFold.current ? 6 : 7}
                     active={step === 2 && !folded.left} done={folded.left} reach={fx(250)} onDone={(n) => onFolded('left', n)} />
-                  <Flap side="right" w={pw / 2} h={fy(PAPER_BOX.top + PAPER_BOX.h - FLAP_TOP)} top={fy(FLAP_TOP - PAPER_BOX.top)}
-                    paper={paper} paperTop={fy(PAPER_BOX.top)} flapTop={fy(FLAP_TOP)} pw={pw} ph={ph}
+                  <Flap side="right" paper={paper} pw={pw} ph={ph}
                     z={firstFold.current === 'right' ? 6 : 7}
                     active={step === 2 && !folded.right} done={folded.right} reach={fx(250)} onDone={(n) => onFolded('right', n)} />
                 </>
@@ -350,7 +349,7 @@ function Bunch({ flowerKey, count, size, disabled, x, y, dropRight, onAdd, fs })
 // One side of the wrapping paper. Swipe it across the middle; it follows your finger,
 // lands flat over the stems if you pass halfway, otherwise springs back. A steady
 // (mostly horizontal) swipe counts as neat.
-function Flap({ side, w, h, top, paper, paperTop, flapTop, pw, ph, z, active, done, reach, onDone }) {
+function Flap({ side, paper, pw, ph, z, active, done, reach, onDone }) {
   const p = useRef(new Animated.Value(done ? 1 : 0)).current;   // 0 open .. 1 folded over
   const cfg = useRef({});
   cfg.current = { active, reach, onDone };
@@ -361,36 +360,44 @@ function Flap({ side, w, h, top, paper, paperTop, flapTop, pw, ph, z, active, do
     onPanResponderRelease: (_, g) => {
       const prog = clamp((side === 'left' ? g.dx : -g.dx) / cfg.current.reach, 0, 1);
       if (prog > 0.5) {
-        const steady = Math.abs(g.dy) < Math.abs(g.dx) * 0.45 + 12;
+        const steady = Math.abs(g.dy) < Math.abs(g.dx) * 0.6 + 14;
         Animated.timing(p, { toValue: 1, duration: 140, useNativeDriver: false }).start(() => cfg.current.onDone(steady));
       } else Animated.spring(p, { toValue: 0, friction: 7, useNativeDriver: false }).start();
     },
   })).current;
-  // the flap pivots on the paper's centre line and flips over: scaleX 1 -> -1
-  const pivot = side === 'left' ? w / 2 : -w / 2;
+
+  // The fold line is diagonal, like wrapping a cone: it runs through the lower middle of
+  // the sheet, tilted FOLD_DEG. The flap is the part of the paper on its outer side, and it
+  // flips over that line (scaleX in the line's own, tilted frame).
+  const th = (side === 'left' ? -FOLD_DEG : FOLD_DEG) * Math.PI / 180;
+  const cos = Math.cos(th), sin = Math.sin(th);
+  const fw = pw * 0.52, fh = ph * 0.56;
+  const P = { x: pw / 2, y: ph * 0.72 };                  // a point on the fold line, in sheet pixels
+  const L = { x: side === 'left' ? fw : 0, y: fh / 2 };   // that same point inside the flap
+  const O = { x: L.x + (-P.x * cos + -P.y * sin), y: L.y + (P.x * sin + -P.y * cos) };  // sheet origin inside the flap (turned by -th)
+  const off = side === 'left' ? fw / 2 : -fw / 2;         // pivot sits on the flap's inner edge
   const scaleX = p.interpolate({ inputRange: [0, 1], outputRange: [1, -1] });
-  // the back of the paper shows once it has passed halfway; its shading is a soft gradient
-  // that is darkest at the crease and fades away across the flap (no hard edges)
   const under = p.interpolate({ inputRange: [0, 0.5, 0.5001, 1], outputRange: [0, 0, 1, 1] });
-  const lift = p.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 1, 0.4] });   // the flap's shadow is biggest mid-swipe
+  const lift = p.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 1, 0.4] });   // the shadow is biggest mid-swipe
   return (
     <Animated.View
       {...pan.panHandlers}
       style={{
-        position: 'absolute', top, left: side === 'left' ? 0 : w, width: w, height: h, zIndex: done ? z : 5,
+        position: 'absolute', left: P.x - L.x, top: P.y - L.y, width: fw, height: fh, zIndex: done ? z : 5,
         pointerEvents: done ? 'none' : 'auto', ...SOFT,
-        transform: [{ translateX: pivot }, { scaleX }, { translateX: -pivot }],
+        transform: [{ translateX: off }, { rotate: `${th}rad` }, { scaleX }, { translateX: -off }],
       }}
     >
-      {/* this flap is a cut of the same sheet, so it keeps the paper's own texture and edge */}
+      {/* this flap is a cut of the same sheet (turned back upright inside), so it keeps the paper's own texture */}
       <View style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]}>
-        <View style={{ position: 'absolute', width: pw, height: ph, left: side === 'left' ? 0 : -w, top: -(flapTop - paperTop) }}>
+        <View style={{ position: 'absolute', left: O.x, top: O.y, width: pw, height: ph,
+          transform: [{ translateX: -pw / 2 }, { translateY: -ph / 2 }, { rotate: `${-th}rad` }, { translateX: pw / 2 }, { translateY: ph / 2 }] }}>
           <SheetLayers paper={paper} w={pw} h={ph} />
+          {/* soft shade along the fold, drawn on the sheet so it never spills past the paper */}
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: lift }]} pointerEvents="none"><Shade side={side} peak={0.2} /></Animated.View>
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: under }]} pointerEvents="none"><Shade side={side} peak={0.3} wide /></Animated.View>
         </View>
       </View>
-      {/* a soft shade along the fold, which deepens as the flap lifts */}
-      <Animated.View style={[StyleSheet.absoluteFill, { opacity: lift }]} pointerEvents="none"><Shade side={side} peak={0.22} /></Animated.View>
-      <Animated.View style={[StyleSheet.absoluteFill, { opacity: under }]} pointerEvents="none"><Shade side={side} peak={0.34} wide /></Animated.View>
       {active && <Text style={[styles.swipe, side === 'left' ? { right: 6 } : { left: 6 }]}>{side === 'left' ? '>>' : '<<'}</Text>}
     </Animated.View>
   );
