@@ -26,9 +26,24 @@ import { useNotice } from '../components/PurchaseNotice';
 const PLOPPER_W = 1376;
 const PLOPPER_H = 768;
 const PAPER_IMG = { plain: 'bouquetempty', layered: 'bouquetmixed', fancy: 'bouquetfancy' };
-// Kraft and the flowered parchment have art; "layered" is kraft with a lighter wash.
-const WASH = { plain: null, layered: 'rgba(255,244,214,0.38)', fancy: null };
-const SHEET_ART = (id) => (id === 'fancy' ? MAKE_IMAGES.paperFancy : MAKE_IMAGES.paper);
+// Kraft and the flowered parchment have art; "layered" is both sheets together, the
+// parchment lying a little crooked on top of the kraft.
+// Shadows follow the shape of the thing, soft and blurred (never a hard box).
+const SOFT = Platform.OS === 'web'
+  ? { filter: 'drop-shadow(0px 5px 7px rgba(50,28,10,0.38))' }
+  : { shadowColor: '#3a200a', shadowOpacity: 0.35, shadowRadius: 7, shadowOffset: { width: 0, height: 4 } };
+function SheetLayers({ paper, w, h, shadow = false }) {
+  if (paper === 'layered') {
+    return (
+      <View style={{ width: w, height: h }}>
+        <Image source={MAKE_IMAGES.paper} style={[{ width: w, height: h }, shadow && SOFT]} resizeMode="stretch" />
+        <Image source={MAKE_IMAGES.paperFancy} resizeMode="stretch"
+          style={[{ position: 'absolute', left: w * 0.06, top: h * 0.05, width: w * 0.88, height: h * 0.9, transform: [{ rotate: '-3deg' }] }, SOFT]} />
+      </View>
+    );
+  }
+  return <Image source={paper === 'fancy' ? MAKE_IMAGES.paperFancy : MAKE_IMAGES.paper} style={[{ width: w, height: h }, shadow && SOFT]} resizeMode="stretch" />;
+}
 const RIBBON = { plain: 'ribbonRed', layered: 'ribbonRed', fancy: 'ribbonPink' };
 const PAPER_ASPECT = 700 / 617;
 const RIBBON_ASPECT = 10;                            // the ribbon pictures are 1000×100
@@ -145,10 +160,7 @@ export default function BouquetScreen({ navigation }) {
                 onPress={cantAfford ? undefined : () => choosePaper(p.id)}
                 style={[styles.sheetBtn, { left: fx(CX + (i - 1) * 190) - sw0 / 2, top: fy(CY - 70), width: sw0, transform: [{ rotate: ['-3deg', '1deg', '4deg'][i] }] }, cantAfford && { opacity: 0.45 }]}
               >
-                <View style={{ width: sw0, height: sh0 }}>
-                  <Image source={SHEET_ART(p.id)} style={{ width: sw0, height: sh0 }} resizeMode="stretch" />
-                  {WASH[p.id] && <View style={[StyleSheet.absoluteFill, { backgroundColor: WASH[p.id] }]} />}
-                </View>
+                <SheetLayers paper={p.id} w={sw0} h={sh0} shadow />
                 <Text style={styles.sheetName}>{p.name}</Text>
                 <Text style={styles.sheetCost}>{locked ? `Level ${p.level}` : p.cost > 0 ? `${p.cost} coins` : 'Free'}</Text>
               </TouchableOpacity>
@@ -159,8 +171,7 @@ export default function BouquetScreen({ navigation }) {
           {step >= 1 && step <= 3 && (
             <View style={{ position: 'absolute', left: pLeft, top: pTop, width: pw, height: ph }} pointerEvents="box-none">
               <View style={{ width: pw, height: ph }} pointerEvents="none">
-                <Image source={SHEET_ART(paper)} style={{ width: pw, height: ph }} resizeMode="stretch" />
-                {WASH[paper] && <View style={[StyleSheet.absoluteFill, { backgroundColor: WASH[paper], borderRadius: 8 }]} />}
+                <SheetLayers paper={paper} w={pw} h={ph} shadow />
               </View>
               {picks.map((k, i) => {
                 const pos = [{ x: 0.3, y: 0.2, r: '-14deg' }, { x: 0.7, y: 0.2, r: '14deg' }, { x: 0.5, y: 0.1, r: '0deg' }][i];
@@ -173,11 +184,11 @@ export default function BouquetScreen({ navigation }) {
               {step >= 2 && (
                 <>
                   <Flap side="left" w={pw / 2} h={fy(PAPER_BOX.top + PAPER_BOX.h - FLAP_TOP)} top={fy(FLAP_TOP - PAPER_BOX.top)}
-                    sheet={SHEET_ART(paper)} paperTop={fy(PAPER_BOX.top)} flapTop={fy(FLAP_TOP)} pw={pw} ph={ph} wash={WASH[paper]}
+                    paper={paper} paperTop={fy(PAPER_BOX.top)} flapTop={fy(FLAP_TOP)} pw={pw} ph={ph}
                     z={firstFold.current === 'left' || !firstFold.current ? 6 : 7}
                     active={step === 2 && !folded.left} done={folded.left} reach={fx(250)} onDone={(n) => onFolded('left', n)} />
                   <Flap side="right" w={pw / 2} h={fy(PAPER_BOX.top + PAPER_BOX.h - FLAP_TOP)} top={fy(FLAP_TOP - PAPER_BOX.top)}
-                    sheet={SHEET_ART(paper)} paperTop={fy(PAPER_BOX.top)} flapTop={fy(FLAP_TOP)} pw={pw} ph={ph} wash={WASH[paper]}
+                    paper={paper} paperTop={fy(PAPER_BOX.top)} flapTop={fy(FLAP_TOP)} pw={pw} ph={ph}
                     z={firstFold.current === 'right' ? 6 : 7}
                     active={step === 2 && !folded.right} done={folded.right} reach={fx(250)} onDone={(n) => onFolded('right', n)} />
                 </>
@@ -336,7 +347,7 @@ function Bunch({ flowerKey, count, size, disabled, x, y, dropRight, onAdd, fs })
 // One side of the wrapping paper. Swipe it across the middle; it follows your finger,
 // lands flat over the stems if you pass halfway, otherwise springs back. A steady
 // (mostly horizontal) swipe counts as neat.
-function Flap({ side, w, h, top, sheet, paperTop, flapTop, pw, ph, wash, z, active, done, reach, onDone }) {
+function Flap({ side, w, h, top, paper, paperTop, flapTop, pw, ph, z, active, done, reach, onDone }) {
   const p = useRef(new Animated.Value(done ? 1 : 0)).current;   // 0 open .. 1 folded over
   const cfg = useRef({});
   cfg.current = { active, reach, onDone };
@@ -355,29 +366,48 @@ function Flap({ side, w, h, top, sheet, paperTop, flapTop, pw, ph, wash, z, acti
   // the flap pivots on the paper's centre line and flips over: scaleX 1 -> -1
   const pivot = side === 'left' ? w / 2 : -w / 2;
   const scaleX = p.interpolate({ inputRange: [0, 1], outputRange: [1, -1] });
-  const under = p.interpolate({ inputRange: [0, 0.5, 0.5001, 1], outputRange: [0, 0, 0.18, 0.18] });
+  // the back of the paper shows once it has passed halfway; its shading is a soft gradient
+  // that is darkest at the crease and fades away across the flap (no hard edges)
+  const under = p.interpolate({ inputRange: [0, 0.5, 0.5001, 1], outputRange: [0, 0, 1, 1] });
+  const lift = p.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 1, 0.4] });   // the flap's shadow is biggest mid-swipe
   return (
     <Animated.View
       {...pan.panHandlers}
       style={{
         position: 'absolute', top, left: side === 'left' ? 0 : w, width: w, height: h, zIndex: done ? z : 5,
-        pointerEvents: done ? 'none' : 'auto',
+        pointerEvents: done ? 'none' : 'auto', ...SOFT,
         transform: [{ translateX: pivot }, { scaleX }, { translateX: -pivot }],
       }}
     >
       {/* this flap is a cut of the same sheet, so it keeps the paper's own texture and edge */}
       <View style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]}>
-        <Image source={sheet} resizeMode="stretch" style={{ position: 'absolute', width: pw, height: ph, left: side === 'left' ? 0 : -w, top: -(flapTop - paperTop) }} />
-        {wash && <View style={[StyleSheet.absoluteFill, { backgroundColor: wash }]} />}
+        <View style={{ position: 'absolute', width: pw, height: ph, left: side === 'left' ? 0 : -w, top: -(flapTop - paperTop) }}>
+          <SheetLayers paper={paper} w={pw} h={ph} />
+        </View>
       </View>
-      <View style={[styles.flapEdge, side === 'left' ? { left: 0 } : { right: 0 }]} />
-      <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: '#3a2008', opacity: under }]} />
+      {/* a soft shade along the fold, which deepens as the flap lifts */}
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: lift }]} pointerEvents="none"><Shade side={side} peak={0.22} /></Animated.View>
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: under }]} pointerEvents="none"><Shade side={side} peak={0.34} wide /></Animated.View>
       {active && <Text style={[styles.swipe, side === 'left' ? { right: 6 } : { left: 6 }]}>{side === 'left' ? '>>' : '<<'}</Text>}
     </Animated.View>
   );
 }
 
 // The ribbon: drag across the waist; it unrolls behind your finger and bows.
+// A soft gradient made of thin strips: darkest at the fold (the flap's inner edge), fading out.
+function Shade({ side, peak, wide = false }) {
+  const N = 40;
+  return (
+    <View style={[StyleSheet.absoluteFill, { flexDirection: side === 'left' ? 'row-reverse' : 'row' }]}>
+      {Array.from({ length: N }, (_, i) => {
+        const t = i / (N - 1);                       // 0 at the fold .. 1 far edge
+        const o = peak * Math.pow(1 - t, wide ? 1.2 : 2.4);
+        return <View key={i} style={{ flex: 1, backgroundColor: `rgba(58,32,8,${o.toFixed(3)})` }} />;
+      })}
+    </View>
+  );
+}
+
 function Ribbon({ x, y, w, source, fy, done, onDone }) {
   const prog = useRef(new Animated.Value(done ? 1 : 0)).current;
   const wob = useRef({ max: 0 });
@@ -422,7 +452,7 @@ const styles = StyleSheet.create({
   ticket: { position: 'absolute', flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fbf0cf', borderRadius: 12, borderWidth: 3, borderColor: '#7a3e1a', paddingHorizontal: 10, paddingVertical: 6, zIndex: 10 },
   ticketName: { fontFamily: HEAD, fontSize: 15, color: '#4a2a10' },
   ticketTxt: { fontFamily: BODY, fontSize: 13.5, color: '#5a3a1a' },
-  sheetBtn: { position: 'absolute', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.35, shadowRadius: 5, shadowOffset: { width: 2, height: 3 } },
+  sheetBtn: { position: 'absolute', alignItems: 'center' },
   hint: { position: 'absolute', textAlign: 'center', fontFamily: HEAD, fontSize: 18, color: '#3a2008', textShadowColor: 'rgba(255,240,200,0.7)', textShadowRadius: 0, textShadowOffset: { width: 1, height: 1 } },
   sheet: {
     position: 'absolute', alignItems: 'center', justifyContent: 'center', borderRadius: 3, borderWidth: 3, borderColor: 'rgba(90,52,16,0.55)',
@@ -431,7 +461,6 @@ const styles = StyleSheet.create({
   sheetName: { fontFamily: HEAD, fontSize: 15, color: '#4a2a10' },
   sheetCost: { fontFamily: BODY, fontSize: 13, color: '#8a5a24' },
   // a thin fold line along the cut edge of a flap
-  flapEdge: { position: 'absolute', top: 0, bottom: 0, width: 2, backgroundColor: 'rgba(90,52,16,0.45)' },
   swipe: { position: 'absolute', top: '45%', fontFamily: HEAD, fontSize: 22, color: '#5a3410' },
   prompt: { position: 'absolute', alignItems: 'center', zIndex: 10 },
   promptTxt: { fontFamily: HEAD, fontSize: 16, color: '#fff3d6', textAlign: 'center', textShadowColor: '#2a1608', textShadowRadius: 4 },
