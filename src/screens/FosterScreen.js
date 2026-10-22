@@ -88,7 +88,7 @@ export default function FosterScreen({ navigation }) {
 
       <ScreenHud sw={sw} sh={sh} onSettings={() => navigation.navigate('Settings')} onMap={() => navigation.navigate('Map')} onInventory={() => setInvOpen(true)} />
 
-      {picked && <AdoptModal petKey={picked.key} onClose={() => setPicked(null)} story={STRAYS[picked.key].found(CUSTOMERS[picked.finder]?.name ?? 'A customer')} />}
+      {picked && <AdoptModal petKey={picked.key} onClose={() => setPicked(null)} finder={picked.finder} />}
       {invOpen && <InventoryOverlay onClose={() => setInvOpen(false)} onPick={() => setInvOpen(false)} />}
     </View>
   );

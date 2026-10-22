@@ -3,7 +3,8 @@ import { View, Text, Image, TouchableOpacity, TextInput, StyleSheet, Platform } 
 import { useGame } from '../context/GameContext';
 import { useLayout } from '../context/LayoutContext';
 import { PETCARD_IMAGES, PETCARD_GRASS, PERK_ICONS } from '../engine/assets';
-import { PETS, ROOM_NAMES } from '../constants/gameData';
+import { PETS, ROOM_NAMES, CUSTOMERS } from '../constants/gameData';
+import Portrait from './Portrait';
 import PetSprite from './PetSprite';
 import { PIXEL_FONT } from './Pixel';
 
@@ -44,7 +45,7 @@ function OnGrass({ petKey, w, h, winW }) {
   );
 }
 
-export function AdoptModal({ petKey, onClose, story }) {
+export function AdoptModal({ petKey, onClose, finder }) {
   const { state, dispatch } = useGame();
   const { height: frameH } = useLayout();
   const pet = PETS[petKey];
@@ -162,11 +163,22 @@ export function AdoptModal({ petKey, onClose, story }) {
             </View>
           ) : (
             <View style={{ flex: 1, alignItems: 'center' }}>
-              <OnGrass petKey={petKey} winW={winW} w={winW * 0.5} h={winH * (story ? 0.44 : 0.7)} />
-              {story ? <Text style={[s.body, { fontSize: fz(0.028), lineHeight: fz(0.038), textAlign: 'center', marginTop: winH * 0.02, paddingHorizontal: winW * 0.02 }]} numberOfLines={3}>{story}</Text> : null}
+              <OnGrass petKey={petKey} winW={winW} w={winW * 0.5} h={winH * 0.72} />
             </View>
           )}
         </View>
+
+        {/* who found this stray: a small round portrait in the corner of the window, so the pet stays the focus */}
+        {finder && CUSTOMERS[finder] && (
+          <View pointerEvents="none" style={{ position: 'absolute', left: W * 0.085, top: H * 0.155, flexDirection: 'row', alignItems: 'center', gap: W * 0.012 }}>
+            <View style={{ width: W * 0.105, height: W * 0.105, borderRadius: W, overflow: 'hidden', borderWidth: 2, borderColor: '#b8793a', backgroundColor: '#f6e6c4' }}>
+              <Portrait customerKey={finder} size={Math.round(W * 0.105)} bare />
+            </View>
+            <View style={{ backgroundColor: 'rgba(255,246,223,0.85)', borderRadius: 8, paddingHorizontal: W * 0.014, paddingVertical: 1 }}>
+              <Text style={[s.body, { fontSize: fz(0.024), color: SOFT }]} numberOfLines={1}>Found by {CUSTOMERS[finder].name}</Text>
+            </View>
+          </View>
+        )}
 
         {/* what the pet does, in the painted green strip */}
         {pet.effect && !renaming && (
