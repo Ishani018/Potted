@@ -48,10 +48,10 @@ export default function LevelBadge({ style, inline }) {
       </View>
       {(open || inline) && (
         <View style={[styles.tip, inline && { maxWidth: 320, marginTop: 8 }]}>
-          <PixelText size={7}>{info.into} / {info.need} XP</PixelText>
-          <PixelText size={6} color="#ffe9a8" style={{ marginTop: 4 }}>{weather.name.toUpperCase()}: {weather.desc.toUpperCase()}</PixelText>
+          <PixelText size={8}>{info.into} / {info.need} XP</PixelText>
+          <PixelText size={6} color="#ffe9a8" style={{ marginTop: 6, lineHeight: 11 }}>{weather.name.toUpperCase()}: {weather.desc.toUpperCase()}</PixelText>
           {nextUnlock && (
-            <PixelText size={6} color="#cfe8a0" style={{ marginTop: 4 }}>
+            <PixelText size={6} color="#cfe8a0" style={{ marginTop: 6, lineHeight: 11 }}>
               LV {nextUnlock.lv}: {nextUnlock.names.join(', ').toUpperCase()}
             </PixelText>
           )}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { BOOK_BUTTONS } from '../engine/assets';
 
@@ -45,19 +45,21 @@ export function PixelButton({ label, onPress, tone = 'green', disabled, style, s
   const art = BOOK_BUTTONS[tone] ?? BOOK_BUTTONS.green;
   const H = Math.round(Math.max(30, size * 2.8) * (art.tall ?? 1) * scale);
   const capW = Math.round(H * art.cap);
+  const [bw, setBw] = useState(0);        // measured width: the stretchy middle gets an exact width
   return (
     <TouchableOpacity
+      onLayout={(e) => setBw(Math.round(e.nativeEvent.layout.width))}
       activeOpacity={0.8}
       onPress={onPress}
       disabled={disabled}
       style={[
-        { height: H, minWidth: capW * 2 + 24, alignItems: 'center', justifyContent: 'center' },
+        { height: H, minWidth: capW * 2 + 24, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 },
         disabled && { opacity: 0.6 },
         style,
       ]}
     >
       <Image source={art.l} style={{ position: 'absolute', left: 0, top: 0, width: capW, height: H }} resizeMode="stretch" pointerEvents="none" />
-      <Image source={art.m} style={{ position: 'absolute', left: capW, right: capW, top: 0, height: H }} resizeMode="stretch" pointerEvents="none" />
+      <Image source={art.m} style={{ position: 'absolute', left: capW, top: 0, width: Math.max(0, bw - capW * 2), height: H }} resizeMode="stretch" pointerEvents="none" />
       <Image source={art.r} style={{ position: 'absolute', right: 0, top: 0, width: capW, height: H }} resizeMode="stretch" pointerEvents="none" />
       <View style={{ paddingHorizontal: Math.round(capW * 1.05) + 2, paddingTop: tone === 'green' ? Math.round(H * 0.15) : 0 }}>
         <Text style={[styles.label, { fontSize: Math.round(size * 1.9 * Math.max(0.8, scale)) }]} numberOfLines={1}>{label}</Text>
