@@ -3,12 +3,13 @@ import {
   View, Text, Image, TouchableOpacity, Pressable, StyleSheet, TextInput, Animated, Easing, Platform,
 } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { PETSHOP_STATES, ORDER_ART, PET_IMAGES, UI_IMAGES, BACKGROUNDS } from '../engine/assets';
+import { PETSHOP_STATES, ORDER_ART, ORDER_ART as  PET_IMAGES, UI_IMAGES, BACKGROUNDS } from '../engine/assets';
 import { PETS, ROOM_NAMES, playerLevel } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
 import PetSprite from '../components/PetSprite';
 import { AdoptModal } from '../components/PetCard';
+import { useNotice } from '../components/PurchaseNotice';
 import { PixelText, PixelPanel, PixelButton, COLORS, PIXEL_FONT } from '../components/Pixel';
 
 // Pets were laid out in Plopper on a 1376×768 canvas with the bg STRETCHED to
@@ -25,8 +26,8 @@ const ART_W = 1677, ART_H = 938;
 // The player level at which each arch opens (until then it is faded and cannot be entered).
 const ARCH_LEVEL = { food: 2, foster: 3 };
 const ARCHES = [
-  { id: 'foster', go: 'Foster', title: 'Foster', sub: 'home', level: ARCH_LEVEL.foster, x0: 1262, y0: 52, x1: 1446, y1: 592 },
-  { id: 'food', go: 'PetFood', title: 'Food', sub: 'aisle', level: ARCH_LEVEL.food, x0: 1462, y0: 8, x1: 1677, y1: 600 },
+  { id: 'foster', go: 'Foster', title: 'The Foster Home', sub: 'home', level: ARCH_LEVEL.foster, x0: 1262, y0: 52, x1: 1446, y1: 592 },
+  { id: 'food', go: 'PetFood', title: 'The Pet Food aisle', sub: 'aisle', level: ARCH_LEVEL.food, x0: 1462, y0: 8, x1: 1677, y1: 600 },
 ];
 
 export const SHOP_PETS = [
@@ -68,32 +69,6 @@ function PetTag({ label, show }) {
   );
 }
 
-// A locked door: the door rattles and a red wax seal is pressed onto it, with the level under it.
-function LockedSeal({ level, sw, doorW }) {
-  const pop = useRef(new Animated.Value(0)).current;
-  const shake = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.spring(pop, { toValue: 1, friction: 4, tension: 90, useNativeDriver: false }).start();
-    Animated.sequence([
-      Animated.timing(shake, { toValue: 1, duration: 60, useNativeDriver: false }),
-      Animated.timing(shake, { toValue: -1, duration: 90, useNativeDriver: false }),
-      Animated.timing(shake, { toValue: 1, duration: 90, useNativeDriver: false }),
-      Animated.timing(shake, { toValue: 0, duration: 60, useNativeDriver: false }),
-    ]).start();
-  }, []);
-  const w = Math.min(doorW * 0.62, sw * 0.085), h = w * 285 / 327;
-  const font = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
-  return (
-    <Animated.View pointerEvents="none" style={{
-      position: 'absolute', left: (doorW - w) / 2 - doorW * 0.04, top: '38%', width: w, alignItems: 'center', zIndex: 60, opacity: pop,
-      transform: [{ translateX: shake.interpolate({ inputRange: [-1, 1], outputRange: [-3, 3] }) }, { scale: pop.interpolate({ inputRange: [0, 1], outputRange: [1.7, 1] }) }, { rotate: '-8deg' }],
-    }}>
-      <Image source={ORDER_ART.seal} style={{ width: w, height: h }} resizeMode="contain" />
-      <Text style={{ marginTop: 4, fontFamily: font, fontSize: Math.max(11, w * 0.34), color: '#fff3d6', textShadowColor: 'rgba(30,14,4,0.9)', textShadowRadius: 3, textShadowOffset: { width: 0, height: 1 } }}>Level {level}</Text>
-    </Animated.View>
-  );
-}
-
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function PetShopScreen({ navigation }) {
   const { state } = useGame();
@@ -104,7 +79,7 @@ export default function PetShopScreen({ navigation }) {
   const sw = box.w, sh = box.h;
   const level = playerLevel(state.player);
   const [opening, setOpening] = useState(null);       // 'food' | 'foster' while that door is opening
-  const [notYet, setNotYet] = useState(null);         // the locked door that was just tapped
+  const [notice, notify] = useNotice(2600);
   const openFade = useRef(new Animated.Value(0)).current;
   const timers = useRef([]);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
@@ -112,8 +87,7 @@ export default function PetShopScreen({ navigation }) {
   const tapDoor = (a) => {
     if (opening) return;
     if (level < a.level) {
-      setNotYet(a.id);
-      timers.current.push(setTimeout(() => setNotYet((n) => (n === a.id ? null : n)), 1800));
+      notify({ icon: ORDER_ART.seal, title: 'Not unlocked yet', subtitle: `${a.title} opens at level ${a.level}.` });
       return;
     }
     setOpening(a.id === 'food' ? 'food' : 'foster');
@@ -174,10 +148,11 @@ export default function PetShopScreen({ navigation }) {
             onPress={() => tapDoor(a)}
           >
             {!locked && !opening && <View pointerEvents="none" style={[styles.archGlow, { borderTopLeftRadius: 999, borderTopRightRadius: 999, opacity: on ? 1 : 0 }]} />}
-            {notYet === a.id && <LockedSeal level={a.level} sw={sw} doorW={((a.x1 - a.x0) / ART_W) * sw} />}
-          </Pressable>
+                      </Pressable>
         );
       })}
+
+      {notice}
 
       {selected && <AdoptModal petKey={selected} onClose={() => setSelected(null)} />}
 
@@ -196,10 +171,6 @@ const styles = StyleSheet.create({
   tagWrap: { position: 'absolute', left: -40, right: -40, top: -22, alignItems: 'center', zIndex: 50 },
 
   archLocked: { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, borderTopLeftRadius: 999, borderTopRightRadius: 999, backgroundColor: 'rgba(252,238,196,0.62)' },
-  notYet: { position: 'absolute', top: '34%', alignItems: 'center', backgroundColor: 'rgba(58,34,14,0.86)', borderRadius: 12, borderWidth: 2, borderColor: '#d9b574', paddingVertical: 6, paddingHorizontal: 8, zIndex: 60 },
-  notYetTxt: { fontFamily: Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' }), fontSize: 15, color: '#fff3d6', textAlign: 'center' },
-  notYetSub: { fontFamily: Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' }), fontSize: 12, color: '#e8c98a', textAlign: 'center' },
-  archHint: { position: 'absolute', left: 0, right: 0, top: '38%', alignItems: 'center' },
   archGlow: { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,236,170,0.22)', borderWidth: 3, borderColor: 'rgba(255,240,190,0.55)' },
 
   modalOverlay: {
