@@ -29,7 +29,20 @@ const HEAD = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Alme
 const BODY = Platform.select({ web: "'PatrickHand', Georgia, serif", default: 'PatrickHand' });
 
 const BOW_COLOR = { ribbonRed: 'red', ribbonPink: 'pink', ribbonCream: 'cream', ribbonPinkFloral: 'pinkfloral', ribbonGreen: 'green', ribbonCreamFloral: 'creamfloral' };
+const FLOWER_ART = { rose: ORDER_ART.rose };
 const PAPER_ART = { plain: MAKE_IMAGES.paper, layered: MAKE_IMAGES.wrapLayered, fancy: MAKE_IMAGES.paperFancy };
+
+// One item on the order card: a small framed picture with its name in the corner.
+function OrderTile({ source, label, fx }) {
+  const T = fx(118);
+  return (
+    <View style={{ width: T, height: T, alignItems: 'center', justifyContent: 'center' }}>
+      <Image source={ORDER_ART.tile_cream} style={styles.fillImg} resizeMode="stretch" />
+      <Image source={source} style={{ position: 'absolute', top: T * 0.1, width: T * 0.62, height: T * 0.6 }} resizeMode="contain" />
+      <Text style={[styles.tileTxt, { position: 'absolute', bottom: T * 0.09 }]} numberOfLines={1}>{label}</Text>
+    </View>
+  );
+}
 
 export default function CounterScreen({ navigation }) {
   const { state, dispatch } = useGame();
@@ -141,6 +154,7 @@ export default function CounterScreen({ navigation }) {
         <View style={[styles.bubbleWrap, { left: fx(900), top: fy(70), width: fx(760) }]}>
           <View style={[styles.bubble, { width: fx(760), height: fx(760) * 459 / 651 }]}>
             <Image source={ORDER_ART.card} style={styles.slip} resizeMode="stretch" />
+            <Image source={ORDER_ART.tag_flower} style={{ position: 'absolute', right: fx(8), top: fx(50), width: fx(70), height: fx(70) * 306 / 124, transform: [{ rotate: '6deg' }] }} resizeMode="contain" />
             <View style={styles.inner}>
             {phase === 'happy' ? (
               <View style={styles.doneRow}>
@@ -165,25 +179,9 @@ export default function CounterScreen({ navigation }) {
                   </View>
                 ) : (
                   <View style={styles.tiles}>
-                    <View style={styles.tile}>
-                      <Image source={ORDER_ART.tile_cream} style={styles.fillImg} resizeMode="stretch" />
-                      {art && <Image source={art} style={styles.tileImg} resizeMode="contain" />}
-                      <Text style={styles.tileTxt} numberOfLines={1}>{flowerName(order.flowerKey)}</Text>
-                    </View>
-                    {order.paper && (
-                      <View style={styles.tile}>
-                        <Image source={ORDER_ART.tile_cream} style={styles.fillImg} resizeMode="stretch" />
-                        <Image source={PAPER_ART[order.paper] || MAKE_IMAGES.paper} style={styles.tileImg} resizeMode="contain" />
-                        <Text style={styles.tileTxt} numberOfLines={1}>{BOUQUET_PAPERS[order.paper]?.name}</Text>
-                      </View>
-                    )}
-                    {order.ribbon && (
-                      <View style={styles.tile}>
-                        <Image source={ORDER_ART.tile_cream} style={styles.fillImg} resizeMode="stretch" />
-                        <Image source={(BOW_IMAGES[BOW_COLOR[order.ribbon]] || [])[0] || MAKE_IMAGES[order.ribbon]} style={styles.tileImg} resizeMode="contain" />
-                        <Text style={styles.tileTxt} numberOfLines={1}>{RIBBON_NAMES[order.ribbon]}</Text>
-                      </View>
-                    )}
+                    <OrderTile fx={fx} source={FLOWER_ART[order.flowerKey] || art} label={flowerName(order.flowerKey)} />
+                    {order.paper && <OrderTile fx={fx} source={PAPER_ART[order.paper] || MAKE_IMAGES.paper} label={BOUQUET_PAPERS[order.paper]?.name} />}
+                    {order.ribbon && <OrderTile fx={fx} source={(BOW_IMAGES[BOW_COLOR[order.ribbon]] || [])[0] || MAKE_IMAGES[order.ribbon]} label={RIBBON_NAMES[order.ribbon]} />}
                   </View>
                 )}
                 <View style={styles.reward}>
@@ -235,7 +233,7 @@ const styles = StyleSheet.create({
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
   bubbleWrap: { position: 'absolute', zIndex: 20 },
   bubble: { alignItems: 'stretch' },
-  inner: { position: 'absolute', left: '14%', right: '10%', top: '17%', bottom: '13%', justifyContent: 'space-between' },
+  inner: { position: 'absolute', left: '14%', right: '15%', top: '17%', bottom: '13%', justifyContent: 'space-between' },
   fillImg: { position: 'absolute', left: 0, top: 0, width: '100%', height: '100%' },
   go: { height: 30, justifyContent: 'center', alignItems: 'center' },
   goTxt: { fontFamily: 'PressStart2P', fontSize: 8, color: '#f7efd2' },
@@ -246,9 +244,7 @@ const styles = StyleSheet.create({
   count: { fontFamily: BODY, fontSize: 12.5, color: '#8a6a40' },
   say: { fontFamily: BODY, fontSize: 14, color: '#4a2a10', lineHeight: 15 },
   photo: { width: 58, height: 58, alignItems: 'center', justifyContent: 'center' },
-  tiles: { flexDirection: 'row', gap: 8, marginTop: 6 },
-  tile: { flex: 1, height: 66, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 4 },
-  tileImg: { position: 'absolute', top: 6, width: 42, height: 36 },
+  tiles: { flexDirection: 'row', justifyContent: 'center', gap: 14, marginTop: 4 },
   tileTxt: { fontFamily: HEAD, fontSize: 13, color: '#6a4a28' },
   reward: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 18, height: 26 },
   orderRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
