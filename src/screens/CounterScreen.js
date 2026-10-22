@@ -189,6 +189,7 @@ export default function CounterScreen({ navigation }) {
                 )}
                 <View style={[slot(190, 450, 760, 488), styles.reward]}>
                   <Image source={ORDER_ART.bar_cream} style={styles.fillImg} resizeMode="stretch" />
+                  <Image source={UI_IMAGES.goldcoins} style={styles.coin} resizeMode="contain" />
                   <Text style={styles.pay}>{order.type === 'flowers' ? `${order.coins} coins` : `price + up to ${Math.round(order.tip * 1.5)} tip`}</Text>
                   <Text style={styles.xp}>+{order.xp} xp</Text>
                 </View>
