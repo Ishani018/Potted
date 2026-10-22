@@ -46,7 +46,7 @@ export default function HerbalistCorner({ sw, sh }) {
         <TouchableOpacity activeOpacity={1} style={styles.overlay} onPress={() => setOpen(false)}>
           <TouchableOpacity activeOpacity={1} onPress={() => {}} style={{ width: Math.min(sw - 24, 400), maxHeight: sh - 24 }}>
             <PixelPanel>
-              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 7 }}>
+              <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: sh - 24 - 36 }} contentContainerStyle={{ gap: 7, paddingBottom: 4 }}>
                 <View style={styles.head}>
                   <Portrait customerKey={HERBALIST.sprite} size={72} />
                   <View style={{ flex: 1, gap: 4 }}>
