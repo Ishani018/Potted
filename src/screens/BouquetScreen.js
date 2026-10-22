@@ -7,7 +7,6 @@ import {
   RIBBON_NAMES, orderGrade,
 } from '../constants/gameData';
 import { globalPetEffects } from '../engine/petEffects';
-import BouquetArt from '../components/BouquetArt';
 import ScreenHud from '../components/ScreenHud';
 import Portrait from '../components/Portrait';
 import { openOrders, bouquetFillsOrder, flowerName } from '../engine/customers';
@@ -60,6 +59,10 @@ PAPER_BOX.top = Math.round(CY - PAPER_BOX.h / 2);
 const FLAP_TOP = PAPER_BOX.top + Math.round(0.42 * PAPER_BOX.h);   // where the ribbon waist sits; the blooms stay above
 // ribbon -> the colour of bows that go with it
 const BOW_COLOR = { ribbonRed: 'red', ribbonPink: 'pink', ribbonCream: 'cream', ribbonPinkFloral: 'pinkfloral', ribbonGreen: 'green', ribbonCreamFloral: 'creamfloral' };
+const WRAP_ART = { plain: 'wrapKraft', layered: 'wrapLayered', fancy: 'wrapLayered' };
+const WRAP_ASPECT = 640 / 590;                                       // height / width of the wrapped-bouquet pictures
+const WRAP_W = 372;
+const WAIST = 0.79;                                                  // where the twine sits, as a fraction of the wrapper's height
 const FOLD_DEG = 20;                                                // tilt of the diagonal fold lines
 const TRAY = { cx: 1234, cy: 628, w: 250, h: 150 };  // the hand-over tray, bottom right
 // The eight bins down the left (basket, bucket, basket, bucket ...), centres in base space
@@ -148,6 +151,8 @@ export default function BouquetScreen({ navigation }) {
 
   const foundCount = BOUQUET_RECIPES.filter((r) => found[r.id]).length;
   const pw = fx(PAPER_BOX.w), ph = fy(PAPER_BOX.h), pLeft = fx(CX) - pw / 2, pTop = fy(PAPER_BOX.top);
+  // the wrapped bouquet sits in the middle of that same box
+  const ww = fx(WRAP_W), wh = ww * WRAP_ASPECT, wx = (pw - ww) / 2, wy = (ph - wh) / 2;
   const prompt = step === 0 ? 'Drag a sheet off the stack onto the mat.'
     : step === 1 ? (full ? 'Lovely! Now fold it.' : `Drag ${BOUQUET_SIZE - picks.length} more flower${BOUQUET_SIZE - picks.length === 1 ? '' : 's'} onto the paper.`)
     : step === 2 ? 'Swipe each side over to wrap the stems.'
@@ -176,31 +181,38 @@ export default function BouquetScreen({ navigation }) {
               enabled={step === 5} home={{ x: pLeft + pw / 2, y: pTop + ph / 2 }} style={{ position: 'absolute', left: pLeft, top: pTop, width: pw, height: ph }}
               tray={{ x: fx(TRAY.cx), y: fy(TRAY.cy), w: fx(TRAY.w), h: fy(TRAY.h) }} onDrop={giveOver}
             >
-              <View style={{ width: pw, height: ph }} pointerEvents="none">
-                <SheetLayers paper={paper} w={pw} h={ph} shadow />
-              </View>
-              {picks.map((k, i) => {
-                const pos = [{ x: 0.3, y: 0.2, r: '-14deg' }, { x: 0.7, y: 0.2, r: '14deg' }, { x: 0.5, y: 0.1, r: '0deg' }][i];
-                const sz = fx(140);
-                return (
-                  <Image key={i} source={TRADE_IMAGES[TRADE_FLOWERS[k].img]} pointerEvents="none"
-                    style={{ position: 'absolute', left: pw * pos.x - sz / 2, top: ph * pos.y - sz / 2, width: sz, height: sz, transform: [{ rotate: pos.r }], zIndex: 3 }} resizeMode="contain" />
-                );
-              })}
-              {step >= 2 && (
-                <>
-                  <Flap side="left" paper={paper} pw={pw} ph={ph}
-                    z={firstFold.current === 'left' || !firstFold.current ? 6 : 7}
-                    active={step === 2 && !folded.left} done={folded.left} reach={fx(250)} onDone={(n) => onFolded('left', n)} />
-                  <Flap side="right" paper={paper} pw={pw} ph={ph}
-                    z={firstFold.current === 'right' ? 6 : 7}
-                    active={step === 2 && !folded.right} done={folded.right} reach={fx(250)} onDone={(n) => onFolded('right', n)} />
-                </>
-              )}
-              {tied && <TiedRibbon x={-pw * 0.04} y={fy(FLAP_TOP - PAPER_BOX.top + 70)} w={pw * 1.08} source={MAKE_IMAGES[ribbonKey]} />}
-              {bow != null && (
-                <Image source={BOW_IMAGES[BOW_COLOR[ribbonKey]][bow]} pointerEvents="none"
-                  style={[{ position: 'absolute', left: pw * 0.78 - fx(70), top: fy(FLAP_TOP - PAPER_BOX.top + 70) - fx(52), width: fx(140), height: fx(105), zIndex: 9 }, SOFT]} resizeMode="contain" />
+              {/* the flat sheet with its flowers and flaps; it fades out once both flaps are over */}
+              <FadeOut hide={step >= 3}>
+                <View style={{ width: pw, height: ph }} pointerEvents="none">
+                  <SheetLayers paper={paper} w={pw} h={ph} shadow />
+                </View>
+                {picks.map((k, i) => {
+                  const pos = [{ x: 0.3, y: 0.2, r: '-14deg' }, { x: 0.7, y: 0.2, r: '14deg' }, { x: 0.5, y: 0.1, r: '0deg' }][i];
+                  const sz = fx(140);
+                  return (
+                    <Image key={i} source={TRADE_IMAGES[TRADE_FLOWERS[k].img]} pointerEvents="none"
+                      style={{ position: 'absolute', left: pw * pos.x - sz / 2, top: ph * pos.y - sz / 2, width: sz, height: sz, transform: [{ rotate: pos.r }], zIndex: 3 }} resizeMode="contain" />
+                  );
+                })}
+                {step >= 2 && (
+                  <>
+                    <Flap side="left" paper={paper} pw={pw} ph={ph}
+                      z={firstFold.current === 'left' || !firstFold.current ? 6 : 7}
+                      active={step === 2 && !folded.left} done={folded.left} reach={fx(250)} onDone={(n) => onFolded('left', n)} />
+                    <Flap side="right" paper={paper} pw={pw} ph={ph}
+                      z={firstFold.current === 'right' ? 6 : 7}
+                      active={step === 2 && !folded.right} done={folded.right} reach={fx(250)} onDone={(n) => onFolded('right', n)} />
+                  </>
+                )}
+              </FadeOut>
+
+              {/* once folded it is the wrapped bouquet: the wrapper, the flowers in its opening, the ribbon and bow */}
+              {step >= 3 && (
+                <Wrapped
+                  art={MAKE_IMAGES[WRAP_ART[paper]]} picks={picks} left={wx} top={wy} w={ww} h={wh} fx={fx}
+                  ribbon={tied ? MAKE_IMAGES[ribbonKey] : null}
+                  bow={bow != null ? BOW_IMAGES[BOW_COLOR[ribbonKey]][bow] : null}
+                />
               )}
             </HandOver>
           )}
@@ -209,7 +221,7 @@ export default function BouquetScreen({ navigation }) {
           {step === 3 && !tied && (
             <SpoolPull
               spools={SPOOLS.map((sp) => ({ ...sp, x: fx(sp.x), y: fy(sp.y), r: fx(30) }))}
-              target={{ left: pLeft, top: pTop, w: pw, h: ph, waist: fy(FLAP_TOP + 70) }}
+              target={{ left: pLeft + wx, top: pTop + wy, w: ww, h: wh, waist: pTop + wy + WAIST * wh }}
               onTie={(key, wasNeat) => onTied(wasNeat, key)} fy={fy}
             />
           )}
@@ -219,7 +231,7 @@ export default function BouquetScreen({ navigation }) {
             <BowBox
               colorKey={BOW_COLOR[ribbonKey]} onPlace={onBow}
               tray={{ x: fx(TRAY.cx), y: fy(TRAY.cy), w: fx(TRAY.w), h: fy(TRAY.h) }}
-              target={{ left: pLeft, top: pTop, w: pw, h: ph }}
+              target={{ left: pLeft + wx, top: pTop + wy, w: ww, h: wh }}
             />
           )}
 
@@ -311,6 +323,34 @@ export default function BouquetScreen({ navigation }) {
       <ScreenHud sw={sw} sh={sh} onMap={() => navigation.navigate('Map')} />
       {notice}
     </View>
+  );
+}
+
+// Fades its children out (and back) when `hide` changes.
+function FadeOut({ hide, children }) {
+  const o = useRef(new Animated.Value(hide ? 0 : 1)).current;
+  React.useEffect(() => { Animated.timing(o, { toValue: hide ? 0 : 1, duration: 380, useNativeDriver: false }).start(); }, [hide]);
+  return <Animated.View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: o }} pointerEvents="box-none">{children}</Animated.View>;
+}
+
+// The wrapped bouquet: the folded wrapper picture, the three flowers blooming out of its
+// opening, then the ribbon round the waist (where the twine is) and the bow on the ribbon.
+function Wrapped({ art, picks, left, top, w, h, ribbon, bow, fx }) {
+  const o = useRef(new Animated.Value(0)).current;
+  React.useEffect(() => { Animated.timing(o, { toValue: 1, duration: 380, useNativeDriver: false }).start(); }, []);
+  const FAN = [{ x: 0.32, y: 0.27, r: '-14deg' }, { x: 0.68, y: 0.27, r: '14deg' }, { x: 0.5, y: 0.17, r: '0deg' }];
+  const fz = w * 0.46;
+  const rw = w * 0.52, rh = rw / RIBBON_ASPECT, wy = top + h * WAIST;
+  return (
+    <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: o }}>
+      <Image source={art} style={[{ position: 'absolute', left, top, width: w, height: h }, SOFT]} resizeMode="contain" />
+      {picks.map((k, i) => (
+        <Image key={i} source={TRADE_IMAGES[TRADE_FLOWERS[k].img]} resizeMode="contain"
+          style={{ position: 'absolute', left: left + w * FAN[i].x - fz / 2, top: top + h * FAN[i].y - fz / 2, width: fz, height: fz, transform: [{ rotate: FAN[i].r }], zIndex: i === 2 ? 3 : 2 }} />
+      ))}
+      {ribbon && <TiedRibbon x={left + (w - rw) / 2} y={wy} w={rw} source={ribbon} />}
+      {bow && <Image source={bow} resizeMode="contain" style={[{ position: 'absolute', left: left + w * 0.62 - fx(66), top: wy - fx(50), width: fx(132), height: fx(100), zIndex: 9 }, SOFT]} />}
+    </Animated.View>
   );
 }
 

@@ -172,6 +172,9 @@ export const BOW_IMAGES = {
 export const MAKE_IMAGES = {
   paper: require('../../assets/shop/paper_kraft.png'),
   paperFancy: require('../../assets/shop/paper_fancy.png'),
+  // the wrapped bouquet (an empty folded wrapper) once the flaps are over; fancy borrows layered's until it has its own
+  wrapKraft: require('../../assets/shop/wrap_kraft.png'),
+  wrapLayered: require('../../assets/shop/wrap_layered.png'),
   ribbonRed: require('../../assets/shop/ribbon_red.png'),
   ribbonPink: require('../../assets/shop/ribbon_pink.png'),
   ribbonCream: require('../../assets/shop/ribbon_cream.png'),
