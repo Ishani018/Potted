@@ -225,7 +225,7 @@ export default function BouquetScreen({ navigation }) {
               {/* once folded it is the wrapped bouquet: the wrapper, the flowers in its opening, the ribbon and bow */}
               {step >= 3 && (
                 <Wrapped
-                  picks={picks} art={step >= 5 ? bouquetPic(picks, paper) : MAKE_IMAGES[paper === 'layered' ? 'wrapLayered' : 'wrapKraft']} reveal={step >= 5} left={wx} top={wy} w={ww} h={wh} fx={fx}
+                  picks={picks} art={bouquetPic(picks, paper)} reveal={true} left={wx} top={wy} w={ww} h={wh} fx={fx}
                   ribbon={tied ? MAKE_IMAGES[ribbonKey] : null}
                   bow={bow != null ? BOW_IMAGES[bow.color][bow.i] : null}
                 />
