@@ -334,7 +334,7 @@ export default function CounterScreen({ navigation, route }) {
         done >= CUSTOMERS_PER_DAY ? (
           <>
           <View pointerEvents="none" style={styles.haze} />
-          <Animated.Image pointerEvents="none" source={ORDER_ART.daydone} resizeMode="contain" style={{ position: 'absolute', left: (sw - fx(620)) / 2, top: 0, width: fx(620), height: fx(620) * (DAYDONE_H / 900), zIndex: 40 }} />
+          <Animated.Image pointerEvents="none" source={ORDER_ART.daydone} resizeMode="contain" style={{ position: 'absolute', left: (sw - fx(820)) / 2, top: 0, width: fx(820), height: fx(820) * (DAYDONE_H / 900), zIndex: 40 }} />
           </>
         ) : (
           <View pointerEvents="none" style={{ position: 'absolute', left: (sw - fx(760)) / 2, top: fy(230), width: fx(760), height: fx(760) * 113 / 489, zIndex: 40, alignItems: 'center', justifyContent: 'center' }}>
@@ -344,9 +344,6 @@ export default function CounterScreen({ navigation, route }) {
         )
       )}
 
-      <View style={styles.bottom}>
-        <PixelButton label="BOUQUET TABLE >" tone="wood" size={8} onPress={() => navigation.navigate('Bouquet')} />
-      </View>
 
       <ScreenHud
         sw={sw} sh={sh}
