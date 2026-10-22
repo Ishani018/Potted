@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { GALLERY_BG, PAINTING_IMAGES, UI_IMAGES } from '../engine/assets';
+import { GALLERY_BG, PAINTING_IMAGES, UI_IMAGES, CUSTOMER_IMAGES } from '../engine/assets';
 import { PAINTINGS } from '../constants/gameData';
 import ScreenHud from '../components/ScreenHud';
 import { pixelText } from '../components/Pixel';
@@ -13,15 +13,17 @@ import InventoryOverlay from '../components/InventoryOverlay';
 // anchor). key = PAINTINGS / PAINTING_IMAGES key.
 const PLOPPER_W = 1376;
 const PLOPPER_H = 768;
+// The paintings hang from the café wall (two rows under the four hooks).
+// Four hooks on the café wall; the eight paintings take turns: one set of four today, the other tomorrow.
 const WALL_ITEMS = [
-  { key: 'newbaby',               x: 951, y: 236, w: 128, h: 128, z: 1 },
-  { key: 'womanportraitpainting', x: 478, y: 226, w: 107, h: 102, z: 2 },
-  { key: 'beachpainting',         x: 617, y: 265, w: 126, h: 121, z: 3 },
-  { key: 'campfirepainting',      x: 787, y: 80,  w: 95,  h: 90,  z: 4 },
-  { key: 'tabbycatpainting',      x: 948, y: 92,  w: 119, h: 114, z: 5 },
-  { key: 'sleepingpuppypainting', x: 477, y: 92,  w: 94,  h: 90,  z: 6 },
-  { key: 'weddingpainting',       x: 780, y: 209, w: 159, h: 151, z: 7 },
-  { key: 'picnic',                x: 617, y: 107, w: 149, h: 149, z: 8 },
+  { key: 'sleepingpuppypainting',  x: 588, y: 315, w: 112, h: 107, z: 1, set: 0 },
+  { key: 'tabbycatpainting',       x: 712, y: 315, w: 112, h: 107, z: 2, set: 0 },
+  { key: 'campfirepainting',       x: 840, y: 315, w: 112, h: 106, z: 3, set: 0 },
+  { key: 'picnic',                 x: 960, y: 318, w: 112, h: 112, z: 4, set: 0 },
+  { key: 'beachpainting',          x: 588, y: 316, w: 112, h: 108, z: 5, set: 1 },
+  { key: 'womanportraitpainting',  x: 712, y: 315, w: 112, h: 107, z: 6, set: 1 },
+  { key: 'weddingpainting',        x: 840, y: 315, w: 112, h: 107, z: 7, set: 1 },
+  { key: 'newbaby',                x: 960, y: 318, w: 112, h: 112, z: 8, set: 1 },
 ];
 
 // ── Buy modal ─────────────────────────────────────────────────────────────────
@@ -83,6 +85,7 @@ export default function GalleryScreen({ navigation }) {
   const [selected, setSelected] = useState(null);
   const [invOpen, setInvOpen] = useState(false);
   const [notice, notify] = useNotice();
+  const todaySet = Math.floor(Date.now() / 86400000) % 2;   // which four paintings are up today
   const [box, setBox] = useState({ w: 0, h: 0 });
   const sw = box.w, sh = box.h;
 
@@ -94,7 +97,7 @@ export default function GalleryScreen({ navigation }) {
       <Image source={GALLERY_BG} style={styles.bg} resizeMode="stretch" />
 
       {/* Paintings on the wall (Plopper base-px coords) — tap to view/buy */}
-      {WALL_ITEMS.map(({ key, x, y, w, h, z }) => {
+      {WALL_ITEMS.filter((it) => it.set === todaySet).map(({ key, x, y, w, h, z }) => {
         const cx = (x / PLOPPER_W) * sw;
         const cy = (y / PLOPPER_H) * sh;
         const iw = (w / PLOPPER_W) * sw;
@@ -110,6 +113,13 @@ export default function GalleryScreen({ navigation }) {
           </TouchableOpacity>
         );
       })}
+
+      {/* Ben behind the bar: drawn above the picture but cut off at the counter's top edge */}
+      {sw > 0 && (
+        <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: sw, height: (441 / PLOPPER_H) * sh, overflow: 'hidden', zIndex: 20 }}>
+          <Image source={CUSTOMER_IMAGES.ben} resizeMode="contain" style={{ position: 'absolute', left: (222 / PLOPPER_W) * sw - (92 / PLOPPER_W) * sw, top: (563 / PLOPPER_H) * sh - (276 / PLOPPER_H) * sh, width: (184 / PLOPPER_W) * sw, height: (276 / PLOPPER_H) * sh }} />
+        </View>
+      )}
 
       {/* Standard HUD — settings (TL) + map (TR) + inventory (BL) */}
       <ScreenHud
