@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Image, Animated, Easing, Platform, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { COUNTER_BG, CUSTOMER_IMAGES, CUSTOMER_POSES, TRADE_IMAGES, SEED_IMAGES, UI_IMAGES, BOOK_STAMP, MAKE_IMAGES, ORDER_SLIP } from '../engine/assets';
+import { COUNTER_BG, CUSTOMER_IMAGES, CUSTOMER_POSES, TRADE_IMAGES, SEED_IMAGES, UI_IMAGES, BOOK_STAMP, MAKE_IMAGES, ORDER_SLIP, BOW_IMAGES } from '../engine/assets';
 import { CUSTOMERS, TRADE_FLOWERS, CUSTOMERS_PER_DAY, BOUQUET_PAPERS, RIBBON_NAMES } from '../constants/gameData';
 import { openOrders, customerLine, flowerName } from '../engine/customers';
 import ScreenHud from '../components/ScreenHud';
@@ -9,6 +9,7 @@ import InventoryOverlay from '../components/InventoryOverlay';
 import { PixelButton } from '../components/Pixel';
 import { SPRITE_ASPECT } from '../components/CustomerSprite';
 import Portrait from '../components/Portrait';
+import TileFrame from '../components/TileFrame';
 
 // The florist counter, seen from behind the till (counter.png, 1678×937). Customers
 // come in through the green door, hop across the shop floor and stop at the counter,
@@ -27,6 +28,7 @@ const HAPPY_MS = 1500;                                // joy hops + thanks befor
 const HEAD = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 const BODY = Platform.select({ web: "'PatrickHand', Georgia, serif", default: 'PatrickHand' });
 
+const BOW_COLOR = { ribbonRed: 'red', ribbonPink: 'pink', ribbonCream: 'cream', ribbonPinkFloral: 'pinkfloral', ribbonGreen: 'green', ribbonCreamFloral: 'creamfloral' };
 const PAPER_ART = { plain: MAKE_IMAGES.paper, layered: MAKE_IMAGES.wrapLayered, fancy: MAKE_IMAGES.paperFancy };
 
 export default function CounterScreen({ navigation }) {
@@ -147,7 +149,7 @@ export default function CounterScreen({ navigation }) {
             ) : (
               <>
                 <View style={styles.who}>
-                  <Portrait customerKey={order.customer} size={40} bare />
+                  <View style={styles.photo}><TileFrame state="empty" /><Portrait customerKey={order.customer} size={44} bare /></View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.name}>{c.name}</Text>
                     <Text style={styles.count}>Customer {Math.min(done + 1, CUSTOMERS_PER_DAY)} of {CUSTOMERS_PER_DAY} today</Text>
@@ -164,24 +166,27 @@ export default function CounterScreen({ navigation }) {
                 ) : (
                   <View style={styles.tiles}>
                     <View style={styles.tile}>
+                      <TileFrame state="empty" />
                       {art && <Image source={art} style={styles.tileImg} resizeMode="contain" />}
                       <Text style={styles.tileTxt} numberOfLines={1}>{flowerName(order.flowerKey)}</Text>
                     </View>
                     {order.paper && (
                       <View style={styles.tile}>
+                        <TileFrame state="empty" />
                         <Image source={PAPER_ART[order.paper] || MAKE_IMAGES.paper} style={styles.tileImg} resizeMode="contain" />
                         <Text style={styles.tileTxt} numberOfLines={1}>{BOUQUET_PAPERS[order.paper]?.name}</Text>
                       </View>
                     )}
                     {order.ribbon && (
                       <View style={styles.tile}>
-                        <View style={styles.tileImg}><Image source={MAKE_IMAGES[order.ribbon]} style={styles.ribbonTile} resizeMode="stretch" /></View>
+                        <TileFrame state="empty" />
+                        <Image source={(BOW_IMAGES[BOW_COLOR[order.ribbon]] || [])[0] || MAKE_IMAGES[order.ribbon]} style={styles.tileImg} resizeMode="contain" />
                         <Text style={styles.tileTxt} numberOfLines={1}>{RIBBON_NAMES[order.ribbon]}</Text>
                       </View>
                     )}
                   </View>
                 )}
-                <View style={styles.orderRow}>
+                <View style={styles.reward}>
                   <Image source={UI_IMAGES.goldcoins} style={styles.coin} resizeMode="contain" />
                   <Text style={styles.pay}>{order.type === 'flowers' ? order.coins : `price + up to ${Math.round(order.tip * 1.5)} tip`}</Text>
                   <Text style={styles.xp}>+{order.xp} xp</Text>
@@ -232,11 +237,12 @@ const styles = StyleSheet.create({
   name: { fontFamily: HEAD, fontSize: 20, color: '#4a2a10' },
   count: { fontFamily: BODY, fontSize: 12.5, color: '#8a6a40' },
   say: { fontFamily: BODY, fontSize: 15, color: '#4a2a10', lineHeight: 17, flex: 1 },
-  tiles: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 6 },
-  tile: { alignItems: 'center', flex: 1 },
-  tileImg: { width: 54, height: 54, alignItems: 'center', justifyContent: 'center' },
-  ribbonTile: { width: 54, height: 18 },
-  tileTxt: { fontFamily: HEAD, fontSize: 14, color: '#3f7a2e', marginTop: 1 },
+  photo: { width: 54, height: 54, alignItems: 'center', justifyContent: 'center' },
+  tiles: { flexDirection: 'row', gap: 8, marginTop: 6 },
+  tile: { flex: 1, height: 82, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 4 },
+  tileImg: { position: 'absolute', top: 7, width: 52, height: 48 },
+  tileTxt: { fontFamily: HEAD, fontSize: 13, color: '#6a4a28' },
+  reward: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6, backgroundColor: 'rgba(176,200,130,0.5)', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
   orderRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   flower: { width: 30, height: 32 },
   want: { fontFamily: HEAD, fontSize: 17, color: '#3f7a2e' },
