@@ -16,19 +16,19 @@ const PLOPPER_H = 768;
 // The paintings hang from the café wall (two rows under the four hooks).
 // Four hooks on the café wall; the eight paintings take turns: one set of four today, the other tomorrow.
 // which café picture is used: 'a' (open room) or 'b' (closer in, bar and tables)
-export const CAFE = 'a';
+export const CAFE = 'b';
 const HOOKS = { a: [588, 712, 840, 960], b: [625, 757, 893, 1025] };
 const HOOK_Y = { a: 262, b: 262 };
 const BAR = { a: { x: 222, top: 441, feet: 563 }, b: { x: 212, top: 437, feet: 560 } };
 const WALL_ITEMS = [
-  { key: 'sleepingpuppypainting',  hx: 0, y: 315, w: 112, h: 107, z: 1, set: 0 },
-  { key: 'tabbycatpainting',       hx: 1, y: 315, w: 112, h: 107, z: 2, set: 0 },
-  { key: 'campfirepainting',       hx: 2, y: 315, w: 112, h: 106, z: 3, set: 0 },
-  { key: 'picnic',                 hx: 3, y: 318, w: 112, h: 112, z: 4, set: 0 },
-  { key: 'beachpainting',          hx: 0, y: 316, w: 112, h: 108, z: 5, set: 1 },
-  { key: 'womanportraitpainting',  hx: 1, y: 315, w: 112, h: 107, z: 6, set: 1 },
-  { key: 'weddingpainting',        hx: 2, y: 315, w: 112, h: 107, z: 7, set: 1 },
-  { key: 'newbaby',                hx: 3, y: 318, w: 112, h: 112, z: 8, set: 1 },
+  { key: 'sleepingpuppypainting',hx: 0, y: 291, w: 62, h: 59, z: 1, set: 0 },
+  { key: 'tabbycatpainting',  hx: 1, y: 291, w: 62, h: 59, z: 2, set: 0 },
+  { key: 'campfirepainting',  hx: 2, y: 291, w: 62, h: 59, z: 3, set: 0 },
+  { key: 'picnic',            hx: 3, y: 293, w: 62, h: 62, z: 4, set: 0 },
+  { key: 'beachpainting',     hx: 0, y: 292, w: 62, h: 60, z: 5, set: 1 },
+  { key: 'womanportraitpainting',hx: 1, y: 291, w: 62, h: 59, z: 6, set: 1 },
+  { key: 'weddingpainting',   hx: 2, y: 291, w: 62, h: 59, z: 7, set: 1 },
+  { key: 'newbaby',           hx: 3, y: 293, w: 62, h: 62, z: 8, set: 1 },
 ];
 
 // ── Buy modal ─────────────────────────────────────────────────────────────────
