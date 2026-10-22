@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { GALLERY_BG, PAINTING_IMAGES, UI_IMAGES, CUSTOMER_IMAGES } from '../engine/assets';
+import { GALLERY_BGS, PAINTING_IMAGES, UI_IMAGES, CUSTOMER_IMAGES } from '../engine/assets';
 import { PAINTINGS } from '../constants/gameData';
 import ScreenHud from '../components/ScreenHud';
 import { pixelText } from '../components/Pixel';
@@ -15,15 +15,20 @@ const PLOPPER_W = 1376;
 const PLOPPER_H = 768;
 // The paintings hang from the café wall (two rows under the four hooks).
 // Four hooks on the café wall; the eight paintings take turns: one set of four today, the other tomorrow.
+// which café picture is used: 'a' (open room) or 'b' (closer in, bar and tables)
+export const CAFE = 'a';
+const HOOKS = { a: [588, 712, 840, 960], b: [625, 757, 893, 1025] };
+const HOOK_Y = { a: 262, b: 262 };
+const BAR = { a: { x: 222, top: 441, feet: 563 }, b: { x: 212, top: 437, feet: 560 } };
 const WALL_ITEMS = [
-  { key: 'sleepingpuppypainting',  x: 588, y: 315, w: 112, h: 107, z: 1, set: 0 },
-  { key: 'tabbycatpainting',       x: 712, y: 315, w: 112, h: 107, z: 2, set: 0 },
-  { key: 'campfirepainting',       x: 840, y: 315, w: 112, h: 106, z: 3, set: 0 },
-  { key: 'picnic',                 x: 960, y: 318, w: 112, h: 112, z: 4, set: 0 },
-  { key: 'beachpainting',          x: 588, y: 316, w: 112, h: 108, z: 5, set: 1 },
-  { key: 'womanportraitpainting',  x: 712, y: 315, w: 112, h: 107, z: 6, set: 1 },
-  { key: 'weddingpainting',        x: 840, y: 315, w: 112, h: 107, z: 7, set: 1 },
-  { key: 'newbaby',                x: 960, y: 318, w: 112, h: 112, z: 8, set: 1 },
+  { key: 'sleepingpuppypainting',  hx: 0, y: 315, w: 112, h: 107, z: 1, set: 0 },
+  { key: 'tabbycatpainting',       hx: 1, y: 315, w: 112, h: 107, z: 2, set: 0 },
+  { key: 'campfirepainting',       hx: 2, y: 315, w: 112, h: 106, z: 3, set: 0 },
+  { key: 'picnic',                 hx: 3, y: 318, w: 112, h: 112, z: 4, set: 0 },
+  { key: 'beachpainting',          hx: 0, y: 316, w: 112, h: 108, z: 5, set: 1 },
+  { key: 'womanportraitpainting',  hx: 1, y: 315, w: 112, h: 107, z: 6, set: 1 },
+  { key: 'weddingpainting',        hx: 2, y: 315, w: 112, h: 107, z: 7, set: 1 },
+  { key: 'newbaby',                hx: 3, y: 318, w: 112, h: 112, z: 8, set: 1 },
 ];
 
 // ── Buy modal ─────────────────────────────────────────────────────────────────
@@ -94,11 +99,11 @@ export default function GalleryScreen({ navigation }) {
       style={styles.root}
       onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
     >
-      <Image source={GALLERY_BG} style={styles.bg} resizeMode="stretch" />
+      <Image source={GALLERY_BGS[CAFE]} style={styles.bg} resizeMode="stretch" />
 
       {/* Paintings on the wall (Plopper base-px coords) — tap to view/buy */}
-      {WALL_ITEMS.filter((it) => it.set === todaySet).map(({ key, x, y, w, h, z }) => {
-        const cx = (x / PLOPPER_W) * sw;
+      {WALL_ITEMS.filter((it) => it.set === todaySet).map(({ key, hx, y, w, h, z }) => {
+        const cx = (HOOKS[CAFE][hx] / PLOPPER_W) * sw;
         const cy = (y / PLOPPER_H) * sh;
         const iw = (w / PLOPPER_W) * sw;
         const ih = (h / PLOPPER_H) * sh;
@@ -116,8 +121,8 @@ export default function GalleryScreen({ navigation }) {
 
       {/* Ben behind the bar: drawn above the picture but cut off at the counter's top edge */}
       {sw > 0 && (
-        <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: sw, height: (441 / PLOPPER_H) * sh, overflow: 'hidden', zIndex: 20 }}>
-          <Image source={CUSTOMER_IMAGES.ben} resizeMode="contain" style={{ position: 'absolute', left: (222 / PLOPPER_W) * sw - (92 / PLOPPER_W) * sw, top: (563 / PLOPPER_H) * sh - (276 / PLOPPER_H) * sh, width: (184 / PLOPPER_W) * sw, height: (276 / PLOPPER_H) * sh }} />
+        <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: sw, height: (BAR[CAFE].top / PLOPPER_H) * sh, overflow: 'hidden', zIndex: 20 }}>
+          <Image source={CUSTOMER_IMAGES.ben} resizeMode="contain" style={{ position: 'absolute', left: (BAR[CAFE].x / PLOPPER_W) * sw - (92 / PLOPPER_W) * sw, top: (BAR[CAFE].feet / PLOPPER_H) * sh - (276 / PLOPPER_H) * sh, width: (184 / PLOPPER_W) * sw, height: (276 / PLOPPER_H) * sh }} />
         </View>
       )}
 
