@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, Animated, Easing, PanResponder, Platform, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { BOUQUET_BG, TRADE_IMAGES, UI_IMAGES } from '../engine/assets';
+import { BOUQUET_BG, TRADE_IMAGES, UI_IMAGES, MAKE_IMAGES } from '../engine/assets';
 import {
   TRADE_FLOWERS, BOUQUET_SIZE, BOUQUET_RECIPES, BOUQUET_PAPERS, bouquetPaper, evaluateBouquet, playerLevel, CUSTOMERS,
 } from '../constants/gameData';
@@ -24,12 +24,16 @@ import { useNotice } from '../components/PurchaseNotice';
 const PLOPPER_W = 1376;
 const PLOPPER_H = 768;
 const PAPER_IMG = { plain: 'bouquetempty', layered: 'bouquetmixed', fancy: 'bouquetfancy' };
-const SHEET = { plain: '#dcb985', layered: '#ead2a6', fancy: '#f3d4de' };   // flat paper colours
+// Only kraft has art so far; the other sheets are the same picture with a colour wash.
+const WASH = { plain: null, layered: 'rgba(255,244,214,0.38)', fancy: 'rgba(243,190,210,0.5)' };
+const SHEET = { plain: '#dcb985', layered: '#ead2a6', fancy: '#f3d4de' };   // small chips on the choose-paper step
+const RIBBON = { plain: 'ribbonRed', layered: 'ribbonRed', fancy: 'ribbonPink' };
+const PAPER_ASPECT = 700 / 617;
 const EDGE = '#7a4a22';
 const STEPS = ['PAPER', 'FLOWERS', 'FOLD', 'TIE', 'GIVE'];
 const CX = 790;                                   // centre of the work area
-const PAPER_BOX = { w: 270, h: 330, top: 300 };   // the flat sheet (tall, stems at the bottom)
-const FLAP_TOP = 400;                              // the flaps cover the lower part, blooms stay visible
+const PAPER_BOX = { w: 340, h: Math.round(340 / PAPER_ASPECT), top: 300 };   // the flat sheet
+const FLAP_TOP = 300 + Math.round(0.4 * 300);                             // the flaps cover the lower part, blooms stay visible
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const HEAD = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 const BODY = Platform.select({ web: "'PatrickHand', Georgia, serif", default: 'PatrickHand' });
@@ -163,8 +167,9 @@ export default function BouquetScreen({ navigation }) {
           {/* ── the work table: flat sheet, flowers, flaps, ribbon ── */}
           {step >= 1 && step <= 3 && (
             <View style={{ position: 'absolute', left: pLeft, top: pTop, width: pw, height: ph }} pointerEvents="box-none">
-              <View style={[styles.flat, { width: pw, height: ph, backgroundColor: SHEET[paper] }]} pointerEvents="none">
-                <View style={styles.crease} />
+              <View style={{ width: pw, height: ph }} pointerEvents="none">
+                <Image source={MAKE_IMAGES.paper} style={{ width: pw, height: ph }} resizeMode="stretch" />
+                {WASH[paper] && <View style={[StyleSheet.absoluteFill, { backgroundColor: WASH[paper], borderRadius: 8 }]} />}
               </View>
               {/* the flowers lie on the paper, blooms toward the top */}
               {picks.map((k, i) => {
@@ -177,13 +182,13 @@ export default function BouquetScreen({ navigation }) {
               })}
               {step >= 2 && (
                 <>
-                  <Flap side="left" w={pw / 2} h={fy(PAPER_BOX.top + PAPER_BOX.h - FLAP_TOP)} top={fy(FLAP_TOP - PAPER_BOX.top)} color={SHEET[paper]} z={firstFold.current === 'left' || !firstFold.current ? 6 : 7}
+                  <Flap side="left" w={pw / 2} h={fy(PAPER_BOX.top + PAPER_BOX.h - FLAP_TOP)} top={fy(FLAP_TOP - PAPER_BOX.top)} paperTop={fy(PAPER_BOX.top)} flapTop={fy(FLAP_TOP)} pw={pw} ph={ph} wash={WASH[paper]} z={firstFold.current === 'left' || !firstFold.current ? 6 : 7}
                     active={step === 2 && !folded.left} done={folded.left} reach={fx(210)} onDone={(n) => onFolded('left', n)} />
-                  <Flap side="right" w={pw / 2} h={fy(PAPER_BOX.top + PAPER_BOX.h - FLAP_TOP)} top={fy(FLAP_TOP - PAPER_BOX.top)} color={SHEET[paper]} z={firstFold.current === 'right' ? 6 : 7}
+                  <Flap side="right" w={pw / 2} h={fy(PAPER_BOX.top + PAPER_BOX.h - FLAP_TOP)} top={fy(FLAP_TOP - PAPER_BOX.top)} paperTop={fy(PAPER_BOX.top)} flapTop={fy(FLAP_TOP)} pw={pw} ph={ph} wash={WASH[paper]} z={firstFold.current === 'right' ? 6 : 7}
                     active={step === 2 && !folded.right} done={folded.right} reach={fx(210)} onDone={(n) => onFolded('right', n)} />
                 </>
               )}
-              {step === 3 && <Ribbon x={0} y={fy(FLAP_TOP - PAPER_BOX.top + 70)} w={pw} fx={fx} fy={fy} done={tied} onDone={onTied} />}
+              {step === 3 && <Ribbon x={-pw * 0.04} y={fy(FLAP_TOP - PAPER_BOX.top + 55)} w={pw * 1.08} source={MAKE_IMAGES[RIBBON[paper]]} fx={fx} fy={fy} done={tied} onDone={onTied} />}
             </View>
           )}
 
@@ -303,7 +308,7 @@ function Bunch({ flowerKey, count, size, disabled, x, y, dropAbove, onAdd, fs })
 // One side of the wrapping paper. Swipe it across the middle; it follows your finger,
 // lands flat over the stems if you pass halfway, otherwise springs back. A steady
 // (mostly horizontal) swipe counts as neat.
-function Flap({ side, w, h, top, color, z, active, done, reach, onDone }) {
+function Flap({ side, w, h, top, paperTop, flapTop, pw, ph, wash, z, active, done, reach, onDone }) {
   const p = useRef(new Animated.Value(done ? 1 : 0)).current;   // 0 open .. 1 folded over
   const cfg = useRef({});
   cfg.current = { active, reach, onDone };
@@ -332,15 +337,20 @@ function Flap({ side, w, h, top, color, z, active, done, reach, onDone }) {
         transform: [{ translateX: pivot }, { scaleX }, { translateX: -pivot }],
       }}
     >
-      <View style={[styles.flap, { backgroundColor: color, borderTopLeftRadius: side === 'left' ? 6 : 0, borderTopRightRadius: side === 'right' ? 6 : 0 }]} />
-      <Animated.View style={[styles.flap, { backgroundColor: '#3a2008', opacity: under }]} />
+      {/* this flap is a cut of the same sheet, so it keeps the paper's own texture and edge */}
+      <View style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]}>
+        <Image source={MAKE_IMAGES.paper} resizeMode="stretch" style={{ position: 'absolute', width: pw, height: ph, left: side === 'left' ? 0 : -w, top: -(flapTop - paperTop) }} />
+        {wash && <View style={[StyleSheet.absoluteFill, { backgroundColor: wash }]} />}
+      </View>
+      <View style={[styles.flapEdge, side === 'left' ? { left: 0 } : { right: 0 }]} />
+      <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: '#3a2008', opacity: under }]} />
       {active && <Text style={[styles.swipe, side === 'left' ? { right: 6 } : { left: 6 }]}>{side === 'left' ? '>>' : '<<'}</Text>}
     </Animated.View>
   );
 }
 
 // The ribbon: drag across the waist; it unrolls behind your finger and bows.
-function Ribbon({ x, y, w, fx, fy, done, onDone }) {
+function Ribbon({ x, y, w, source, fx, fy, done, onDone }) {
   const prog = useRef(new Animated.Value(done ? 1 : 0)).current;
   const wob = useRef({ max: 0 });
   const pan = useRef(PanResponder.create({
@@ -354,16 +364,18 @@ function Ribbon({ x, y, w, fx, fy, done, onDone }) {
     },
   })).current;
   const barW = prog.interpolate({ inputRange: [0, 1], outputRange: [0, w] });
-  const bow = prog.interpolate({ inputRange: [0, 0.9, 1], outputRange: [0, 0, 1] });
+  const rh = w * (165 / 900);                            // the ribbon picture is 900×165
   return (
-    <View style={{ position: 'absolute', left: x, top: y - fy(30), width: w, height: fy(60), zIndex: 8 }} {...pan.panHandlers}>
-      <Animated.View style={[styles.ribbon, { width: barW, top: fy(22) }]} />
-      <Animated.View style={[styles.bow, { left: w / 2 - fx(34), top: 0, opacity: bow, transform: [{ scale: bow }] }]}>
-        <View style={[styles.loop, { transform: [{ rotate: '-22deg' }] }]} />
-        <View style={[styles.loop, { transform: [{ rotate: '22deg' }] }]} />
-        <View style={styles.knot} />
+    <View style={{ position: 'absolute', left: x, top: y - rh / 2, width: w, height: rh, zIndex: 8 }} {...pan.panHandlers}>
+      {/* the ribbon is revealed left to right behind your finger */}
+      <Animated.View style={{ position: 'absolute', left: 0, top: 0, height: rh, width: barW, overflow: 'hidden' }} pointerEvents="none">
+        <Image source={source} style={{ width: w, height: rh }} resizeMode="stretch" />
       </Animated.View>
-      {!done && <Text style={[styles.swipe, { left: 6, top: fy(10) }]}>drag ribbon {'>>'}</Text>}
+      {!done && (
+        <Animated.Text pointerEvents="none" style={[styles.swipe, { left: 8, top: rh * 0.25, fontSize: 18, opacity: prog.interpolate({ inputRange: [0, 0.08], outputRange: [1, 0], extrapolate: 'clamp' }) }]}>
+          drag the ribbon {'>>'}
+        </Animated.Text>
+      )}
     </View>
   );
 }
@@ -389,14 +401,9 @@ const styles = StyleSheet.create({
   },
   sheetName: { fontFamily: HEAD, fontSize: 15, color: '#4a2a10' },
   sheetCost: { fontFamily: BODY, fontSize: 13, color: '#8a5a24' },
-  flat: { borderRadius: 6, borderWidth: 3, borderColor: EDGE, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 6, shadowOffset: { width: 2, height: 4 } },
-  crease: { position: 'absolute', left: '50%', top: 6, bottom: 6, width: 1, backgroundColor: 'rgba(90,52,16,0.25)' },
-  flap: { ...StyleSheet.absoluteFillObject, borderWidth: 3, borderColor: EDGE, borderBottomLeftRadius: 4, borderBottomRightRadius: 4 },
+  // a thin fold line along the cut edge of a flap
+  flapEdge: { position: 'absolute', top: 0, bottom: 0, width: 2, backgroundColor: 'rgba(90,52,16,0.45)' },
   swipe: { position: 'absolute', top: '45%', fontFamily: HEAD, fontSize: 22, color: '#5a3410' },
-  ribbon: { position: 'absolute', left: 0, height: 14, backgroundColor: '#d9506a', borderTopWidth: 2, borderBottomWidth: 2, borderColor: '#9a2a44', borderRadius: 3 },
-  bow: { position: 'absolute', width: 68, height: 50 },
-  loop: { position: 'absolute', top: 6, width: 34, height: 30, borderRadius: 16, backgroundColor: '#e8647c', borderWidth: 2, borderColor: '#9a2a44' },
-  knot: { position: 'absolute', left: 25, top: 16, width: 18, height: 18, borderRadius: 9, backgroundColor: '#c8405c', borderWidth: 2, borderColor: '#9a2a44' },
   prompt: { position: 'absolute', alignItems: 'center', zIndex: 10 },
   promptTxt: { fontFamily: HEAD, fontSize: 19, color: '#fff3d6', textAlign: 'center', textShadowColor: '#2a1608', textShadowRadius: 4 },
   bunch: { position: 'absolute', alignItems: 'center', justifyContent: 'center', borderRadius: 26, backgroundColor: 'rgba(255,243,214,0.88)' },

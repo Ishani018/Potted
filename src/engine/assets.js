@@ -158,6 +158,12 @@ export const SHOP_IMAGES = {
   bell: require('../../assets/shop/bell.png'), spool: require('../../assets/shop/spool.png'),
   lantern: require('../../assets/shop/lantern.png'), plant: require('../../assets/shop/plant.png'),
 };
+// Bouquet-making: the flat kraft sheet (700×617) and two wavy ribbons (red, pink).
+export const MAKE_IMAGES = {
+  paper: require('../../assets/shop/paper_kraft.png'),
+  ribbonRed: require('../../assets/shop/ribbon_red.png'),
+  ribbonPink: require('../../assets/shop/ribbon_pink.png'),
+};
 export const FOSTER_BG = require('../../assets/foster/center.png');
 
 // ─── UI ──────────────────────────────────────────────────────────────────────
