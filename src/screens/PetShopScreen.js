@@ -3,7 +3,7 @@ import {
   View, Text, Image, TouchableOpacity, Pressable, StyleSheet, TextInput, Animated, Easing, Platform,
 } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { PETSHOP_STATES, PET_IMAGES, UI_IMAGES, BACKGROUNDS } from '../engine/assets';
+import { PETSHOP_STATES, ORDER_ART, PET_IMAGES, UI_IMAGES, BACKGROUNDS } from '../engine/assets';
 import { PETS, ROOM_NAMES, playerLevel } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
@@ -64,6 +64,33 @@ function PetTag({ label, show }) {
   return (
     <Animated.View pointerEvents="none" style={{ opacity: fade, transform: [{ translateY: y }] }}>
       <PixelText size={10}>{label}</PixelText>
+    </Animated.View>
+  );
+}
+
+// The "not yet" message: a painted hanging tag that swings from the door, with the level on it.
+function LockedTag({ level, sw, doorW }) {
+  const swing = useRef(new Animated.Value(0)).current;
+  const pop = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.spring(pop, { toValue: 1, friction: 6, useNativeDriver: false }).start();
+    Animated.loop(Animated.sequence([
+      Animated.timing(swing, { toValue: 1, duration: 520, easing: Easing.inOut(Easing.sin), useNativeDriver: false }),
+      Animated.timing(swing, { toValue: -1, duration: 520, easing: Easing.inOut(Easing.sin), useNativeDriver: false }),
+    ]), { iterations: 2 }).start();
+  }, []);
+  const w = Math.max(110, sw * 0.15), h = w * 312 / 198;
+  const font = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
+  return (
+    <Animated.View pointerEvents="none" style={{
+      position: 'absolute', left: (doorW - w) / 2 - (doorW > 90 ? w * 0.14 : 0), top: '10%', width: w, height: h, zIndex: 60, opacity: pop,
+      transform: [{ translateY: -h / 2 }, { rotate: swing.interpolate({ inputRange: [-1, 1], outputRange: ['-5deg', '5deg'] }) }, { translateY: h / 2 }, { scale: pop.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] }) }],
+    }}>
+      <Image source={ORDER_ART.tag_bow} style={{ position: 'absolute', width: w, height: h }} resizeMode="stretch" />
+      <View style={{ position: 'absolute', left: w * 0.1, right: w * 0.1, top: h * 0.67, bottom: h * 0.06, alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ fontFamily: font, fontSize: w * 0.11, lineHeight: w * 0.125, color: '#5a3410', textAlign: 'center' }}>Not yet{'\n'}unlocked</Text>
+        <Text style={{ fontFamily: font, fontSize: w * 0.095, color: '#9a6a2a', marginTop: w * 0.015 }}>Level {level}</Text>
+      </View>
     </Animated.View>
   );
 }
@@ -148,12 +175,7 @@ export default function PetShopScreen({ navigation }) {
             onPress={() => tapDoor(a)}
           >
             {!locked && !opening && <View pointerEvents="none" style={[styles.archGlow, { borderTopLeftRadius: 999, borderTopRightRadius: 999, opacity: on ? 1 : 0 }]} />}
-            {notYet === a.id && (
-              <View pointerEvents="none" style={[styles.notYet, a.id === 'food' ? { left: -120, right: 6 } : { left: -24, right: -24 }]}>
-                <Text style={styles.notYetTxt}>Not yet unlocked</Text>
-                <Text style={styles.notYetSub}>Reach level {a.level}</Text>
-              </View>
-            )}
+            {notYet === a.id && <LockedTag level={a.level} sw={sw} doorW={((a.x1 - a.x0) / ART_W) * sw} />}
           </Pressable>
         );
       })}
