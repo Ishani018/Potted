@@ -755,7 +755,7 @@ const styles = StyleSheet.create({
   badge: { position: 'absolute', right: -4, bottom: -4, backgroundColor: '#5a3410', borderWidth: 2, borderColor: '#2a1608', borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1 },
   price: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: 'rgba(58,32,12,0.88)', borderWidth: 3, borderColor: '#2a1608', borderRadius: 4 },
   priceTxt: { fontFamily: HEAD, fontSize: 24, color: '#ffd060' },
-  perfectRow: { position: 'absolute', left: '28%', right: '12%', top: '30%', height: '40%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
+  perfectRow: { position: 'absolute', left: '28%', right: '12%', top: '38%', height: '40%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
   perfectCoins: { fontFamily: HEAD, fontSize: 44, color: '#4a2a10' },
   neat: { fontFamily: HEAD, fontSize: 16, color: '#cfe8a0', textShadowColor: '#2a1608', textShadowRadius: 3 },
   small: { fontFamily: BODY, fontSize: 13, color: '#fff3d6', textShadowColor: '#2a1608', textShadowRadius: 3 },
