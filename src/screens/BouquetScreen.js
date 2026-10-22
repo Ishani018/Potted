@@ -32,8 +32,10 @@ const PAPER_ASPECT = 700 / 617;
 const EDGE = '#7a4a22';
 const STEPS = ['PAPER', 'FLOWERS', 'FOLD', 'TIE', 'GIVE'];
 const CX = 790;                                   // centre of the work area
-const PAPER_BOX = { w: 340, h: Math.round(340 / PAPER_ASPECT), top: 300 };   // the flat sheet
-const FLAP_TOP = 300 + Math.round(0.4 * 300);                             // the flaps cover the lower part, blooms stay visible
+// the flat sheet lies on the work table (the table top starts at about y=435; the flower
+// buckets run along y=704, so the sheet ends above them)
+const PAPER_BOX = { w: 300, h: Math.round(300 / PAPER_ASPECT), top: 418 };
+const FLAP_TOP = PAPER_BOX.top + Math.round(0.4 * PAPER_BOX.h);                             // the flaps cover the lower part, blooms stay visible
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const HEAD = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 const BODY = Platform.select({ web: "'PatrickHand', Georgia, serif", default: 'PatrickHand' });
@@ -105,7 +107,7 @@ export default function BouquetScreen({ navigation }) {
   };
 
   const foundCount = BOUQUET_RECIPES.filter((r) => found[r.id]).length;
-  const art = fx(340);
+  const art = fx(300);
   const rowN = Math.max(owned.length, 1);
   const gap = Math.min(fx(96), fx(700) / rowN);
   const bunchW = Math.min(fx(66), gap - fx(6));
@@ -120,7 +122,7 @@ export default function BouquetScreen({ navigation }) {
       {sw > 0 && (
         <>
           {/* step strip */}
-          <View style={[styles.steps, { top: fy(62), left: fx(CX) - fx(260), width: fx(520) }]} pointerEvents="none">
+          <View style={[styles.steps, { top: fy(14), left: fx(CX) - fx(260), width: fx(520) }]} pointerEvents="none">
             {STEPS.map((s, i) => (
               <View key={s} style={styles.stepItem}>
                 <View style={[styles.dot, i < step && styles.dotDone, i === step && styles.dotNow]} />
@@ -131,7 +133,7 @@ export default function BouquetScreen({ navigation }) {
 
           {/* the customer's ticket */}
           {want && (
-            <View style={[styles.ticket, { left: fx(215), top: fy(108), width: fx(300) }]} pointerEvents="none">
+            <View style={[styles.ticket, { left: fx(700), top: fy(112), width: fx(300) }]} pointerEvents="none">
               <Portrait customerKey={want.customer} size={fx(40)} bare />
               <View style={{ flex: 1 }}>
                 <Text style={styles.ticketName}>{CUSTOMERS[want.customer].name} wants</Text>
@@ -194,13 +196,13 @@ export default function BouquetScreen({ navigation }) {
 
           {/* ── 5: the finished bouquet ── */}
           {step === 4 && (
-            <View pointerEvents="none" style={{ position: 'absolute', left: fx(CX) - art / 2, top: fy(290), width: art }}>
+            <View pointerEvents="none" style={{ position: 'absolute', left: fx(CX) - art / 2, top: fy(400), width: art }}>
               <BouquetArt flowers={[picks[0], picks[1], picks[2]]} size={art} tier={paper} />
             </View>
           )}
 
           {/* the prompt for this step */}
-          <View style={[styles.prompt, { left: fx(CX) - fx(190), width: fx(380), top: fy(640) }]} pointerEvents="none">
+          <View style={[styles.prompt, { left: fx(CX) - fx(190), width: fx(380), top: fy(372) }]} pointerEvents="none">
             <Text style={styles.promptTxt}>
               {step === 0 ? 'Pick a sheet of paper to begin.'
                 : step === 1 ? (full ? 'Lovely! Now fold it.' : `Drag ${BOUQUET_SIZE - picks.length} more flower${BOUQUET_SIZE - picks.length === 1 ? '' : 's'} onto the paper.`)
