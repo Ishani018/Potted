@@ -361,7 +361,7 @@ function Celebration({ fx, fy, coins }) {
       }}>
         <Image source={ORDER_ART.perfect} style={{ width: '100%', height: '100%' }} resizeMode="stretch" />
         <View style={styles.perfectRow}>
-          <Image source={UI_IMAGES.goldcoins} style={{ width: fx(70), height: fx(70) }} resizeMode="contain" />
+          <Image source={UI_IMAGES.goldcoins} style={{ width: fx(58), height: fx(58) }} resizeMode="contain" />
           <Text style={styles.perfectCoins}>+{coins}</Text>
         </View>
       </Animated.View>
@@ -755,8 +755,8 @@ const styles = StyleSheet.create({
   badge: { position: 'absolute', right: -4, bottom: -4, backgroundColor: '#5a3410', borderWidth: 2, borderColor: '#2a1608', borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1 },
   price: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: 'rgba(58,32,12,0.88)', borderWidth: 3, borderColor: '#2a1608', borderRadius: 4 },
   priceTxt: { fontFamily: HEAD, fontSize: 24, color: '#ffd060' },
-  perfectRow: { position: 'absolute', left: '28%', right: '12%', top: '38%', height: '40%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
-  perfectCoins: { fontFamily: HEAD, fontSize: 44, color: '#4a2a10' },
+  perfectRow: { position: 'absolute', left: '28%', right: '12%', top: '42%', height: '40%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
+  perfectCoins: { fontFamily: HEAD, fontSize: 38, color: '#4a2a10' },
   neat: { fontFamily: HEAD, fontSize: 16, color: '#cfe8a0', textShadowColor: '#2a1608', textShadowRadius: 3 },
   small: { fontFamily: BODY, fontSize: 13, color: '#fff3d6', textShadowColor: '#2a1608', textShadowRadius: 3 },
   recipeBtn: { position: 'absolute', zIndex: 30, backgroundColor: '#5a3410', borderWidth: 3, borderColor: '#2a1608', borderRadius: 4 },
