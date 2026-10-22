@@ -86,7 +86,7 @@ export default function BouquetScreen({ navigation }) {
   const [folded, setFolded] = useState({ left: false, right: false });
   const [tied, setTied] = useState(false);
   const firstFold = useRef(null);               // which flap went over first (it ends up underneath)
-  const [celebrate, setCelebrate] = useState(false);   // the perfect-order burst
+  const [celebrate, setCelebrate] = useState(0);   // the perfect-order burst
   const [neat, setNeat] = useState(true);           // stays true while every swipe is steady
   const [binPage, setBinPage] = useState(0);
   const [ribbonKey, setRibbonKey] = useState('ribbonRed');
@@ -138,16 +138,19 @@ export default function BouquetScreen({ navigation }) {
   const giveOver = () => {
     if (!result) return;
     dispatch({ type: 'SELL_BOUQUET', flowers: picks, paper, ribbon: ribbonKey, customerId: order ? order.id : null, neat });
-    const earned = order ? `${customerName} paid ${payout} coins.${grade.label ? ` ${grade.label}` : ''}` : `You earned ${result.net + neatBonus} coins.`;
-    notify({
-      icon: UI_IMAGES[PAPER_IMG[paper]],
-      title: isNewRecipe ? `New recipe: ${result.name}!` : `Made ${result.name}!`,
-      subtitle: isNewRecipe ? `Saved to your garden journal. ${earned}` : earned,
-    });
-    const toCounter = !!order;
     const perfect = !!(order && grade && grade.perfect);
+    const earned = order ? `${customerName} paid ${payout} coins.${grade.label && !perfect ? ` ${grade.label}` : ''}` : `You earned ${result.net + neatBonus} coins.`;
+    // a perfect order gets its own banner (with the coins), so no second pop-up unless it is a new recipe
+    if (!perfect || isNewRecipe) {
+      notify({
+        icon: UI_IMAGES[PAPER_IMG[paper]],
+        title: isNewRecipe ? `New recipe: ${result.name}!` : `Made ${result.name}!`,
+        subtitle: isNewRecipe ? `Saved to your garden journal. ${earned}` : earned,
+      });
+    }
+    const toCounter = !!order;
     resetAll();
-    if (perfect) { setCelebrate(true); setTimeout(() => setCelebrate(false), 1900); }
+    if (perfect) { setCelebrate(payout);  setTimeout(() => setCelebrate(0), 1900); }
     if (toCounter) setTimeout(() => navigation.navigate('Counter'), perfect ? 1900 : 900);
   };
 
@@ -320,7 +323,7 @@ export default function BouquetScreen({ navigation }) {
       </TouchableOpacity>
 
       {/* no settings button or level badge here: they would sit on top of the flower bins */}
-      {celebrate && <Celebration fx={fx} fy={fy} />}
+      {celebrate > 0 && <Celebration fx={fx} fy={fy} coins={celebrate} />}
       <ScreenHud sw={sw} sh={sh} onMap={() => navigation.navigate('Map')} />
       {notice}
     </View>
@@ -328,7 +331,7 @@ export default function BouquetScreen({ navigation }) {
 }
 
 // A shower of blossoms and leaves with a banner when an order is perfect.
-function Celebration({ fx, fy }) {
+function Celebration({ fx, fy, coins }) {
   const N = 22;
   const t = useRef(new Animated.Value(0)).current;
   const pop = useRef(new Animated.Value(0)).current;
@@ -357,7 +360,7 @@ function Celebration({ fx, fy }) {
         opacity: pop, transform: [{ scale: pop.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) }],
       }}>
         <Image source={ORDER_ART.banner} style={{ position: 'absolute', width: '100%', height: '100%' }} resizeMode="stretch" />
-        <Text style={styles.perfect}>Perfect order!</Text>
+        <Text style={styles.perfect}>Perfect order!  +{coins}</Text>
       </Animated.View>
     </View>
   );
