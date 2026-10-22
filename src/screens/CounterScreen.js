@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Image, Animated, Easing, PanResponder, Platform, StyleSheet } from 'react-native';
+import { View, Text, Image, Animated, Easing, PanResponder, Pressable, Platform, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { COUNTER_BG, CUSTOMER_IMAGES, CUSTOMER_POSES, TRADE_IMAGES, SEED_IMAGES, UI_IMAGES, BOOK_STAMP, MAKE_IMAGES, ORDER_ART, BOW_IMAGES, BOX_IMAGES } from '../engine/assets';
 import { CUSTOMERS, TRADE_FLOWERS, CUSTOMERS_PER_DAY, BOUQUET_PAPERS, RIBBON_NAMES } from '../constants/gameData';
@@ -102,6 +102,7 @@ export default function CounterScreen({ navigation, route }) {
   const gone = useRef(new Animated.Value(1)).current;    // opacity
   const stub = useRef(new Animated.Value(0)).current;    // 0 = order stub up, 1 = taken down (going to the workstation)
   const [taking, setTaking] = useState(false);
+  const [opened, setOpened] = useState(false);           // the order is only read once you tap the customer
   const [mode, setMode] = useState('card');                 // 'card' (reading the order) | 'pack' (putting flowers in the box)
   const [packed, setPacked] = useState([]);                  // flowers dropped in the box so far
   const [boxState, setBoxState] = useState('open');          // 'open' | 'closing' | 'closed'
@@ -167,7 +168,7 @@ export default function CounterScreen({ navigation, route }) {
   useEffect(() => {
     if (cur || !live) return undefined;
     setCur({ order: live, line: null });
-    setPhase('in'); setMode('card'); setPacked([]); setBoxState('open'); setPlacing(null);
+    setPhase('in'); setMode('card'); setOpened(false); setPacked([]); setBoxState('open'); setPlacing(null);
     t.setValue(0); hop.setValue(0); gone.setValue(1);
     const anim = Animated.parallel([
       Animated.timing(t, { toValue: 1, duration: HOPS * HOP_MS, easing: Easing.linear, useNativeDriver: false }),
@@ -226,7 +227,7 @@ export default function CounterScreen({ navigation, route }) {
         <View style={{ position: 'absolute', left: 0, top: 0, width: sw, height: fy(COUNTER_TOP), overflow: 'hidden', zIndex: 5 }} pointerEvents="none">
           <Animated.View
             style={{
-              position: 'absolute', opacity: phase === 'ask' && mode === 'card' ? 0 : gone,
+              position: 'absolute', opacity: phase === 'ask' && mode === 'card' && opened ? 0 : gone,
               left: fx(DOOR.x),
               width: Animated.multiply(height, SPRITE_ASPECT * sh / H),
               height: Animated.multiply(height, sh / H),
@@ -242,7 +243,13 @@ export default function CounterScreen({ navigation, route }) {
         </View>
       )}
 
-      {sw > 0 && cur && phase === 'ask' && mode === 'card' && (
+      {sw > 0 && cur && phase === 'ask' && mode === 'card' && !opened && (
+        <Pressable onPress={() => setOpened(true)} style={{ position: 'absolute', left: fx(SPOT.x - 190), top: fy(110), width: fx(380), height: fy(540), zIndex: 12 }}>
+          <View pointerEvents="none" style={styles.callBubble}><Text style={styles.callTxt}>!</Text></View>
+        </Pressable>
+      )}
+
+      {sw > 0 && cur && phase === 'ask' && mode === 'card' && opened && (
         <>
         {/* the shop goes hazy while you read the order */}
         <View style={styles.haze} />
@@ -365,6 +372,8 @@ const styles = StyleSheet.create({
   trayHint: { fontFamily: HEAD, fontSize: 15, color: '#5a3410' },
   trayCount: { position: 'absolute', right: -4, bottom: -4, backgroundColor: '#5a3410', borderRadius: 9, minWidth: 18, height: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
   trayCountTxt: { fontFamily: HEAD, fontSize: 12, color: '#fff3d6' },
+  callBubble: { position: 'absolute', top: 0, alignSelf: 'center', left: '38%', width: 54, height: 54, borderRadius: 27, backgroundColor: '#fbf0cf', borderWidth: 3, borderColor: '#b8793a', alignItems: 'center', justifyContent: 'center' },
+  callTxt: { fontFamily: HEAD, fontSize: 30, color: '#b04a2a', fontWeight: 'bold' },
   haze: { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, zIndex: 15, backgroundColor: 'rgba(48,30,14,0.5)', ...(Platform.OS === 'web' ? { backdropFilter: 'blur(5px)', WebkitBackdropFilter: 'blur(5px)' } : {}) },
   bubble: { alignItems: 'stretch' },
   inner: { position: 'absolute', left: '14%', right: '15%', top: '17%', bottom: '13%', justifyContent: 'space-between' },

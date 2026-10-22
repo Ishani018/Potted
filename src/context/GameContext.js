@@ -101,11 +101,8 @@ function completeOrder(state, order, message) {
         [order.customer]: { served: (met?.served ?? 0) + 1, firstAt: met?.firstAt ?? Date.now() },
       },
     },
-    notices: [...state.notices, {
-      id: `cust_${order.id}_${Date.now()}`,
-      icon: '💐',
-      text: `${message}${gotSeed ? ` · and a ${seedName} seed!` : ''}`,
-    }],
+    // no "thanks" message on top of the screen: the customer reacts in person at the counter
+    notices: gotSeed ? [...state.notices, { id: `cust_${order.id}_${Date.now()}`, icon: '🌱', text: `A ${seedName} seed from ${CUSTOMERS[order.customer].name}!` }] : state.notices,
   };
   return grantXp(next, order.xp);
 }
@@ -419,7 +416,9 @@ function reducer(state, action) {
       if (!Array.isArray(flowers) || flowers.length !== BOUQUET_SIZE) return state;
       // Delivering to a customer: the order must be open and the bouquet must fit it.
       const order = customerId ? state.player.customers?.list?.find((o) => o.id === customerId) : null;
-      if (customerId && (!order || !bouquetFillsOrder(order, flowers))) return state;
+      if (customerId && (!order || order.done)) return state;
+      // you may hand over the wrong bouquet: the customer pays less and leaves angry
+      const flowersOk = !order || bouquetFillsOrder(order, flowers);
       if (state.player.coins < bouquetPaper(paper).cost) return state; // can't afford the paper
       if (playerLevel(state.player) < bouquetPaper(paper).level) return state; // paper not unlocked yet
       const harvested = { ...(state.player.harvestedFlowers ?? {}) };
@@ -438,7 +437,7 @@ function reducer(state, action) {
       // a neatly folded and tied bouquet sells for 10% more
       const neatBonus = neat && net > 0 ? Math.round(net * 0.1) : 0;
       // a customer pays the price plus a tip; the tip depends on how well paper and ribbon match the order
-      const tip = order ? Math.round(order.tip * orderGrade(order, paper, ribbon).mult) : 0;
+      const tip = order ? Math.round(order.tip * (flowersOk ? orderGrade(order, paper, ribbon).mult : 0.4)) : 0;
       let delivered = {
         ...state,
         player: {
@@ -450,7 +449,7 @@ function reducer(state, action) {
         },
       };
       if (order) {
-        const upset = orderGrade(order, paper, ribbon).mult < 1;   // got neither the paper nor the ribbon they asked for
+        const upset = !flowersOk || orderGrade(order, paper, ribbon).mult < 1;   // got neither the paper nor the ribbon they asked for
         delivered = completeOrder(delivered, order, upset ? `${CUSTOMERS[order.customer].name} wasn't happy with the bouquet. +${tip} tip` : `${CUSTOMERS[order.customer].name} loved the bouquet! +${tip} tip`);
         if (upset) delivered = { ...delivered, player: { ...delivered.player, customers: { ...delivered.player.customers, list: delivered.player.customers.list.map((o) => (o.id === order.id ? { ...o, upset: true } : o)) } } };
       }

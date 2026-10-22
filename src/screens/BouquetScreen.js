@@ -118,7 +118,7 @@ export default function BouquetScreen({ navigation, route }) {
   const packOrder = packId ? (state.player.customers?.list ?? []).find((o) => o.id === packId && o.type === 'flowers') ?? null : null;
   const wantCombo = packOrder ? null : ((openOrders(state.player).find((o) => o.type === 'bouquet') ?? {}).combo ?? null);
   const remainingCombo = wantCombo ? (() => { const pool = [...picks]; return wantCombo.filter((k) => { const i = pool.indexOf(k); if (i >= 0) { pool.splice(i, 1); return false; } return true; }); })() : null;
-  const needs = (key) => (wantCombo ? wantCombo.filter((k) => k === key).length - picks.filter((k) => k === key).length : 1);
+  const needs = () => 1;                                 // any flower may go in; the order only hints at which ones
   const owned = BOUQUET_FLOWERS.filter((k) => (harvested[k] ?? 0) > 0 && TRADE_FLOWERS[k]);
   const pages = 1;
   const page = 0;
@@ -133,10 +133,12 @@ export default function BouquetScreen({ navigation, route }) {
   // delivered to them when it has the flower they asked for.
   const want = openOrders(state.player).find((o) => o.type === 'bouquet') ?? null;
   const strip = packOrder || want;
-  const order = full ? openOrders(state.player).find((o) => bouquetFillsOrder(o, picks)) : null;
+  // you can hand over any bouquet: the waiting customer gets it even if it is wrong (and is angry)
+  const order = full ? want : null;
+  const flowersOk = !order || bouquetFillsOrder(order, picks);
   const customerName = order ? CUSTOMERS[order.customer].name : '';
   const neatBonus = result && neat ? Math.round(Math.max(0, result.net) * 0.1) : 0;
-  const grade = order ? orderGrade(order, paper, ribbonKey) : null;
+  const grade = order ? (flowersOk ? orderGrade(order, paper, ribbonKey) : { mult: 0.4, perfect: false, label: 'Not what I asked for...' }) : null;
   const payout = result ? result.net + neatBonus + (order ? Math.round(order.tip * grade.mult) : 0) : 0;
 
   // ── step helpers ──
