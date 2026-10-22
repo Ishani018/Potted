@@ -17,16 +17,16 @@ const PLOPPER_H = 768;
 // which café picture is used: 'a' (open room) or 'b' (closer in, bar and tables)
 export const CAFE = 'b';
 const BAR = { a: { x: 222, top: 441, feet: 563 }, b: { x: 212, top: 437, feet: 560 } };   // where Ben stands, per picture
-// All eight paintings hang as tiny frames along the high beam, up by the ceiling.
+// All eight paintings hang along the high beam, up by the ceiling, in a mix of sizes (like a real gallery wall).
 const WALL_ITEMS = [
-  { key: 'sleepingpuppypainting',  x: 540, y: 86, w: 38, h: 36, z: 1 },
-  { key: 'tabbycatpainting',       x: 620, y: 86, w: 38, h: 36, z: 2 },
-  { key: 'campfirepainting',       x: 700, y: 86, w: 38, h: 36, z: 3 },
-  { key: 'picnic',                 x: 780, y: 86, w: 38, h: 38, z: 4 },
-  { key: 'beachpainting',          x: 860, y: 86, w: 38, h: 37, z: 5 },
-  { key: 'womanportraitpainting',  x: 940, y: 86, w: 38, h: 36, z: 6 },
-  { key: 'weddingpainting',        x: 1020, y: 86, w: 38, h: 36, z: 7 },
-  { key: 'newbaby',                x: 1100, y: 86, w: 38, h: 38, z: 8 },
+  { key: 'sleepingpuppypainting',  x: 540, y: 88, w: 46, h: 44, z: 1 },
+  { key: 'tabbycatpainting',       x: 612, y: 86, w: 34, h: 32, z: 2 },
+  { key: 'campfirepainting',       x: 676, y: 90, w: 42, h: 40, z: 3 },
+  { key: 'picnic',                 x: 758, y: 87, w: 50, h: 50, z: 4 },
+  { key: 'beachpainting',          x: 836, y: 91, w: 38, h: 37, z: 5 },
+  { key: 'womanportraitpainting',  x: 908, y: 85, w: 44, h: 42, z: 6 },
+  { key: 'weddingpainting',        x: 986, y: 89, w: 36, h: 34, z: 7 },
+  { key: 'newbaby',                x: 1060, y: 88, w: 48, h: 48, z: 8 },
 ];
 
 // ── Buy modal ─────────────────────────────────────────────────────────────────
