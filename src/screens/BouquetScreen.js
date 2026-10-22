@@ -341,7 +341,7 @@ function Wrapped({ art, picks, left, top, w, h, ribbon, bow, fx }) {
   React.useEffect(() => { Animated.timing(o, { toValue: 1, duration: 380, useNativeDriver: false }).start(); }, []);
   const FAN = [{ x: 0.32, y: 0.27, r: '-14deg' }, { x: 0.68, y: 0.27, r: '14deg' }, { x: 0.5, y: 0.17, r: '0deg' }];
   const fz = w * 0.46;
-  const rw = w * 0.24, rh = w * 0.075, wy = top + h * WAIST + w * 0.01;
+  const rw = w * 0.2, rh = w * 0.075, wy = top + h * WAIST + w * 0.01;
   return (
     <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: o }}>
       <Image source={art} style={[{ position: 'absolute', left, top, width: w, height: h }, SOFT]} resizeMode="contain" />
