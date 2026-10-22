@@ -27,6 +27,8 @@ const HAPPY_MS = 1500;                                // joy hops + thanks befor
 const HEAD = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 const BODY = Platform.select({ web: "'PatrickHand', Georgia, serif", default: 'PatrickHand' });
 
+const PAPER_ART = { plain: MAKE_IMAGES.paper, layered: MAKE_IMAGES.wrapLayered, fancy: MAKE_IMAGES.paperFancy };
+
 export default function CounterScreen({ navigation }) {
   const { state, dispatch } = useGame();
   const [box, setBox] = useState({ w: 0, h: 0 });
@@ -151,20 +153,32 @@ export default function CounterScreen({ navigation }) {
                     <Text style={styles.count}>Customer {Math.min(done + 1, CUSTOMERS_PER_DAY)} of {CUSTOMERS_PER_DAY} today</Text>
                   </View>
                 </View>
-                <Text style={styles.say}>{customerLine(order)}</Text>
-                <View style={styles.orderRow}>
-                  {art && <Image source={art} style={styles.flower} resizeMode="contain" />}
-                  <Text style={[styles.want, order.type === 'flowers' && !canGive && { color: '#b04a2a' }]}>
-                    {order.type === 'flowers'
-                      ? `${flowerName(order.flowerKey)}  ${Math.min(have, order.qty)} / ${order.qty}`
-                      : `A bouquet with ${flowerName(order.flowerKey)}`}
-                  </Text>
-                </View>
-                {order.type === 'bouquet' && order.paper && (
+                <Text style={styles.say} numberOfLines={2}>{customerLine(order, 'short')}</Text>
+                {order.type === 'flowers' ? (
                   <View style={styles.orderRow}>
-                    <Text style={styles.want}>{BOUQUET_PAPERS[order.paper]?.name} paper</Text>
-                    <Image source={MAKE_IMAGES[order.ribbon]} style={styles.ribbon} resizeMode="stretch" />
-                    <Text style={styles.want}>{RIBBON_NAMES[order.ribbon]}</Text>
+                    {art && <Image source={art} style={styles.flower} resizeMode="contain" />}
+                    <Text style={[styles.want, !canGive && { color: '#b04a2a' }]}>
+                      {`${flowerName(order.flowerKey)}  ${Math.min(have, order.qty)} / ${order.qty}`}
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.tiles}>
+                    <View style={styles.tile}>
+                      {art && <Image source={art} style={styles.tileImg} resizeMode="contain" />}
+                      <Text style={styles.tileTxt} numberOfLines={1}>{flowerName(order.flowerKey)}</Text>
+                    </View>
+                    {order.paper && (
+                      <View style={styles.tile}>
+                        <Image source={PAPER_ART[order.paper] || MAKE_IMAGES.paper} style={styles.tileImg} resizeMode="contain" />
+                        <Text style={styles.tileTxt} numberOfLines={1}>{BOUQUET_PAPERS[order.paper]?.name}</Text>
+                      </View>
+                    )}
+                    {order.ribbon && (
+                      <View style={styles.tile}>
+                        <View style={styles.tileImg}><Image source={MAKE_IMAGES[order.ribbon]} style={styles.ribbonTile} resizeMode="stretch" /></View>
+                        <Text style={styles.tileTxt} numberOfLines={1}>{RIBBON_NAMES[order.ribbon]}</Text>
+                      </View>
+                    )}
                   </View>
                 )}
                 <View style={styles.orderRow}>
@@ -218,6 +232,11 @@ const styles = StyleSheet.create({
   name: { fontFamily: HEAD, fontSize: 20, color: '#4a2a10' },
   count: { fontFamily: BODY, fontSize: 12.5, color: '#8a6a40' },
   say: { fontFamily: BODY, fontSize: 15, color: '#4a2a10', lineHeight: 17, flex: 1 },
+  tiles: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 6 },
+  tile: { alignItems: 'center', flex: 1 },
+  tileImg: { width: 54, height: 54, alignItems: 'center', justifyContent: 'center' },
+  ribbonTile: { width: 54, height: 18 },
+  tileTxt: { fontFamily: HEAD, fontSize: 14, color: '#3f7a2e', marginTop: 1 },
   orderRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   flower: { width: 30, height: 32 },
   want: { fontFamily: HEAD, fontSize: 17, color: '#3f7a2e' },

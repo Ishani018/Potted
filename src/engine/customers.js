@@ -35,7 +35,7 @@ export function customerLine(order, which = 'ask') {
     .replace('{qty}', String(qty))
     .replace('{flower}', order.type === 'flowers' ? plural : `${name}`);
   // a bouquet order also names the paper and the ribbon
-  if (order.type === 'bouquet' && order.paper && order.ribbon) {
+  if (which !== 'short' && order.type === 'bouquet' && order.paper && order.ribbon) {
     return `${line} In ${BOUQUET_PAPERS[order.paper]?.name ?? 'kraft'} paper with a ${RIBBON_NAMES[order.ribbon] ?? 'red'} ribbon, please.`;
   }
   return line;
