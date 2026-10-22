@@ -52,3 +52,9 @@ export function bouquetPic(picks, paper) {
   const h = [...picks].sort().join('').split('').reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
   return tied[h % tied.length].img;
 }
+
+// Which flowers have a bouquet picture on this paper (customers only ask for those).
+export function picturedFlowers(paper) {
+  const set = PICS[paper === 'layered' ? 'f' : 'k'];
+  return [...new Set(set.flatMap((p) => p.flowers))];
+}

@@ -1,3 +1,4 @@
+import { picturedFlowers } from './bouquetPics';
 import {
   CUSTOMERS, CUSTOMERS_PER_DAY, POTTED_FLOWERS, HANGING_PLANTS, TRADE_FLOWERS,
   BOUQUET_FLOWERS, SEED_UNLOCK_LEVEL, seedType, seedUnlockLevel, BOUQUET_PAPERS, RIBBON_KEYS, RIBBON_NAMES,
@@ -61,10 +62,26 @@ export function rollCustomerOrders(day, level, rand) {
   return keys.slice(0, CUSTOMERS_PER_DAY).map((customer, i) => {
     const c = CUSTOMERS[customer];
     // Only ask for flowers the player can already get (or is one level away).
-    const type = rand() < 0.6 ? 'flowers' : 'bouquet';
-    // (a bouquet only asks for one of the flowers that go into bouquets)
-    const reachable = c.likes.filter((k) => seedUnlockLevel(k) <= level + 1 && (type === 'flowers' || BOUQUET_FLOWERS.includes(k)));
-    const flowerKey = pick(reachable.length ? reachable : ['daisy']);
+    const reach = (k) => seedUnlockLevel(k) <= level + 1;
+    const papers = Object.values(BOUQUET_PAPERS).filter((p) => p.level <= level);
+    const paperPool = papers.length ? papers : [BOUQUET_PAPERS.plain];
+    let type = rand() < 0.6 ? 'flowers' : 'bouquet';
+    // a bouquet order only asks for what there is a bouquet picture of, on the paper it names
+    let paper = null; let flowerKey;
+    if (type === 'bouquet') {
+      const tryPapers = shuffle(paperPool.map((p) => p.id));
+      for (const id of tryPapers) {
+        const pics = picturedFlowers(id).filter((k) => BOUQUET_FLOWERS.includes(k) && reach(k));
+        const liked = c.likes.filter((k) => pics.includes(k));
+        const pool = liked.length ? liked : pics;
+        if (pool.length) { paper = id; flowerKey = pick(pool); break; }
+      }
+      if (!paper) type = 'flowers';
+    }
+    if (type === 'flowers') {
+      const reachable = c.likes.filter(reach);
+      flowerKey = pick(reachable.length ? reachable : ['daisy']);
+    }
     const base = TRADE_FLOWERS[flowerKey]?.base ?? 10;
     // Hanging plants only give 1 flower per harvest, so ask for fewer.
     const maxQty = seedType(flowerKey) === 'hanging' ? 2 : 3;
@@ -77,8 +94,6 @@ export function rollCustomerOrders(day, level, rand) {
     });
     const seed = ahead.length && rand() < 0.3 ? pick(ahead) : null;
     // bouquets are placed like a shop order: the paper (one you have unlocked) and a ribbon
-    const papers = Object.values(BOUQUET_PAPERS).filter((p) => p.level <= level);
-    const paper = type === 'bouquet' ? pick(papers.length ? papers : [BOUQUET_PAPERS.plain]).id : null;
     const ribbon = type === 'bouquet' ? pick(RIBBON_KEYS) : null;
 
     return {
