@@ -29,17 +29,17 @@ const ARCHES = [
 ];
 
 export const SHOP_PETS = [
-  { key: 'tiger',         x: 726, y: 78, w: 108, h: 141, flip: false, z: 1 },
-  { key: 'koazy',         x: 263, y: 602, w: 148, h: 85,  flip: false, z: 2 },
-  { key: 'brownie',       x: 878, y: 565, w: 137, h: 149, flip: false, z: 3 },
-  { key: 'aki',           x: 583, y: 557, w: 136, h: 161, flip: false, z: 4 },
-  { key: 'cherry',        x: 1214, y: 602, w: 126, h: 70,  flip: false, z: 5 },
-  { key: 'oreo',          x: 1141, y: 712, w: 170, h: 76,  flip: false, z: 6 },
-  { key: 'ebonyandivory', x: 501, y: 360, w: 142, h: 88,  flip: false, z: 7 },
-  { key: 'george',        x: 271, y: 360, w: 96,  h: 108, flip: false, z: 8 },
-  { key: 'martin',        x: 574, y: 282, w: 114, h: 165, flip: true,  z: 9 },
-  { key: 'milk',          x: 788, y: 209, w: 94,  h: 129, flip: true,  z: 10 },
-  { key: 'storm',         x: 1182, y: 508, w: 108, h: 144, flip: false, z: 11 },
+  { key: 'tiger',     x: 806, y: 192, w: 87, h: 114, flip: false, z: 1 },
+  { key: 'milk',      x: 735, y: 329, w: 82, h: 112, flip: false, z: 2 },
+  { key: 'ebonyandivory', x: 566, y: 365, w: 156, h: 97, flip: false, z: 3 },
+  { key: 'george',    x: 392, y: 364, w: 93, h: 104, flip: false, z: 4 },
+  { key: 'martin',    x: 271, y: 338, w: 127, h: 183, flip: false, z: 5 },
+  { key: 'aki',       x: 427, y: 459, w: 123, h: 146, flip: false, z: 6 },
+  { key: 'brownie',   x: 919, y: 461, w: 131, h: 142, flip: false, z: 7 },
+  { key: 'storm',     x: 1206, y: 449, w: 131, h: 175, flip: false, z: 8 },
+  { key: 'cherry',    x: 1247, y: 561, w: 176, h: 97, flip: false, z: 9 },
+  { key: 'koazy',     x: 263, y: 588, w: 205, h: 118, flip: false, z: 10 },
+  { key: 'oreo',      x: 1141, y: 715, w: 189, h: 84, flip: false, z: 11 },
 ];
 
 
