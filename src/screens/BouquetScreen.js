@@ -71,6 +71,11 @@ const BINS = [
   { x: 92, y: 490 }, { x: 266, y: 488 }, { x: 435, y: 490 },
 ];
 const BIN_D = 160;
+// centre of each bin's painted name tag, in base space (same order as BINS)
+const PLATES = [
+  { x: 96, y: 201 }, { x: 267, y: 201 }, { x: 435, y: 201 }, { x: 96, y: 371 }, { x: 265, y: 370 }, { x: 435, y: 372 }, { x: 95, y: 544 }, { x: 265, y: 543 }, { x: 435, y: 544 },
+];
+const PLATE_W = 60, PLATE_H = 29;
 const STRIP_SLOTS = [606, 700, 794, 888, 982];   // left edges of the five painted slots on the order strip
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const HEAD = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
@@ -252,7 +257,7 @@ export default function BouquetScreen({ navigation }) {
             <Bunch
               key={key + i} flowerKey={key} count={left(key)} size={fx(BIN_D) * 0.72} disabled={step !== 1 || full || left(key) <= 0} dim={step === 1}
               x={fx(BINS[i].x) - fx(BIN_D) * 0.36} y={fy(BINS[i].y) - fx(BIN_D) * 0.36}
-              dropRight={fx(MAT.x0)} onAdd={() => addFlower(key)} fs={fs} plateY={fy(68) + fx(BIN_D) * 0.36}
+              dropRight={fx(MAT.x0)} onAdd={() => addFlower(key)} fs={fs} plate={{ x: fx(PLATES[i].x), y: fy(PLATES[i].y) }} fxs={fx(1)}
             />
           ))}
           {pages > 1 && (
@@ -509,7 +514,7 @@ const PILE = [
   { x: -0.02, y: -0.2, r: -4 }, { x: -0.26, y: 0.1, r: -24 }, { x: 0.26, y: 0.08, r: 22 },
 ];
 
-function Bunch({ flowerKey, count, size, disabled, dim = true, x, y, dropRight, onAdd, fs, plateY }) {
+function Bunch({ flowerKey, count, size, disabled, dim = true, x, y, dropRight, onAdd, fs, plate, fxs }) {
   const drag = useRef(new Animated.ValueXY()).current;
   const [lifted, setLifted] = useState(false);
   const cfg = useRef({});
@@ -546,9 +551,9 @@ function Bunch({ flowerKey, count, size, disabled, dim = true, x, y, dropRight, 
             }} />
         );
       })}
-      <View pointerEvents="none" style={[styles.plate, { top: plateY - size * 0.11, width: size, height: size * 0.22 }]}>
-        <Image source={src} resizeMode="contain" style={{ width: size * 0.2, height: size * 0.2, marginRight: size * 0.05 }} />
-        <Text style={{ fontFamily: HEAD, color: '#5a3a18', fontSize: Math.max(10, size * 0.17) }}>{count}</Text>
+      <View pointerEvents="none" style={[styles.plate, { left: plate.x - x - PLATE_W / 2 * fxs, top: plate.y - y - PLATE_H / 2 * fxs, width: PLATE_W * fxs, height: PLATE_H * fxs }]}>
+        <Image source={src} resizeMode="contain" style={{ width: PLATE_H * 0.62 * fxs, height: PLATE_H * 0.62 * fxs, marginRight: 4 * fxs }} />
+        <Text style={{ fontFamily: HEAD, color: '#5a3a18', fontSize: 14 * fxs }}>{count}</Text>
       </View>
     </View>
   );
@@ -804,7 +809,7 @@ const styles = StyleSheet.create({
   promptSub: { fontFamily: HEAD, fontSize: 14, color: '#cfe8a0', textAlign: 'center', textShadowColor: '#2a1608', textShadowRadius: 4, marginTop: 1 },
   promptTxt: { fontFamily: HEAD, fontSize: 15, lineHeight: 17, color: '#fff3d6', textAlign: 'center', textShadowColor: '#2a1608', textShadowRadius: 4 },
   bunch: { position: 'absolute' },
-  plate: { position: 'absolute', left: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  plate: { position: 'absolute', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   badge: { position: 'absolute', right: -4, bottom: -4, backgroundColor: '#5a3410', borderWidth: 2, borderColor: '#2a1608', borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1 },
   price: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: 'rgba(58,32,12,0.88)', borderWidth: 3, borderColor: '#2a1608', borderRadius: 4 },
   priceTxt: { fontFamily: HEAD, fontSize: 24, color: '#ffd060' },
