@@ -50,6 +50,8 @@ assets/*
 !assets/bouquets/*.png
 !assets/petcard/
 !assets/petcard/*.png
+!assets/perks/
+!assets/perks/*.png
 !assets/pests/
 !assets/pests/*.png
 !assets/herbalist/
