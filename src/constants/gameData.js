@@ -244,18 +244,25 @@ export const FOSTER_BASE_W = 1020;          // pet widths (fw) are measured agai
 export const FOSTER_SIZE = { w: 1677, h: 938 }; // size of the foster centre picture
 // Feet position of a pet sitting on each seat (px of the 1677×938 picture).
 export const FOSTER_SEATS = [
-  { id: 'cubbyL',    x: 200,  y: 655, scale: 0.7 },
-  { id: 'cubbyR',    x: 440,  y: 560, scale: 0.6 },
-  { id: 'bench',     x: 400,  y: 458, scale: 0.9 },
+  { id: 'cubbyL',    x: 200,  y: 655, scale: 0.7, max: 62 },
+  { id: 'cubbyR',    x: 440,  y: 560, scale: 0.6, max: 56 },
+  { id: 'bench',     x: 400,  y: 458, scale: 0.9, max: 92 },
   { id: 'greenBed',  x: 500,  y: 655, scale: 1.1 },
-  { id: 'treeHouse', x: 842,  y: 590, scale: 0.7 },
+  { id: 'treeHouse', x: 842,  y: 590, scale: 0.7, max: 66 },
   { id: 'greenDog',  x: 1170, y: 628, scale: 1.1 },
   { id: 'flowerL',   x: 200,  y: 810, scale: 1.3 },
   { id: 'flowerR',   x: 1500, y: 685, scale: 1.2 },
   { id: 'pinkBed',   x: 1470, y: 845, scale: 1.2 },
   { id: 'pawRug',    x: 850,  y: 810, scale: 1.2 },
-  { id: 'playpen',   x: 1285, y: 520, scale: 0.7 },
+  { id: 'playpen',   x: 1285, y: 520, scale: 0.7, max: 72 },
 ];
+// A pet only sits where it fits: its width on that seat must not pass the seat's `max` (seats with
+// no max take anything, so big pets end up on the rug and beds).
+export function strayFits(stray, seat) {
+  if (!seat.max) return true;
+  const w = (stray.restFw ?? stray.fw) * seat.scale;
+  return w <= seat.max;
+}
 export const STRAYS = {
   biscuit:   { key: 'biscuit',   name: 'Biscuit',   breed: 'Shih Tzu',      species: 'dog',    price: 120, aspect: 300 / 262, fw: 120, restAspect: 300 / 155, restFw: 150,
     found: (n) => `${n} found Biscuit dozing under a park bench, far too sleepy to be scared.`,

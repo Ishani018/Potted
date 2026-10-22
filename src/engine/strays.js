@@ -1,4 +1,4 @@
-import { STRAY_KEYS, STRAYS, STRAY_MS, STRAY_MAX, FOSTER_SEATS, CUSTOMERS } from '../constants/gameData';
+import { strayFits, STRAY_KEYS, STRAYS, STRAY_MS, STRAY_MAX, FOSTER_SEATS, CUSTOMERS } from '../constants/gameData';
 
 // Customers bring strays to the Foster Center. Called on every TICK: if there's a
 // free seat, an unmet animal left, and STRAY_MS has passed since the last one (the
@@ -11,14 +11,17 @@ export function maybeArriveStray(player, now, rand) {
 
   const taken = new Set([...present.map((s) => s.key), ...(player.ownedPets ?? [])]);
   const keys = STRAY_KEYS.filter((k) => !taken.has(k));
-  const seats = FOSTER_SEATS.filter((seat) => !present.some((s) => s.seat === seat.id));
-  if (keys.length === 0 || seats.length === 0) return null;
+  const free = FOSTER_SEATS.filter((seat) => !present.some((s) => s.seat === seat.id));
+  if (keys.length === 0 || free.length === 0) return null;
 
   const pick = (list) => list[Math.min(list.length - 1, Math.floor(rand() * list.length))];
   const key = pick(keys);
   // someone you already know is likelier to be the finder
   const met = Object.keys(player.customerBook ?? {}).filter((c) => CUSTOMERS[c]);
   const finder = pick(met.length ? met : Object.keys(CUSTOMERS));
+  // somewhere it fits (a big dog does not go on the little bench)
+  const seats = free.filter((seat) => strayFits(STRAYS[key], seat));
+  if (seats.length === 0) return null;
   const seat = pick(seats).id;
   const stray = { key, finder, seat, at: now };
   return {

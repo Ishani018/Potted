@@ -189,6 +189,8 @@ export const ORDER_ART = {
   washi_pink: require('../../assets/order/washi_pink.png'),
 };
 
+// The painted pet card frame (blank: all text is live). 'nocoin' has the coin icon wiped too.
+export const PETCARD_IMAGES = { coin: require('../../assets/petcard/card_coin.png'), nocoin: require('../../assets/petcard/card_nocoin.png') };
 export const ORDER_SLIP = require('../../assets/shop/order_slip.png');
 export const SHOP_IMAGES = {
   box: require('../../assets/shop/box.png'), backpack: require('../../assets/shop/backpack.png'),

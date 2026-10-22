@@ -48,6 +48,8 @@ assets/*
 !assets/order/*.png
 !assets/bouquets/
 !assets/bouquets/*.png
+!assets/petcard/
+!assets/petcard/*.png
 !assets/pests/
 !assets/pests/*.png
 !assets/herbalist/

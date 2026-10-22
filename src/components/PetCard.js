@@ -1,11 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, TextInput, StyleSheet, Platform } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { useLayout } from '../context/LayoutContext';
-import { UI_IMAGES, BACKGROUNDS, PERK_ICONS } from '../engine/assets';
+import { PETCARD_IMAGES, PERK_ICONS } from '../engine/assets';
 import { PETS, ROOM_NAMES } from '../constants/gameData';
 import PetSprite from './PetSprite';
-import { PIXEL_FONT, pixelText } from './Pixel';
+import { PIXEL_FONT } from './Pixel';
+
+// the card's lettering: the same soft serif as the other painted pop-ups
+const HEAD = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
+const pixelText = (size, color) => ({
+  fontFamily: HEAD, fontSize: Math.round(size * 1.45), color: color ?? '#fbf3da',
+  ...(color ? {} : { textShadowColor: 'rgba(40,24,6,0.8)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 }),
+});
 
 // Pet card — the painted "Pixel-Art Pet Adoption Frame" (pet_frame.png, 599×656)
 // with live content laid over its painted slots: banner (title), big window (pet,
@@ -13,16 +20,17 @@ import { PIXEL_FONT, pixelText } from './Pixel';
 // The window text/buttons were wiped from the art so all text is live.
 const REFUND_FRACTION = 0.5; // coins returned when giving a pet up for adoption
 const INK = '#5a3410', SOFT = '#8a5a24', GREEN = '#2f6a22';
-const IMG_W = 599, IMG_H = 656;
+const IMG_W = 600, IMG_H = 624;
 
 // slot rectangles as fractions of the image
 const F = {
-  banner:   { l: 0.19, t: 0.075, w: 0.60, h: 0.085 },
-  close:    { l: 0.862, t: 0.085, w: 0.09, h: 0.085 },
-  window:   { l: 0.105, t: 0.2, w: 0.79, h: 0.425 },
-  plate:    { l: 0.105, t: 0.645, w: 0.79, h: 0.105 },
-  coinBox:  { l: 0.088, t: 0.785, w: 0.36, h: 0.125 },
-  button:   { l: 0.475, t: 0.785, w: 0.43, h: 0.125 },
+  banner:   { l: 0.193, t: 0.034, w: 0.579, h: 0.077 },
+  close:    { l: 0.854, t: 0.036, w: 0.116, h: 0.111 },
+  window:   { l: 0.064, t: 0.147, w: 0.852, h: 0.405 },
+  perk:     { l: 0.09, t: 0.56, w: 0.77, h: 0.12 },
+  plate:    { l: 0.093, t: 0.706, w: 0.764, h: 0.117 },
+  coinBox:  { l: 0.0675, t: 0.847, w: 0.326, h: 0.116 },
+  button:   { l: 0.418, t: 0.847, w: 0.466, h: 0.116 },
 };
 
 export function AdoptModal({ petKey, onClose, story }) {
@@ -88,7 +96,7 @@ export function AdoptModal({ petKey, onClose, story }) {
   return (
     <TouchableOpacity style={s.overlay} activeOpacity={1} onPress={onClose}>
       <TouchableOpacity activeOpacity={1} onPress={() => {}} style={{ width: W, height: H }}>
-        <Image source={showCoin ? UI_IMAGES.petFrame : UI_IMAGES.petFrameNoCoin} style={{ position: 'absolute', left: 0, top: 0, width: W, height: H }} resizeMode="stretch" />
+        <Image source={showCoin ? PETCARD_IMAGES.coin : PETCARD_IMAGES.nocoin} style={{ position: 'absolute', left: 0, top: 0, width: W, height: H }} resizeMode="stretch" />
 
         {/* banner title */}
         <View pointerEvents="none" style={[R(F.banner), { alignItems: 'center', justifyContent: 'center' }]}>
@@ -127,27 +135,17 @@ export function AdoptModal({ petKey, onClose, story }) {
               </Text>
             </View>
           ) : manage ? (
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                <View style={{ width: winW * 0.36, height: winH * 0.5 }}>
-                  <PetSprite petKey={petKey} w={winW * 0.36} h={winH * 0.5} />
-                </View>
-                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: winW * 0.02 }}>
-                  <Image source={PERK_ICONS[petKey]} style={{ width: winW * 0.15, height: winW * 0.14 }} resizeMode="contain" />
-                  <View style={{ flex: 1 }}>
-                    <Text style={[s.perkTitle, { fontSize: fz(0.034) }]}>{pet.effect.title}</Text>
-                    <Text style={[s.body, { fontSize: fz(0.029), lineHeight: fz(0.04) }]}>{pet.effect.desc}</Text>
-                  </View>
-                </View>
+            <View style={{ flex: 1, alignItems: 'center' }}>
+              <View style={{ width: winW * 0.4, height: winH * 0.5 }}>
+                <PetSprite petKey={petKey} w={winW * 0.4} h={winH * 0.5} />
               </View>
-              {/* two big choices — no cramped room picker */}
-              <View style={{ flexDirection: 'row', gap: winW * 0.04, paddingBottom: winH * 0.04 }}>
-                {[['all', 'EVERY ROOM', 'Appears and helps everywhere'], [null, 'TUCK AWAY', 'Resting - no perk']].map(([val, label, sub]) => {
+              {/* two big choices, no cramped room picker */}
+              <View style={{ flexDirection: 'row', gap: winW * 0.04, marginTop: winH * 0.03, alignSelf: 'stretch', paddingHorizontal: winW * 0.04 }}>
+                {[['all', 'EVERY ROOM'], [null, 'TUCK AWAY']].map(([val, label]) => {
                   const on = (placedRoom === 'all' || (typeof placedRoom === 'number')) ? val === 'all' : val === null;
                   return (
-                    <TouchableOpacity key={label} activeOpacity={0.85} onPress={() => handlePlace(val)} style={[s.choice, { flex: 1, paddingVertical: winH * 0.035 }, on && s.choiceOn]}>
-                      <Text style={pixelText(fz(0.03), on ? '#fff' : INK)}>{label}</Text>
-                      <Text style={[s.body, { fontSize: fz(0.022), marginTop: 3, color: on ? '#e9f5d8' : SOFT, textAlign: 'center' }]}>{sub}</Text>
+                    <TouchableOpacity key={label} activeOpacity={0.85} onPress={() => handlePlace(val)} style={[s.choice, { flex: 1, paddingVertical: winH * 0.03 }, on && s.choiceOn]}>
+                      <Text style={pixelText(fz(0.028), on ? '#fff' : INK)}>{label}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -155,22 +153,24 @@ export function AdoptModal({ petKey, onClose, story }) {
             </View>
           ) : (
             <View style={{ flex: 1, alignItems: 'center' }}>
-              <View style={{ width: winW * 0.58, height: winH * (story ? 0.44 : 0.62) }}>
-                <PetSprite petKey={petKey} w={winW * 0.58} h={winH * (story ? 0.44 : 0.62)} />
+              <View style={{ width: winW * 0.6, height: winH * (story ? 0.56 : 0.9) }}>
+                <PetSprite petKey={petKey} w={winW * 0.6} h={winH * (story ? 0.56 : 0.9)} />
               </View>
-              {story ? <Text style={[s.body, { fontSize: fz(0.026), lineHeight: fz(0.035), textAlign: 'center', marginTop: winH * 0.01, paddingHorizontal: winW * 0.03 }]} numberOfLines={3}>{story}</Text> : null}
-              {pet.effect && (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: winW * 0.025, marginTop: winH * 0.02, paddingHorizontal: winW * 0.02 }}>
-                  <Image source={PERK_ICONS[petKey]} style={{ width: winW * 0.16, height: winW * 0.15 }} resizeMode="contain" />
-                  <View style={{ flex: 1 }}>
-                    <Text style={[s.perkTitle, { fontSize: fz(0.034) }]}>{pet.effect.title}</Text>
-                    <Text style={[s.body, { fontSize: fz(0.029), lineHeight: fz(0.04) }]}>{pet.effect.desc}</Text>
-                  </View>
-                </View>
-              )}
+              {story ? <Text style={[s.body, { fontSize: fz(0.028), lineHeight: fz(0.038), textAlign: 'center', marginTop: winH * 0.02, paddingHorizontal: winW * 0.02 }]} numberOfLines={3}>{story}</Text> : null}
             </View>
           )}
         </View>
+
+        {/* what the pet does, in the painted green strip */}
+        {pet.effect && !renaming && (
+          <View pointerEvents="none" style={[R(F.perk), { flexDirection: 'row', alignItems: 'center', paddingHorizontal: W * 0.025, gap: W * 0.02 }]}>
+            <Image source={PERK_ICONS[petKey]} style={{ width: W * 0.1, height: W * 0.095 }} resizeMode="contain" />
+            <View style={{ flex: 1 }}>
+              <Text style={[s.perkTitle, { fontSize: fz(0.034) }]} numberOfLines={1}>{pet.effect.title}</Text>
+              <Text style={[s.body, { fontSize: fz(0.027), lineHeight: fz(0.034) }]} numberOfLines={2}>{pet.effect.desc}</Text>
+            </View>
+          </View>
+        )}
 
         {/* name plate */}
         <View pointerEvents="none" style={[R(F.plate), { alignItems: 'center', justifyContent: 'center' }]}>
@@ -187,7 +187,7 @@ export function AdoptModal({ petKey, onClose, story }) {
         </Slot>
 
         {/* bottom-right (green button) */}
-        <Slot r={F.button} onPress={right.onPress} style={right.disabled ? { opacity: 0.6 } : null}>
+        <Slot r={F.button} onPress={right.onPress} style={[{ paddingLeft: W * 0.1 }, right.disabled ? { opacity: 0.6 } : null]}>
           <Text style={pixelText(fz(0.034))} numberOfLines={1}>{right.label}</Text>
         </Slot>
       </TouchableOpacity>
@@ -207,7 +207,7 @@ const s = StyleSheet.create({
   choice: { alignItems: 'center', borderRadius: 8, borderWidth: 3, borderColor: '#c99555', backgroundColor: '#fde9b8' },
   choiceOn: { borderColor: '#1d4a14', backgroundColor: '#3f8a35' },
   input: {
-    textAlign: 'center', fontFamily: PIXEL_FONT, color: INK, backgroundColor: '#fff6df',
+    textAlign: 'center', fontFamily: HEAD, color: INK, backgroundColor: '#fff6df',
     borderWidth: 3, borderColor: '#c99555', borderRadius: 8, paddingVertical: 10, outlineStyle: 'none',
   },
 });

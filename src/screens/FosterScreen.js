@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Image, Pressable, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { FOSTER_BG, FOSTER_REST_IMAGES } from '../engine/assets';
-import { STRAYS, FOSTER_SEATS, FOSTER_SIZE, FOSTER_BASE_W, CUSTOMERS } from '../constants/gameData';
+import { STRAYS, FOSTER_SEATS, strayFits, FOSTER_SIZE, FOSTER_BASE_W, CUSTOMERS } from '../constants/gameData';
 import ScreenHud from '../components/ScreenHud';
 import InventoryOverlay from '../components/InventoryOverlay';
 import PetSprite from '../components/PetSprite';
@@ -22,7 +22,19 @@ export default function FosterScreen({ navigation }) {
   const [invOpen, setInvOpen] = useState(false);
   const sw = box.w, sh = box.h;
   const strays = state.player.strays ?? [];
-  const seatOf = (st) => FOSTER_SEATS.find((x) => x.id === st.seat) ?? FOSTER_SEATS[0];
+  // where each stray sits: its own seat if it fits there, otherwise the nearest free one that does
+  // (an older save may have a big dog on the little bench)
+  const seats = {};
+  const used = new Set();
+  strays.forEach((st) => {
+    let seat = FOSTER_SEATS.find((x) => x.id === st.seat);
+    if (!seat || !strayFits(STRAYS[st.key], seat) || used.has(seat.id)) {
+      seat = FOSTER_SEATS.find((x) => !used.has(x.id) && strayFits(STRAYS[st.key], x) && x.id === 'pawRug')
+        ?? FOSTER_SEATS.find((x) => !used.has(x.id) && strayFits(STRAYS[st.key], x)) ?? FOSTER_SEATS[0];
+    }
+    used.add(seat.id); seats[st.key] = seat;
+  });
+  const seatOf = (st) => seats[st.key];
   const fx = (v) => (v / FOSTER_SIZE.w) * sw;
   const fy = (v) => (v / FOSTER_SIZE.h) * sh;
   const fw = (v) => (v / FOSTER_BASE_W) * sw;   // pet widths
