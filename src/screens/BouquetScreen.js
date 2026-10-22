@@ -44,12 +44,13 @@ function SheetLayers({ paper, w, h, shadow = false }) {
   }
   return <Image source={paper === 'fancy' ? MAKE_IMAGES.paperFancy : MAKE_IMAGES.paper} style={[{ width: w, height: h }, shadow && SOFT]} resizeMode="stretch" />;
 }
-// The spools on the ribbon tray you can pull from (base units; the others have no ribbon art yet)
+// The six spools on the ribbon tray (base units); each pulls its own ribbon. The twine isn't one.
 const SPOOLS = [
-  { x: 1136, y: 152, key: 'ribbonRed' }, { x: 1192, y: 152, key: 'ribbonPink' }, { x: 1136, y: 272, key: 'ribbonPink' },
+  { x: 1136, y: 153, key: 'ribbonRed' }, { x: 1196, y: 153, key: 'ribbonPink' }, { x: 1250, y: 153, key: 'ribbonCream' },
+  { x: 1136, y: 274, key: 'ribbonPinkFloral' }, { x: 1200, y: 274, key: 'ribbonCreamFloral' }, { x: 1265, y: 274, key: 'ribbonGreen' },
 ];
 const PAPER_ASPECT = 700 / 617;
-const RIBBON_ASPECT = 10;                            // the ribbon pictures are 1000×100
+const RIBBON_ASPECT = 11.2;                          // the ribbon pictures are 1000×~89
 const MAT = { x0: 419, y0: 232, x1: 1066, y1: 705 };  // the wooden work mat
 const CX = (MAT.x0 + MAT.x1) / 2;                    // 742
 const CY = (MAT.y0 + MAT.y1) / 2 + 6;
@@ -193,7 +194,7 @@ export default function BouquetScreen({ navigation }) {
           {/* ── 3: pull a ribbon off a spool and let go over the middle of the paper ── */}
           {step === 3 && !tied && (
             <SpoolPull
-              spools={SPOOLS.map((sp) => ({ ...sp, x: fx(sp.x), y: fy(sp.y), r: fx(34) }))}
+              spools={SPOOLS.map((sp) => ({ ...sp, x: fx(sp.x), y: fy(sp.y), r: fx(30) }))}
               target={{ left: pLeft, top: pTop, w: pw, h: ph, waist: fy(FLAP_TOP + 70) }}
               onTie={(key, wasNeat) => onTied(wasNeat, key)} fy={fy}
             />
@@ -460,7 +461,7 @@ function SpoolPull({ spools, target, onTie, fy }) {
   const pans = useRef(spools.map(makePan)).current;
   const len = pull ? Math.hypot(pull.x - pull.sx, pull.y - pull.sy) : 0;
   const ang = pull ? Math.atan2(pull.y - pull.sy, pull.x - pull.sx) : 0;
-  const RH = 26;
+  const RH = 24;
   return (
     <>
       {spools.map((sp, i) => (

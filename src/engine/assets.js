@@ -164,6 +164,10 @@ export const MAKE_IMAGES = {
   paperFancy: require('../../assets/shop/paper_fancy.png'),
   ribbonRed: require('../../assets/shop/ribbon_red.png'),
   ribbonPink: require('../../assets/shop/ribbon_pink.png'),
+  ribbonCream: require('../../assets/shop/ribbon_cream.png'),
+  ribbonPinkFloral: require('../../assets/shop/ribbon_pinkfloral.png'),
+  ribbonGreen: require('../../assets/shop/ribbon_green.png'),
+  ribbonCreamFloral: require('../../assets/shop/ribbon_creamfloral.png'),
 };
 export const FOSTER_BG = require('../../assets/foster/center.png');
 
