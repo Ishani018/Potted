@@ -34,7 +34,7 @@ export const CHAPTERS = [
 
 export const pageIndexFor = (key) => Math.max(0, BOOK_PAGES.findIndex((p) => p.key === key));
 
-const TURN_MS = 170;
+const TURN_MS = 240;
 const BookContext = createContext(null);
 export const useBook = () => useContext(BookContext);
 
@@ -51,9 +51,9 @@ export function BookProvider({ startKey = 'flowers', children }) {
     if (busy.current || target === pageRef.current) return;
     busy.current = true;
     setDir(target > pageRef.current ? 1 : -1);
-    Animated.timing(turn, { toValue: 1, duration: TURN_MS, easing: Easing.in(Easing.quad), useNativeDriver: false }).start(() => {
+    Animated.timing(turn, { toValue: 1, duration: TURN_MS, easing: Easing.in(Easing.cubic), useNativeDriver: false }).start(() => {
       setPage(target);
-      Animated.timing(turn, { toValue: 0, duration: TURN_MS, easing: Easing.out(Easing.quad), useNativeDriver: false }).start(() => { busy.current = false; });
+      Animated.timing(turn, { toValue: 0, duration: TURN_MS, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start(() => { busy.current = false; });
     });
   };
   const flip = (d) => goTo(pageRef.current + d);

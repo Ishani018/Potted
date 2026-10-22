@@ -24,12 +24,13 @@ const PAGES = {
 };
 const MARGIN = 0.02;
 
-// Squash a page towards the spine: `edge` is the side the spine is on.
-function turnStyle(w, scale, edge, shade) {
+// Turn a page about the spine like a real leaf: it swings (rotateY, with perspective) from flat to edge-on,
+// the spread changes at that moment, and the new page swings open again. `edge` is the side the spine is on.
+function turnStyle(w, angle, edge) {
   const half = w / 2;
-  const sign = edge === 'left' ? 1 : -1; // scale about the left edge (right page) or the right edge (left page)
+  const sign = edge === 'left' ? 1 : -1;      // the right page hinges on its left edge, the left page on its right edge
   return {
-    transform: [{ translateX: -sign * half }, { scaleX: scale }, { translateX: sign * half }],
+    transform: [{ perspective: 1100 }, { translateX: -sign * half }, { rotateY: angle }, { translateX: sign * half }],
   };
 }
 
@@ -46,9 +47,10 @@ export default function BookFrame({ left, right }) {
   const pageW = (PAGES.left.x1 - PAGES.left.x0) * W;
 
   // 1 → 0 while a page closes onto the spine, then back up as the next one opens
-  const open = book ? book.turn.interpolate({ inputRange: [0, 1], outputRange: [1, 0.02] }) : 1;
-  const leftScale = book && book.dir < 0 ? open : 1;
-  const rightScale = book && book.dir > 0 ? open : 1;
+  const swingL = book ? book.turn.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '88deg'] }) : '0deg';
+  const swingR = book ? book.turn.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-88deg'] }) : '0deg';
+  const leftScale = book && book.dir < 0 ? swingL : '0deg';
+  const rightScale = book && book.dir > 0 ? swingR : '0deg';
   const shade = book ? book.turn.interpolate({ inputRange: [0, 1], outputRange: [0, 0.35] }) : 0;
 
   return (
@@ -62,6 +64,19 @@ export default function BookFrame({ left, right }) {
         {right}
         {book && book.dir > 0 && <Animated.View pointerEvents="none" style={[styles.shade, { opacity: shade }]} />}
       </Animated.View>
+      {/* the two red clasps at the sides are big flip tabs: tap to turn the page */}
+      {book && (
+        <>
+          <TouchableOpacity accessibilityLabel="Previous page" disabled={book.page === 0} onPress={() => book.flip(-1)} activeOpacity={0.7}
+            style={[styles.clasp, { left: mx + 0.012 * W, top: my + 0.34 * H, width: 0.1 * W, height: 0.3 * H }, book.page === 0 && styles.off]}>
+            <Image source={BOOK_ARROWS.left} style={styles.claspImg} resizeMode="contain" />
+          </TouchableOpacity>
+          <TouchableOpacity accessibilityLabel="Next page" disabled={book.page === book.total - 1} onPress={() => book.flip(1)} activeOpacity={0.7}
+            style={[styles.clasp, { right: mx + 0.012 * W, top: my + 0.34 * H, width: 0.1 * W, height: 0.3 * H }, book.page === book.total - 1 && styles.off]}>
+            <Image source={BOOK_ARROWS.right} style={styles.claspImg} resizeMode="contain" />
+          </TouchableOpacity>
+        </>
+      )}
       {book && (
         <View style={[rect(PAGES.pager), styles.center, styles.pager]}>
           <TouchableOpacity accessibilityLabel="Previous page" disabled={book.page === 0} onPress={() => book.flip(-1)} style={[styles.arrowBtn, book.page === 0 && styles.off]}>
@@ -80,9 +95,11 @@ export default function BookFrame({ left, right }) {
 const styles = StyleSheet.create({
   center: { alignItems: 'center', justifyContent: 'center' },
   pager: { flexDirection: 'row', gap: 10 },
-  arrowBtn: { paddingHorizontal: 10, paddingVertical: 4 },
+  arrowBtn: { paddingHorizontal: 14, paddingVertical: 10 },
+  clasp: { position: 'absolute', alignItems: 'center', justifyContent: 'center', zIndex: 20 },
+  claspImg: { width: '62%', height: '30%' },
   off: { opacity: 0.25 },
-  arrowImg: { width: 30, height: 26 },
+  arrowImg: { width: 44, height: 38 },
   pageNum: { fontFamily: PIXEL_FONT, color: '#8a6a40', fontSize: 7 },
   shade: { ...StyleSheet.absoluteFillObject, backgroundColor: '#5a3410' },
 });
