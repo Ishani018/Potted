@@ -9,7 +9,6 @@ import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
 import PetSprite from '../components/PetSprite';
 import { AdoptModal } from '../components/PetCard';
-import { useNotice } from '../components/PurchaseNotice';
 import { PixelText, PixelPanel, PixelButton, COLORS, PIXEL_FONT } from '../components/Pixel';
 
 // Pets were laid out in Plopper on a 1376×768 canvas with the bg STRETCHED to
@@ -24,6 +23,7 @@ const PLOPPER_H = 768;
 // The painted shop (1677x938) has two arches on the right; tap one to walk through.
 const ART_W = 1677, ART_H = 938;
 // The player level at which each arch opens (until then it is faded and cannot be entered).
+const LOCK_TITLE = 'Not unlocked yet';
 const ARCH_LEVEL = { food: 2, foster: 3 };
 const ARCHES = [
   { id: 'foster', go: 'Foster', title: 'The Foster Home', sub: 'home', level: ARCH_LEVEL.foster, x0: 1262, y0: 52, x1: 1446, y1: 592 },
@@ -79,7 +79,14 @@ export default function PetShopScreen({ navigation }) {
   const sw = box.w, sh = box.h;
   const level = playerLevel(state.player);
   const [opening, setOpening] = useState(null);       // 'food' | 'foster' while that door is opening
-  const [notice, notify] = useNotice(2600);
+  // the painted "not unlocked" banner that slides up from the bottom
+  const [lockMsg, setLockMsg] = useState(null);
+  const lockAnim = useRef(new Animated.Value(0)).current;
+  const showLock = (m) => {
+    setLockMsg(m); lockAnim.setValue(0);
+    Animated.timing(lockAnim, { toValue: 1, duration: 260, easing: Easing.out(Easing.back(1.3)), useNativeDriver: false }).start();
+    timers.current.push(setTimeout(() => Animated.timing(lockAnim, { toValue: 0, duration: 300, useNativeDriver: false }).start(() => setLockMsg(null)), 2600));
+  };
   const openFade = useRef(new Animated.Value(0)).current;
   const timers = useRef([]);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
@@ -87,7 +94,7 @@ export default function PetShopScreen({ navigation }) {
   const tapDoor = (a) => {
     if (opening) return;
     if (level < a.level) {
-      notify({ icon: ORDER_ART.seal, title: 'Not unlocked yet', subtitle: `${a.title} opens at level ${a.level}.` });
+      showLock({ title: LOCK_TITLE, sub: `${a.title} opens at level ${a.level}.` });
       return;
     }
     setOpening(a.id === 'food' ? 'food' : 'foster');
@@ -152,7 +159,18 @@ export default function PetShopScreen({ navigation }) {
         );
       })}
 
-      {notice}
+      {lockMsg && sw > 0 && (
+        <Animated.View pointerEvents="none" style={{
+          position: 'absolute', left: (sw - sw * 0.62) / 2, bottom: sh * 0.04, width: sw * 0.62, height: sw * 0.62 * 275 / 900, zIndex: 120,
+          opacity: lockAnim, transform: [{ translateY: lockAnim.interpolate({ inputRange: [0, 1], outputRange: [40, 0] }) }],
+        }}>
+          <Image source={ORDER_ART.notice} style={{ position: 'absolute', width: '100%', height: '100%' }} resizeMode="stretch" />
+          <View style={{ position: 'absolute', left: '26%', right: '9%', top: '24%', bottom: '24%', alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={styles.lockTitle} numberOfLines={1}>{lockMsg.title}</Text>
+            <Text style={styles.lockSub} numberOfLines={2}>{lockMsg.sub}</Text>
+          </View>
+        </Animated.View>
+      )}
 
       {selected && <AdoptModal petKey={selected} onClose={() => setSelected(null)} />}
 
@@ -171,6 +189,8 @@ const styles = StyleSheet.create({
   tagWrap: { position: 'absolute', left: -40, right: -40, top: -22, alignItems: 'center', zIndex: 50 },
 
   archLocked: { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, borderTopLeftRadius: 999, borderTopRightRadius: 999, backgroundColor: 'rgba(252,238,196,0.62)' },
+  lockTitle: { fontFamily: Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' }), fontSize: 22, color: '#4a2a10', textAlign: 'center', fontWeight: 'bold' },
+  lockSub: { fontFamily: Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' }), fontSize: 14, color: '#7a5030', textAlign: 'center', marginTop: 2 },
   archGlow: { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,236,170,0.22)', borderWidth: 3, borderColor: 'rgba(255,240,190,0.55)' },
 
   modalOverlay: {
