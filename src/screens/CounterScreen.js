@@ -3,7 +3,7 @@ import { View, Text, Image, Animated, Easing, Platform, StyleSheet } from 'react
 import { useGame } from '../context/GameContext';
 import { COUNTER_BG, CUSTOMER_IMAGES, CUSTOMER_POSES, TRADE_IMAGES, SEED_IMAGES, UI_IMAGES, BOOK_STAMP, MAKE_IMAGES, ORDER_ART, BOW_IMAGES } from '../engine/assets';
 import { CUSTOMERS, TRADE_FLOWERS, CUSTOMERS_PER_DAY, BOUQUET_PAPERS, RIBBON_NAMES } from '../constants/gameData';
-import { pictureById } from '../engine/bouquetPics';
+import { FlowerCluster } from './BouquetScreen';
 import { openOrders, customerLine, flowerName } from '../engine/customers';
 import ScreenHud from '../components/ScreenHud';
 import InventoryOverlay from '../components/InventoryOverlay';
@@ -34,11 +34,11 @@ const FLOWER_ART = { rose: ORDER_ART.rose };
 const PAPER_ART = { plain: MAKE_IMAGES.paper, layered: MAKE_IMAGES.wrapLayered, fancy: MAKE_IMAGES.paperFancy };
 
 // A place the card already has: a picture in the middle, its name along the bottom.
-function OrderTile({ source, label, fx, bad }) {
+function OrderTile({ source, label, fx, bad, cluster }) {
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
       <View style={{ flex: 1, width: '70%', marginTop: '9%', alignItems: 'center', justifyContent: 'center' }}>
-        {source ? <Image source={source} style={{ width: '100%', height: '100%' }} resizeMode="contain" /> : null}
+        {cluster ? <FlowerCluster keys={cluster} size={fx(76)} /> : source ? <Image source={source} style={{ width: '100%', height: '100%' }} resizeMode="contain" /> : null}
       </View>
       <Text style={[styles.tileTxt, { marginBottom: '9%' }, bad && { color: '#b04a2a' }]} numberOfLines={1}>{label}</Text>
     </View>
@@ -183,7 +183,7 @@ export default function CounterScreen({ navigation }) {
                   </>
                 ) : (
                   <>
-                    <View style={slot(147, 280, 347, 442)}><OrderTile fx={fx} source={order.pic && pictureById(order.pic) ? pictureById(order.pic).img : (FLOWER_ART[order.flowerKey] || art)} label={order.combo ? 'Bouquet' : flowerName(order.flowerKey)} /></View>
+                    <View style={slot(147, 280, 347, 442)}><OrderTile fx={fx} source={FLOWER_ART[order.flowerKey] || art} cluster={order.combo} label={order.combo ? 'Flowers' : flowerName(order.flowerKey)} /></View>
                     <View style={slot(359, 280, 568, 442)}><OrderTile fx={fx} source={PAPER_ART[order.paper] || MAKE_IMAGES.paper} label={BOUQUET_PAPERS[order.paper]?.name} /></View>
                     <View style={slot(577, 280, 783, 442)}><OrderTile fx={fx} source={(BOW_IMAGES[BOW_COLOR[order.ribbon]] || [])[0] || MAKE_IMAGES[order.ribbon]} label={RIBBON_NAMES[order.ribbon]} /></View>
                   </>

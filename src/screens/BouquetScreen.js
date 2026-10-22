@@ -8,7 +8,7 @@ import {
 } from '../constants/gameData';
 import { globalPetEffects } from '../engine/petEffects';
 import ScreenHud from '../components/ScreenHud';
-import { bouquetPic, pictureById } from '../engine/bouquetPics';
+import { bouquetPic } from '../engine/bouquetPics';
 import { openOrders, bouquetFillsOrder, flowerName, comboText } from '../engine/customers';
 import { PixelText, PixelButton } from '../components/Pixel';
 import { useNotice } from '../components/PurchaseNotice';
@@ -225,7 +225,7 @@ export default function BouquetScreen({ navigation }) {
               {/* once folded it is the wrapped bouquet: the wrapper, the flowers in its opening, the ribbon and bow */}
               {step >= 3 && (
                 <Wrapped
-                  art={bouquetPic(picks, paper)} left={wx} top={wy} w={ww} h={wh} fx={fx}
+                  art={step >= 5 ? bouquetPic(picks, paper) : MAKE_IMAGES[paper === 'layered' ? 'wrapLayered' : 'wrapKraft']} reveal={step >= 5} left={wx} top={wy} w={ww} h={wh} fx={fx}
                   ribbon={tied ? MAKE_IMAGES[ribbonKey] : null}
                   bow={bow != null ? BOW_IMAGES[bow.color][bow.i] : null}
                 />
@@ -280,7 +280,7 @@ export default function BouquetScreen({ navigation }) {
               <Text pointerEvents="none" style={[styles.stripName, { left: fx(392), top: fy(642), width: fx(190) }]} numberOfLines={1}>{CUSTOMERS[want.customer].name}</Text>
               <Text pointerEvents="none" style={[styles.stripSub, { left: fx(392), top: fy(678), width: fx(190) }]} numberOfLines={2}>{step === 5 && result ? `${payout} coins${grade && grade.perfect ? ' · Perfect' : neat ? ' · Neat' : ''}` : (want.combo ? comboText(want) : `${flowerName(want.flowerKey)} bouquet`)}</Text>
               {[
-                { src: want.pic && pictureById(want.pic) ? pictureById(want.pic).img : TRADE_IMAGES[TRADE_FLOWERS[want.flowerKey]?.img], ok: want.combo ? remainingCombo.length === 0 : picks.includes(want.flowerKey) },
+                { cluster: want.combo, src: TRADE_IMAGES[TRADE_FLOWERS[want.flowerKey]?.img], ok: want.combo ? remainingCombo.length === 0 : picks.includes(want.flowerKey) },
                 want.paper && { src: { plain: MAKE_IMAGES.paper, layered: MAKE_IMAGES.wrapLayered }[want.paper] || MAKE_IMAGES.paper, ok: step >= 1 && paper === want.paper },
                 want.ribbon && { src: MAKE_IMAGES[want.ribbon], strip: true, ok: tied && ribbonKey === want.ribbon },
                 want.ribbon && { src: (BOW_IMAGES[BOW_COLOR[want.ribbon]] || [])[0], ok: bow != null && bow.color === BOW_COLOR[want.ribbon] },
@@ -288,7 +288,9 @@ export default function BouquetScreen({ navigation }) {
               ].map((it, i) => it && (
                 <View key={i} pointerEvents="none" style={{ position: 'absolute', left: fx(STRIP_SLOTS[i]), top: fy(633), width: fx(76), height: fx(76), alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
                   <Image source={ORDER_ART.tile_cream} style={styles.ticketBg} resizeMode="stretch" />
-                  {it.strip
+                  {it.cluster
+                    ? <FlowerCluster keys={it.cluster} size={fx(60)} />
+                    : it.strip
                     ? <Image source={it.src} style={{ width: fx(52), height: fx(52) / RIBBON_ASPECT * 1.8 }} resizeMode="stretch" />
                     : <Image source={it.src} style={{ width: fx(48), height: fx(48), marginBottom: it.label ? fx(8) : 0 }} resizeMode="contain" />}
                   {it.label ? <Text style={styles.stripTip}>{it.label}</Text> : null}
@@ -385,6 +387,21 @@ function Celebration({ fx, fy, coins }) {
   );
 }
 
+// the flowers an order asks for, as a little cluster of icons (the finished bouquet stays a surprise)
+export function FlowerCluster({ keys, size }) {
+  const n = keys.length;
+  const d = size * (n > 2 ? 0.58 : 0.7);
+  const spots = n > 2 ? [[0.02, 0.02], [0.4, 0.02], [0.21, 0.4]] : n === 2 ? [[0.0, 0.15], [0.3, 0.15]] : [[0.15, 0.15]];
+  return (
+    <View style={{ width: size, height: size }}>
+      {keys.map((k, i) => (
+        <Image key={i} source={TRADE_IMAGES[TRADE_FLOWERS[k]?.img]} resizeMode="contain"
+          style={{ position: 'absolute', left: size * spots[i % spots.length][0], top: size * spots[i % spots.length][1], width: d, height: d }} />
+      ))}
+    </View>
+  );
+}
+
 // Fades its children out (and back) when `hide` changes.
 function FadeOut({ hide, children }) {
   const o = useRef(new Animated.Value(hide ? 0 : 1)).current;
@@ -394,14 +411,17 @@ function FadeOut({ hide, children }) {
 
 // The wrapped bouquet: the folded wrapper picture, the three flowers blooming out of its
 // opening, then the ribbon round the waist (where the twine is) and the bow on the ribbon.
-function Wrapped({ art, left, top, w, h, ribbon, bow, fx }) {
+function Wrapped({ art, reveal, left, top, w, h, ribbon, bow, fx }) {
   const o = useRef(new Animated.Value(0)).current;
-  React.useEffect(() => { Animated.timing(o, { toValue: 1, duration: 380, useNativeDriver: false }).start(); }, []);
+  React.useEffect(() => { if (!reveal) { Animated.timing(o, { toValue: 1, duration: 380, useNativeDriver: false }).start(); } }, []);
+  // the finished bouquet is only shown at the very end: a short pop when it is revealed
+  const pop = useRef(new Animated.Value(reveal ? 0 : 1)).current;
+  React.useEffect(() => { if (reveal) { o.setValue(1); Animated.spring(pop, { toValue: 1, friction: 5, useNativeDriver: false }).start(); } }, [reveal]);
   const rw = w * 0.2, rh = w * 0.075, wy = top + h * WAIST + w * 0.01;
   return (
     <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: o }}>
       <View style={{ position: 'absolute', left: left + w * 0.18, top: top + h * 0.9, width: w * 0.64, height: h * 0.12, borderRadius: w, backgroundColor: 'rgba(60,30,8,0.28)', ...(Platform.OS === 'web' ? { filter: 'blur(7px)' } : {}) }} />
-      <Image source={art} style={[{ position: 'absolute', left, top, width: w, height: h }, SOFT]} resizeMode="contain" />
+      <Animated.Image source={art} style={[{ position: 'absolute', left, top, width: w, height: h, transform: [{ scale: pop.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) }] }, SOFT]} resizeMode="contain" />
       {ribbon && <TiedRibbon x={left + (w - rw) / 2} y={wy} w={rw} h={rh} source={ribbon} />}
       {bow && <Image source={bow} resizeMode="contain" style={[{ position: 'absolute', left: left + w * 0.5 - fx(58), top: wy - fx(42), width: fx(116), height: fx(88), zIndex: 9 }, SOFT]} />}
     </Animated.View>
