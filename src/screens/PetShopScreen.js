@@ -24,7 +24,7 @@ const PLOPPER_H = 768;
 const ART_W = 1677, ART_H = 938;
 // The player level at which each arch opens (until then it is faded and cannot be entered).
 const LOCK_TITLE = 'Not unlocked yet';
-const ARCH_LEVEL = { food: 2, foster: 3 };
+const ARCH_LEVEL = { food: 1, foster: 1 };   // both open from the start for now (was 2 and 3)
 const ARCHES = [
   { id: 'foster', go: 'Foster', title: 'The Foster Home', sub: 'home', level: ARCH_LEVEL.foster, x0: 1262, y0: 52, x1: 1446, y1: 592 },
   { id: 'food', go: 'PetFood', title: 'The Pet Food aisle', sub: 'aisle', level: ARCH_LEVEL.food, x0: 1462, y0: 8, x1: 1677, y1: 600 },
