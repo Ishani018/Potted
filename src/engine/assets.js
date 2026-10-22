@@ -372,6 +372,7 @@ export const PETSHOP_BG = require('../../assets/petshop/shop_closed.png');
 export const PETSHOP_STATES = {
   closed: PETSHOP_BG,
   food: require('../../assets/petshop/shop_food_open.png'),
+  foster: require('../../assets/petshop/shop_foster_open.png'),
   both: require('../../assets/petshop/shop_both_open.png'),
 };
 // ─── Pet food aisle ───────────────────────────────────────────────────────────

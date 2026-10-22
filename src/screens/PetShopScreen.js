@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  View, Image, TouchableOpacity, Pressable, StyleSheet, TextInput, Animated, Easing,
+  View, Text, Image, TouchableOpacity, Pressable, StyleSheet, TextInput, Animated, Easing, Platform,
 } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { PETSHOP_STATES, PET_IMAGES, UI_IMAGES, BACKGROUNDS } from '../engine/assets';
@@ -77,12 +77,34 @@ export default function PetShopScreen({ navigation }) {
   const [box, setBox] = useState({ w: 0, h: 0 });
   const sw = box.w, sh = box.h;
   const level = playerLevel(state.player);
+  const [opening, setOpening] = useState(null);       // 'food' | 'foster' while that door is opening
+  const [notYet, setNotYet] = useState(null);         // the locked door that was just tapped
+  const openFade = useRef(new Animated.Value(0)).current;
+  const timers = useRef([]);
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  useEffect(() => { setOpening(null); openFade.setValue(0); }, []);
+  const tapDoor = (a) => {
+    if (opening) return;
+    if (level < a.level) {
+      setNotYet(a.id);
+      timers.current.push(setTimeout(() => setNotYet((n) => (n === a.id ? null : n)), 1800));
+      return;
+    }
+    setOpening(a.id === 'food' ? 'food' : 'foster');
+    openFade.setValue(0);
+    Animated.timing(openFade, { toValue: 1, duration: 380, useNativeDriver: false }).start();
+    timers.current.push(setTimeout(() => { navigation.navigate(a.go); timers.current.push(setTimeout(() => { setOpening(null); openFade.setValue(0); }, 400)); }, 750));
+  };
   const ownedPets = state.player.ownedPets ?? [];
   const petNames = state.player.petNames ?? {};
 
   return (
     <View style={styles.root} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
-      <Image source={level >= ARCH_LEVEL.foster ? PETSHOP_STATES.both : level >= ARCH_LEVEL.food ? PETSHOP_STATES.food : PETSHOP_STATES.closed} style={styles.bg} resizeMode="stretch" />
+      <Image source={PETSHOP_STATES.closed} style={styles.bg} resizeMode="stretch" />
+      {/* the door you tapped swings open: its open picture fades in over the shut one */}
+      {opening && (
+        <Animated.Image source={PETSHOP_STATES[opening]} style={[styles.bg, { opacity: openFade }]} resizeMode="stretch" pointerEvents="none" />
+      )}
 
       {SHOP_PETS.filter((p) => !ownedPets.includes(p.key)).map(({ key, x, y, w, h, flip, z }) => {
         const cx = (x / PLOPPER_W) * sw;
@@ -123,11 +145,14 @@ export default function PetShopScreen({ navigation }) {
             style={{ position: 'absolute', left: (a.x0 / ART_W) * sw, top: (a.y0 / ART_H) * sh, width: ((a.x1 - a.x0) / ART_W) * sw, height: ((a.y1 - a.y0) / ART_H) * sh, zIndex: 0 }}
             onHoverIn={() => setHovered(a.id)}
             onHoverOut={() => setHovered((h) => (h === a.id ? null : h))}
-            onPress={() => { if (!locked) navigation.navigate(a.go); else { setHovered(a.id); setTimeout(() => setHovered((h) => (h === a.id ? null : h)), 1800); } }}
+            onPress={() => tapDoor(a)}
           >
-            {!locked && <View pointerEvents="none" style={[styles.archGlow, { borderTopLeftRadius: 999, borderTopRightRadius: 999, opacity: on ? 1 : 0 }]} />}
-            {locked && on && (
-              <View pointerEvents="none" style={styles.archHint}><PixelText size={7} color="#fff6df">LEVEL {a.level}</PixelText></View>
+            {!locked && !opening && <View pointerEvents="none" style={[styles.archGlow, { borderTopLeftRadius: 999, borderTopRightRadius: 999, opacity: on ? 1 : 0 }]} />}
+            {notYet === a.id && (
+              <View pointerEvents="none" style={[styles.notYet, a.id === 'food' ? { left: -120, right: 6 } : { left: -24, right: -24 }]}>
+                <Text style={styles.notYetTxt}>Not yet unlocked</Text>
+                <Text style={styles.notYetSub}>Reach level {a.level}</Text>
+              </View>
             )}
           </Pressable>
         );
@@ -150,6 +175,9 @@ const styles = StyleSheet.create({
   tagWrap: { position: 'absolute', left: -40, right: -40, top: -22, alignItems: 'center', zIndex: 50 },
 
   archLocked: { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, borderTopLeftRadius: 999, borderTopRightRadius: 999, backgroundColor: 'rgba(252,238,196,0.62)' },
+  notYet: { position: 'absolute', top: '34%', alignItems: 'center', backgroundColor: 'rgba(58,34,14,0.86)', borderRadius: 12, borderWidth: 2, borderColor: '#d9b574', paddingVertical: 6, paddingHorizontal: 8, zIndex: 60 },
+  notYetTxt: { fontFamily: Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' }), fontSize: 15, color: '#fff3d6', textAlign: 'center' },
+  notYetSub: { fontFamily: Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' }), fontSize: 12, color: '#e8c98a', textAlign: 'center' },
   archHint: { position: 'absolute', left: 0, right: 0, top: '38%', alignItems: 'center' },
   archGlow: { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,236,170,0.22)', borderWidth: 3, borderColor: 'rgba(255,240,190,0.55)' },
 
