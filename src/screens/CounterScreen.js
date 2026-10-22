@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Image, Pressable, Animated, Easing, Platform, StyleSheet } from 'react-native';
+import { View, Text, Image, Animated, Easing, Platform, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { COUNTER_BG, CUSTOMER_IMAGES, CUSTOMER_POSES, TRADE_IMAGES, SEED_IMAGES, UI_IMAGES, BOOK_STAMP, MAKE_IMAGES, ORDER_ART, BOW_IMAGES } from '../engine/assets';
 import { CUSTOMERS, TRADE_FLOWERS, CUSTOMERS_PER_DAY, BOUQUET_PAPERS, RIBBON_NAMES } from '../constants/gameData';
@@ -192,14 +192,13 @@ export default function CounterScreen({ navigation }) {
                   <Text style={styles.pay}>{order.type === 'flowers' ? `${order.coins} coins` : `price + up to ${Math.round(order.tip * 1.5)} tip`}</Text>
                   <Text style={styles.xp}>+{order.xp} xp</Text>
                 </View>
-                <Pressable
-                  disabled={order.type === 'flowers' && !canGive}
-                  onPress={() => (order.type === 'flowers' ? dispatch({ type: 'FULFILL_CUSTOMER', id: order.id }) : navigation.navigate('Bouquet'))}
-                  style={[slot(210, 494, 740, 536), styles.go, order.type === 'flowers' && !canGive && { opacity: 0.55 }]}
-                >
-                  <Image source={ORDER_ART.bar_green} style={styles.fillImg} resizeMode="stretch" />
-                  <Text style={styles.goTxt}>{order.type === 'flowers' ? (canGive ? 'GIVE FLOWERS' : 'NOT ENOUGH YET') : 'TO THE BOUQUET TABLE'}</Text>
-                </Pressable>
+                <View style={[slot(210, 486, 740, 544), { alignItems: 'center', justifyContent: 'center' }]}>
+                  <PixelButton
+                    label={order.type === 'flowers' ? (canGive ? 'GIVE FLOWERS' : 'NOT ENOUGH YET') : 'TO THE BOUQUET TABLE'}
+                    size={7} scale={0.62} disabled={order.type === 'flowers' && !canGive}
+                    onPress={() => (order.type === 'flowers' ? dispatch({ type: 'FULFILL_CUSTOMER', id: order.id }) : navigation.navigate('Bouquet'))}
+                  />
+                </View>
               </>
             )}
           </View>
@@ -235,7 +234,7 @@ const styles = StyleSheet.create({
   bubble: { alignItems: 'stretch' },
   inner: { position: 'absolute', left: '14%', right: '15%', top: '17%', bottom: '13%', justifyContent: 'space-between' },
   fillImg: { position: 'absolute', left: 0, top: 0, width: '100%', height: '100%' },
-  go: { justifyContent: 'center', alignItems: 'center' },
+  go: { justifyContent: 'center', alignItems: 'center', paddingTop: '2.5%' },
   goTxt: { fontFamily: HEAD, fontSize: 17, color: '#fbf3da', textShadowColor: 'rgba(40,24,6,0.85)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 },
   slip: { position: 'absolute', left: 0, top: 0, width: '100%', height: '100%' },
   tail: { position: 'absolute', left: -14, top: 120, width: 0, height: 0, borderTopWidth: 12, borderBottomWidth: 12, borderRightWidth: 18, borderTopColor: 'transparent', borderBottomColor: 'transparent', borderRightColor: '#7a3e1a' },
