@@ -131,6 +131,7 @@ export default function BouquetScreen({ navigation, route }) {
   // The waiting customer (if they want a bouquet) is shown as a ticket; the bouquet is
   // delivered to them when it has the flower they asked for.
   const want = openOrders(state.player).find((o) => o.type === 'bouquet') ?? null;
+  const strip = packOrder || want;
   const order = full ? openOrders(state.player).find((o) => bouquetFillsOrder(o, picks)) : null;
   const customerName = order ? CUSTOMERS[order.customer].name : '';
   const neatBonus = result && neat ? Math.round(Math.max(0, result.net) * 0.1) : 0;
@@ -297,21 +298,24 @@ export default function BouquetScreen({ navigation, route }) {
           )}
 
           {/* the order slip and the prompt along the bottom of the table */}
-          {want && !packOrder && (
+          {(packOrder || want) && (
             <>
               {/* the customer, in the round frame at the left of the painted strip */}
               <View pointerEvents="none" style={{ position: 'absolute', left: fx(243), top: fy(623), width: fx(100), height: fx(100), borderRadius: fx(50), overflow: 'hidden', zIndex: 10 }}>
-                <Image source={(CUSTOMER_POSES[want.customer] || {}).think || CUSTOMER_IMAGES[want.customer]} style={{ position: 'absolute', width: fx(190), height: fx(285), left: -fx(45), top: -fx(55) }} resizeMode="contain" />
+                <Image source={(CUSTOMER_POSES[strip.customer] || {}).think || CUSTOMER_IMAGES[strip.customer]} style={{ position: 'absolute', width: fx(190), height: fx(285), left: -fx(45), top: -fx(55) }} resizeMode="contain" />
               </View>
-              <Text pointerEvents="none" style={[styles.stripName, { left: fx(392), top: fy(642), width: fx(190) }]} numberOfLines={1}>{CUSTOMERS[want.customer].name}</Text>
-              <Text pointerEvents="none" style={[styles.stripSub, { left: fx(392), top: fy(678), width: fx(190) }]} numberOfLines={2}>{step === 5 && result ? `${payout} coins${grade && grade.perfect ? ' · Perfect' : neat ? ' · Neat' : ''}` : (want.combo ? comboText(want) : `${flowerName(want.flowerKey)} bouquet`)}</Text>
-              {[
-                { cluster: want.combo, src: TRADE_IMAGES[TRADE_FLOWERS[want.flowerKey]?.img], ok: want.combo ? remainingCombo.length === 0 : picks.includes(want.flowerKey) },
-                want.paper && { src: { plain: MAKE_IMAGES.paper, layered: MAKE_IMAGES.wrapLayered }[want.paper] || MAKE_IMAGES.paper, ok: step >= 1 && paper === want.paper },
-                want.ribbon && { src: MAKE_IMAGES[want.ribbon], strip: true, ok: tied && ribbonKey === want.ribbon },
-                want.ribbon && { src: (BOW_IMAGES[BOW_COLOR[want.ribbon]] || [])[0], ok: bow != null && bow.color === BOW_COLOR[want.ribbon] },
-                { src: UI_IMAGES.goldcoins, label: `+${want.tip}` },
-              ].map((it, i) => it && (
+              <Text pointerEvents="none" style={[styles.stripName, { left: fx(392), top: fy(642), width: fx(190) }]} numberOfLines={1}>{CUSTOMERS[strip.customer].name}</Text>
+              <Text pointerEvents="none" style={[styles.stripSub, { left: fx(392), top: fy(678), width: fx(190) }]} numberOfLines={2}>{packOrder ? comboText({ combo: Array(packOrder.qty).fill(packOrder.flowerKey) }) : step === 5 && result ? `${payout} coins${grade && grade.perfect ? ' · Perfect' : neat ? ' · Neat' : ''}` : (strip.combo ? comboText(strip) : `${flowerName(strip.flowerKey)} bouquet`)}</Text>
+              {(packOrder ? [
+                { cluster: Array(packOrder.qty).fill(packOrder.flowerKey), ok: full && picks.every((k) => k === packOrder.flowerKey) },
+                { src: UI_IMAGES.goldcoins, label: `+${packOrder.coins}` },
+              ] : [
+                { cluster: strip.combo, src: TRADE_IMAGES[TRADE_FLOWERS[strip.flowerKey]?.img], ok: strip.combo ? remainingCombo.length === 0 : picks.includes(strip.flowerKey) },
+                strip.paper && { src: { plain: MAKE_IMAGES.paper, layered: MAKE_IMAGES.wrapLayered }[strip.paper] || MAKE_IMAGES.paper, ok: step >= 1 && paper === strip.paper },
+                strip.ribbon && { src: MAKE_IMAGES[strip.ribbon], strip: true, ok: tied && ribbonKey === strip.ribbon },
+                strip.ribbon && { src: (BOW_IMAGES[BOW_COLOR[strip.ribbon]] || [])[0], ok: bow != null && bow.color === BOW_COLOR[strip.ribbon] },
+                { src: UI_IMAGES.goldcoins, label: `+${strip.tip}` },
+              ]).map((it, i) => it && (
                 <View key={i} pointerEvents="none" style={{ position: 'absolute', left: fx(STRIP_SLOTS[i]), top: fy(633), width: fx(76), height: fx(76), alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
                   <Image source={ORDER_ART.tile_cream} style={styles.ticketBg} resizeMode="stretch" />
                   {it.cluster

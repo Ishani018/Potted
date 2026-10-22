@@ -330,8 +330,9 @@ export default function CounterScreen({ navigation, route }) {
       {perfect > 0 && <Celebration fx={fx} fy={fy} coins={perfect} />}
 
       {sw > 0 && !cur && (
-        <View style={[styles.quiet, { left: fx(560), width: fx(420), top: fy(250) }]} pointerEvents="none">
-          <Text style={styles.quietTxt}>{done >= CUSTOMERS_PER_DAY ? 'All done for today. See you tomorrow!' : 'The shop is quiet right now.'}</Text>
+        <View pointerEvents="none" style={{ position: 'absolute', left: (sw - fx(760)) / 2, top: fy(230), width: fx(760), height: fx(760) * 113 / 489, zIndex: 40, alignItems: 'center', justifyContent: 'center' }}>
+          <Image source={ORDER_ART.banner} style={styles.slip} resizeMode="stretch" />
+          <Text style={styles.quietTxt} numberOfLines={2}>{done >= CUSTOMERS_PER_DAY ? 'All done for today. See you tomorrow!' : 'The shop is quiet right now.'}</Text>
         </View>
       )}
 
@@ -386,6 +387,6 @@ const styles = StyleSheet.create({
   doneRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   stamp: { width: 40, height: 39 },
   quiet: { position: 'absolute', alignItems: 'center', zIndex: 10 },
-  quietTxt: { fontFamily: HEAD, fontSize: 20, color: '#fbf0cf', textShadowColor: '#2a1608', textShadowRadius: 4, textAlign: 'center' },
+  quietTxt: { fontFamily: HEAD, fontSize: 22, color: '#4a2a10', textAlign: 'center', paddingLeft: 60, paddingRight: 150, fontWeight: 'bold' },
   bottom: { position: 'absolute', right: 16, bottom: 12, zIndex: 30 },
 });
