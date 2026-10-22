@@ -32,17 +32,23 @@ const BOW_COLOR = { ribbonRed: 'red', ribbonPink: 'pink', ribbonCream: 'cream', 
 const FLOWER_ART = { rose: ORDER_ART.rose };
 const PAPER_ART = { plain: MAKE_IMAGES.paper, layered: MAKE_IMAGES.wrapLayered, fancy: MAKE_IMAGES.paperFancy };
 
-// One item on the order card: a small framed picture with its name in the corner.
-function OrderTile({ source, label, fx }) {
-  const T = fx(118);
+// A place the card already has: a picture in the middle, its name along the bottom.
+function OrderTile({ source, label, fx, bad }) {
   return (
-    <View style={{ width: T, height: T, alignItems: 'center', justifyContent: 'center' }}>
-      <Image source={ORDER_ART.tile_cream} style={styles.fillImg} resizeMode="stretch" />
-      <Image source={source} style={{ position: 'absolute', top: T * 0.1, width: T * 0.62, height: T * 0.6 }} resizeMode="contain" />
-      <Text style={[styles.tileTxt, { position: 'absolute', bottom: T * 0.09 }]} numberOfLines={1}>{label}</Text>
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ flex: 1, width: '70%', marginTop: '9%', alignItems: 'center', justifyContent: 'center' }}>
+        {source ? <Image source={source} style={{ width: '100%', height: '100%' }} resizeMode="contain" /> : null}
+      </View>
+      <Text style={[styles.tileTxt, { marginBottom: '9%' }, bad && { color: '#b04a2a' }]} numberOfLines={1}>{label}</Text>
     </View>
   );
 }
+
+// Place something on the card by its position in the card picture (900 x 593).
+const slot = (x0, y0, x1, y1) => ({
+  position: 'absolute', left: `${(x0 / 900) * 100}%`, top: `${(y0 / 593) * 100}%`,
+  width: `${((x1 - x0) / 900) * 100}%`, height: `${((y1 - y0) / 593) * 100}%`,
+});
 
 export default function CounterScreen({ navigation }) {
   const { state, dispatch } = useGame();
@@ -151,57 +157,51 @@ export default function CounterScreen({ navigation }) {
       )}
 
       {sw > 0 && cur && phase !== 'in' && phase !== 'out' && (
-        <View style={[styles.bubbleWrap, { left: fx(900), top: fy(70), width: fx(760) }]}>
-          <View style={[styles.bubble, { width: fx(760), height: fx(760) * 459 / 651 }]}>
+        <View style={[styles.bubbleWrap, { left: fx(880), top: fy(50), width: fx(780) }]}>
+          <View style={[styles.bubble, { width: fx(780), height: fx(780) * 593 / 900 }]}>
             <Image source={ORDER_ART.card} style={styles.slip} resizeMode="stretch" />
-            <Image source={ORDER_ART.tag_flower} style={{ position: 'absolute', right: fx(8), top: fx(50), width: fx(70), height: fx(70) * 306 / 124, transform: [{ rotate: '6deg' }] }} resizeMode="contain" />
-            <View style={styles.inner}>
             {phase === 'happy' ? (
-              <View style={styles.doneRow}>
+              <View style={[slot(365, 120, 735, 260), styles.doneRow]}>
                 <Image source={BOOK_STAMP} style={styles.stamp} resizeMode="contain" />
-                <Text style={styles.say}>{cur.line}</Text>
+                <Text style={[styles.say, { flex: 1 }]}>{cur.line}</Text>
               </View>
             ) : (
               <>
-                <View style={styles.who}>
-                  <View style={styles.photo}><Image source={ORDER_ART.photo} style={styles.fillImg} resizeMode="stretch" /><Portrait customerKey={order.customer} size={40} bare /></View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.name}>{c.name}  <Text style={styles.count}>{Math.min(done + 1, CUSTOMERS_PER_DAY)}/{CUSTOMERS_PER_DAY}</Text></Text>
-                    <Text style={styles.say} numberOfLines={2}>{customerLine(order, 'short')}</Text>
-                  </View>
+                <View style={[slot(192, 108, 340, 238), { alignItems: 'center', justifyContent: 'center' }]}>
+                  <Portrait customerKey={order.customer} size={Math.round(fx(96))} bare />
+                </View>
+                <View style={slot(362, 114, 735, 262)}>
+                  <Text style={styles.name}>{c.name}  <Text style={styles.count}>{Math.min(done + 1, CUSTOMERS_PER_DAY)}/{CUSTOMERS_PER_DAY}</Text></Text>
+                  <Text style={styles.say} numberOfLines={3}>{customerLine(order, 'short')}</Text>
                 </View>
                 {order.type === 'flowers' ? (
-                  <View style={styles.orderRow}>
-                    {art && <Image source={art} style={styles.flower} resizeMode="contain" />}
-                    <Text style={[styles.want, !canGive && { color: '#b04a2a' }]}>
-                      {`${flowerName(order.flowerKey)}  ${Math.min(have, order.qty)} / ${order.qty}`}
-                    </Text>
-                  </View>
+                  <>
+                    <View style={slot(147, 280, 347, 442)}><OrderTile fx={fx} source={FLOWER_ART[order.flowerKey] || art} label={`${Math.min(have, order.qty)} / ${order.qty} ${flowerName(order.flowerKey)}`} bad={!canGive} /></View>
+                    <View style={slot(359, 280, 568, 442)}><OrderTile fx={fx} source={UI_IMAGES.goldcoins} label={`${order.coins} coins`} /></View>
+                    <View style={slot(577, 280, 783, 442)}><OrderTile fx={fx} source={order.seed && SEED_IMAGES[order.seed] ? SEED_IMAGES[order.seed] : null} label={`+${order.xp} xp`} /></View>
+                  </>
                 ) : (
-                  <View style={styles.tiles}>
-                    <OrderTile fx={fx} source={FLOWER_ART[order.flowerKey] || art} label={flowerName(order.flowerKey)} />
-                    {order.paper && <OrderTile fx={fx} source={PAPER_ART[order.paper] || MAKE_IMAGES.paper} label={BOUQUET_PAPERS[order.paper]?.name} />}
-                    {order.ribbon && <OrderTile fx={fx} source={(BOW_IMAGES[BOW_COLOR[order.ribbon]] || [])[0] || MAKE_IMAGES[order.ribbon]} label={RIBBON_NAMES[order.ribbon]} />}
-                  </View>
+                  <>
+                    <View style={slot(147, 280, 347, 442)}><OrderTile fx={fx} source={FLOWER_ART[order.flowerKey] || art} label={flowerName(order.flowerKey)} /></View>
+                    <View style={slot(359, 280, 568, 442)}><OrderTile fx={fx} source={PAPER_ART[order.paper] || MAKE_IMAGES.paper} label={BOUQUET_PAPERS[order.paper]?.name} /></View>
+                    <View style={slot(577, 280, 783, 442)}><OrderTile fx={fx} source={(BOW_IMAGES[BOW_COLOR[order.ribbon]] || [])[0] || MAKE_IMAGES[order.ribbon]} label={RIBBON_NAMES[order.ribbon]} /></View>
+                  </>
                 )}
-                <View style={styles.reward}>
+                <View style={[slot(190, 450, 760, 488), styles.reward]}>
                   <Image source={ORDER_ART.bar_cream} style={styles.fillImg} resizeMode="stretch" />
-                  <Image source={UI_IMAGES.goldcoins} style={styles.coin} resizeMode="contain" />
-                  <Text style={styles.pay}>{order.type === 'flowers' ? order.coins : `price + up to ${Math.round(order.tip * 1.5)} tip`}</Text>
+                  <Text style={styles.pay}>{order.type === 'flowers' ? `${order.coins} coins` : `price + up to ${Math.round(order.tip * 1.5)} tip`}</Text>
                   <Text style={styles.xp}>+{order.xp} xp</Text>
-                  {order.seed && SEED_IMAGES[order.seed] && <Image source={SEED_IMAGES[order.seed]} style={styles.seed} resizeMode="contain" />}
                 </View>
                 <Pressable
                   disabled={order.type === 'flowers' && !canGive}
                   onPress={() => (order.type === 'flowers' ? dispatch({ type: 'FULFILL_CUSTOMER', id: order.id }) : navigation.navigate('Bouquet'))}
-                  style={[styles.go, order.type === 'flowers' && !canGive && { opacity: 0.55 }]}
+                  style={[slot(210, 494, 740, 536), styles.go, order.type === 'flowers' && !canGive && { opacity: 0.55 }]}
                 >
                   <Image source={ORDER_ART.bar_green} style={styles.fillImg} resizeMode="stretch" />
                   <Text style={styles.goTxt}>{order.type === 'flowers' ? (canGive ? 'GIVE FLOWERS' : 'NOT ENOUGH YET') : 'TO THE BOUQUET TABLE'}</Text>
                 </Pressable>
               </>
             )}
-            </View>
           </View>
         </View>
       )}
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
   bubble: { alignItems: 'stretch' },
   inner: { position: 'absolute', left: '14%', right: '15%', top: '17%', bottom: '13%', justifyContent: 'space-between' },
   fillImg: { position: 'absolute', left: 0, top: 0, width: '100%', height: '100%' },
-  go: { height: 30, justifyContent: 'center', alignItems: 'center' },
+  go: { justifyContent: 'center', alignItems: 'center' },
   goTxt: { fontFamily: 'PressStart2P', fontSize: 8, color: '#f7efd2' },
   slip: { position: 'absolute', left: 0, top: 0, width: '100%', height: '100%' },
   tail: { position: 'absolute', left: -14, top: 120, width: 0, height: 0, borderTopWidth: 12, borderBottomWidth: 12, borderRightWidth: 18, borderTopColor: 'transparent', borderBottomColor: 'transparent', borderRightColor: '#7a3e1a' },
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   photo: { width: 58, height: 58, alignItems: 'center', justifyContent: 'center' },
   tiles: { flexDirection: 'row', justifyContent: 'center', gap: 14, marginTop: 4 },
   tileTxt: { fontFamily: HEAD, fontSize: 13, color: '#6a4a28' },
-  reward: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 18, height: 26 },
+  reward: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
   orderRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   flower: { width: 30, height: 32 },
   want: { fontFamily: HEAD, fontSize: 17, color: '#3f7a2e' },
