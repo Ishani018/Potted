@@ -679,6 +679,26 @@ export const ACHIEVEMENTS = [
 // Tie any 3 harvested flowers into a bouquet and sell it at the market. Unlike
 // single flowers (only sellable when featured that day), the market always buys
 // bouquets. Value = sum of the flowers' base values × the bouquet's multiplier.
+// Ribbons on the tray, by key (the same keys the bouquet table uses).
+export const RIBBON_NAMES = {
+  ribbonRed: 'red', ribbonPink: 'pink', ribbonCream: 'cream',
+  ribbonPinkFloral: 'pink flowered', ribbonGreen: 'green', ribbonCreamFloral: 'cream flowered',
+};
+export const RIBBON_KEYS = Object.keys(RIBBON_NAMES);
+
+// How well a made bouquet matches a customer's order: they ask for a flower, a paper and a
+// ribbon. Both right = a perfect order (tip x1.5), one right = the full tip, none right
+// = a small tip (x0.4). Older saved orders with no paper/ribbon count as matching.
+export function orderGrade(order, paper, ribbon) {
+  const paperOk = !order?.paper || order.paper === paper;
+  const ribbonOk = !order?.ribbon || order.ribbon === ribbon;
+  const hits = (paperOk ? 1 : 0) + (ribbonOk ? 1 : 0);
+  const asked = (order?.paper ? 1 : 0) + (order?.ribbon ? 1 : 0);
+  const perfect = asked > 0 && hits === asked;
+  const mult = asked === 0 ? 1 : perfect ? 1.5 : hits > 0 ? 1 : 0.4;
+  return { paperOk, ribbonOk, perfect, mult, label: asked === 0 ? '' : perfect ? 'Perfect order!' : hits > 0 ? 'Close enough' : 'Not what I asked for...' };
+}
+
 export const BOUQUET_SIZE = 3;
 export const BOUQUET_MIXED = { name: 'Mixed Bouquet', multiplier: 1.1 };
 export const BOUQUET_TRIO = { multiplier: 1.3 }; // 3 of the same flower

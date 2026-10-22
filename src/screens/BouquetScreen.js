@@ -4,6 +4,7 @@ import { useGame } from '../context/GameContext';
 import { BOUQUET_BG, TRADE_IMAGES, UI_IMAGES, MAKE_IMAGES, BOW_IMAGES } from '../engine/assets';
 import {
   TRADE_FLOWERS, BOUQUET_SIZE, BOUQUET_RECIPES, BOUQUET_PAPERS, bouquetPaper, evaluateBouquet, playerLevel, CUSTOMERS,
+  RIBBON_NAMES, orderGrade,
 } from '../constants/gameData';
 import { globalPetEffects } from '../engine/petEffects';
 import BouquetArt from '../components/BouquetArt';
@@ -113,7 +114,8 @@ export default function BouquetScreen({ navigation }) {
   const order = full ? openOrders(state.player).find((o) => bouquetFillsOrder(o, picks)) : null;
   const customerName = order ? CUSTOMERS[order.customer].name : '';
   const neatBonus = result && neat ? Math.round(Math.max(0, result.net) * 0.1) : 0;
-  const payout = result ? result.net + neatBonus + (order ? order.tip : 0) : 0;
+  const grade = order ? orderGrade(order, paper, ribbonKey) : null;
+  const payout = result ? result.net + neatBonus + (order ? Math.round(order.tip * grade.mult) : 0) : 0;
 
   // ── step helpers ──
   const resetAll = () => { firstFold.current = null; setStep(0); setPicks([]); setFolded({ left: false, right: false }); setTied(false); setNeat(true); setRibbonKey('ribbonRed'); setBow(null); };
@@ -132,8 +134,8 @@ export default function BouquetScreen({ navigation }) {
   const onBow = (idx) => setBow(idx);
   const giveOver = () => {
     if (!result) return;
-    dispatch({ type: 'SELL_BOUQUET', flowers: picks, paper, customerId: order ? order.id : null, neat });
-    const earned = order ? `${customerName} paid ${payout} coins.` : `You earned ${result.net + neatBonus} coins.`;
+    dispatch({ type: 'SELL_BOUQUET', flowers: picks, paper, ribbon: ribbonKey, customerId: order ? order.id : null, neat });
+    const earned = order ? `${customerName} paid ${payout} coins.${grade.label ? ` ${grade.label}` : ''}` : `You earned ${result.net + neatBonus} coins.`;
     notify({
       icon: UI_IMAGES[PAPER_IMG[paper]],
       title: isNewRecipe ? `New recipe: ${result.name}!` : `Made ${result.name}!`,
@@ -240,16 +242,23 @@ export default function BouquetScreen({ navigation }) {
 
           {/* the order slip and the prompt along the bottom of the table */}
           {want && (
-            <View style={[styles.ticket, { left: fx(430), top: fy(712), width: fx(330) }]} pointerEvents="none">
-              <Portrait customerKey={want.customer} size={fx(34)} bare />
+            <View style={[styles.ticket, { left: fx(425), top: fy(692), width: fx(300) }]} pointerEvents="none">
+              <Portrait customerKey={want.customer} size={fx(40)} bare />
               <View style={{ flex: 1 }}>
-                <Text style={styles.ticketTxt} numberOfLines={1}><Text style={styles.ticketName}>{CUSTOMERS[want.customer].name.split(' ').pop()}</Text> wants a {flowerName(want.flowerKey)} bouquet</Text>
+                <Text style={styles.ticketTxt} numberOfLines={1}><Text style={styles.ticketName}>{CUSTOMERS[want.customer].name.split(' ').pop()}</Text>: {flowerName(want.flowerKey)} bouquet</Text>
+                {want.paper && (
+                  <View style={styles.ticketRow}>
+                    <Text style={[styles.ticketSub, step >= 1 && paper === want.paper && styles.ok]} numberOfLines={1}>{BOUQUET_PAPERS[want.paper]?.name}</Text>
+                    <Image source={MAKE_IMAGES[want.ribbon]} style={{ width: fx(40), height: fx(40) / RIBBON_ASPECT, marginHorizontal: 6 }} resizeMode="stretch" />
+                    <Text style={[styles.ticketSub, tied && ribbonKey === want.ribbon && styles.ok]} numberOfLines={1}>{RIBBON_NAMES[want.ribbon]}</Text>
+                  </View>
+                )}
               </View>
-              <Image source={TRADE_IMAGES[TRADE_FLOWERS[want.flowerKey]?.img]} style={{ width: fx(28), height: fx(28) }} resizeMode="contain" />
+              <Image source={TRADE_IMAGES[TRADE_FLOWERS[want.flowerKey]?.img]} style={{ width: fx(30), height: fx(30) }} resizeMode="contain" />
             </View>
           )}
-          <View style={[styles.prompt, { left: fx(want ? 775 : 520), width: fx(want ? 410 : 560), top: fy(716) }]} pointerEvents="none">
-            <Text style={styles.promptTxt} numberOfLines={1}>{prompt}</Text>
+          <View style={[styles.prompt, { left: fx(want ? 735 : 520), width: fx(want ? 450 : 560), top: fy(706) }]} pointerEvents="none">
+            <Text style={styles.promptTxt} numberOfLines={2}>{prompt}</Text>
           </View>
 
           {/* buttons, right column (beside the scissors) */}
@@ -270,6 +279,7 @@ export default function BouquetScreen({ navigation }) {
                   <Text style={styles.priceTxt}>{payout}</Text>
                 </View>
                 {neat && <Text style={styles.neat}>Neat work! +10%</Text>}
+                {grade && grade.label ? <Text style={[styles.neat, !grade.perfect && { color: '#ffd9a0' }]}>{grade.label}</Text> : null}
                 {result.paperCost > 0 && <Text style={styles.small}>paper -{result.paperCost}</Text>}
                 <PixelButton onPress={giveOver} size={fs(8, 6)} label={order ? 'GIVE IT' : 'SELL IT'} style={{ alignSelf: 'stretch' }} />
               </>
@@ -597,6 +607,9 @@ const styles = StyleSheet.create({
   stepTxtNow: { color: '#fff3d6' },
   ticket: { position: 'absolute', flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fbf0cf', borderRadius: 12, borderWidth: 3, borderColor: '#7a3e1a', paddingHorizontal: 10, paddingVertical: 6, zIndex: 10 },
   ticketName: { fontFamily: HEAD, fontSize: 15, color: '#4a2a10' },
+  ticketRow: { flexDirection: 'row', alignItems: 'center', marginTop: 1 },
+  ticketSub: { fontFamily: BODY, fontSize: 12.5, color: '#8a6a40' },
+  ok: { color: '#3f7a2e', fontFamily: HEAD },
   ticketTxt: { fontFamily: BODY, fontSize: 13.5, color: '#5a3a1a' },
   stackLabel: { fontFamily: HEAD, fontSize: 15, color: '#fff3d6', textAlign: 'center', textShadowColor: '#2a1608', textShadowRadius: 4 },
   hint: { position: 'absolute', textAlign: 'center', fontFamily: HEAD, fontSize: 18, color: '#3a2008', textShadowColor: 'rgba(255,240,200,0.7)', textShadowRadius: 0, textShadowOffset: { width: 1, height: 1 } },
@@ -609,7 +622,7 @@ const styles = StyleSheet.create({
   // a thin fold line along the cut edge of a flap
   swipe: { position: 'absolute', top: '45%', fontFamily: HEAD, fontSize: 22, color: '#5a3410' },
   prompt: { position: 'absolute', alignItems: 'center', zIndex: 10 },
-  promptTxt: { fontFamily: HEAD, fontSize: 16, color: '#fff3d6', textAlign: 'center', textShadowColor: '#2a1608', textShadowRadius: 4 },
+  promptTxt: { fontFamily: HEAD, fontSize: 15, lineHeight: 17, color: '#fff3d6', textAlign: 'center', textShadowColor: '#2a1608', textShadowRadius: 4 },
   bunch: { position: 'absolute', alignItems: 'center', justifyContent: 'center', borderRadius: 26, backgroundColor: 'rgba(255,243,214,0.88)' },
   badge: { position: 'absolute', right: -4, bottom: -4, backgroundColor: '#5a3410', borderWidth: 2, borderColor: '#2a1608', borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1 },
   price: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: 'rgba(58,32,12,0.88)', borderWidth: 3, borderColor: '#2a1608', borderRadius: 4 },

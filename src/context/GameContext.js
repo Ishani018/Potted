@@ -7,7 +7,7 @@ import {
   seedType, evaluateBouquet, bouquetPaper,
   XP_CONFIG, levelInfo, playerLevel, seedUnlockLevel, unlocksAtLevel, TRADE_FLOWERS, CUSTOMERS,
   roomScentShield, HERBALIST, HERBALIST_TRADES, REMEDIES, SACHET_MS, isShielded,
-  PET_FOOD, PET_SPECIES, FED_MAX_HOURS, ADVENTURE,
+  PET_FOOD, PET_SPECIES, FED_MAX_HOURS, ADVENTURE, orderGrade,
 } from '../constants/gameData';
 import { maybeArriveStray } from '../engine/strays';
 import { rollRewards } from '../engine/adventures';
@@ -415,7 +415,7 @@ function reducer(state, action) {
     // Tie BOUQUET_SIZE harvested flowers into a bouquet and sell it at once.
     // action: { flowers: [flowerKey, ...] }
     case 'SELL_BOUQUET': {
-      const { flowers, paper = 'plain', customerId = null, neat = false } = action;
+      const { flowers, paper = 'plain', ribbon = null, customerId = null, neat = false } = action;
       if (!Array.isArray(flowers) || flowers.length !== BOUQUET_SIZE) return state;
       // Delivering to a customer: the order must be open and the bouquet must fit it.
       const order = customerId ? state.player.customers?.list?.find((o) => o.id === customerId) : null;
@@ -437,7 +437,8 @@ function reducer(state, action) {
       const newRecipe = recipe && !state.player.bouquetBook?.[recipe.id];
       // a neatly folded and tied bouquet sells for 10% more
       const neatBonus = neat && net > 0 ? Math.round(net * 0.1) : 0;
-      const tip = order ? order.tip : 0; // a customer pays the price plus a tip
+      // a customer pays the price plus a tip; the tip depends on how well paper and ribbon match the order
+      const tip = order ? Math.round(order.tip * orderGrade(order, paper, ribbon).mult) : 0;
       let delivered = {
         ...state,
         player: {

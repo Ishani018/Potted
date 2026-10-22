@@ -1,6 +1,6 @@
 import {
   CUSTOMERS, CUSTOMERS_PER_DAY, POTTED_FLOWERS, HANGING_PLANTS, TRADE_FLOWERS,
-  SEED_UNLOCK_LEVEL, seedType, seedUnlockLevel,
+  SEED_UNLOCK_LEVEL, seedType, seedUnlockLevel, BOUQUET_PAPERS, RIBBON_KEYS, RIBBON_NAMES,
 } from '../constants/gameData';
 
 // Daily florist orders. Rolled once per day (see TICK) and stored on the player
@@ -31,9 +31,14 @@ export function customerLine(order, which = 'ask') {
   const name = flowerName(order.flowerKey);
   const plural = qty > 1 ? `${name}s` : name;
   const template = order.type === 'flowers' ? c.askFlowers : c.askBouquet;
-  return template
+  const line = template
     .replace('{qty}', String(qty))
     .replace('{flower}', order.type === 'flowers' ? plural : `${name}`);
+  // a bouquet order also names the paper and the ribbon
+  if (order.type === 'bouquet' && order.paper && order.ribbon) {
+    return `${line} In ${BOUQUET_PAPERS[order.paper]?.name ?? 'kraft'} paper with a ${RIBBON_NAMES[order.ribbon] ?? 'red'} ribbon, please.`;
+  }
+  return line;
 }
 
 // rand: () => [0,1). level: the player's level (keeps orders fulfillable).
@@ -70,6 +75,10 @@ export function rollCustomerOrders(day, level, rand) {
       return lv > level && lv <= level + 2;
     });
     const seed = ahead.length && rand() < 0.3 ? pick(ahead) : null;
+    // bouquets are placed like a shop order: the paper (one you have unlocked) and a ribbon
+    const papers = Object.values(BOUQUET_PAPERS).filter((p) => p.level <= level);
+    const paper = type === 'bouquet' ? pick(papers.length ? papers : [BOUQUET_PAPERS.plain]).id : null;
+    const ribbon = type === 'bouquet' ? pick(RIBBON_KEYS) : null;
 
     return {
       id: `${day}_${i}`,
@@ -77,6 +86,8 @@ export function rollCustomerOrders(day, level, rand) {
       type,
       flowerKey,
       qty,
+      paper,
+      ribbon,
       coins: type === 'flowers' ? Math.round(base * qty * 1.5) : 0,
       tip: type === 'bouquet' ? Math.round(10 + base * 1.2) : 0,
       xp: type === 'flowers' ? Math.round((base * qty) / 2) : 15,

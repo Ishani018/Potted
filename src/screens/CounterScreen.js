@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Image, Animated, Easing, Platform, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { COUNTER_BG, CUSTOMER_IMAGES, TRADE_IMAGES, SEED_IMAGES, UI_IMAGES, BOOK_STAMP } from '../engine/assets';
-import { CUSTOMERS, TRADE_FLOWERS, CUSTOMERS_PER_DAY } from '../constants/gameData';
+import { COUNTER_BG, CUSTOMER_IMAGES, TRADE_IMAGES, SEED_IMAGES, UI_IMAGES, BOOK_STAMP, MAKE_IMAGES } from '../engine/assets';
+import { CUSTOMERS, TRADE_FLOWERS, CUSTOMERS_PER_DAY, BOUQUET_PAPERS, RIBBON_NAMES } from '../constants/gameData';
 import { openOrders, customerLine, flowerName } from '../engine/customers';
 import ScreenHud from '../components/ScreenHud';
 import InventoryOverlay from '../components/InventoryOverlay';
@@ -159,9 +159,16 @@ export default function CounterScreen({ navigation }) {
                       : `A bouquet with ${flowerName(order.flowerKey)}`}
                   </Text>
                 </View>
+                {order.type === 'bouquet' && order.paper && (
+                  <View style={styles.orderRow}>
+                    <Text style={styles.want}>{BOUQUET_PAPERS[order.paper]?.name} paper</Text>
+                    <Image source={MAKE_IMAGES[order.ribbon]} style={styles.ribbon} resizeMode="stretch" />
+                    <Text style={styles.want}>{RIBBON_NAMES[order.ribbon]}</Text>
+                  </View>
+                )}
                 <View style={styles.orderRow}>
                   <Image source={UI_IMAGES.goldcoins} style={styles.coin} resizeMode="contain" />
-                  <Text style={styles.pay}>{order.type === 'flowers' ? order.coins : `price + ${order.tip} tip`}</Text>
+                  <Text style={styles.pay}>{order.type === 'flowers' ? order.coins : `price + up to ${Math.round(order.tip * 1.5)} tip`}</Text>
                   <Text style={styles.xp}>+{order.xp} xp</Text>
                   {order.seed && SEED_IMAGES[order.seed] && <Image source={SEED_IMAGES[order.seed]} style={styles.seed} resizeMode="contain" />}
                 </View>
@@ -213,6 +220,7 @@ const styles = StyleSheet.create({
   orderRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   flower: { width: 30, height: 32 },
   want: { fontFamily: HEAD, fontSize: 17, color: '#3f7a2e' },
+  ribbon: { width: 70, height: 6.5 },
   coin: { width: 18, height: 18 },
   pay: { fontFamily: HEAD, fontSize: 16, color: '#a8700a' },
   xp: { fontFamily: BODY, fontSize: 13, color: '#8a6a40', marginLeft: 4 },
