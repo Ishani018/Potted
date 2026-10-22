@@ -476,6 +476,12 @@ function BowBox({ colorKey, tray, target, onPlace, fx }) {
 }
 
 // A bunch of flowers in a bin: tap to add, or drag it out onto the paper.
+// where each flower in a bin's heap lies (as a fraction of the bin's size) and how it is turned
+const PILE = [
+  { x: 0.04, y: 0.02, r: 8 }, { x: -0.2, y: -0.08, r: -16 }, { x: 0.22, y: -0.1, r: 14 },
+  { x: -0.02, y: -0.2, r: -4 }, { x: -0.26, y: 0.1, r: -24 }, { x: 0.26, y: 0.08, r: 22 },
+];
+
 function Bunch({ flowerKey, count, size, disabled, x, y, dropRight, onAdd, fs }) {
   const drag = useRef(new Animated.ValueXY()).current;
   const [lifted, setLifted] = useState(false);
@@ -495,14 +501,26 @@ function Bunch({ flowerKey, count, size, disabled, x, y, dropRight, onAdd, fs })
     },
     onPanResponderTerminate: () => { setLifted(false); Animated.spring(drag, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start(); },
   })).current;
+  // a loose heap of the flower in its bin, back to front; the top one lifts out when you drag
+  const n = Math.min(count, PILE.length);
+  const fl = size * 0.74;
+  const src = TRADE_IMAGES[TRADE_FLOWERS[flowerKey].img];
   return (
-    <Animated.View
-      {...pan.panHandlers}
-      style={[styles.bunch, { left: x, top: y, width: size, height: size * 0.8, zIndex: lifted ? 50 : 5, opacity: disabled ? 0.4 : 1, transform: drag.getTranslateTransform() }]}
-    >
-      <Image source={TRADE_IMAGES[TRADE_FLOWERS[flowerKey].img]} style={{ width: size * (lifted ? 1.15 : 0.7), height: size * (lifted ? 1.15 : 0.7) }} resizeMode="contain" pointerEvents="none" />
+    <View {...pan.panHandlers} style={[styles.bunch, { left: x, top: y, width: size, height: size * 0.8, zIndex: lifted ? 50 : 5, opacity: disabled ? 0.55 : 1 }]}>
+      {PILE.slice(0, n).map((q, i) => {
+        const top = i === 0;                       // PILE[0] is the front-most flower
+        return (
+          <Animated.Image key={i} source={src} resizeMode="contain" pointerEvents="none"
+            style={{
+              position: 'absolute', width: fl * (top && lifted ? 1.5 : 1), height: fl * (top && lifted ? 1.5 : 1),
+              left: size / 2 + q.x * size - fl * (top && lifted ? 0.75 : 0.5), top: size * 0.47 + q.y * size - fl * (top && lifted ? 0.75 : 0.5),
+              zIndex: PILE.length - i, ...SOFT,
+              transform: [{ rotate: `${q.r}deg` }, ...(top ? drag.getTranslateTransform() : [])],
+            }} />
+        );
+      })}
       <View style={styles.badge}><PixelText size={fs(8, 6)}>{count}</PixelText></View>
-    </Animated.View>
+    </View>
   );
 }
 
@@ -751,7 +769,7 @@ const styles = StyleSheet.create({
   swipe: { position: 'absolute', top: '45%', fontFamily: HEAD, fontSize: 22, color: '#5a3410' },
   prompt: { position: 'absolute', alignItems: 'center', zIndex: 10 },
   promptTxt: { fontFamily: HEAD, fontSize: 15, lineHeight: 17, color: '#fff3d6', textAlign: 'center', textShadowColor: '#2a1608', textShadowRadius: 4 },
-  bunch: { position: 'absolute', alignItems: 'center', justifyContent: 'center', borderRadius: 26, backgroundColor: 'rgba(255,243,214,0.88)' },
+  bunch: { position: 'absolute' },
   badge: { position: 'absolute', right: -4, bottom: -4, backgroundColor: '#5a3410', borderWidth: 2, borderColor: '#2a1608', borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1 },
   price: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: 'rgba(58,32,12,0.88)', borderWidth: 3, borderColor: '#2a1608', borderRadius: 4 },
   priceTxt: { fontFamily: HEAD, fontSize: 24, color: '#ffd060' },
