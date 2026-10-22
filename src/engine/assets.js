@@ -442,7 +442,7 @@ export const BOOK_TILES = {
 // Painted buttons, cut in three (left cap | stretchy middle | right cap) so the
 // flowers on the corners keep their shape at any width. cap = cap width / height.
 export const BOOK_BUTTONS = {
-  green: { l: require('../../assets/book/btn_green_l.png'), m: require('../../assets/book/btn_green_m.png'), r: require('../../assets/book/btn_green_r.png'), cap: 82 / 170 },
+  green: { l: require('../../assets/book/btn_green_l.png'), m: require('../../assets/book/btn_green_m.png'), r: require('../../assets/book/btn_green_r.png'), cap: 237 / 200, tall: 1.9 },
   wood:  { l: require('../../assets/book/btn_wood_l.png'),  m: require('../../assets/book/btn_wood_m.png'),  r: require('../../assets/book/btn_wood_r.png'),  cap: 82 / 170 },
   red:   { l: require('../../assets/book/btn_red_l.png'),   m: require('../../assets/book/btn_red_m.png'),   r: require('../../assets/book/btn_red_r.png'),   cap: 80 / 170 },
 };

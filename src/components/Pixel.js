@@ -43,7 +43,7 @@ export function PixelPanel({ style, children, cream }) {
 // The frame is three pictures: left cap, stretchy middle, right cap.
 export function PixelButton({ label, onPress, tone = 'green', disabled, style, size = 11 }) {
   const art = BOOK_BUTTONS[tone] ?? BOOK_BUTTONS.green;
-  const H = Math.max(30, Math.round(size * 2.8));
+  const H = Math.round(Math.max(30, size * 2.8) * (art.tall ?? 1));
   const capW = Math.round(H * art.cap);
   return (
     <TouchableOpacity
