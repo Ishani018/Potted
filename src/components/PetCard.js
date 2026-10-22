@@ -78,7 +78,7 @@ export function AdoptModal({ petKey, onClose, finder }) {
   const R = (r) => ({ position: 'absolute', left: W * r.l, top: H * r.t, width: W * r.w, height: H * r.h });
   const fz = (n) => Math.max(7, Math.round(W * n));
 
-  const bannerText = greeting ? 'WELCOME HOME!' : renaming ? 'PICK A NEW NAME' : owned ? 'YOUR PET' : 'MEET YOUR NEW FRIEND';
+  const bannerText = greeting ? 'Welcome Home!' : renaming ? 'Pick a New Name' : owned ? 'Your Pet' : 'Meet Your New Friend';
   const display = (savedName ?? pet.name).toUpperCase();
 
   // bottom row actions
@@ -112,7 +112,7 @@ export function AdoptModal({ petKey, onClose, finder }) {
 
         {/* banner title */}
         <View pointerEvents="none" style={[R(F.banner), { alignItems: 'center', justifyContent: 'center' }]}>
-          <Text numberOfLines={1} style={pixelText(fz(bannerText.length > 16 ? 0.0245 : 0.03))}>{bannerText}</Text>
+          <Text numberOfLines={1} style={[pixelText(fz(bannerText.length > 16 ? 0.034 : 0.038), '#4a2a10'), { fontWeight: 'bold' }]}>{bannerText}</Text>
         </View>
 
         {/* painted red X */}
