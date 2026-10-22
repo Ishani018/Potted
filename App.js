@@ -20,6 +20,7 @@ import NurseryScreen from './src/screens/NurseryScreen';
 import PetShopScreen from './src/screens/PetShopScreen';
 import PetFoodScreen from './src/screens/PetFoodScreen';
 import FosterScreen from './src/screens/FosterScreen';
+import CounterScreen from './src/screens/CounterScreen';
 import TradeScreen from './src/screens/TradeScreen';
 import TradingScreen from './src/screens/TradingScreen';
 import GalleryScreen from './src/screens/GalleryScreen';
@@ -77,6 +78,7 @@ export default function App() {
                   <Stack.Screen name="PetShop" component={PetShopScreen} />
                   <Stack.Screen name="PetFood" component={PetFoodScreen} />
                   <Stack.Screen name="Foster" component={FosterScreen} />
+                  <Stack.Screen name="Counter" component={CounterScreen} />
                   <Stack.Screen name="Trade" component={TradeScreen} />
                   <Stack.Screen name="Trading" component={TradingScreen} />
                   <Stack.Screen name="Gallery" component={GalleryScreen} />

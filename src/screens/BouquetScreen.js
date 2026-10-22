@@ -8,7 +8,6 @@ import {
 import { globalPetEffects } from '../engine/petEffects';
 import BouquetArt from '../components/BouquetArt';
 import ScreenHud from '../components/ScreenHud';
-import CustomerCorner from '../components/CustomerCorner';
 import { openOrders, bouquetFillsOrder, CUSTOMERS } from '../engine/customers';
 import { PixelText, PixelButton, COLORS } from '../components/Pixel';
 import { useNotice } from '../components/PurchaseNotice';
@@ -194,8 +193,14 @@ export default function BouquetScreen({ navigation }) {
         <PixelText size={fs(8, 6)}>RECIPES {foundCount}/{BOUQUET_RECIPES.length}</PixelText>
       </TouchableOpacity>
 
-      {/* The next waiting customer (tap for their order) */}
-      <CustomerCorner sw={sw} sh={sh} />
+      {/* Customers now come to the counter (their own screen) */}
+      <TouchableOpacity
+        style={[styles.recipeBtn, { right: fx(40), top: fy(150), paddingHorizontal: fx(10), paddingVertical: fy(8) }]}
+        onPress={() => navigation.navigate('Counter')}
+        activeOpacity={0.85}
+      >
+        <PixelText size={fs(8, 6)}>{'< COUNTER'}</PixelText>
+      </TouchableOpacity>
 
       <ScreenHud
         sw={sw} sh={sh}

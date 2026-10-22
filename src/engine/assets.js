@@ -319,6 +319,7 @@ export const PETFOOD_IMAGES = {
 
 export const TRADE_BG = require('../../assets/flowertradeshop.png');   // market exterior (scales)
 export const TRADING_BG = require('../../assets/tradingscreen.png');    // the 6-slot trade page
+export const COUNTER_BG = require('../../assets/shop/counter.png');   // florist counter seen from behind the till (1678×937)
 export const BOUQUET_BG = require('../../assets/bouquetshop.png');   // bouquet table screen
 export const PETROOM_BG = require('../../assets/petroom.png');       // pet lounge (beds)
 export const GALLERY_BG = require('../../assets/gallery.png');
