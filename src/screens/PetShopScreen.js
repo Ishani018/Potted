@@ -68,29 +68,28 @@ function PetTag({ label, show }) {
   );
 }
 
-// The "not yet" message: a painted hanging tag that swings from the door, with the level on it.
-function LockedTag({ level, sw, doorW }) {
-  const swing = useRef(new Animated.Value(0)).current;
+// A locked door: the door rattles and a red wax seal is pressed onto it, with the level under it.
+function LockedSeal({ level, sw, doorW }) {
   const pop = useRef(new Animated.Value(0)).current;
+  const shake = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    Animated.spring(pop, { toValue: 1, friction: 6, useNativeDriver: false }).start();
-    Animated.loop(Animated.sequence([
-      Animated.timing(swing, { toValue: 1, duration: 520, easing: Easing.inOut(Easing.sin), useNativeDriver: false }),
-      Animated.timing(swing, { toValue: -1, duration: 520, easing: Easing.inOut(Easing.sin), useNativeDriver: false }),
-    ]), { iterations: 2 }).start();
+    Animated.spring(pop, { toValue: 1, friction: 4, tension: 90, useNativeDriver: false }).start();
+    Animated.sequence([
+      Animated.timing(shake, { toValue: 1, duration: 60, useNativeDriver: false }),
+      Animated.timing(shake, { toValue: -1, duration: 90, useNativeDriver: false }),
+      Animated.timing(shake, { toValue: 1, duration: 90, useNativeDriver: false }),
+      Animated.timing(shake, { toValue: 0, duration: 60, useNativeDriver: false }),
+    ]).start();
   }, []);
-  const w = Math.max(110, sw * 0.15), h = w * 312 / 198;
+  const w = Math.min(doorW * 0.62, sw * 0.085), h = w * 285 / 327;
   const font = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
   return (
     <Animated.View pointerEvents="none" style={{
-      position: 'absolute', left: (doorW - w) / 2 - (doorW > 90 ? w * 0.14 : 0), top: '10%', width: w, height: h, zIndex: 60, opacity: pop,
-      transform: [{ translateY: -h / 2 }, { rotate: swing.interpolate({ inputRange: [-1, 1], outputRange: ['-5deg', '5deg'] }) }, { translateY: h / 2 }, { scale: pop.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] }) }],
+      position: 'absolute', left: (doorW - w) / 2 - doorW * 0.04, top: '38%', width: w, alignItems: 'center', zIndex: 60, opacity: pop,
+      transform: [{ translateX: shake.interpolate({ inputRange: [-1, 1], outputRange: [-3, 3] }) }, { scale: pop.interpolate({ inputRange: [0, 1], outputRange: [1.7, 1] }) }, { rotate: '-8deg' }],
     }}>
-      <Image source={ORDER_ART.tag_bow} style={{ position: 'absolute', width: w, height: h }} resizeMode="stretch" />
-      <View style={{ position: 'absolute', left: w * 0.1, right: w * 0.1, top: h * 0.67, bottom: h * 0.06, alignItems: 'center', justifyContent: 'center' }}>
-        <Text style={{ fontFamily: font, fontSize: w * 0.11, lineHeight: w * 0.125, color: '#5a3410', textAlign: 'center' }}>Not yet{'\n'}unlocked</Text>
-        <Text style={{ fontFamily: font, fontSize: w * 0.095, color: '#9a6a2a', marginTop: w * 0.015 }}>Level {level}</Text>
-      </View>
+      <Image source={ORDER_ART.seal} style={{ width: w, height: h }} resizeMode="contain" />
+      <Text style={{ marginTop: 4, fontFamily: font, fontSize: Math.max(11, w * 0.34), color: '#fff3d6', textShadowColor: 'rgba(30,14,4,0.9)', textShadowRadius: 3, textShadowOffset: { width: 0, height: 1 } }}>Level {level}</Text>
     </Animated.View>
   );
 }
@@ -175,7 +174,7 @@ export default function PetShopScreen({ navigation }) {
             onPress={() => tapDoor(a)}
           >
             {!locked && !opening && <View pointerEvents="none" style={[styles.archGlow, { borderTopLeftRadius: 999, borderTopRightRadius: 999, opacity: on ? 1 : 0 }]} />}
-            {notYet === a.id && <LockedTag level={a.level} sw={sw} doorW={((a.x1 - a.x0) / ART_W) * sw} />}
+            {notYet === a.id && <LockedSeal level={a.level} sw={sw} doorW={((a.x1 - a.x0) / ART_W) * sw} />}
           </Pressable>
         );
       })}
