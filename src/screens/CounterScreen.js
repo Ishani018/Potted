@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Image, Animated, Easing, Platform, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { COUNTER_BG, CUSTOMER_IMAGES, TRADE_IMAGES, SEED_IMAGES, UI_IMAGES, BOOK_STAMP, MAKE_IMAGES, ORDER_SLIP } from '../engine/assets';
+import { COUNTER_BG, CUSTOMER_IMAGES, CUSTOMER_POSES, TRADE_IMAGES, SEED_IMAGES, UI_IMAGES, BOOK_STAMP, MAKE_IMAGES, ORDER_SLIP } from '../engine/assets';
 import { CUSTOMERS, TRADE_FLOWERS, CUSTOMERS_PER_DAY, BOUQUET_PAPERS, RIBBON_NAMES } from '../constants/gameData';
 import { openOrders, customerLine, flowerName } from '../engine/customers';
 import ScreenHud from '../components/ScreenHud';
@@ -130,7 +130,7 @@ export default function CounterScreen({ navigation }) {
               ],
             }}
           >
-            <Image source={CUSTOMER_IMAGES[order.customer]} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+            <Image source={(CUSTOMER_POSES[order.customer] || {})[phase === 'in' ? 'wave' : phase === 'ask' ? 'think' : 'hold'] || CUSTOMER_IMAGES[order.customer]} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
           </Animated.View>
         </View>
       )}

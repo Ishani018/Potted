@@ -369,6 +369,21 @@ export const CUSTOMER_IMAGES = {
   nori:    require('../../assets/customers/nori.png'),
 };
 
+// Extra poses per customer (same 400x600 canvas): waving as they come in, thinking while
+// they order, and holding their bouquet once served.
+export const CUSTOMER_POSES = {
+  clara: { wave: require('../../assets/customers/poses/clara_wave.png'), think: require('../../assets/customers/poses/clara_think.png'), hold: require('../../assets/customers/poses/clara_hold.png') },
+  theo: { wave: require('../../assets/customers/poses/theo_wave.png'), think: require('../../assets/customers/poses/theo_think.png'), hold: require('../../assets/customers/poses/theo_hold.png') },
+  iris: { wave: require('../../assets/customers/poses/iris_wave.png'), think: require('../../assets/customers/poses/iris_think.png'), hold: require('../../assets/customers/poses/iris_hold.png') },
+  posy: { wave: require('../../assets/customers/poses/posy_wave.png'), think: require('../../assets/customers/poses/posy_think.png'), hold: require('../../assets/customers/poses/posy_hold.png') },
+  walt: { wave: require('../../assets/customers/poses/walt_wave.png'), think: require('../../assets/customers/poses/walt_think.png'), hold: require('../../assets/customers/poses/walt_hold.png') },
+  finn: { wave: require('../../assets/customers/poses/finn_wave.png'), think: require('../../assets/customers/poses/finn_think.png'), hold: require('../../assets/customers/poses/finn_hold.png') },
+  marisol: { wave: require('../../assets/customers/poses/marisol_wave.png'), think: require('../../assets/customers/poses/marisol_think.png'), hold: require('../../assets/customers/poses/marisol_hold.png') },
+  ben: { wave: require('../../assets/customers/poses/ben_wave.png'), think: require('../../assets/customers/poses/ben_think.png'), hold: require('../../assets/customers/poses/ben_hold.png') },
+  maemae: { wave: require('../../assets/customers/poses/maemae_wave.png'), think: require('../../assets/customers/poses/maemae_think.png'), hold: require('../../assets/customers/poses/maemae_hold.png') },
+  nori: { wave: require('../../assets/customers/poses/nori_wave.png'), think: require('../../assets/customers/poses/nori_think.png'), hold: require('../../assets/customers/poses/nori_hold.png') },
+};
+
 // ─── Herbalist (Granny Mae) and her remedies ──────────────────────────────────
 // The herbalist reuses Granny Mae's customer sprite (CUSTOMER_IMAGES.maemae). The
 // two remedy icons (256×256 transparent) live in assets/herbalist/ and ship with

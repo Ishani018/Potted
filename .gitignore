@@ -42,6 +42,8 @@ assets/*
 !assets/petfood/*.png
 !assets/customers/
 !assets/customers/*.png
+!assets/customers/poses/
+!assets/customers/poses/*.png
 !assets/pests/
 !assets/pests/*.png
 !assets/herbalist/
