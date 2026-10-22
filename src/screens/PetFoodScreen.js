@@ -177,9 +177,17 @@ export default function PetFoodScreen({ navigation }) {
         );
       })}
 
-      <View style={styles.back}>
-        <PixelButton label="< PET SHOP" tone="wood" size={8} onPress={() => navigation.navigate('PetShop')} />
-      </View>
+      {/* the arch on the left leads back into the pet shop */}
+      {sw > 0 && (
+        <Pressable
+          style={{ position: 'absolute', left: (68 / BG_W) * sw, top: (120 / BG_H) * sh, width: ((318 - 68) / BG_W) * sw, height: ((860 - 120) / BG_H) * sh, zIndex: 6 }}
+          onHoverIn={() => setHovered('arch')}
+          onHoverOut={() => setHovered((h) => (h === 'arch' ? null : h))}
+          onPress={() => navigation.navigate('PetShop')}
+        >
+          <View style={[styles.tagWrap, { top: '30%' }]} pointerEvents="none"><PetTag show={hovered === 'arch'} label="PET SHOP" /></View>
+        </Pressable>
+      )}
 
       <ScreenHud sw={sw} sh={sh} onSettings={() => navigation.navigate('Settings')} onMap={() => navigation.navigate('Map')} onInventory={() => setInvOpen(true)} />
 
@@ -194,7 +202,6 @@ const styles = StyleSheet.create({
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
   spot: { position: 'absolute', borderRadius: 6 },
   tagWrap: { position: 'absolute', left: -40, right: -40, top: -22, alignItems: 'center', zIndex: 50 },
-  back: { position: 'absolute', right: 16, bottom: 12, zIndex: 30 },
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center', zIndex: 200 },
   card: { width: 400, maxWidth: '94%' },
   head: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },

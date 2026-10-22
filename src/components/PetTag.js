@@ -21,7 +21,7 @@ export default function PetTag({ label, show }) {
   const y = bob.interpolate({ inputRange: [0, 1], outputRange: [0, -4] });
   return (
     <Animated.View pointerEvents="none" style={{ opacity: fade, transform: [{ translateY: y }] }}>
-      <PixelText size={10}>{label}</PixelText>
+      <PixelText size={10} style={{ textShadowRadius: 3.5 }}>{label}</PixelText>
     </Animated.View>
   );
 }
