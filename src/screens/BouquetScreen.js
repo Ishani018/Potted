@@ -8,6 +8,7 @@ import {
 } from '../constants/gameData';
 import { globalPetEffects } from '../engine/petEffects';
 import ScreenHud from '../components/ScreenHud';
+import { bouquetPic } from '../engine/bouquetPics';
 import { openOrders, bouquetFillsOrder, flowerName } from '../engine/customers';
 import { PixelText, PixelButton } from '../components/Pixel';
 import { useNotice } from '../components/PurchaseNotice';
@@ -58,9 +59,8 @@ PAPER_BOX.top = Math.round(CY - PAPER_BOX.h / 2);
 const FLAP_TOP = PAPER_BOX.top + Math.round(0.42 * PAPER_BOX.h);   // where the ribbon waist sits; the blooms stay above
 // ribbon -> the colour of bows that go with it
 const BOW_COLOR = { ribbonRed: 'red', ribbonPink: 'pink', ribbonCream: 'cream', ribbonPinkFloral: 'pinkfloral', ribbonGreen: 'green', ribbonCreamFloral: 'creamfloral' };
-const WRAP_ART = { plain: 'wrapKraft', layered: 'wrapLayered', fancy: 'wrapLayered' };
-const WRAP_ASPECT = 640 / 590;                                       // height / width of the wrapped-bouquet pictures
-const WRAP_W = 300;
+const WRAP_ASPECT = 630 / 600;                                       // height / width of the wrapped-bouquet pictures
+const WRAP_W = 330;
 const WAIST = 0.79;                                                  // where the twine sits, as a fraction of the wrapper's height
 const FOLD_DEG = 20;                                                // tilt of the diagonal fold lines
 const TRAY = { cx: 1247, cy: 562, w: 247, h: 169 };  // the hand-over tray, bottom right
@@ -221,7 +221,7 @@ export default function BouquetScreen({ navigation }) {
               {/* once folded it is the wrapped bouquet: the wrapper, the flowers in its opening, the ribbon and bow */}
               {step >= 3 && (
                 <Wrapped
-                  art={MAKE_IMAGES[WRAP_ART[paper]]} picks={picks} left={wx} top={wy} w={ww} h={wh} fx={fx}
+                  art={bouquetPic(picks, paper)} left={wx} top={wy} w={ww} h={wh} fx={fx}
                   ribbon={tied ? MAKE_IMAGES[ribbonKey] : null}
                   bow={bow != null ? BOW_IMAGES[bow.color][bow.i] : null}
                 />
@@ -390,23 +390,14 @@ function FadeOut({ hide, children }) {
 
 // The wrapped bouquet: the folded wrapper picture, the three flowers blooming out of its
 // opening, then the ribbon round the waist (where the twine is) and the bow on the ribbon.
-function Wrapped({ art, picks, left, top, w, h, ribbon, bow, fx }) {
+function Wrapped({ art, left, top, w, h, ribbon, bow, fx }) {
   const o = useRef(new Animated.Value(0)).current;
   React.useEffect(() => { Animated.timing(o, { toValue: 1, duration: 380, useNativeDriver: false }).start(); }, []);
-  const FAN = [{ x: 0.3, y: 0.22, r: '-16deg' }, { x: 0.7, y: 0.22, r: '16deg' }, { x: 0.5, y: 0.12, r: '0deg' }];
-  const fz = w * 0.4;
   const rw = w * 0.2, rh = w * 0.075, wy = top + h * WAIST + w * 0.01;
   return (
     <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: o }}>
       <View style={{ position: 'absolute', left: left + w * 0.18, top: top + h * 0.9, width: w * 0.64, height: h * 0.12, borderRadius: w, backgroundColor: 'rgba(60,30,8,0.28)', ...(Platform.OS === 'web' ? { filter: 'blur(7px)' } : {}) }} />
       <Image source={art} style={[{ position: 'absolute', left, top, width: w, height: h }, SOFT]} resizeMode="contain" />
-      {/* the blooms rise out of the wrapper's opening: anything below the rim is hidden */}
-      <View style={{ position: 'absolute', left: left - w * 0.1, top: top - h * 0.2, width: w * 1.2, height: h * 0.2 + h * 0.34, overflow: 'hidden' }}>
-        {picks.map((k, i) => (
-          <Image key={i} source={TRADE_IMAGES[TRADE_FLOWERS[k].img]} resizeMode="contain"
-            style={[{ position: 'absolute', left: w * 0.1 + w * FAN[i].x - fz / 2, top: h * 0.2 + h * (FAN[i].y - 0.03) - fz / 2, width: fz, height: fz, transform: [{ rotate: FAN[i].r }], zIndex: i === 2 ? 3 : 2 }, SOFT]} />
-        ))}
-      </View>
       {ribbon && <TiedRibbon x={left + (w - rw) / 2} y={wy} w={rw} h={rh} source={ribbon} />}
       {bow && <Image source={bow} resizeMode="contain" style={[{ position: 'absolute', left: left + w * 0.5 - fx(58), top: wy - fx(42), width: fx(116), height: fx(88), zIndex: 9 }, SOFT]} />}
     </Animated.View>
