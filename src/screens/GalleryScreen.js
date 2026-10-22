@@ -15,18 +15,18 @@ const PLOPPER_W = 1376;
 const PLOPPER_H = 768;
 // The paintings hang from the café wall (two rows under the four hooks).
 // which café picture is used: 'a' (open room) or 'b' (closer in, bar and tables)
-export const CAFE = 'b';
-const BAR = { a: { x: 222, top: 441, feet: 563 }, b: { x: 212, top: 437, feet: 560 } };   // where Ben stands, per picture
+export const CAFE = 'c';
+const BAR = { a: { x: 222, top: 441, feet: 563 }, b: { x: 212, top: 437, feet: 560 }, c: { x: 175, top: 447, feet: 575 } };   // where Ben stands, per picture
 // A gallery wall: all eight paintings in a cluster of mixed sizes on the big empty wall.
 const WALL_ITEMS = [
-  { key: 'sleepingpuppypainting',  x: 702, y: 244, w: 46, h: 44, z: 1 },
-  { key: 'picnic',                 x: 778, y: 252, w: 78, h: 78, z: 2 },
-  { key: 'campfirepainting',       x: 852, y: 236, w: 42, h: 40, z: 3 },
-  { key: 'tabbycatpainting',       x: 922, y: 246, w: 54, h: 51, z: 4 },
-  { key: 'womanportraitpainting',  x: 716, y: 332, w: 50, h: 48, z: 5 },
-  { key: 'beachpainting',          x: 792, y: 342, w: 64, h: 63, z: 6 },
-  { key: 'weddingpainting',        x: 884, y: 332, w: 82, h: 77, z: 7 },
-  { key: 'newbaby',                x: 972, y: 336, w: 60, h: 60, z: 8 },
+  { key: 'sleepingpuppypainting',  x: 690, y: 236, w: 56, h: 54, z: 1 },
+  { key: 'picnic',                 x: 780, y: 250, w: 90, h: 90, z: 2 },
+  { key: 'campfirepainting',       x: 872, y: 228, w: 50, h: 48, z: 3 },
+  { key: 'tabbycatpainting',       x: 950, y: 246, w: 64, h: 60, z: 4 },
+  { key: 'womanportraitpainting',  x: 712, y: 350, w: 60, h: 58, z: 5 },
+  { key: 'beachpainting',          x: 800, y: 362, w: 76, h: 75, z: 6 },
+  { key: 'weddingpainting',        x: 905, y: 352, w: 96, h: 90, z: 7 },
+  { key: 'newbaby',                x: 1005, y: 356, w: 68, h: 68, z: 8 },
 ];
 
 // ── Buy modal ─────────────────────────────────────────────────────────────────
