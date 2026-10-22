@@ -52,7 +52,7 @@ export function PixelButton({ label, onPress, tone = 'green', disabled, style, s
       disabled={disabled}
       style={[
         { height: H, minWidth: capW * 2 + 24, alignItems: 'center', justifyContent: 'center' },
-        disabled && { opacity: 0.45 },
+        disabled && { opacity: 0.6 },
         style,
       ]}
     >

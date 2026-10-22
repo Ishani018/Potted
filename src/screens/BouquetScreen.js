@@ -22,7 +22,7 @@ import { useNotice } from '../components/PurchaseNotice';
 // Steady swipes keep the "neat" bonus: +10% on the sale.
 // Positions are in the 1376×768 base space. The picture is 3:2, the game frame 16:9, so it
 // is stretched a little (like the other screens); a 16:9 picture would remove that.
-const PLOPPER_W = 1376;
+const PLOPPER_W = 1376;   // (the workspace picture is 1170x658, close enough to 16:9)
 const PLOPPER_H = 768;
 const PAPER_IMG = { plain: 'bouquetempty', layered: 'bouquetmixed', fancy: 'bouquetfancy' };
 // Kraft and the flowered parchment have art; "layered" is both sheets together, the
@@ -45,31 +45,33 @@ function SheetLayers({ paper, w, h, shadow = false }) {
 }
 // The six spools on the ribbon tray (base units); each pulls its own ribbon. The twine isn't one.
 const SPOOLS = [
-  { x: 1136, y: 153, key: 'ribbonRed' }, { x: 1196, y: 153, key: 'ribbonPink' }, { x: 1250, y: 153, key: 'ribbonCream' },
-  { x: 1136, y: 274, key: 'ribbonPinkFloral' }, { x: 1200, y: 274, key: 'ribbonCreamFloral' }, { x: 1265, y: 274, key: 'ribbonGreen' },
+  { x: 1158, y: 138, key: 'ribbonRed' }, { x: 1211, y: 138, key: 'ribbonPink' }, { x: 1264, y: 138, key: 'ribbonCream' },
+  { x: 1158, y: 247, key: 'ribbonPinkFloral' }, { x: 1215, y: 247, key: 'ribbonCreamFloral' }, { x: 1280, y: 247, key: 'ribbonGreen' },
 ];
 const PAPER_ASPECT = 700 / 617;
 const RIBBON_ASPECT = 11.2;                          // the ribbon pictures are 1000×~89
-const MAT = { x0: 419, y0: 232, x1: 1066, y1: 705 };  // the wooden work mat
-const CX = (MAT.x0 + MAT.x1) / 2;                    // 742
+const MAT = { x0: 535, y0: 196, x1: 1088, y1: 583 };  // the wooden work mat
+const CX = 807;                                       // centre of the sheet lying on the mat (it is painted into the picture)
 const CY = (MAT.y0 + MAT.y1) / 2 + 6;
-const PAPER_BOX = { w: 430, h: Math.round(430 / PAPER_ASPECT) };   // the sheet once it is on the mat
+const PAPER_BOX = { w: 365, h: Math.round(365 / PAPER_ASPECT) };   // the sheet once it is on the mat
 PAPER_BOX.top = Math.round(CY - PAPER_BOX.h / 2);
 const FLAP_TOP = PAPER_BOX.top + Math.round(0.42 * PAPER_BOX.h);   // where the ribbon waist sits; the blooms stay above
 // ribbon -> the colour of bows that go with it
 const BOW_COLOR = { ribbonRed: 'red', ribbonPink: 'pink', ribbonCream: 'cream', ribbonPinkFloral: 'pinkfloral', ribbonGreen: 'green', ribbonCreamFloral: 'creamfloral' };
 const WRAP_ART = { plain: 'wrapKraft', layered: 'wrapLayered', fancy: 'wrapLayered' };
 const WRAP_ASPECT = 640 / 590;                                       // height / width of the wrapped-bouquet pictures
-const WRAP_W = 372;
+const WRAP_W = 315;
 const WAIST = 0.79;                                                  // where the twine sits, as a fraction of the wrapper's height
 const FOLD_DEG = 20;                                                // tilt of the diagonal fold lines
-const TRAY = { cx: 1234, cy: 628, w: 250, h: 150 };  // the hand-over tray, bottom right
-// The eight bins down the left (basket, bucket, basket, bucket ...), centres in base space
+const TRAY = { cx: 1247, cy: 562, w: 247, h: 169 };  // the hand-over tray, bottom right
+// The nine bins down the left (basket, bucket, basket ...), centres in base space; each has a name plate under it
 const BINS = [
-  { x: 112, y: 128 }, { x: 318, y: 132 }, { x: 112, y: 295 }, { x: 306, y: 295 },
-  { x: 104, y: 458 }, { x: 306, y: 458 }, { x: 102, y: 618 }, { x: 296, y: 622 },
+  { x: 100, y: 140 }, { x: 267, y: 138 }, { x: 433, y: 138 },
+  { x: 96, y: 315 }, { x: 263, y: 315 }, { x: 433, y: 313 },
+  { x: 92, y: 490 }, { x: 266, y: 488 }, { x: 435, y: 490 },
 ];
-const BIN_D = 150;
+const BIN_D = 160;
+const STRIP_SLOTS = [611, 701, 790, 882, 974];   // left edges of the five painted slots on the order strip
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const HEAD = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 const BODY = Platform.select({ web: "'PatrickHand', Georgia, serif", default: 'PatrickHand' });
@@ -176,7 +178,7 @@ export default function BouquetScreen({ navigation }) {
             <PaperStack
               paper={paper} chosen={chosenPaper} level={level} coins={coins}
               onCycle={(id) => setPaper(id)} onChoose={() => setStep(1)}
-              box={{ x: fx(480), y: 0, w: fx(487), h: fy(190) }} matTop={fy(MAT.y0)} fx={fx} fy={fy}
+              box={{ x: fx(547), y: 0, w: fx(476), h: fy(190) }} matTop={fy(MAT.y0)} fx={fx} fy={fy}
             />
           )}
 
@@ -240,44 +242,57 @@ export default function BouquetScreen({ navigation }) {
             />
           )}
 
+          <BowPile tray={{ x: fx(TRAY.cx), y: fy(TRAY.cy), w: fx(TRAY.w), h: fy(TRAY.h) }} fx={fx} />
+
           {/* the flowers sit in their bins; drag one out onto the paper */}
           {step === 1 && owned.length === 0 && (
             <Text style={[styles.hint, { left: fx(CX) - fx(260), width: fx(520), top: fy(CY) }]}>No harvested flowers yet. Grow some first!</Text>
           )}
-          {step === 1 && shown.map((key, i) => (
+          {shown.map((key, i) => (
             <Bunch
-              key={key + i} flowerKey={key} count={left(key)} size={fx(BIN_D) * 0.72} disabled={full || left(key) <= 0}
+              key={key + i} flowerKey={key} count={left(key)} size={fx(BIN_D) * 0.72} disabled={step !== 1 || full || left(key) <= 0} dim={step === 1}
               x={fx(BINS[i].x) - fx(BIN_D) * 0.36} y={fy(BINS[i].y) - fx(BIN_D) * 0.36}
-              dropRight={fx(MAT.x0)} onAdd={() => addFlower(key)} fs={fs}
+              dropRight={fx(MAT.x0)} onAdd={() => addFlower(key)} fs={fs} plateY={fy(68) + fx(BIN_D) * 0.36}
             />
           ))}
-          {step === 1 && pages > 1 && (
-            <View style={{ position: 'absolute', left: fx(290), top: fy(716), zIndex: 30 }}>
+          {pages > 1 && (
+            <View style={{ position: 'absolute', left: fx(18), top: fy(608), zIndex: 30 }}>
               <PixelButton label={`MORE ${page + 1}/${pages}`} tone="wood" size={fs(7, 6)} onPress={() => setBinPage((page + 1) % pages)} />
             </View>
           )}
 
           {/* the order slip and the prompt along the bottom of the table */}
           {want && (
-            <View style={[styles.ticket, { left: fx(395), top: fy(688), width: fx(450), height: fx(450) * 113 / 489 }]} pointerEvents="none">
-              <Image source={ORDER_ART.banner} style={styles.ticketBg} resizeMode="stretch" />
-              <View style={{ width: fx(46), height: fx(46), overflow: 'hidden', marginLeft: fx(34) }}>
-                <Image source={(CUSTOMER_POSES[want.customer] || {}).think || CUSTOMER_IMAGES[want.customer]} style={{ position: 'absolute', width: fx(106), height: fx(159), left: -fx(30), top: -fx(34) }} resizeMode="contain" />
+            <>
+              {/* the customer, in the round frame at the left of the painted strip */}
+              <View pointerEvents="none" style={{ position: 'absolute', left: fx(268), top: fy(612), width: fx(104), height: fx(104), borderRadius: fx(52), overflow: 'hidden', zIndex: 10 }}>
+                <Image source={(CUSTOMER_POSES[want.customer] || {}).think || CUSTOMER_IMAGES[want.customer]} style={{ position: 'absolute', width: fx(200), height: fx(300), left: -fx(48), top: -fx(58) }} resizeMode="contain" />
               </View>
-              <Text style={styles.ticketName} numberOfLines={1}>{CUSTOMERS[want.customer].name.split(' ').pop()}</Text>
-              <View style={styles.ticketTiles}>
-                <TicketTile fx={fx} source={TRADE_IMAGES[TRADE_FLOWERS[want.flowerKey]?.img]} ok={step >= 1 && picks.includes(want.flowerKey)} />
-                {want.paper && <TicketTile fx={fx} source={{ plain: MAKE_IMAGES.paper, layered: MAKE_IMAGES.wrapLayered, fancy: MAKE_IMAGES.paperFancy }[want.paper] || MAKE_IMAGES.paper} ok={step >= 1 && paper === want.paper} />}
-                {want.ribbon && <TicketTile fx={fx} source={(BOW_IMAGES[BOW_COLOR[want.ribbon]] || [])[0] || MAKE_IMAGES[want.ribbon]} ok={tied && ribbonKey === want.ribbon} />}
-              </View>
-            </View>
+              <Text pointerEvents="none" style={[styles.stripName, { left: fx(394), top: fy(626), width: fx(190) }]} numberOfLines={1}>{CUSTOMERS[want.customer].name}</Text>
+              <Text pointerEvents="none" style={[styles.stripSub, { left: fx(394), top: fy(668), width: fx(190) }]} numberOfLines={1}>{step === 5 && result ? `${payout} coins${grade && grade.perfect ? ' · Perfect' : neat ? ' · Neat' : ''}` : `${flowerName(want.flowerKey)} bouquet`}</Text>
+              {[
+                { src: TRADE_IMAGES[TRADE_FLOWERS[want.flowerKey]?.img], ok: picks.includes(want.flowerKey) },
+                want.paper && { src: { plain: MAKE_IMAGES.paper, layered: MAKE_IMAGES.wrapLayered }[want.paper] || MAKE_IMAGES.paper, ok: step >= 1 && paper === want.paper },
+                want.ribbon && { src: MAKE_IMAGES[want.ribbon], strip: true, ok: tied && ribbonKey === want.ribbon },
+                want.ribbon && { src: (BOW_IMAGES[BOW_COLOR[want.ribbon]] || [])[0], ok: bow != null && bow.color === BOW_COLOR[want.ribbon] },
+                { src: UI_IMAGES.goldcoins, label: `+${want.tip}` },
+              ].map((it, i) => it && (
+                <View key={i} pointerEvents="none" style={{ position: 'absolute', left: fx(STRIP_SLOTS[i]), top: fy(630), width: fx(76), height: fy(76), alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
+                  {it.strip
+                    ? <Image source={it.src} style={{ width: fx(58), height: fx(58) / RIBBON_ASPECT * 1.6 }} resizeMode="stretch" />
+                    : <Image source={it.src} style={{ width: fx(54), height: fx(54) }} resizeMode="contain" />}
+                  {it.label ? <Text style={styles.stripTip}>{it.label}</Text> : null}
+                  {it.ok && <View style={styles.tick}><Text style={styles.tickTxt}>✓</Text></View>}
+                </View>
+              ))}
+            </>
           )}
-          <View style={[styles.prompt, { left: fx(want ? 860 : 520), width: fx(want ? 320 : 560), top: fy(706) }]} pointerEvents="none">
-            <Text style={styles.promptTxt} numberOfLines={2}>{prompt}</Text>
+          <View style={[styles.prompt, { left: fx(541), width: fx(547), top: fy(203) }]} pointerEvents="none">
+            <Text style={styles.promptTxt} numberOfLines={1}>{prompt}</Text>
           </View>
 
           {/* buttons, right column (beside the scissors) */}
-          <View style={{ position: 'absolute', left: fx(1195), top: fy(372), width: fx(170), alignItems: 'center', gap: fy(8), zIndex: 30 }}>
+          <View style={{ position: 'absolute', left: fx(1160), top: fy(330), width: fx(170), alignItems: 'center', gap: fy(8), zIndex: 30 }}>
             {step === 1 && (
               <>
                 <PixelButton onPress={goFold} disabled={!full} size={fs(9, 7)} label="FOLD IT" style={{ alignSelf: 'stretch' }} />
@@ -288,16 +303,7 @@ export default function BouquetScreen({ navigation }) {
               <PixelButton onPress={() => setStep(5)} disabled={bow == null} size={fs(9, 7)} label="FINISH" style={{ alignSelf: 'stretch' }} />
             )}
             {step === 5 && result && (
-              <>
-                <View style={styles.price}>
-                  <Image source={UI_IMAGES.goldcoins} style={{ width: fx(22), height: fx(22) }} resizeMode="contain" />
-                  <Text style={styles.priceTxt}>{payout}</Text>
-                </View>
-                {neat && <Text style={styles.neat}>Neat work! +10%</Text>}
-                {grade && grade.label ? <Text style={[styles.neat, !grade.perfect && { color: '#ffd9a0' }]}>{grade.label}</Text> : null}
-                {result.paperCost > 0 && <Text style={styles.small}>paper -{result.paperCost}</Text>}
-                <PixelButton onPress={giveOver} size={fs(8, 6)} label={order ? 'GIVE IT' : 'SELL IT'} style={{ alignSelf: 'stretch' }} />
-              </>
+              <PixelButton onPress={giveOver} size={fs(8, 6)} label={order ? 'GIVE IT' : 'SELL IT'} style={{ alignSelf: 'stretch' }} />
             )}
             {step > 0 && step < 5 && (
               <PixelButton onPress={resetAll} tone="wood" size={fs(7, 6)} label="START OVER" style={{ alignSelf: 'stretch' }} />
@@ -308,14 +314,14 @@ export default function BouquetScreen({ navigation }) {
 
       {/* Recipes: the garden journal's bouquet pages */}
       <TouchableOpacity
-        style={[styles.recipeBtn, { left: fx(150), top: fy(718), paddingHorizontal: fx(10), paddingVertical: fy(6) }]}
+        style={[styles.recipeBtn, { left: fx(18), top: fy(706), paddingHorizontal: fx(10), paddingVertical: fy(6) }]}
         onPress={() => navigation.navigate('FlowerBook', { tab: 'bouquets' })}
         activeOpacity={0.85}
       >
         <PixelText size={fs(7, 6)}>RECIPES {foundCount}/{BOUQUET_RECIPES.length}</PixelText>
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.recipeBtn, { left: fx(14), top: fy(718), paddingHorizontal: fx(10), paddingVertical: fy(6) }]}
+        style={[styles.recipeBtn, { left: fx(18), top: fy(660), paddingHorizontal: fx(10), paddingVertical: fy(6) }]}
         onPress={() => navigation.navigate('Counter')}
         activeOpacity={0.85}
       >
@@ -422,6 +428,26 @@ function HandOver({ enabled, home, tray, onDrop, style, children }) {
   );
 }
 
+// The painted box of bows is empty in the picture, so the bows are heaped into it here.
+const BOW_SPOTS = [
+  { c: 'red', x: 0.2, y: 0.3, r: -18 }, { c: 'pink', x: 0.5, y: 0.26, r: 8 }, { c: 'pinkfloral', x: 0.8, y: 0.3, r: 16 },
+  { c: 'cream', x: 0.3, y: 0.55, r: 10 }, { c: 'green', x: 0.62, y: 0.56, r: -12 }, { c: 'creamfloral', x: 0.82, y: 0.62, r: 6 },
+  { c: 'pink', x: 0.15, y: 0.7, r: 14 }, { c: 'red', x: 0.46, y: 0.74, r: -8 },
+];
+function BowPile({ tray, fx }) {
+  const L = tray.x - tray.w / 2, T = tray.y - tray.h / 2;
+  return (
+    <View pointerEvents="none" style={{ position: 'absolute', left: L, top: T, width: tray.w, height: tray.h, zIndex: 3, overflow: 'hidden' }}>
+      {BOW_SPOTS.map((b, i) => (
+        <Image key={i} source={(BOW_IMAGES[b.c] || [])[i % (BOW_IMAGES[b.c] || [1]).length]} resizeMode="contain" style={{
+          position: 'absolute', left: tray.w * b.x - fx(40), top: tray.h * b.y - fx(34), width: fx(80), height: fx(68), transform: [{ rotate: `${b.r}deg` }], ...SOFT,
+        }} />
+      ))}
+    </View>
+  );
+}
+
+
 // The box under the scissors is a dispenser: press anywhere in it and a bow appears under your
 // finger; drag it onto the bouquet and let go. Each pick is a different bow (about 7 in 10
 // match your ribbon's colour, the rest are any of the 26 on the sheet), so you always get a
@@ -482,7 +508,7 @@ const PILE = [
   { x: -0.02, y: -0.2, r: -4 }, { x: -0.26, y: 0.1, r: -24 }, { x: 0.26, y: 0.08, r: 22 },
 ];
 
-function Bunch({ flowerKey, count, size, disabled, x, y, dropRight, onAdd, fs }) {
+function Bunch({ flowerKey, count, size, disabled, dim = true, x, y, dropRight, onAdd, fs, plateY }) {
   const drag = useRef(new Animated.ValueXY()).current;
   const [lifted, setLifted] = useState(false);
   const cfg = useRef({});
@@ -506,7 +532,7 @@ function Bunch({ flowerKey, count, size, disabled, x, y, dropRight, onAdd, fs })
   const fl = size * 0.74;
   const src = TRADE_IMAGES[TRADE_FLOWERS[flowerKey].img];
   return (
-    <View {...pan.panHandlers} style={[styles.bunch, { left: x, top: y, width: size, height: size * 0.8, zIndex: lifted ? 50 : 5, opacity: disabled ? 0.55 : 1 }]}>
+    <View {...pan.panHandlers} style={[styles.bunch, { left: x, top: y, width: size, height: size * 0.8, zIndex: lifted ? 50 : 5, opacity: disabled && dim ? 0.55 : 1 }]}>
       {PILE.slice(0, n).map((q, i) => {
         const top = i === 0;                       // PILE[0] is the front-most flower
         return (
@@ -519,7 +545,7 @@ function Bunch({ flowerKey, count, size, disabled, x, y, dropRight, onAdd, fs })
             }} />
         );
       })}
-      <View style={styles.badge}><PixelText size={fs(8, 6)}>{count}</PixelText></View>
+      <Text pointerEvents="none" style={[styles.plate, { top: plateY - size * 0.11, width: size, fontSize: Math.max(10, size * 0.17) }]}>{count}</Text>
     </View>
   );
 }
@@ -747,6 +773,9 @@ const styles = StyleSheet.create({
   dotNow: { backgroundColor: '#fbf0cf', borderColor: '#c9780a' },
   stepTxt: { fontFamily: HEAD, fontSize: 14, color: '#d9c39a', textShadowColor: '#2a1608', textShadowRadius: 3 },
   stepTxtNow: { color: '#fff3d6' },
+  stripName: { position: 'absolute', fontFamily: HEAD, fontSize: 19, color: '#4a2a10', zIndex: 10 },
+  stripSub: { position: 'absolute', fontFamily: HEAD, fontSize: 14, color: '#7a5a30', zIndex: 10 },
+  stripTip: { position: 'absolute', bottom: 0, fontFamily: HEAD, fontSize: 13, color: '#6a4a18' },
   ticket: { position: 'absolute', flexDirection: 'row', alignItems: 'center', gap: 8, zIndex: 10 },
   ticketBg: { position: 'absolute', left: 0, top: 0, width: '100%', height: '100%' },
   ticketTiles: { flexDirection: 'row', gap: 6, marginLeft: 6 },
@@ -768,8 +797,10 @@ const styles = StyleSheet.create({
   // a thin fold line along the cut edge of a flap
   swipe: { position: 'absolute', top: '45%', fontFamily: HEAD, fontSize: 22, color: '#5a3410' },
   prompt: { position: 'absolute', alignItems: 'center', zIndex: 10 },
+  promptSub: { fontFamily: HEAD, fontSize: 14, color: '#cfe8a0', textAlign: 'center', textShadowColor: '#2a1608', textShadowRadius: 4, marginTop: 1 },
   promptTxt: { fontFamily: HEAD, fontSize: 15, lineHeight: 17, color: '#fff3d6', textAlign: 'center', textShadowColor: '#2a1608', textShadowRadius: 4 },
   bunch: { position: 'absolute' },
+  plate: { position: 'absolute', left: 0, textAlign: 'center', fontFamily: HEAD, color: '#5a3a18' },
   badge: { position: 'absolute', right: -4, bottom: -4, backgroundColor: '#5a3410', borderWidth: 2, borderColor: '#2a1608', borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1 },
   price: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: 'rgba(58,32,12,0.88)', borderWidth: 3, borderColor: '#2a1608', borderRadius: 4 },
   priceTxt: { fontFamily: HEAD, fontSize: 24, color: '#ffd060' },
