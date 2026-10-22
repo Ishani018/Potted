@@ -1,7 +1,6 @@
 import React from 'react';
 import { Image, TouchableOpacity } from 'react-native';
 import { UI_IMAGES } from '../engine/assets';
-import LevelBadge from './LevelBadge';
 
 // Standard corner HUD, positioned at fixed Plopper coords (1376×768 base, CENTER
 // anchor) so the buttons sit in the exact same spot on every screen. Pass the
@@ -36,10 +35,6 @@ export default function ScreenHud({ sw, sh, onSettings, onMap, onInventory, onBo
         <TouchableOpacity style={place(HUD.settings, sw, sh)} onPress={onSettings} activeOpacity={0.8}>
           <Image source={UI_IMAGES.settingsnobg} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
         </TouchableOpacity>
-      )}
-      {/* Level + XP, tucked under the settings button on every screen that has one */}
-      {onSettings && (
-        <LevelBadge style={{ left: (HUD.settings.x - HUD.settings.w / 2) / PLOPPER_W * sw, top: (HUD.settings.y + HUD.settings.h / 2 + 8) / PLOPPER_H * sh }} />
       )}
       {onMap && (
         <TouchableOpacity style={place(HUD.map, sw, sh)} onPress={onMap} activeOpacity={0.8}>

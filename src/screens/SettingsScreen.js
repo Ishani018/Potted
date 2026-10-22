@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import LevelBadge from '../components/LevelBadge';
 import { useGame } from '../context/GameContext';
 import { MAP_BG } from '../engine/assets';
 import { getAudioPrefs, subscribeAudio, setMusicOn, setMusicVolume } from '../engine/audio';
@@ -46,6 +47,9 @@ export default function SettingsScreen({ navigation }) {
           <PixelPanel>
             <View style={{ gap: 14 }}>
               <PixelText size={14} color={COLORS.gold} style={{ textAlign: 'center' }}>SETTINGS</PixelText>
+
+              {/* level, XP, today's weather and the next unlock live here now, not on every screen */}
+              <LevelBadge inline />
 
               {/* music on / off */}
               <View style={styles.row}>

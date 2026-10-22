@@ -8,7 +8,7 @@ import { PixelText, COLORS } from './Pixel';
 import { levelInfo, playerLevel, SEED_UNLOCK_LEVEL, POTTED_FLOWERS, HANGING_PLANTS, BOUQUET_PAPERS } from '../constants/gameData';
 
 // Player level + XP bar. Tap for the XP numbers and what unlocks next.
-export default function LevelBadge({ style }) {
+export default function LevelBadge({ style, inline }) {
   const { state } = useGame();
   const [open, setOpen] = useState(false);
   const info = levelInfo(state.player.xp ?? 0);
@@ -27,7 +27,7 @@ export default function LevelBadge({ style }) {
   })();
 
   return (
-    <TouchableOpacity style={[styles.wrap, style]} activeOpacity={0.85} onPress={() => setOpen(!open)}>
+    <TouchableOpacity style={[inline ? styles.inline : styles.wrap, style]} activeOpacity={inline ? 1 : 0.85} onPress={() => !inline && setOpen(!open)}>
       <View style={styles.badge}>
         {/* the painted medal, with the level written in its circle */}
         <View style={styles.medal}>
@@ -46,8 +46,8 @@ export default function LevelBadge({ style }) {
         </View>
         <Image source={WEATHER_IMAGES[weather.key]} style={styles.weather} resizeMode="contain" />
       </View>
-      {open && (
-        <View style={styles.tip}>
+      {(open || inline) && (
+        <View style={[styles.tip, inline && { maxWidth: 320, marginTop: 8 }]}>
           <PixelText size={7}>{info.into} / {info.need} XP</PixelText>
           <PixelText size={6} color="#ffe9a8" style={{ marginTop: 4 }}>{weather.name.toUpperCase()}: {weather.desc.toUpperCase()}</PixelText>
           {nextUnlock && (
@@ -63,6 +63,7 @@ export default function LevelBadge({ style }) {
 
 const styles = StyleSheet.create({
   wrap: { position: 'absolute', zIndex: 31 },
+  inline: { alignItems: 'center' },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   medal: { width: 44, height: 51 },
   medalImg: { width: 44, height: 51 },
