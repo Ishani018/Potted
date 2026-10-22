@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { PETSHOP_BG, PET_IMAGES, UI_IMAGES, BACKGROUNDS } from '../engine/assets';
-import { PETS, ROOM_NAMES } from '../constants/gameData';
+import { PETS, ROOM_NAMES, playerLevel } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
 import PetSprite from '../components/PetSprite';
@@ -23,9 +23,11 @@ const PLOPPER_H = 768;
 // z = stack order (low = back). Projected to screen via projectPoint/projectSize.
 // The painted shop (1677x938) has two arches on the right; tap one to walk through.
 const ART_W = 1677, ART_H = 938;
+// The player level at which each arch opens (until then it is faded and cannot be entered).
+const ARCH_LEVEL = { food: 2, foster: 3 };
 const ARCHES = [
-  { id: 'foster', go: 'Foster', title: 'Foster', sub: 'home', x0: 1272, y0: 70, x1: 1440, y1: 590 },
-  { id: 'food', go: 'PetFood', title: 'Food', sub: 'aisle', x0: 1472, y0: 12, x1: 1677, y1: 590 },
+  { id: 'foster', go: 'Foster', title: 'Foster', sub: 'home', level: ARCH_LEVEL.foster, x0: 1272, y0: 70, x1: 1440, y1: 548 },
+  { id: 'food', go: 'PetFood', title: 'Food', sub: 'aisle', level: ARCH_LEVEL.food, x0: 1472, y0: 12, x1: 1677, y1: 548 },
 ];
 
 export const SHOP_PETS = [
@@ -75,6 +77,7 @@ export default function PetShopScreen({ navigation }) {
   const [invOpen, setInvOpen] = useState(false);
   const [box, setBox] = useState({ w: 0, h: 0 });
   const sw = box.w, sh = box.h;
+  const level = playerLevel(state.player);
   const ownedPets = state.player.ownedPets ?? [];
   const petNames = state.player.petNames ?? {};
 
@@ -114,16 +117,20 @@ export default function PetShopScreen({ navigation }) {
       {/* the two arches on the right: the Foster Home and the Pet Food aisle */}
       {sw > 0 && ARCHES.map((a) => {
         const on = hovered === a.id;
+        const locked = level < a.level;
         return (
           <Pressable
             key={a.id}
-            style={{ position: 'absolute', left: (a.x0 / ART_W) * sw, top: (a.y0 / ART_H) * sh, width: ((a.x1 - a.x0) / ART_W) * sw, height: ((a.y1 - a.y0) / ART_H) * sh, zIndex: 40 }}
+            style={{ position: 'absolute', left: (a.x0 / ART_W) * sw, top: (a.y0 / ART_H) * sh, width: ((a.x1 - a.x0) / ART_W) * sw, height: ((a.y1 - a.y0) / ART_H) * sh, zIndex: 0 }}
             onHoverIn={() => setHovered(a.id)}
             onHoverOut={() => setHovered((h) => (h === a.id ? null : h))}
-            onPress={() => navigation.navigate(a.go)}
+            onPress={() => { if (!locked) navigation.navigate(a.go); else { setHovered(a.id); setTimeout(() => setHovered((h) => (h === a.id ? null : h)), 1800); } }}
           >
-            <View pointerEvents="none" style={[styles.archGlow, { borderTopLeftRadius: 999, borderTopRightRadius: 999, opacity: on ? 1 : 0 }]} />
-            <View pointerEvents="none" style={[styles.archTag, { transform: [{ scale: on ? 0.74 : 0.62 }] }]}><TagLabel title={a.title} sub={a.sub} /></View>
+            {locked && <View pointerEvents="none" style={styles.archLocked} />}
+            {!locked && <View pointerEvents="none" style={[styles.archGlow, { borderTopLeftRadius: 999, borderTopRightRadius: 999, opacity: on ? 1 : 0 }]} />}
+            <View pointerEvents="none" style={[styles.archTag, { transform: [{ scale: on ? 0.74 : 0.62 }], opacity: locked && !on ? 0.75 : 1 }]}>
+              <TagLabel title={locked ? `Level ${a.level}` : a.title} sub={locked ? 'locked' : a.sub} />
+            </View>
           </Pressable>
         );
       })}
@@ -144,6 +151,7 @@ const styles = StyleSheet.create({
   // Sign floating above each pet (centred, overflowing the sprite box upward)
   tagWrap: { position: 'absolute', left: -40, right: -40, top: -22, alignItems: 'center', zIndex: 50 },
 
+  archLocked: { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, borderTopLeftRadius: 999, borderTopRightRadius: 999, backgroundColor: 'rgba(252,238,196,0.66)' },
   archGlow: { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,236,170,0.22)', borderWidth: 3, borderColor: 'rgba(255,240,190,0.55)' },
   archTag: { position: 'absolute', left: 0, right: 0, top: '22%', alignItems: 'center' },
 
