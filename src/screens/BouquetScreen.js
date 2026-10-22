@@ -81,7 +81,7 @@ export default function BouquetScreen({ navigation }) {
   const found = state.player.bouquetBook ?? {};
   const [box, setBox] = useState({ w: 0, h: 0 });
   const [step, setStep] = useState(0);              // 0 paper .. 3 tie, 4 bow, 5 give
-  const [bow, setBow] = useState(null);            // the bow on the ribbon: an index into that colour's bows
+  const [bow, setBow] = useState(null);            // the bow on the ribbon: { color, i } into BOW_IMAGES
   const [picks, setPicks] = useState([]);
   const [chosenPaper, setPaper] = useState('plain');
   const [folded, setFolded] = useState({ left: false, right: false });
@@ -134,7 +134,7 @@ export default function BouquetScreen({ navigation }) {
     if (next.left && next.right) setTimeout(() => setStep(3), 350);
   };
   const onTied = (wasNeat, key) => { if (!wasNeat) setNeat(false); setRibbonKey(key); setTied(true); setTimeout(() => setStep(4), 900); };
-  const onBow = (idx) => setBow(idx);
+  const onBow = (pick) => setBow(pick);
   const giveOver = () => {
     if (!result) return;
     dispatch({ type: 'SELL_BOUQUET', flowers: picks, paper, ribbon: ribbonKey, customerId: order ? order.id : null, neat });
@@ -211,7 +211,7 @@ export default function BouquetScreen({ navigation }) {
                 <Wrapped
                   art={MAKE_IMAGES[WRAP_ART[paper]]} picks={picks} left={wx} top={wy} w={ww} h={wh} fx={fx}
                   ribbon={tied ? MAKE_IMAGES[ribbonKey] : null}
-                  bow={bow != null ? BOW_IMAGES[BOW_COLOR[ribbonKey]][bow] : null}
+                  bow={bow != null ? BOW_IMAGES[bow.color][bow.i] : null}
                 />
               )}
             </HandOver>
@@ -229,7 +229,7 @@ export default function BouquetScreen({ navigation }) {
           {/* ── 4: the box under the scissors holds the bows: drag one onto the ribbon ── */}
           {step === 4 && (
             <BowBox
-              colorKey={BOW_COLOR[ribbonKey]} onPlace={onBow}
+              colorKey={BOW_COLOR[ribbonKey]} onPlace={onBow} fx={fx}
               tray={{ x: fx(TRAY.cx), y: fy(TRAY.cy), w: fx(TRAY.w), h: fy(TRAY.h) }}
               target={{ left: pLeft + wx, top: pTop + wy, w: ww, h: wh }}
             />
@@ -379,52 +379,56 @@ function HandOver({ enabled, home, tray, onDrop, style, children }) {
   );
 }
 
-// The box under the scissors: three bows in the colour of your ribbon. Drag one onto the
-// bouquet; the slot it left fills with a fresh bow straight away.
-function BowBox({ colorKey, tray, target, onPlace }) {
-  const list = BOW_IMAGES[colorKey];
-  const [slots, setSlots] = useState(() => [0, 1, 2].map((i) => i % list.length));
-  const next = useRef(3 % list.length);
-  const refill = (slot) => setSlots((s) => { const n = [...s]; n[slot] = next.current; next.current = (next.current + 1) % list.length; return n; });
-  const SZ = tray.w * 0.34;
-  return (
-    <>
-      {slots.map((idx, slot) => (
-        <BowChip
-          key={slot + ':' + idx} source={list[idx]} size={SZ}
-          x={tray.x + (slot - 1) * (SZ * 0.96) - SZ / 2} y={tray.y - SZ * 0.38}
-          target={target} onDrop={() => { onPlace(idx); refill(slot); }}
-        />
-      ))}
-    </>
-  );
-}
-
-function BowChip({ source, size, x, y, target, onDrop }) {
-  const drag = useRef(new Animated.ValueXY()).current;
-  const [lifted, setLifted] = useState(false);
+// The box under the scissors is a dispenser: press anywhere in it and a bow appears under your
+// finger; drag it onto the bouquet and let go. Each pick is a different bow (about 7 in 10
+// match your ribbon's colour, the rest are any of the 26 on the sheet), so you always get a
+// new one. Let go off the bouquet and it goes back.
+function BowBox({ colorKey, tray, target, onPlace, fx }) {
+  const [held, setHeld] = useState(null);            // { color, i, x, y }
+  const last = useRef(null);
   const cfg = useRef({});
-  cfg.current = { x, y, size, target, onDrop };
+  cfg.current = { target, onPlace, tray };
+  const pickBow = () => {
+    const colors = Object.keys(BOW_IMAGES);
+    for (let n = 0; n < 8; n++) {
+      const color = Math.random() < 0.7 ? colorKey : colors[Math.floor(Math.random() * colors.length)];
+      const i = Math.floor(Math.random() * BOW_IMAGES[color].length);
+      if (!last.current || last.current.color !== color || last.current.i !== i || BOW_IMAGES[color].length === 1) { last.current = { color, i }; return last.current; }
+    }
+    return last.current ?? { color: colorKey, i: 0 };
+  };
   const pan = useRef(PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onMoveShouldSetPanResponder: () => true,
-    onPanResponderGrant: () => setLifted(true),
-    onPanResponderMove: (_, g) => drag.setValue({ x: g.dx, y: g.dy }),
-    onPanResponderRelease: (_, g) => {
-      setLifted(false);
-      const c = cfg.current, t = c.target;
-      const cx = c.x + c.size / 2 + g.dx, cy = c.y + c.size * 0.4 + g.dy;
-      if (cx > t.left && cx < t.left + t.w && cy > t.top && cy < t.top + t.h) c.onDrop();
-      else Animated.spring(drag, { toValue: { x: 0, y: 0 }, friction: 7, useNativeDriver: false }).start();
+    onPanResponderGrant: (e) => {
+      const t = cfg.current.tray;
+      const ne = e.nativeEvent;
+      const bx = t.x - t.w / 2 + (ne.locationX ?? t.w / 2), by = t.y - t.h / 2 + (ne.locationY ?? t.h / 2);
+      setHeld({ ...pickBow(), sx: bx, sy: by, x: bx, y: by });
     },
-    onPanResponderTerminate: () => { setLifted(false); Animated.spring(drag, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start(); },
+    onPanResponderMove: (_, g) => setHeld((h) => (h ? { ...h, x: h.sx + g.dx, y: h.sy + g.dy } : h)),
+    onPanResponderRelease: () => {
+      setHeld((h) => {
+        if (h) {
+          const t = cfg.current.target;
+          if (h.x > t.left && h.x < t.left + t.w && h.y > t.top && h.y < t.top + t.h) cfg.current.onPlace({ color: h.color, i: h.i });
+        }
+        return null;
+      });
+    },
+    onPanResponderTerminate: () => setHeld(null),
   })).current;
+  const SZ = fx(150);
   return (
-    <Animated.View {...pan.panHandlers} style={{ position: 'absolute', left: x, top: y, width: size, height: size * 0.8, zIndex: lifted ? 60 : 40, transform: [...drag.getTranslateTransform(), { scale: lifted ? 1.25 : 1 }] }}>
-      {/* a soft light behind it, so the three you can take stand out from the bows painted in the box */}
-      <View pointerEvents="none" style={{ position: 'absolute', left: -size * 0.12, right: -size * 0.12, top: -size * 0.12, bottom: -size * 0.12, borderRadius: size, backgroundColor: 'rgba(255,243,214,0.55)' }} />
-      <Image source={source} style={[{ width: '100%', height: '100%' }, lifted && SOFT]} resizeMode="contain" pointerEvents="none" />
-    </Animated.View>
+    <>
+      <View {...pan.panHandlers} style={{ position: 'absolute', left: tray.x - tray.w / 2, top: tray.y - tray.h / 2, width: tray.w, height: tray.h, zIndex: 40 }} />
+      {held && (
+        <Image
+          source={BOW_IMAGES[held.color][held.i]} pointerEvents="none" resizeMode="contain"
+          style={[{ position: 'absolute', left: held.x - SZ / 2, top: held.y - SZ * 0.38, width: SZ, height: SZ * 0.76, zIndex: 70 }, SOFT]}
+        />
+      )}
+    </>
   );
 }
 
