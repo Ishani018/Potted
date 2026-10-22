@@ -349,7 +349,7 @@ export default function BouquetScreen({ navigation }) {
 }
 
 // A shower of blossoms and leaves with a banner when an order is perfect.
-function Celebration({ fx, fy, coins }) {
+export function Celebration({ fx, fy, coins }) {
   const N = 22;
   const t = useRef(new Animated.Value(0)).current;
   const pop = useRef(new Animated.Value(0)).current;

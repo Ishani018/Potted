@@ -194,6 +194,11 @@ export const ORDER_ART = {
 // The painted pet card frame (blank: all text is live). 'nocoin' has the coin icon wiped too.
 export const PETCARD_IMAGES = { coin: require('../../assets/petcard/card_coin.png'), nocoin: require('../../assets/petcard/card_nocoin.png') };
 export const PETCARD_GRASS = require('../../assets/petcard/grass.png');   // the grass patch a pet sits on in the card
+// The cardboard delivery box: open with tissue, half-closed, closed from above and closed at an angle.
+export const BOX_IMAGES = {
+  open: require('../../assets/boxes/open1.png'), closing: require('../../assets/boxes/closing.png'),
+  top: require('../../assets/boxes/closed_top.png'), iso: require('../../assets/boxes/closed_iso.png'),
+};
 export const ORDER_SLIP = require('../../assets/shop/order_slip.png');
 export const SHOP_IMAGES = {
   box: require('../../assets/shop/box.png'), backpack: require('../../assets/shop/backpack.png'),

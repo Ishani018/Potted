@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Image, Pressable, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, Pressable, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { PETFOOD_BG, PETFOOD_IMAGES, PET_IMAGES } from '../engine/assets';
 import {
@@ -9,7 +9,7 @@ import { isFed } from '../engine/petEffects';
 import ScreenHud from '../components/ScreenHud';
 import InventoryOverlay from '../components/InventoryOverlay';
 import { PixelText, PixelPanel, PixelButton, COLORS } from '../components/Pixel';
-import TagLabel from '../components/TagLabel';
+import PetTag from '../components/PetTag';
 import { BOOK_STAMP } from '../engine/assets';
 
 // The pet food aisle: the stocked fridge is painted into aisle.png (1676×939,
@@ -57,6 +57,13 @@ const eligible = (item, ownedPets) => ownedPets.filter(
   (k) => PETS[k] && (item.for === 'any' || PET_SPECIES[k] === item.for),
 );
 
+// Card text in the same soft serif as the other painted pop-ups (the pixel font was hard to read here).
+const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
+function T({ size = 8, color = '#5a3410', style, children }) {
+  const fs = Math.round(size * 1.9);
+  return <Text style={[{ fontFamily: SERIF, fontSize: fs, lineHeight: Math.round(fs * 1.2), color }, style]}>{children}</Text>;
+}
+
 function FoodCard({ item, onClose }) {
   const { state, dispatch } = useGame();
   const coins = state.player.coins;
@@ -79,26 +86,26 @@ function FoodCard({ item, onClose }) {
           <View style={styles.head}>
             <Image source={PETFOOD_IMAGES[item.key]} style={styles.big} resizeMode="contain" />
             <View style={{ flex: 1, gap: 6 }}>
-              <PixelText size={10} color="#5a3410" style={styles.dark}>{item.name.toUpperCase()}</PixelText>
-              <PixelText size={7} color="#8a5a24" style={[styles.dark, { lineHeight: 12 }]}>
+              <T size={11} color="#5a3410" style={styles.dark}>{item.name}</T>
+              <T size={7} color="#8a5a24" style={[styles.dark, { lineHeight: 12 }]}>
                 {`For ${KIND_LABEL[item.for]}. ${item.scope === 'species' ? 'Keeps all of them' : 'Keeps one pet'} happy for ${item.hours}h.`}
-              </PixelText>
-              <PixelText size={7} color="#3f7a2e" style={[styles.dark, { lineHeight: 12 }]}>
+              </T>
+              <T size={7} color="#3f7a2e" style={[styles.dark, { lineHeight: 12 }]}>
                 {`A happy pet's perk is ${FED_BOOST}x as strong.`}
-              </PixelText>
-              <PixelText size={9} color="#a8700a" style={styles.dark}>{`${item.price} coins`}</PixelText>
+              </T>
+              <T size={9} color="#a8700a" style={styles.dark}>{`${item.price} coins`}</T>
             </View>
           </View>
 
           {done ? (
             <View style={styles.doneRow}>
               <Image source={BOOK_STAMP} style={styles.stamp} resizeMode="contain" />
-              <PixelText size={8} color="#3f7a2e" style={[styles.dark, { flex: 1 }]}>{done}</PixelText>
+              <T size={8} color="#3f7a2e" style={[styles.dark, { flex: 1 }]}>{done}</T>
             </View>
           ) : pets.length === 0 ? (
-            <PixelText size={8} color="#8a5a24" style={[styles.dark, styles.msg]}>
+            <T size={8} color="#8a5a24" style={[styles.dark, styles.msg]}>
               {`You need a ${SINGULAR[item.for]} first. Adopt one at the pet shop!`}
-            </PixelText>
+            </T>
           ) : item.scope === 'species' ? (
             <View style={styles.msg}>
               <PixelButton
@@ -109,17 +116,17 @@ function FoodCard({ item, onClose }) {
             </View>
           ) : (
             <View>
-              <PixelText size={7} color="#5a3410" style={[styles.dark, { marginBottom: 6 }]}>WHO IS IT FOR?</PixelText>
+              <T size={7} color="#5a3410" style={[styles.dark, { marginBottom: 6 }]}>WHO IS IT FOR?</T>
               <View style={styles.petRow}>
                 {pets.map((k) => {
                   const left = (state.player.petCare?.[k] ?? 0) - now;
                   return (
                     <TouchableOpacity key={k} style={styles.petBtn} disabled={!canAfford} onPress={() => feed(k)} activeOpacity={0.8}>
                       <Image source={PET_IMAGES[k]} style={styles.petImg} resizeMode="contain" />
-                      <PixelText size={6} color="#5a3410" style={styles.dark}>{(names[k] ?? PETS[k].name).toUpperCase()}</PixelText>
-                      <PixelText size={6} color={isFed(state.player, k, now) ? '#3f7a2e' : '#a89060'} style={styles.dark}>
+                      <T size={7} color="#5a3410" style={styles.dark}>{names[k] ?? PETS[k].name}</T>
+                      <T size={6} color={isFed(state.player, k, now) ? '#3f7a2e' : '#a89060'} style={styles.dark}>
                         {left > 0 ? formatDuration(left) : 'HUNGRY'}
-                      </PixelText>
+                      </T>
                     </TouchableOpacity>
                   );
                 })}
@@ -128,11 +135,11 @@ function FoodCard({ item, onClose }) {
           )}
 
           {!done && !canAfford && pets.length > 0 && (
-            <PixelText size={7} color="#b04a2a" style={[styles.dark, { marginTop: 8 }]}>Not enough coins.</PixelText>
+            <T size={7} color="#b04a2a" style={[styles.dark, { marginTop: 8 }]}>Not enough coins.</T>
           )}
-          <PixelText size={6} color="#a89060" style={[styles.dark, { marginTop: 8 }]}>
+          <T size={6} color="#a89060" style={[styles.dark, { marginTop: 8 }]}>
             {`Food stacks, up to ${FED_MAX_HOURS}h. Hungry pets still work, just not as well.`}
-          </PixelText>
+          </T>
           <PixelButton label={done ? 'DONE' : 'CLOSE'} tone="wood" size={8} onPress={onClose} style={{ marginTop: 10, alignSelf: 'center' }} />
         </PixelPanel>
       </Pressable>
@@ -160,14 +167,12 @@ export default function PetFoodScreen({ navigation }) {
             style={[styles.spot, {
               left: (x0 / BG_W) * sw, top: (y0 / BG_H) * sh, width: ((x1 - x0) / BG_W) * sw, height: ((y1 - y0) / BG_H) * sh,
               zIndex: on ? 40 : 5,
-            }, on && styles.spotOn]}
+            }]}
             onHoverIn={() => setHovered(i)}
             onHoverOut={() => setHovered((h) => (h === i ? null : h))}
             onPress={() => setPicked(item)}
           >
-            {on && (
-              <TagLabel title={item.name} sub={`${item.price} coins`} style={styles.tag} />
-            )}
+            <View style={styles.tagWrap} pointerEvents="none"><PetTag show={on} label={item.name.toUpperCase()} /></View>
           </Pressable>
         );
       })}
@@ -188,11 +193,10 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#1a1200' },
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
   spot: { position: 'absolute', borderRadius: 6 },
-  spotOn: { borderWidth: 2, borderColor: 'rgba(255,255,255,0.85)', backgroundColor: 'rgba(255,255,255,0.12)' },
-  tag: { position: 'absolute', bottom: '100%', alignSelf: 'center', marginBottom: 2 },
+  tagWrap: { position: 'absolute', left: -40, right: -40, top: -22, alignItems: 'center', zIndex: 50 },
   back: { position: 'absolute', right: 16, bottom: 12, zIndex: 30 },
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center', zIndex: 200 },
-  card: { width: 330, maxWidth: '94%' },
+  card: { width: 400, maxWidth: '94%' },
   head: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
   big: { width: 84, height: 100 },
   dark: { textShadowRadius: 0 },
@@ -200,6 +204,6 @@ const styles = StyleSheet.create({
   stamp: { width: 40, height: 39 },
   msg: { marginVertical: 4, alignItems: 'center', textAlign: 'center' },
   petRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  petBtn: { width: 64, alignItems: 'center', paddingVertical: 4, borderRadius: 4, borderWidth: 2, borderColor: COLORS.creamEdge, backgroundColor: 'rgba(255,255,255,0.35)' },
+  petBtn: { width: 76, alignItems: 'center', paddingVertical: 4, borderRadius: 4, borderWidth: 2, borderColor: COLORS.creamEdge, backgroundColor: 'rgba(255,255,255,0.35)' },
   petImg: { width: 44, height: 40 },
 });

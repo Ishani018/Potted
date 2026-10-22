@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Image, Animated, Easing, Platform, StyleSheet } from 'react-native';
+import { View, Text, Image, Animated, Easing, PanResponder, Platform, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { COUNTER_BG, CUSTOMER_IMAGES, CUSTOMER_POSES, TRADE_IMAGES, SEED_IMAGES, UI_IMAGES, BOOK_STAMP, MAKE_IMAGES, ORDER_ART, BOW_IMAGES } from '../engine/assets';
+import { COUNTER_BG, CUSTOMER_IMAGES, CUSTOMER_POSES, TRADE_IMAGES, SEED_IMAGES, UI_IMAGES, BOOK_STAMP, MAKE_IMAGES, ORDER_ART, BOW_IMAGES, BOX_IMAGES } from '../engine/assets';
 import { CUSTOMERS, TRADE_FLOWERS, CUSTOMERS_PER_DAY, BOUQUET_PAPERS, RIBBON_NAMES } from '../constants/gameData';
-import { FlowerCluster } from './BouquetScreen';
+import { FlowerCluster, Celebration } from './BouquetScreen';
+import { bouquetPic } from '../engine/bouquetPics';
 import { openOrders, customerLine, flowerName } from '../engine/customers';
 import ScreenHud from '../components/ScreenHud';
 import InventoryOverlay from '../components/InventoryOverlay';
@@ -51,7 +52,37 @@ const slot = (x0, y0, x1, y1) => ({
   width: `${((x1 - x0) / 900) * 100}%`, height: `${((y1 - y0) / 593) * 100}%`,
 });
 
-export default function CounterScreen({ navigation }) {
+const BOX_SPOT = { x: 870, y: 800, w: 330 };            // the empty place on the counter where the box / bouquet goes (picture px)
+
+// A flower you can pick up from the tray and drop into the box. The drop point is worked out
+// in picture pixels from where the tray slot sits, so no screen measuring is needed.
+function TrayFlower({ flowerKey, count, x, y, size, fx, fy, onDrop }) {
+  const drag = useRef(new Animated.ValueXY()).current;
+  const [lifted, setLifted] = useState(false);
+  const cfg = useRef({}); cfg.current = { x, y, onDrop, fx, fy };
+  const pan = useRef(PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderGrant: () => setLifted(true),
+    onPanResponderMove: (_, g) => drag.setValue({ x: g.dx, y: g.dy }),
+    onPanResponderRelease: (_, g) => {
+      setLifted(false);
+      const px = cfg.current.x + g.dx / (cfg.current.fx(1)) , py = cfg.current.y + g.dy / (cfg.current.fy(1));
+      cfg.current.onDrop(flowerKey, px, py, Math.hypot(g.dx, g.dy));
+      Animated.spring(drag, { toValue: { x: 0, y: 0 }, friction: 7, useNativeDriver: false }).start();
+    },
+    onPanResponderTerminate: () => { setLifted(false); Animated.spring(drag, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start(); },
+  })).current;
+  const d = fx(size);
+  return (
+    <Animated.View {...pan.panHandlers} style={{ position: 'absolute', left: fx(x) - d / 2, top: fy(y) - d / 2, width: d, height: d, zIndex: lifted ? 60 : 30, opacity: count > 0 ? 1 : 0.35, transform: drag.getTranslateTransform() }}>
+      <Image source={TRADE_IMAGES[TRADE_FLOWERS[flowerKey].img]} style={{ width: d * (lifted ? 1.25 : 1), height: d * (lifted ? 1.25 : 1) }} resizeMode="contain" pointerEvents="none" />
+      <View style={styles.trayCount} pointerEvents="none"><Text style={styles.trayCountTxt}>{count}</Text></View>
+    </Animated.View>
+  );
+}
+
+export default function CounterScreen({ navigation, route }) {
   const { state, dispatch } = useGame();
   const [box, setBox] = useState({ w: 0, h: 0 });
   const [invOpen, setInvOpen] = useState(false);
@@ -70,13 +101,47 @@ export default function CounterScreen({ navigation }) {
   const gone = useRef(new Animated.Value(1)).current;    // opacity
   const stub = useRef(new Animated.Value(0)).current;    // 0 = order stub up, 1 = taken down (going to the workstation)
   const [taking, setTaking] = useState(false);
-  const takeDown = () => {
+  const [mode, setMode] = useState('card');                 // 'card' (reading the order) | 'pack' (putting flowers in the box)
+  const [packed, setPacked] = useState([]);                  // flowers dropped in the box so far
+  const [boxState, setBoxState] = useState('open');          // 'open' | 'closing' | 'closed'
+  const [placing, setPlacing] = useState(null);              // a bouquet from the table being set on the counter
+  const [perfect, setPerfect] = useState(0);
+  const drop = useRef(new Animated.Value(0)).current;        // the bouquet settling onto the counter
+  const timers = useRef([]);
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  const later = (fn, ms) => { timers.current.push(setTimeout(fn, ms)); };
+  const takeDown = (toBox) => {
     if (taking) return;
     setTaking(true);
     Animated.timing(stub, { toValue: 1, duration: 520, easing: Easing.in(Easing.cubic), useNativeDriver: false }).start(() => {
-      navigation.navigate('Bouquet');
-      setTimeout(() => { setTaking(false); stub.setValue(0); }, 400);
+      if (toBox) { setMode('pack'); setPacked([]); setBoxState('open'); }
+      else navigation.navigate('Bouquet');
+      later(() => { setTaking(false); stub.setValue(0); }, 400);
     });
+  };
+  // a bouquet made at the table arrives here: set it on the counter, then the customer reacts
+  const deliver = route?.params?.deliver;
+  useEffect(() => {
+    if (!deliver) return;
+    navigation.setParams({ deliver: undefined });
+    setMode('pack'); setBoxState('closed'); setPlacing(deliver); drop.setValue(0);
+    Animated.timing(drop, { toValue: 1, duration: 520, easing: Easing.out(Easing.bounce), useNativeDriver: false }).start();
+    later(() => {
+      dispatch({ type: 'SELL_BOUQUET', flowers: deliver.flowers, paper: deliver.paper, ribbon: deliver.ribbon, customerId: deliver.customerId, neat: deliver.neat });
+      if (deliver.perfect) { setPerfect(deliver.payout); later(() => setPerfect(0), 1900); }
+    }, 900);
+  }, [deliver]);
+  const dropInBox = (flowerKey) => {
+    if (!order || order.type !== 'flowers' || boxState !== 'open') return;
+    if (packed.length >= order.qty) return;
+    if ((harvested[flowerKey] ?? 0) - packed.filter((k) => k === flowerKey).length <= 0) return;
+    const next = [...packed, flowerKey];
+    setPacked(next);
+    if (next.length >= order.qty) {
+      setBoxState('closing');
+      later(() => setBoxState('closed'), 380);
+      later(() => dispatch({ type: 'DELIVER_FLOWERS', id: order.id, given: next }), 950);
+    }
   };
   const running = useRef(null);
 
@@ -93,7 +158,7 @@ export default function CounterScreen({ navigation }) {
   useEffect(() => {
     if (cur || !live) return undefined;
     setCur({ order: live, line: null });
-    setPhase('in');
+    setPhase('in'); setMode('card'); setPacked([]); setBoxState('open'); setPlacing(null);
     t.setValue(0); hop.setValue(0); gone.setValue(1);
     const anim = Animated.parallel([
       Animated.timing(t, { toValue: 1, duration: HOPS * HOP_MS, easing: Easing.linear, useNativeDriver: false }),
@@ -152,7 +217,7 @@ export default function CounterScreen({ navigation }) {
         <View style={{ position: 'absolute', left: 0, top: 0, width: sw, height: fy(COUNTER_TOP), overflow: 'hidden', zIndex: 5 }} pointerEvents="none">
           <Animated.View
             style={{
-              position: 'absolute', opacity: phase === 'ask' || phase === 'happy' ? 0 : gone,
+              position: 'absolute', opacity: phase === 'ask' && mode === 'card' ? 0 : gone,
               left: fx(DOOR.x),
               width: Animated.multiply(height, SPRITE_ASPECT * sh / H),
               height: Animated.multiply(height, sh / H),
@@ -163,12 +228,12 @@ export default function CounterScreen({ navigation }) {
               ],
             }}
           >
-            <Image source={(CUSTOMER_POSES[order.customer] || {})[phase === 'in' ? 'wave' : phase === 'ask' ? 'think' : 'hold'] || CUSTOMER_IMAGES[order.customer]} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+            <Image source={(CUSTOMER_POSES[order.customer] || {})[phase === 'in' ? 'wave' : phase === 'ask' ? 'think' : (upset ? 'angry' : 'hold')] || CUSTOMER_IMAGES[order.customer]} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
           </Animated.View>
         </View>
       )}
 
-      {sw > 0 && cur && phase !== 'in' && phase !== 'out' && (
+      {sw > 0 && cur && phase === 'ask' && mode === 'card' && (
         <>
         {/* the shop goes hazy while you read the order */}
         <View style={styles.haze} />
@@ -215,9 +280,9 @@ export default function CounterScreen({ navigation }) {
                 </View>
                 <View style={[slot(210, 486, 740, 544), { alignItems: 'center', justifyContent: 'center' }]}>
                   <PixelButton
-                    label={order.type === 'flowers' ? (canGive ? 'GIVE FLOWERS' : 'NOT ENOUGH YET') : 'TO THE BOUQUET TABLE'}
+                    label={order.type === 'flowers' ? (canGive ? 'PACK THE FLOWERS' : 'NOT ENOUGH YET') : 'TO THE BOUQUET TABLE'}
                     size={7} scale={0.62} disabled={order.type === 'flowers' && !canGive}
-                    onPress={() => (order.type === 'flowers' ? dispatch({ type: 'FULFILL_CUSTOMER', id: order.id }) : takeDown())}
+                    onPress={() => takeDown(order.type === 'flowers')}
                   />
                 </View>
               </>
@@ -226,6 +291,49 @@ export default function CounterScreen({ navigation }) {
         </Animated.View>
       </>
       )}
+
+      {/* the counter: the open box to put flowers in, or the bouquet you just made, set on the empty place */}
+      {sw > 0 && cur && mode === 'pack' && (phase === 'ask' || phase === 'happy') && (
+        <>
+          {placing ? (
+            <Animated.Image source={placing.pic} resizeMode="contain" style={{
+              position: 'absolute', left: fx(BOX_SPOT.x - BOX_SPOT.w * 0.45), width: fx(BOX_SPOT.w * 0.9), height: fx(BOX_SPOT.w * 0.9), zIndex: 28,
+              top: drop.interpolate({ inputRange: [0, 1], outputRange: [fy(BOX_SPOT.y - 420), fy(BOX_SPOT.y - 250)] }),
+              opacity: drop.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 1, 1] }),
+            }} />
+          ) : (
+            <View pointerEvents="none" style={{ position: 'absolute', left: fx(BOX_SPOT.x - BOX_SPOT.w / 2), top: fy(BOX_SPOT.y - BOX_SPOT.w * 0.36), width: fx(BOX_SPOT.w), height: fx(BOX_SPOT.w) * 0.72, zIndex: 28 }}>
+              <Image source={boxState === 'open' ? BOX_IMAGES.open : boxState === 'closing' ? BOX_IMAGES.closing : BOX_IMAGES.top} style={{ position: 'absolute', width: '100%', height: '100%' }} resizeMode="contain" />
+              {boxState === 'open' && packed.map((k, i) => (
+                <Image key={i} source={TRADE_IMAGES[TRADE_FLOWERS[k].img]} resizeMode="contain" style={{ position: 'absolute', left: `${22 + i * 22}%`, top: '32%', width: '30%', height: '40%' }} />
+              ))}
+            </View>
+          )}
+          {phase === 'ask' && order?.type === 'flowers' && !placing && boxState === 'open' && (
+            <>
+              <View pointerEvents="none" style={[styles.tray, { left: fx(1060), top: fy(690), width: fx(560), height: fy(200) }]}>
+                <Text style={styles.trayHint}>{`Put ${order.qty} ${order.qty > 1 ? flowerName(order.flowerKey) + 's' : flowerName(order.flowerKey)} in the box`.replace('ys ', 'ies ').replace(/ys in/, 'ies in')}</Text>
+              </View>
+              {Object.keys(harvested).filter((k) => harvested[k] > 0 && TRADE_FLOWERS[k]).slice(0, 6).map((k, i) => (
+                <TrayFlower key={k} flowerKey={k} count={(harvested[k] ?? 0) - packed.filter((x) => x === k).length} x={1105 + i * 90} y={830} size={78} fx={fx} fy={fy}
+                  onDrop={(key, px, py, moved) => {
+                    const inBox = Math.abs(px - BOX_SPOT.x) < BOX_SPOT.w * 0.55 && Math.abs(py - BOX_SPOT.y) < BOX_SPOT.w * 0.4;
+                    if (inBox || moved < 8) dropInBox(key);
+                  }} />
+              ))}
+            </>
+          )}
+        </>
+      )}
+
+      {/* the customer's reaction once you have handed it over */}
+      {sw > 0 && cur && phase === 'happy' && cur.line ? (
+        <View pointerEvents="none" style={{ position: 'absolute', left: (sw - fx(620)) / 2, top: fy(40), width: fx(620), height: fx(620) * 113 / 489, zIndex: 40, alignItems: 'center', justifyContent: 'center' }}>
+          <Image source={ORDER_ART.banner} style={styles.slip} resizeMode="stretch" />
+          <Text style={[styles.say, { color: upset ? '#8a2a1a' : '#4a2a10', fontSize: 16, textAlign: 'center', paddingHorizontal: fx(50) }]} numberOfLines={2}>{cur.line}</Text>
+        </View>
+      ) : null}
+      {perfect > 0 && <Celebration fx={fx} fy={fy} coins={perfect} />}
 
       {sw > 0 && !cur && (
         <View style={[styles.quiet, { left: fx(560), width: fx(420), top: fy(250) }]} pointerEvents="none">
@@ -253,6 +361,10 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#2a1608' },
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
   bubbleWrap: { position: 'absolute', zIndex: 20 },
+  tray: { position: 'absolute', backgroundColor: 'rgba(250,236,200,0.9)', borderRadius: 18, borderWidth: 3, borderColor: '#b8793a', zIndex: 20, alignItems: 'center', paddingTop: 6 },
+  trayHint: { fontFamily: HEAD, fontSize: 15, color: '#5a3410' },
+  trayCount: { position: 'absolute', right: -4, bottom: -4, backgroundColor: '#5a3410', borderRadius: 9, minWidth: 18, height: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
+  trayCountTxt: { fontFamily: HEAD, fontSize: 12, color: '#fff3d6' },
   haze: { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, zIndex: 15, backgroundColor: 'rgba(48,30,14,0.5)', ...(Platform.OS === 'web' ? { backdropFilter: 'blur(5px)', WebkitBackdropFilter: 'blur(5px)' } : {}) },
   bubble: { alignItems: 'stretch' },
   inner: { position: 'absolute', left: '14%', right: '15%', top: '17%', bottom: '13%', justifyContent: 'space-between' },

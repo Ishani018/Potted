@@ -544,6 +544,26 @@ function reducer(state, action) {
       return completeOrder(paid, order, `${CUSTOMERS[order.customer].name} paid ${order.coins} coins`);
     }
 
+    // Flowers handed over in the box on the counter. action: { id, given: [flowerKey, ...] }.
+    // Right flowers pay in full; the wrong ones pay a little and the customer storms off.
+    case 'DELIVER_FLOWERS': {
+      const order = state.player.customers?.list?.find((o) => o.id === action.id);
+      const given = action.given ?? [];
+      if (!order || order.done || order.type !== 'flowers' || given.length !== order.qty) return state;
+      const harvested = { ...(state.player.harvestedFlowers ?? {}) };
+      for (const k of given) {
+        if (!(harvested[k] > 0)) return state;
+        harvested[k] -= 1;
+      }
+      for (const k of Object.keys(harvested)) if (harvested[k] <= 0) delete harvested[k];
+      const right = given.every((k) => k === order.flowerKey);
+      const coins = right ? order.coins : Math.round(order.coins * 0.4);
+      let paid = { ...state, player: { ...state.player, coins: state.player.coins + coins, harvestedFlowers: harvested } };
+      paid = completeOrder(paid, order, right ? `${CUSTOMERS[order.customer].name} paid ${coins} coins` : `${CUSTOMERS[order.customer].name} wasn't happy with the flowers. ${coins} coins`);
+      if (!right) paid = { ...paid, player: { ...paid.player, customers: { ...paid.player.customers, list: paid.player.customers.list.map((o) => (o.id === order.id ? { ...o, upset: true } : o)) } } };
+      return paid;
+    }
+
     case 'REMOVE_PLANT': {
       const { slotId, deletePot } = action;
       const slot = state.slots[slotId];
