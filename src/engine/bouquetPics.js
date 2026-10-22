@@ -12,6 +12,7 @@ const PICS = {
     { flowers: ['rose', 'rose', 'marigold'], img: require('../../assets/bouquets/p5_k.png') },
     { flowers: ['rose', 'rose', 'marigold'], img: require('../../assets/bouquets/p6_k.png') },
     { flowers: ['hydrenga', 'hydrenga', 'hydrenga'], img: require('../../assets/bouquets/p8_k.png') },
+    { flowers: ['jasmine', 'jasmine', 'jasmine'], img: require('../../assets/bouquets/p9_k.png') },
   ],
   f: [
     { flowers: ['peony', 'peony', 'peony'], img: require('../../assets/bouquets/p1_f.png') },
@@ -21,6 +22,7 @@ const PICS = {
     { flowers: ['marigold', 'marigold', 'rose'], img: require('../../assets/bouquets/p5_f.png') },
     { flowers: ['rose', 'rose', 'marigold'], img: require('../../assets/bouquets/p6_f.png') },
     { flowers: ['hydrenga', 'hydrenga', 'hydrenga'], img: require('../../assets/bouquets/p8_f.png') },
+    { flowers: ['poppy', 'poppy', 'poppy'], img: require('../../assets/bouquets/p9_f.png') },
   ],
 };
 
@@ -40,9 +42,10 @@ function score(want, have) {
 export function bouquetPic(picks, paper) {
   const set = PICS[paper === 'layered' ? 'f' : 'k'];
   const want = picks.map((k) => LOOKS_LIKE[k] ?? k);
+  const total = (p) => score(picks, p.flowers) * 2 + score(want, p.flowers);   // an exact flower beats a look-alike
   let best = -1; let tied = [];
   for (const p of set) {
-    const s = score(want, p.flowers);
+    const s = total(p);
     if (s > best) { best = s; tied = [p]; } else if (s === best) tied.push(p);
   }
   // same picks always give the same picture
