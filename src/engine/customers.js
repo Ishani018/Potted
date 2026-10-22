@@ -1,4 +1,4 @@
-import { picturedFlowers } from './bouquetPics';
+import { picturesFor } from './bouquetPics';
 import {
   CUSTOMERS, CUSTOMERS_PER_DAY, POTTED_FLOWERS, HANGING_PLANTS, TRADE_FLOWERS,
   BOUQUET_FLOWERS, SEED_UNLOCK_LEVEL, seedType, seedUnlockLevel, BOUQUET_PAPERS, RIBBON_KEYS, RIBBON_NAMES,
@@ -25,6 +25,15 @@ function flowerName(key) {
   return POTTED_FLOWERS[key]?.name ?? HANGING_PLANTS[key]?.name ?? key;
 }
 
+// "2 Roses and Marigold" for a bouquet order with a fixed set of flowers
+export function comboText(order) {
+  if (!order.combo) return null;
+  const n = {};
+  order.combo.forEach((k) => { n[k] = (n[k] || 0) + 1; });
+  const parts = Object.keys(n).map((k) => (n[k] > 1 ? `${n[k]} ${flowerName(k)}s` : flowerName(k)));
+  return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}` : parts[0];
+}
+
 export function customerLine(order, which = 'ask') {
   const c = CUSTOMERS[order.customer];
   if (which === 'thanks') return c.thanks;
@@ -34,7 +43,7 @@ export function customerLine(order, which = 'ask') {
   const template = order.type === 'flowers' ? c.askFlowers : c.askBouquet;
   const line = template
     .replace('{qty}', String(qty))
-    .replace('{flower}', order.type === 'flowers' ? plural : `${name}`);
+    .replace('{flower}', order.type === 'flowers' ? plural : comboText(order) ?? name);
   // a bouquet order also names the paper and the ribbon
   if (which !== 'short' && order.type === 'bouquet' && order.paper && order.ribbon) {
     return `${line} In ${BOUQUET_PAPERS[order.paper]?.name ?? 'kraft'} paper with a ${RIBBON_NAMES[order.ribbon] ?? 'red'} ribbon, please.`;
@@ -67,14 +76,21 @@ export function rollCustomerOrders(day, level, rand) {
     const paperPool = papers.length ? papers : [BOUQUET_PAPERS.plain];
     let type = rand() < 0.6 ? 'flowers' : 'bouquet';
     // a bouquet order only asks for what there is a bouquet picture of, on the paper it names
-    let paper = null; let flowerKey;
+    let paper = null; let flowerKey; let combo = null; let pic = null;
     if (type === 'bouquet') {
       const tryPapers = shuffle(paperPool.map((p) => p.id));
       for (const id of tryPapers) {
-        const pics = picturedFlowers(id).filter((k) => BOUQUET_FLOWERS.includes(k) && reach(k));
-        const liked = c.likes.filter((k) => pics.includes(k));
-        const pool = liked.length ? liked : pics;
-        if (pool.length) { paper = id; flowerKey = pick(pool); break; }
+        // bouquets whose flowers can all be had by now
+        const ok = picturesFor(id).filter((p) => p.flowers.every((k) => BOUQUET_FLOWERS.includes(k) && reach(k)));
+        const liked = ok.filter((p) => p.flowers.some((k) => c.likes.includes(k)));
+        const pool = liked.length ? liked : ok;
+        if (pool.length) {
+          const chosen = pick(pool);
+          paper = id; pic = chosen.id; combo = [...chosen.flowers];
+          // the flower the order is "about": the one used most
+          flowerKey = [...combo].sort((x, y) => combo.filter((k) => k === y).length - combo.filter((k) => k === x).length)[0];
+          break;
+        }
       }
       if (!paper) type = 'flowers';
     }
@@ -103,6 +119,8 @@ export function rollCustomerOrders(day, level, rand) {
       flowerKey,
       qty,
       paper,
+      combo,
+      pic,
       ribbon,
       coins: type === 'flowers' ? Math.round(base * qty * 1.5) : 0,
       tip: type === 'bouquet' ? Math.round(10 + base * 1.2) : 0,
@@ -126,6 +144,9 @@ export function hasStaleOrders(customers) {
 
 // Does a tied bouquet (array of flower keys) satisfy this order?
 export function bouquetFillsOrder(order, flowers) {
+  if (order.type === 'bouquet' && !order.done && order.combo) {
+    return flowers.length === order.combo.length && [...flowers].sort().join() === [...order.combo].sort().join();
+  }
   return order.type === 'bouquet' && !order.done && (flowers.includes(order.flowerKey) || !BOUQUET_FLOWERS.includes(order.flowerKey));   // an old order for a flower that no longer goes in bouquets takes any bouquet
 }
 

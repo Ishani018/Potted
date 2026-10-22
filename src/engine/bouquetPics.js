@@ -5,24 +5,24 @@
 // 'k' = kraft paper, 'f' = floral (layered) paper
 const PICS = {
   k: [
-    { flowers: ['daisy', 'daisy', 'daisy'], img: require('../../assets/bouquets/p1_k.png') },
-    { flowers: ['rose', 'rose', 'rose'], img: require('../../assets/bouquets/p2_k.png') },
-    { flowers: ['jasmine', 'peony', 'snapdragon'], img: require('../../assets/bouquets/p3_k.png') },
-    { flowers: ['daisy', 'rose', 'snapdragon'], img: require('../../assets/bouquets/p4_k.png') },
-    { flowers: ['rose', 'rose', 'marigold'], img: require('../../assets/bouquets/p5_k.png') },
-    { flowers: ['rose', 'rose', 'marigold'], img: require('../../assets/bouquets/p6_k.png') },
-    { flowers: ['hydrenga', 'hydrenga', 'hydrenga'], img: require('../../assets/bouquets/p8_k.png') },
-    { flowers: ['jasmine', 'jasmine', 'jasmine'], img: require('../../assets/bouquets/p9_k.png') },
+    { id: 'p1_k', flowers: ['daisy', 'daisy', 'daisy'], img: require('../../assets/bouquets/p1_k.png') },
+    { id: 'p2_k', flowers: ['rose', 'rose', 'rose'], img: require('../../assets/bouquets/p2_k.png') },
+    { id: 'p3_k', flowers: ['jasmine', 'peony', 'snapdragon'], img: require('../../assets/bouquets/p3_k.png') },
+    { id: 'p4_k', flowers: ['daisy', 'rose', 'snapdragon'], img: require('../../assets/bouquets/p4_k.png') },
+    { id: 'p5_k', flowers: ['rose', 'rose', 'marigold'], img: require('../../assets/bouquets/p5_k.png') },
+    { id: 'p6_k', flowers: ['rose', 'rose', 'marigold'], img: require('../../assets/bouquets/p6_k.png') },
+    { id: 'p8_k', flowers: ['hydrenga', 'hydrenga', 'hydrenga'], img: require('../../assets/bouquets/p8_k.png') },
+    { id: 'p9_k', flowers: ['jasmine', 'jasmine', 'jasmine'], img: require('../../assets/bouquets/p9_k.png') },
   ],
   f: [
-    { flowers: ['peony', 'peony', 'peony'], img: require('../../assets/bouquets/p1_f.png') },
-    { flowers: ['rose', 'rose', 'rose'], img: require('../../assets/bouquets/p2_f.png') },
-    { flowers: ['rose', 'marigold', 'hydrenga'], img: require('../../assets/bouquets/p3_f.png') },
-    { flowers: ['marigold', 'peony', 'petunia'], img: require('../../assets/bouquets/p4_f.png') },
-    { flowers: ['marigold', 'marigold', 'rose'], img: require('../../assets/bouquets/p5_f.png') },
-    { flowers: ['rose', 'rose', 'marigold'], img: require('../../assets/bouquets/p6_f.png') },
-    { flowers: ['hydrenga', 'hydrenga', 'hydrenga'], img: require('../../assets/bouquets/p8_f.png') },
-    { flowers: ['poppy', 'poppy', 'poppy'], img: require('../../assets/bouquets/p9_f.png') },
+    { id: 'p1_f', flowers: ['peony', 'peony', 'peony'], img: require('../../assets/bouquets/p1_f.png') },
+    { id: 'p2_f', flowers: ['rose', 'rose', 'rose'], img: require('../../assets/bouquets/p2_f.png') },
+    { id: 'p3_f', flowers: ['rose', 'marigold', 'hydrenga'], img: require('../../assets/bouquets/p3_f.png') },
+    { id: 'p4_f', flowers: ['marigold', 'peony', 'petunia'], img: require('../../assets/bouquets/p4_f.png') },
+    { id: 'p5_f', flowers: ['marigold', 'marigold', 'rose'], img: require('../../assets/bouquets/p5_f.png') },
+    { id: 'p6_f', flowers: ['rose', 'rose', 'marigold'], img: require('../../assets/bouquets/p6_f.png') },
+    { id: 'p8_f', flowers: ['hydrenga', 'hydrenga', 'hydrenga'], img: require('../../assets/bouquets/p8_f.png') },
+    { id: 'p9_f', flowers: ['poppy', 'poppy', 'poppy'], img: require('../../assets/bouquets/p9_f.png') },
   ],
 };
 
@@ -57,4 +57,13 @@ export function bouquetPic(picks, paper) {
 export function picturedFlowers(paper) {
   const set = PICS[paper === 'layered' ? 'f' : 'k'];
   return [...new Set(set.flatMap((p) => p.flowers))];
+}
+
+// every picture on a paper: [{ id, flowers, img }]
+export function picturesFor(paper) {
+  return PICS[paper === 'layered' ? 'f' : 'k'];
+}
+
+export function pictureById(id) {
+  return [...PICS.k, ...PICS.f].find((p) => p.id === id) ?? null;
 }

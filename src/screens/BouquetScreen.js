@@ -8,8 +8,8 @@ import {
 } from '../constants/gameData';
 import { globalPetEffects } from '../engine/petEffects';
 import ScreenHud from '../components/ScreenHud';
-import { bouquetPic } from '../engine/bouquetPics';
-import { openOrders, bouquetFillsOrder, flowerName } from '../engine/customers';
+import { bouquetPic, pictureById } from '../engine/bouquetPics';
+import { openOrders, bouquetFillsOrder, flowerName, comboText } from '../engine/customers';
 import { PixelText, PixelButton } from '../components/Pixel';
 import { useNotice } from '../components/PurchaseNotice';
 
@@ -109,6 +109,10 @@ export default function BouquetScreen({ navigation }) {
   const fs = (n, min = 6) => Math.max(min, Math.round(fx(n)));
 
   const left = (key) => (harvested[key] ?? 0) - picks.filter((k) => k === key).length;
+  // an order that names its flowers: only those can go in, and no more than it asks for
+  const wantCombo = (openOrders(state.player).find((o) => o.type === 'bouquet') ?? {}).combo ?? null;
+  const remainingCombo = wantCombo ? (() => { const pool = [...picks]; return wantCombo.filter((k) => { const i = pool.indexOf(k); if (i >= 0) { pool.splice(i, 1); return false; } return true; }); })() : null;
+  const needs = (key) => (wantCombo ? wantCombo.filter((k) => k === key).length - picks.filter((k) => k === key).length : 1);
   const owned = BOUQUET_FLOWERS.filter((k) => (harvested[k] ?? 0) > 0 && TRADE_FLOWERS[k]);
   const pages = 1;
   const page = 0;
@@ -130,7 +134,7 @@ export default function BouquetScreen({ navigation }) {
   // ── step helpers ──
   const resetAll = () => { firstFold.current = null; setStep(0); setPicks([]); setFolded({ left: false, right: false }); setTied(false); setNeat(true); setRibbonKey('ribbonRed'); setBow(null); };
   const choosePaper = (id) => { setPaper(id); setStep(1); };
-  const addFlower = (key) => { if (!full && left(key) > 0 && step === 1) setPicks((p) => [...p, key]); };
+  const addFlower = (key) => { if (!full && left(key) > 0 && needs(key) > 0 && step === 1) setPicks((p) => [...p, key]); };
   const undo = () => setPicks((p) => p.slice(0, -1));
   const goFold = () => { if (full) setStep(2); };
   const onFolded = (side, wasNeat) => {
@@ -166,7 +170,7 @@ export default function BouquetScreen({ navigation }) {
   // the wrapped bouquet sits in the middle of that same box
   const ww = fx(WRAP_W), wh = ww * WRAP_ASPECT, wx = (pw - ww) / 2, wy = (ph - wh) / 2;
   const prompt = step === 0 ? 'Drag a sheet off the stack onto the mat.'
-    : step === 1 ? (full ? 'Lovely! Now fold it.' : `Drag ${BOUQUET_SIZE - picks.length} more flower${BOUQUET_SIZE - picks.length === 1 ? '' : 's'} onto the paper.`)
+    : step === 1 ? (full ? 'Lovely! Now fold it.' : (wantCombo ? `Add ${comboText({ combo: remainingCombo })} onto the paper.` : `Drag ${BOUQUET_SIZE - picks.length} more flower${BOUQUET_SIZE - picks.length === 1 ? '' : 's'} onto the paper.`))
     : step === 2 ? 'Swipe each side over to wrap the stems.'
     : step === 3 ? 'Pull a ribbon from a spool onto the paper.'
     : step === 4 ? (bow == null ? 'Drag a bow from the box onto the ribbon.' : 'Pretty! Drag another to swap, or tap Finish.')
@@ -255,7 +259,7 @@ export default function BouquetScreen({ navigation }) {
           )}
           {shown.map((key, i) => (
             <Bunch
-              key={key + i} flowerKey={key} count={left(key)} size={fx(BIN_D) * 0.72} disabled={step !== 1 || full || left(key) <= 0} dim={step === 1}
+              key={key + i} flowerKey={key} count={left(key)} size={fx(BIN_D) * 0.72} disabled={step !== 1 || full || left(key) <= 0 || needs(key) <= 0} dim={step === 1}
               x={fx(BINS[i].x) - fx(BIN_D) * 0.36} y={fy(BINS[i].y) - fx(BIN_D) * 0.36}
               dropRight={fx(MAT.x0)} onAdd={() => addFlower(key)} fs={fs} plate={{ x: fx(PLATES[i].x), y: fy(PLATES[i].y) }} fxs={fx(1)}
             />
@@ -274,9 +278,9 @@ export default function BouquetScreen({ navigation }) {
                 <Image source={(CUSTOMER_POSES[want.customer] || {}).think || CUSTOMER_IMAGES[want.customer]} style={{ position: 'absolute', width: fx(190), height: fx(285), left: -fx(45), top: -fx(55) }} resizeMode="contain" />
               </View>
               <Text pointerEvents="none" style={[styles.stripName, { left: fx(392), top: fy(642), width: fx(190) }]} numberOfLines={1}>{CUSTOMERS[want.customer].name}</Text>
-              <Text pointerEvents="none" style={[styles.stripSub, { left: fx(392), top: fy(678), width: fx(190) }]} numberOfLines={1}>{step === 5 && result ? `${payout} coins${grade && grade.perfect ? ' · Perfect' : neat ? ' · Neat' : ''}` : `${flowerName(want.flowerKey)} bouquet`}</Text>
+              <Text pointerEvents="none" style={[styles.stripSub, { left: fx(392), top: fy(678), width: fx(190) }]} numberOfLines={2}>{step === 5 && result ? `${payout} coins${grade && grade.perfect ? ' · Perfect' : neat ? ' · Neat' : ''}` : (want.combo ? comboText(want) : `${flowerName(want.flowerKey)} bouquet`)}</Text>
               {[
-                { src: TRADE_IMAGES[TRADE_FLOWERS[want.flowerKey]?.img], ok: picks.includes(want.flowerKey) },
+                { src: want.pic && pictureById(want.pic) ? pictureById(want.pic).img : TRADE_IMAGES[TRADE_FLOWERS[want.flowerKey]?.img], ok: want.combo ? remainingCombo.length === 0 : picks.includes(want.flowerKey) },
                 want.paper && { src: { plain: MAKE_IMAGES.paper, layered: MAKE_IMAGES.wrapLayered }[want.paper] || MAKE_IMAGES.paper, ok: step >= 1 && paper === want.paper },
                 want.ribbon && { src: MAKE_IMAGES[want.ribbon], strip: true, ok: tied && ribbonKey === want.ribbon },
                 want.ribbon && { src: (BOW_IMAGES[BOW_COLOR[want.ribbon]] || [])[0], ok: bow != null && bow.color === BOW_COLOR[want.ribbon] },
@@ -778,7 +782,7 @@ const styles = StyleSheet.create({
   stepTxt: { fontFamily: HEAD, fontSize: 14, color: '#d9c39a', textShadowColor: '#2a1608', textShadowRadius: 3 },
   stepTxtNow: { color: '#fff3d6' },
   stripName: { position: 'absolute', fontFamily: HEAD, fontSize: 17, color: '#4a2a10', zIndex: 10 },
-  stripSub: { position: 'absolute', fontFamily: HEAD, fontSize: 14, color: '#7a5a30', zIndex: 10 },
+  stripSub: { position: 'absolute', fontFamily: HEAD, fontSize: 13, lineHeight: 14, color: '#7a5a30', zIndex: 10 },
   stripTip: { position: 'absolute', bottom: 0, fontFamily: HEAD, fontSize: 13, color: '#6a4a18' },
   ticket: { position: 'absolute', flexDirection: 'row', alignItems: 'center', gap: 8, zIndex: 10 },
   ticketBg: { position: 'absolute', left: 0, top: 0, width: '100%', height: '100%' },
