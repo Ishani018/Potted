@@ -1,68 +1,18 @@
 import React, { useState } from 'react';
 import { View, Image, Pressable, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { FOSTER_BG, FOSTER_REST_IMAGES, PET_IMAGES, PERK_ICONS, BOOK_STAMP } from '../engine/assets';
+import { FOSTER_BG, FOSTER_REST_IMAGES } from '../engine/assets';
 import { STRAYS, FOSTER_SEATS, FOSTER_SIZE, FOSTER_BASE_W, CUSTOMERS } from '../constants/gameData';
 import ScreenHud from '../components/ScreenHud';
 import InventoryOverlay from '../components/InventoryOverlay';
 import PetSprite from '../components/PetSprite';
 import { PixelText, PixelPanel, PixelButton } from '../components/Pixel';
 import TagLabel from '../components/TagLabel';
+import { AdoptModal } from '../components/PetCard';
 
 // The Foster Center: the pet shop's big back room. Customers find strays and bring
 // them here; each takes an empty seat until you adopt it. Tap one to read
 // where it was found and to adopt it (it then lives in your garden like any pet).
-const dark = { textShadowRadius: 0 };
-
-function StrayCard({ stray, onClose }) {
-  const { state, dispatch } = useGame();
-  const [done, setDone] = useState(false);
-  const def = STRAYS[stray.key];
-  const finder = CUSTOMERS[stray.finder]?.name ?? 'A customer';
-  const coins = state.player.coins;
-  const canAfford = coins >= def.price;
-  const adopt = () => { dispatch({ type: 'BUY_PET', petKey: stray.key, price: def.price }); setDone(true); };
-  return (
-    <Pressable style={styles.overlay} onPress={onClose}>
-      <Pressable onPress={() => {}}>
-        <PixelPanel cream style={styles.card}>
-          <View style={styles.head}>
-            <Image source={PET_IMAGES[stray.key]} style={styles.big} resizeMode="contain" />
-            <View style={{ flex: 1, gap: 6 }}>
-              <PixelText size={11} color="#5a3410" style={dark}>{def.name.toUpperCase()}</PixelText>
-              <PixelText size={7} color="#8a5a24" style={dark}>{def.breed.toUpperCase()}</PixelText>
-              <PixelText size={7} color="#5a3410" style={[dark, { lineHeight: 12 }]}>{def.found(finder)}</PixelText>
-            </View>
-          </View>
-
-          <View style={styles.perk}>
-            <Image source={PERK_ICONS[stray.key]} style={styles.perkIcon} resizeMode="contain" />
-            <View style={{ flex: 1 }}>
-              <PixelText size={8} color="#3f7a2e" style={dark}>{def.effect.title.toUpperCase()}</PixelText>
-              <PixelText size={7} color="#5a3410" style={[dark, { lineHeight: 12, marginTop: 3 }]}>{def.effect.desc}</PixelText>
-            </View>
-          </View>
-
-          {done ? (
-            <View style={styles.doneRow}>
-              <Image source={BOOK_STAMP} style={styles.stamp} resizeMode="contain" />
-              <PixelText size={8} color="#3f7a2e" style={[dark, { flex: 1 }]}>
-                {`${def.name} is yours! Rename or move them in the garden journal.`}
-              </PixelText>
-            </View>
-          ) : (
-            <View style={styles.buyRow}>
-              <PixelText size={9} color="#a8700a" style={dark}>{`${def.price} coins`}</PixelText>
-              <PixelButton label="ADOPT" onPress={adopt} disabled={!canAfford} />
-            </View>
-          )}
-          {!done && !canAfford && <PixelText size={7} color="#b04a2a" style={[dark, styles.msg]}>Not enough coins yet.</PixelText>}
-          <PixelButton label={done ? 'DONE' : 'CLOSE'} tone="wood" size={8} onPress={onClose} style={{ marginTop: 10, alignSelf: 'center' }} />
-        </PixelPanel>
-      </Pressable>
-    </Pressable>
-  );
-}
 
 export default function FosterScreen({ navigation }) {
   const { state } = useGame();
@@ -126,7 +76,7 @@ export default function FosterScreen({ navigation }) {
 
       <ScreenHud sw={sw} sh={sh} onSettings={() => navigation.navigate('Settings')} onMap={() => navigation.navigate('Map')} onInventory={() => setInvOpen(true)} />
 
-      {picked && <StrayCard stray={picked} onClose={() => setPicked(null)} />}
+      {picked && <AdoptModal petKey={picked.key} onClose={() => setPicked(null)} story={STRAYS[picked.key].found(CUSTOMERS[picked.finder]?.name ?? 'A customer')} />}
       {invOpen && <InventoryOverlay onClose={() => setInvOpen(false)} onPick={() => setInvOpen(false)} />}
     </View>
   );

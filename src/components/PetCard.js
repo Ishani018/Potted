@@ -25,7 +25,7 @@ const F = {
   button:   { l: 0.475, t: 0.785, w: 0.43, h: 0.125 },
 };
 
-export function AdoptModal({ petKey, onClose }) {
+export function AdoptModal({ petKey, onClose, story }) {
   const { state, dispatch } = useGame();
   const { height: frameH } = useLayout();
   const pet = PETS[petKey];
@@ -155,9 +155,10 @@ export function AdoptModal({ petKey, onClose }) {
             </View>
           ) : (
             <View style={{ flex: 1, alignItems: 'center' }}>
-              <View style={{ width: winW * 0.58, height: winH * 0.62 }}>
-                <PetSprite petKey={petKey} w={winW * 0.58} h={winH * 0.62} />
+              <View style={{ width: winW * 0.58, height: winH * (story ? 0.44 : 0.62) }}>
+                <PetSprite petKey={petKey} w={winW * 0.58} h={winH * (story ? 0.44 : 0.62)} />
               </View>
+              {story ? <Text style={[s.body, { fontSize: fz(0.026), lineHeight: fz(0.035), textAlign: 'center', marginTop: winH * 0.01, paddingHorizontal: winW * 0.03 }]} numberOfLines={3}>{story}</Text> : null}
               {pet.effect && (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: winW * 0.025, marginTop: winH * 0.02, paddingHorizontal: winW * 0.02 }}>
                   <Image source={PERK_ICONS[petKey]} style={{ width: winW * 0.16, height: winW * 0.15 }} resizeMode="contain" />
