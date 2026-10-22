@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { GALLERY_BGS, PAINTING_IMAGES, UI_IMAGES, CUSTOMER_IMAGES } from '../engine/assets';
+import { GALLERY_BGS, PAINTING_IMAGES, UI_IMAGES, CUSTOMER_IMAGES, PET_IMAGES } from '../engine/assets';
 import { PAINTINGS } from '../constants/gameData';
 import ScreenHud from '../components/ScreenHud';
+import PetSprite from '../components/PetSprite';
 import { pixelText } from '../components/Pixel';
 import { Skinned } from '../components/NineSlice';
 import { useNotice } from '../components/PurchaseNotice';
@@ -13,7 +14,18 @@ import InventoryOverlay from '../components/InventoryOverlay';
 // anchor). key = PAINTINGS / PAINTING_IMAGES key.
 const PLOPPER_W = 1376;
 const PLOPPER_H = 768;
-// The paintings hang from the café wall (two rows under the four hooks).
+// Pets that drop in on the café and lounge on the big empty floor (the ones you have adopted, in turn).
+// Three arrangements to choose from: 'tables' (beside the table legs), 'nap' (sleeping in the open middle),
+// 'corner' (a cosy huddle by the bar). Sizes are the sprite's width in base pixels; feet are at y.
+export const CAFE_PETS = 'tables';
+const PET_ASPECT = { george: 625 / 556, storm: 1200 / 896, koazy: 403 / 701, brownie: 582 / 537, aki: 637 / 537, cherry: 381 / 688, martin: 828 / 573, tiger: 768 / 587, ebonyandivory: 507 / 815, milk: 928 / 678, oreo: 387 / 868 };
+const VISIT_SLOTS = {
+  tables: [{ x: 535, y: 590, w: 70 }, { x: 905, y: 592, w: 74 }, { x: 760, y: 640, w: 96 }, { x: 1065, y: 628, w: 66 }, { x: 620, y: 690, w: 120 }, { x: 980, y: 700, w: 130 }],
+  nap:    [{ x: 640, y: 660, w: 150 }, { x: 800, y: 700, w: 160 }, { x: 960, y: 665, w: 100 }, { x: 540, y: 705, w: 110 }, { x: 880, y: 745, w: 120 }, { x: 720, y: 600, w: 90 }],
+  corner: [{ x: 300, y: 680, w: 130 }, { x: 400, y: 715, w: 110 }, { x: 480, y: 660, w: 90 }, { x: 360, y: 640, w: 86 }, { x: 250, y: 740, w: 100 }, { x: 460, y: 745, w: 120 }],
+};
+const SLEEPERS = ['koazy', 'cherry', 'oreo', 'ebonyandivory'];
+
 // which café picture is used: 'a' (open room) or 'b' (closer in, bar and tables)
 export const CAFE = 'd';
 const BAR = { a: { x: 222, top: 441, feet: 563 }, b: { x: 212, top: 437, feet: 560 }, c: { x: 175, top: 447, feet: 575 }, d: { x: 372, top: 452, feet: 566, h: 250 } };   // where Ben stands, per picture
@@ -85,6 +97,7 @@ function BuyModal({ paintingKey, onClose, onBought }) {
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function GalleryScreen({ navigation }) {
+  const { state } = useGame();
   const [selected, setSelected] = useState(null);
   const [invOpen, setInvOpen] = useState(false);
   const [notice, notify] = useNotice();
@@ -114,6 +127,17 @@ export default function GalleryScreen({ navigation }) {
           >
             <Image source={PAINTING_IMAGES[key]} style={{ width: iw, height: ih }} resizeMode="contain" />
           </TouchableOpacity>
+        );
+      })}
+
+      {/* visiting pets on the floor */}
+      {sw > 0 && (state.player.ownedPets ?? []).filter((k) => PET_ASPECT[k]).slice(0, 6).map((k, i) => {
+        const sl = VISIT_SLOTS[CAFE_PETS][i];
+        const w = sl.w * (SLEEPERS.includes(k) ? 1.25 : 1) * (PET_ASPECT[k] > 1.15 ? 0.85 : 1), h = w * PET_ASPECT[k];
+        return (
+          <View key={k} pointerEvents="none" style={{ position: 'absolute', left: ((sl.x - w / 2) / PLOPPER_W) * sw, top: ((sl.y - h) / PLOPPER_H) * sh, width: (w / PLOPPER_W) * sw, height: (h / PLOPPER_H) * sh, zIndex: 10 + Math.round(sl.y / 10) }}>
+            <PetSprite petKey={k} w={(w / PLOPPER_W) * sw} h={(h / PLOPPER_H) * sh} />
+          </View>
         );
       })}
 
