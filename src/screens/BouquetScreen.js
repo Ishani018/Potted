@@ -381,6 +381,8 @@ function BowChip({ source, size, x, y, target, onDrop }) {
   })).current;
   return (
     <Animated.View {...pan.panHandlers} style={{ position: 'absolute', left: x, top: y, width: size, height: size * 0.8, zIndex: lifted ? 60 : 40, transform: [...drag.getTranslateTransform(), { scale: lifted ? 1.25 : 1 }] }}>
+      {/* a soft light behind it, so the three you can take stand out from the bows painted in the box */}
+      <View pointerEvents="none" style={{ position: 'absolute', left: -size * 0.12, right: -size * 0.12, top: -size * 0.12, bottom: -size * 0.12, borderRadius: size, backgroundColor: 'rgba(255,243,214,0.55)' }} />
       <Image source={source} style={[{ width: '100%', height: '100%' }, lifted && SOFT]} resizeMode="contain" pointerEvents="none" />
     </Animated.View>
   );

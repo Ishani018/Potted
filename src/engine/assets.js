@@ -343,7 +343,7 @@ export const TRADING_BG = require('../../assets/tradingscreen.png');    // the 6
 export const COUNTER_BG = require('../../assets/shop/counter.png');   // florist counter seen from behind the till (1678×937)
 // The bouquet workspace seen from above (1536×1024, zoomed-in version). workspace_wide.png is the
 // same scene pulled back a little; swap the line to try it.
-export const BOUQUET_BG = require('../../assets/shop/workspace_zoom.png');
+export const BOUQUET_BG = require('../../assets/shop/workspace_bows.png');   // the zoomed workspace with a box of bows
 export const PETROOM_BG = require('../../assets/petroom.png');       // pet lounge (beds)
 export const GALLERY_BG = require('../../assets/gallery.png');
 export const LOADING_BG = require('../../assets/loadingshop.png');
