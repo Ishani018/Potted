@@ -18,7 +18,7 @@ import Portrait from '../components/Portrait';
 // All positions are in picture pixels. The customer is drawn clipped at the counter's
 // top edge so their lower half is hidden behind the counter.
 const W = 1678, H = 937;
-const DOOR = { x: 940, feetY: 478, h: 175 };         // where they step in
+const DOOR = { x: 940, feetY: 478, h: 340 };         // where they step in
 const SPOT = { x: 740, feetY: 870, h: 720 };         // at the counter (feet are behind it)
 const COUNTER_TOP = 646;                              // y of the counter's top edge
 const HOPS = 5, HOP_MS = 300;                         // the walk in
