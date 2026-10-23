@@ -31,16 +31,16 @@ const row = (n, x0, gap, y, salt) => Array.from({ length: n }, (_, i) => [x0 + i
 // The painted shop already has pots, hanging plants and a few bags on its shelves. Our seed bags (bigger) go on top of the
 // painted bags and into the gaps, one spot per seed (picture pixels, feet on the board).
 const SEED_AT = [
-  [433, 268], [586, 268], [790, 268],
-  [650, 382], [775, 382], [380, 382],
-  [462, 490], [780, 490], [640, 490],
-  [395, 612], [690, 612], [790, 612],
+  [545, 268], [725, 268], [785, 268],
+  [622, 385], [725, 385], [785, 385],
+  [625, 497], [990, 447], [1125, 447],
+  [1020, 548], [1010, 650], [1115, 650],
 ];
 const SPOT_OF = {};
 SEED_ORDER.forEach((k, n) => { SPOT_OF['s:' + k] = SEED_AT[n]; });
 const HOOK_SPOTS = [955, 1028, 1100, 1175].map((x) => [x, 236]);   // where a hanging pot's top sits
 const CAN_SPOT = [330, 735];
-const BAG = { w: 56, h: 51 };
+const BAG = { w: 50, h: 46 };
 const POT_W = 44;                                           // shelf pot width on the shelf
 const HOOK_H = 96;                                          // hanging pot height on its hook
 const COUNTER_TOP = 770;                                    // drop an item below this line to put it on the counter
