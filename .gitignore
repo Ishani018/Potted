@@ -58,6 +58,8 @@ assets/*
 !assets/building/*.png
 !assets/furniture/
 !assets/furniture/*.png
+!assets/butler/
+!assets/butler/*.png
 !assets/pests/
 !assets/pests/*.png
 !assets/herbalist/

@@ -406,6 +406,22 @@ export const COUNTER_BG = require('../../assets/shop/counter.png');   // florist
 export const BOUQUET_BG = require('../../assets/shop/workspace_v3.png');   // the zoomed workspace with a box of bows
 export const PETROOM_BG = require('../../assets/petroom.png');       // pet lounge (beds)
 export const GALLERY_BGS = { a: require('../../assets/ui_comps/cafe.png'), b: require('../../assets/ui_comps/cafe2.png'), c: require('../../assets/ui_comps/cafe3.png'), d: require('../../assets/ui_comps/cafe4.png') };   // the gallery is now a café (two pictures to choose from)
+// The apartment building's butler (picture + its pixel size, so he keeps his proportions)
+export const BUTLER = {
+  idle: { src: require('../../assets/butler/bt_01.png'), w: 202, h: 468 },
+  wave: { src: require('../../assets/butler/bt_02.png'), w: 249, h: 463 },
+  clip: { src: require('../../assets/butler/bt_03.png'), w: 216, h: 461 },
+  offer: { src: require('../../assets/butler/bt_04.png'), w: 289, h: 460 },
+  pointR: { src: require('../../assets/butler/bt_05.png'), w: 271, h: 463 },
+  pointL: { src: require('../../assets/butler/bt_06.png'), w: 259, h: 456 },
+  parcels: { src: require('../../assets/butler/bt_07.png'), w: 196, h: 445 },
+  cart: { src: require('../../assets/butler/bt_08.png'), w: 229, h: 440 },
+  keys: { src: require('../../assets/butler/bt_09.png'), w: 267, h: 446 },
+  tip: { src: require('../../assets/butler/bt_10.png'), w: 199, h: 439 },
+  gift: { src: require('../../assets/butler/bt_11.png'), w: 206, h: 440 },
+  bow: { src: require('../../assets/butler/bt_12.png'), w: 197, h: 431 },
+  whisper: { src: require('../../assets/butler/bt_13.png'), w: 200, h: 432 },
+};
 export const LOBBY_BG = require('../../assets/building/lobby.png');   // the apartment building's entrance hall
 export const APT_ART = {   // the empty rooms: picture + its pixel size
   1: { src: require('../../assets/building/apt1.png'), w: 1672, h: 941 },
