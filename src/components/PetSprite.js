@@ -45,8 +45,10 @@ function PosedPet({ petKey, w, h, flip, children, asleepForced, napper }) {
 
   const list = poses[cur.pose] || poses.sit;
   const frame = list[cur.n % list.length];
-  const base = frames[poses.base];
-  const sc = Math.min(w / base.w, h / base.h);
+  // The box was sized for the pet's old single picture (sitting, lying, wide or tall). Match its area so a pet that was drawn
+  // lying down doesn't shrink when its sheet's base frame is a sitting pose; never let it spill far outside the box.
+  const base = frames[napper || asleepForced ? poses.sleep[0] : poses.base];
+  const sc = Math.min(Math.sqrt((w * h) / (base.w * base.h)), (w * 1.3) / base.w, (h * 1.3) / base.h);
   const sleeping = cur.pose === 'sleep';
   const scaleY = breath.interpolate({ inputRange: [0, 1], outputRange: [1, 1.025] });
   return (
