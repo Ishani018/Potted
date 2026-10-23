@@ -14,12 +14,32 @@ HANGERS.forEach((k) => { DECOR['h_' + k] = { key: 'h_' + k, kind: 'hang', img: H
 Object.keys(PAINTING_IMAGES).forEach((k) => { DECOR['w_' + k] = { key: 'w_' + k, kind: 'wall', img: PAINTING_IMAGES[k], size: 0.2, painting: k }; });
 
 // What a potted plant stands on. w = stand width as a fraction of the plant's box, ratio = its height / width.
-// Furniture cut from the sprite sheets. Height as a fraction of the room follows the picture's own pixel size,
-// so pieces from one sheet keep their proportions. Rugs lie flat on the floor (drawn skewed, under everything).
+// Furniture cut from the sprite sheets. The sheets draw every piece to fit its cell, so a bookshelf and a sofa came out
+// the same size; heights here are real-world metres by piece type (1 m = 0.25 of the room's height).
+// Rugs lie flat on the floor (drawn skewed, under everything).
+const M = {
+  sofa: 0.95, armchair: 1.05, coffeetable: 0.62, console: 0.85, lamp: 1.7, sidetable: 0.6, tvstand: 0.6, bookshelf: 2, cabinet: 1.9,
+  wardrobe: 2.1, dresser: 1.25, desk: 0.9, chair: 1, roundtable: 0.75, bed: 1.25, nightstand: 0.65, vanity: 1.6, mirror: 1.8,
+  bigdresser: 1, coatrack: 1.8, sink: 1, stove: 1, potrack: 0.6, hutch: 1.9, diningtable: 0.8, fridge: 1.8, bench: 0.5, plant: 0.7,
+};
+const T = {
+  g: ['sofa', 'armchair', 'armchair', 'coffeetable', 'console', 'lamp', 'sidetable', 'tvstand', 'bookshelf', 'cabinet', 'wardrobe', 'dresser', 'desk', 'chair', 'roundtable', 'chair', 'bed', 'bed', 'nightstand', 'nightstand', 'vanity', 'mirror', 'bigdresser', 'coatrack', 'sink', 'stove', 'potrack', 'console', 'hutch', 'diningtable', 'chair', 'chair', 'fridge'],
+  pr: ['sofa', 'armchair', 'coffeetable', 'bookshelf', 'lamp', 'sidetable', 'tvstand', 'mirror', 'bed', 'wardrobe', 'vanity', 'desk', 'cabinet', 'dresser', 'rug', 'sink', 'stove', 'potrack', 'fridge', 'diningtable', 'chair', 'bench', 'console', 'coatrack', 'coatrack', 'plant',
+       'sofa', 'armchair', 'coffeetable', 'bookshelf', 'lamp', 'sidetable', 'tvstand', 'mirror', 'bed', 'nightstand', 'wardrobe', 'vanity', 'rug', 'cabinet', 'bigdresser', 'rug', 'sink', 'stove', 'potrack', 'fridge', 'chair', 'bench', 'console', 'plant'],
+  pk: [null, null, null, null, null, null, null, null, 'sofa', 'armchair', 'coffeetable', 'bookshelf', 'lamp', 'sidetable', 'tvstand', 'rug'],
+};
+// pr numbering skips 39 and 42 (pieces that stuck together), so its list above runs 1-38 then 40-41 then 43-50
+const PR_NUMS = [...Array(38).keys()].map((i) => i + 1).concat([40, 41], [...Array(8).keys()].map((i) => i + 43));
+const typeOf = (key) => {
+  const [pre, num] = key.split('_'); const n = Number(num);
+  if (pre === 'pr') return T.pr[PR_NUMS.indexOf(n)];
+  return T[pre][n - 1];
+};
 FURNITURE_ITEMS.forEach((f) => {
   const n = Number(f.key.split('_')[1]);
   const set = f.key.startsWith('g_') ? 'green' : f.key.startsWith('pk_') ? 'pink' : n <= 26 ? 'purple' : 'red';
-  DECOR[f.key] = { key: f.key, kind: 'floor', img: f.img, furniture: true, set, rug: f.rug, aspect: f.w / f.h, size: f.h * 0.0011 * (f.rug ? 1.9 : 1) };
+  const type = typeOf(f.key);
+  DECOR[f.key] = { key: f.key, kind: 'floor', img: f.img, furniture: true, set, rug: f.rug, aspect: f.w / f.h, size: f.rug ? f.h * 0.0011 * 1.9 : (M[type] ?? 0.9) * 0.25 };
 });
 
 export const STANDS = {
