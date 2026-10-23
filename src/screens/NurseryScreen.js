@@ -16,7 +16,7 @@ const SEED_INFO = {};
 // The shop picture is 1671x941. Each seed bag has a spot on the shelves (centre x, y of the plank it stands on).
 const IMG_W = 1671;
 const IMG_H = 941;
-const BAG = { w: 74, h: 80 };
+const BAG = { w: 84, h: 77 };   // the generic bag is a little wider than tall
 const SPOTS = {
   snapdragon:     [630, 188],
   peony:          [680, 294],

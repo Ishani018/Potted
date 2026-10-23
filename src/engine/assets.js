@@ -73,18 +73,18 @@ export const HANGING_PLANT_IMAGES = {
 
 // ─── Seeds ───────────────────────────────────────────────────────────────────
 export const SEED_IMAGES = {
-  daisy:          require('../../assets/seeds/daisyseed.png'),
-  snapdragon:     require('../../assets/seeds/snapdragonseed.png'),
-  poppy:          require('../../assets/seeds/poppyseed.png'),
-  marigold:       require('../../assets/seeds/marigoldseed.png'),
-  peony:          require('../../assets/seeds/peonyseed.png'),
-  hydrenga:       require('../../assets/seeds/hydrengaseed.png'),
-  rose:           require('../../assets/seeds/roseseed.png'),
-  stringofpearls: require('../../assets/seeds/stringofpearlseed.png'),
-  Philodendron:   require('../../assets/seeds/philodendronseed.png'),
-  jasmine:        require('../../assets/seeds/jasmineseed.png'),
-  petunia:        require('../../assets/seeds/petuniaseed.png'),
-  Bougainvillea:  require('../../assets/seeds/bougenvillaseed.png'),
+  daisy:          require('../../assets/seeds2/daisyseed.png'),
+  snapdragon:     require('../../assets/seeds2/snapdragonseed.png'),
+  poppy:          require('../../assets/seeds2/poppyseed.png'),
+  marigold:       require('../../assets/seeds2/marigoldseed.png'),
+  peony:          require('../../assets/seeds2/peonyseed.png'),
+  hydrenga:       require('../../assets/seeds2/hydrengaseed.png'),
+  rose:           require('../../assets/seeds2/roseseed.png'),
+  stringofpearls: require('../../assets/seeds2/stringofpearlseed.png'),
+  Philodendron:   require('../../assets/seeds2/philodendronseed.png'),
+  jasmine:        require('../../assets/seeds2/jasmineseed.png'),
+  petunia:        require('../../assets/seeds2/petuniaseed.png'),
+  Bougainvillea:  require('../../assets/seeds2/bougenvillaseed.png'),
 };
 
 Object.assign(SEED_IMAGES, {

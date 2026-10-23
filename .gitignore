@@ -70,6 +70,8 @@ assets/*
 !assets/petsheets/*.png
 !assets/rot/
 !assets/rot/*.png
+!assets/seeds2/
+!assets/seeds2/*.png
 !assets/goose/
 !assets/goose2/
 !assets/goose2/*.png
