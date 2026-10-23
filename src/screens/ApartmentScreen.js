@@ -22,6 +22,7 @@ function Placed({ item, W, H, edit, selected, onSelect, onMove, onDragState }) {
   const size = def.size * H;
   const stand = def.plant ? STANDS[standOf(item)] : null;   // potted plants sit on a stool, stand or pedestal
   const standH = stand ? stand.w * size * stand.ratio : 0;
+  const bw = def.furniture ? size * def.aspect : size;
   const boxH = def.plant ? size * def.bf + standH * 0.86 : size;   // the stand tucks up under the pot
   const x = (pos ?? item).x, y = (pos ?? item).y;
   const [lo, hi] = DECOR_Y_RANGE[def.kind];
@@ -40,12 +41,13 @@ function Placed({ item, W, H, edit, selected, onSelect, onMove, onDragState }) {
     onPanResponderTerminate: () => { onDragState(false); setPos(null); },
   })).current;
 
-  const left = x * W - size / 2;
-  const top = def.kind === 'floor' ? y * H - boxH : y * H - size / 2;
+  const left = x * W - bw / 2;
+  const top = def.rug ? y * H - boxH / 2 : def.kind === 'floor' ? y * H - boxH : y * H - size / 2;
   return (
-    <View {...(edit ? pan.panHandlers : {})} pointerEvents={edit ? 'auto' : 'none'} style={{ position: 'absolute', left, top, width: size, height: boxH, zIndex: def.kind === 'floor' ? Math.round(y * 100) : 5 }}>
+    <View {...(edit ? pan.panHandlers : {})} pointerEvents={edit ? 'auto' : 'none'} style={{ position: 'absolute', left, top, width: bw, height: boxH, zIndex: def.rug ? 1 : def.kind === 'floor' ? 10 + Math.round(y * 100) : 5 }}>
       {stand && <Image source={stand.img} resizeMode="stretch" style={{ position: 'absolute', left: (size - stand.w * size) / 2, bottom: 0, width: stand.w * size, height: standH }} />}
-      <Image source={def.img} resizeMode="contain" style={{ position: 'absolute', left: 0, top: 0, width: size, height: size }} />
+      <Image source={def.img} resizeMode={def.furniture ? 'stretch' : 'contain'} style={{ position: 'absolute', left: 0, top: 0, width: bw, height: def.furniture ? size : size,
+        ...(def.rug ? { transform: [{ perspective: 520 }, { rotateX: '58deg' }] } : null) }} />
       {edit && selected && <View pointerEvents="none" style={[styles.ring, { borderRadius: size * 0.1 }]} />}
     </View>
   );
@@ -56,7 +58,7 @@ export default function ApartmentScreen({ navigation, route }) {
   const { state, dispatch } = useGame();
   const [box, setBox] = useState({ w: 0, h: 0 });
   const [edit, setEdit] = useState(false);
-  const [tab, setTab] = useState('floor');
+  const [tab, setTab] = useState(Object.values(DECOR).some((d) => d.furniture) ? 'furn' : 'floor');
   const [selected, setSelected] = useState(null);
   const [dragging, setDragging] = useState(false);
   const [invOpen, setInvOpen] = useState(false);
@@ -79,7 +81,7 @@ export default function ApartmentScreen({ navigation, route }) {
     setSelected(item.id);
   };
 
-  const tabItems = Object.values(DECOR).filter((d) => d.kind === tab && (d.kind !== 'wall' || ownedArt.includes(d.painting)));
+  const tabItems = Object.values(DECOR).filter((d) => (tab === 'furn' ? d.furniture : d.kind === tab && !d.furniture) && (d.kind !== 'wall' || ownedArt.includes(d.painting)));
 
   return (
     <View style={styles.root} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
@@ -135,7 +137,7 @@ export default function ApartmentScreen({ navigation, route }) {
       {edit && (
         <View style={styles.tray}>
           <View style={styles.tabs}>
-            {DECOR_TABS.map((t) => (
+            {DECOR_TABS.filter((t) => t.id !== 'furn' || Object.values(DECOR).some((d) => d.furniture)).map((t) => (
               <TouchableOpacity key={t.id} onPress={() => setTab(t.id)} activeOpacity={0.8} style={[styles.tab, tab === t.id && styles.tabOn]}>
                 <Text style={[styles.tabText, tab === t.id && { color: '#fff3d0' }]}>{t.label}</Text>
               </TouchableOpacity>

@@ -1,3 +1,4 @@
+import { FURNITURE_ITEMS } from './furnitureItems';
 import { POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES, PAINTING_IMAGES } from './assets';
 
 // Everything you can put in a flat. kind: 'floor' (stands on the floor, y = its feet),
@@ -13,6 +14,12 @@ HANGERS.forEach((k) => { DECOR['h_' + k] = { key: 'h_' + k, kind: 'hang', img: H
 Object.keys(PAINTING_IMAGES).forEach((k) => { DECOR['w_' + k] = { key: 'w_' + k, kind: 'wall', img: PAINTING_IMAGES[k], size: 0.2, painting: k }; });
 
 // What a potted plant stands on. w = stand width as a fraction of the plant's box, ratio = its height / width.
+// Furniture cut from the sprite sheets. Height as a fraction of the room follows the picture's own pixel size,
+// so pieces from one sheet keep their proportions. Rugs lie flat on the floor (drawn skewed, under everything).
+FURNITURE_ITEMS.forEach((f) => {
+  DECOR[f.key] = { key: f.key, kind: 'floor', img: f.img, furniture: true, rug: f.rug, aspect: f.w / f.h, size: f.h * 0.0011 * (f.rug ? 0.8 : 1) };
+});
+
 export const STANDS = {
   stool:    { img: require('../../assets/building/stand_stool.png'), w: 0.55, ratio: 224 / 256 },
   tall:     { img: require('../../assets/building/stand_tall.png'),  w: 0.4,  ratio: 432 / 256 },
@@ -22,6 +29,7 @@ export const STAND_ORDER = ['stool', 'tall', 'pedestal', 'none'];
 export const standOf = (item) => (item.stand === undefined ? 'stool' : item.stand);
 
 export const DECOR_TABS = [
+  { id: 'furn',  label: 'FURNITURE' },
   { id: 'floor', label: 'PLANTS' },
   { id: 'hang',  label: 'HANGING' },
   { id: 'wall',  label: 'ART' },
