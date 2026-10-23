@@ -615,13 +615,14 @@ function reducer(state, action) {
       };
     }
 
-    case 'PLACE_APT_ITEM': case 'MOVE_APT_ITEM': case 'REMOVE_APT_ITEM': {
+    case 'PLACE_APT_ITEM': case 'MOVE_APT_ITEM': case 'REMOVE_APT_ITEM': case 'STAND_APT_ITEM': {
       const { aptId } = action;
       const all = state.player.apartmentItems ?? {};
       const list = all[aptId] ?? [];
       let next = list;
       if (action.type === 'PLACE_APT_ITEM') next = [...list, action.item];
       else if (action.type === 'MOVE_APT_ITEM') next = list.map((it) => (it.id === action.id ? { ...it, x: action.x, y: action.y } : it));
+      else if (action.type === 'STAND_APT_ITEM') next = list.map((it) => (it.id === action.id ? { ...it, stand: action.stand } : it));
       else next = list.filter((it) => it.id !== action.id);
       return { ...state, player: { ...state.player, apartmentItems: { ...all, [aptId]: next } } };
     }

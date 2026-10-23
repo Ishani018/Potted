@@ -3,7 +3,7 @@ import { View, Text, Image, ScrollView, PanResponder, TouchableOpacity, StyleShe
 import { useGame } from '../context/GameContext';
 import { APT_ART, UI_IMAGES } from '../engine/assets';
 import { APARTMENTS } from '../constants/gameData';
-import { DECOR, DECOR_TABS, DECOR_START_Y, DECOR_Y_RANGE } from '../engine/decor';
+import { DECOR, DECOR_TABS, DECOR_START_Y, DECOR_Y_RANGE, STANDS, STAND_ORDER, standOf } from '../engine/decor';
 import ScreenHud from '../components/ScreenHud';
 import { pixelText } from '../components/Pixel';
 import { Skinned } from '../components/NineSlice';
@@ -20,6 +20,9 @@ function Placed({ item, W, H, edit, selected, onSelect, onMove, onDragState }) {
   const live = useRef(item);
   live.current = item;
   const size = def.size * H;
+  const stand = def.plant ? STANDS[standOf(item)] : null;   // potted plants sit on a stool, stand or pedestal
+  const standH = stand ? stand.w * size * stand.ratio : 0;
+  const boxH = def.plant ? size * def.bf + standH * 0.86 : size;   // the stand tucks up under the pot
   const x = (pos ?? item).x, y = (pos ?? item).y;
   const [lo, hi] = DECOR_Y_RANGE[def.kind];
 
@@ -38,10 +41,11 @@ function Placed({ item, W, H, edit, selected, onSelect, onMove, onDragState }) {
   })).current;
 
   const left = x * W - size / 2;
-  const top = def.kind === 'floor' ? y * H - size : y * H - size / 2;
+  const top = def.kind === 'floor' ? y * H - boxH : y * H - size / 2;
   return (
-    <View {...(edit ? pan.panHandlers : {})} pointerEvents={edit ? 'auto' : 'none'} style={{ position: 'absolute', left, top, width: size, height: size, zIndex: def.kind === 'floor' ? Math.round(y * 100) : 5 }}>
-      <Image source={def.img} resizeMode="contain" style={{ width: size, height: size }} />
+    <View {...(edit ? pan.panHandlers : {})} pointerEvents={edit ? 'auto' : 'none'} style={{ position: 'absolute', left, top, width: size, height: boxH, zIndex: def.kind === 'floor' ? Math.round(y * 100) : 5 }}>
+      {stand && <Image source={stand.img} resizeMode="stretch" style={{ position: 'absolute', left: (size - stand.w * size) / 2, bottom: 0, width: stand.w * size, height: standH }} />}
+      <Image source={def.img} resizeMode="contain" style={{ position: 'absolute', left: 0, top: 0, width: size, height: size }} />
       {edit && selected && <View pointerEvents="none" style={[styles.ring, { borderRadius: size * 0.1 }]} />}
     </View>
   );
@@ -111,6 +115,11 @@ export default function ApartmentScreen({ navigation, route }) {
 
       {selected && edit && (
         <View style={[styles.removeWrap, { bottom: trayH + 70 }]} pointerEvents="box-none">
+          {DECOR[items.find((it) => it.id === selected)?.key]?.plant && (
+            <TouchableOpacity activeOpacity={0.8} onPress={() => { const it = items.find((i) => i.id === selected); dispatch({ type: 'STAND_APT_ITEM', aptId, id: selected, stand: STAND_ORDER[(STAND_ORDER.indexOf(standOf(it) ?? 'none') + 1) % STAND_ORDER.length] }); }} style={[styles.removeBtn, { backgroundColor: '#8a5a2a', borderColor: '#4a2a10', marginRight: 8 }]}>
+              <Text style={styles.removeText}>CHANGE STAND</Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity activeOpacity={0.8} onPress={() => { dispatch({ type: 'REMOVE_APT_ITEM', aptId, id: selected }); setSelected(null); }} style={styles.removeBtn}>
             <Text style={styles.removeText}>PUT AWAY</Text>
           </TouchableOpacity>
@@ -152,7 +161,7 @@ const styles = StyleSheet.create({
   top: { position: 'absolute', top: 12, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, zIndex: 40 },
   name: { fontFamily: SERIF, fontSize: 20, color: '#fff3d0', textShadowColor: 'rgba(40,20,5,0.95)', textShadowRadius: 6 },
   decoBtn: { position: 'absolute', right: 14, zIndex: 40 },
-  removeWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center', zIndex: 45 },
+  removeWrap: { position: 'absolute', left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', zIndex: 45 },
   removeBtn: { backgroundColor: '#a63a2a', borderWidth: 2, borderColor: '#5a1a10', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 6 },
   removeText: { fontFamily: SERIF, fontSize: 15, color: '#fff3d0' },
   ring: { ...StyleSheet.absoluteFillObject, borderWidth: 2, borderColor: '#ffe29a', borderStyle: 'dashed' },

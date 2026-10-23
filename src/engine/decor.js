@@ -6,9 +6,20 @@ const PLANTS = ['daisy', 'snapdragon', 'poppy', 'marigold', 'peony', 'hydrenga',
 const HANGERS = ['stringofpearls', 'Philodendron', 'jasmine', 'petunia', 'Bougainvillea'];
 
 export const DECOR = {};
-PLANTS.forEach((k) => { DECOR['p_' + k] = { key: 'p_' + k, kind: 'floor', img: POTTED_PLANT_IMAGES[k][2], size: 0.26 }; });
+// bf = where the pot's bottom edge sits inside the picture (0..1), so a stand can be slid right under it
+const POT_BOTTOM = { daisy: 0.864, snapdragon: 0.864, marigold: 0.864, rose: 0.864, poppy: 1, peony: 1, hydrenga: 1 };
+PLANTS.forEach((k) => { DECOR['p_' + k] = { key: 'p_' + k, kind: 'floor', img: POTTED_PLANT_IMAGES[k][2], size: 0.26, plant: true, bf: POT_BOTTOM[k] }; });
 HANGERS.forEach((k) => { DECOR['h_' + k] = { key: 'h_' + k, kind: 'hang', img: HANGING_PLANT_IMAGES[k][2], size: 0.26 }; });
 Object.keys(PAINTING_IMAGES).forEach((k) => { DECOR['w_' + k] = { key: 'w_' + k, kind: 'wall', img: PAINTING_IMAGES[k], size: 0.2, painting: k }; });
+
+// What a potted plant stands on. w = stand width as a fraction of the plant's box, ratio = its height / width.
+export const STANDS = {
+  stool:    { img: require('../../assets/building/stand_stool.png'), w: 0.55, ratio: 224 / 256 },
+  tall:     { img: require('../../assets/building/stand_tall.png'),  w: 0.4,  ratio: 432 / 256 },
+  pedestal: { img: require('../../assets/building/pedestal.png'),    w: 0.5,  ratio: 336 / 256 },
+};
+export const STAND_ORDER = ['stool', 'tall', 'pedestal', 'none'];
+export const standOf = (item) => (item.stand === undefined ? 'stool' : item.stand);
 
 export const DECOR_TABS = [
   { id: 'floor', label: 'PLANTS' },
