@@ -4,9 +4,9 @@ import { useLayout } from '../context/LayoutContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useGame } from '../context/GameContext';
-import { BACKGROUNDS, UI_IMAGES, PAINTING_IMAGES, PET_IMAGES, HANGING_PLANT_IMAGES, POTTED_PLANT_IMAGES, SEED_IMAGES } from '../engine/assets';
+import { ROOM_BGS, UI_IMAGES, PAINTING_IMAGES, PET_IMAGES, HANGING_PLANT_IMAGES, POTTED_PLANT_IMAGES, SEED_IMAGES } from '../engine/assets';
 import { getSnapPoints, WATERING_CAN_POSITIONS, DECOR_POSITIONS, POT_SOURCE_POSITIONS, scalePoint } from '../engine/snapPoints';
-import { getCurrentSeason, seedType, heldSeedHint, PETS, pestInfo } from '../constants/gameData';
+import { seedType, heldSeedHint, PETS, pestInfo } from '../constants/gameData';
 import { pestRewardFor } from '../engine/petEffects';
 import { useToast } from '../components/Toast';
 import { projectSize, projectPoint } from '../engine/project';
@@ -35,7 +35,6 @@ export default function Room2Screen({ navigation }) {
   const canDragging = useRef(false);
   const [toast, showToast] = useToast();
   const tryRemedy = useRemedyUse(showToast);
-  const season = getCurrentSeason();
 
   useEffect(() => {
     if (state.initialized) {
@@ -43,7 +42,7 @@ export default function Room2Screen({ navigation }) {
     }
   }, [state.initialized, sw, sh]);
 
-  const bgSource = BACKGROUNDS.room2?.white?.[season] ?? BACKGROUNDS.room1.white.spring;
+  const bgSource = ROOM_BGS.room2;
 
   const hangingPoints = getSnapPoints(2, 'hanging', sw, sh);
   const allSnapPoints = hangingPoints;
@@ -143,19 +142,6 @@ export default function Room2Screen({ navigation }) {
 
         {/* Placed pets */}
         <RoomPets room={2} sw={sw} sh={sh} onPetPress={handlePetPress} />
-
-        {/* Photo frame */}
-        {photoFrameKey && (() => {
-          const raw = DECOR_POSITIONS.room2.photoFrame;
-          const pos = scalePoint(raw.x, raw.y, sw, sh);
-          return (
-            <Image
-              source={PAINTING_IMAGES[photoFrameKey]}
-              style={{ position: 'absolute', left: pos.x - 35, top: pos.y - 35, width: 70, height: 70 }}
-              resizeMode="contain"
-            />
-          );
-        })()}
 
         {/* Pet */}
         {petKey && (

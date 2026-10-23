@@ -33,7 +33,6 @@ import { BookProvider, useBook, CHAPTERS } from '../components/BookNav';
 
 const PIXEL_FONT = 'PressStart2P';
 
-const SEASON_LABEL = { spring: 'Spring', summer: 'Summer', autumn: 'Autumn', winter: 'Winter' };
 
 function flowerName(key) {
   return POTTED_FLOWERS[key]?.name ?? HANGING_PLANTS[key]?.name ?? key;
@@ -252,7 +251,7 @@ function FlowerBookPages({ navigation }) {
 
             {/* Pot type is always shown so you know where a new seed goes */}
             <Text style={styles.tagline}>
-              {type === 'hanging' ? 'Hanging pot' : 'Shelf pot'}{isRare ? '  ·  Rare' : ''}{unlocked ? `  ·  ${SEASON_LABEL[entry.season] ?? entry.season}` : ''}
+              {type === 'hanging' ? 'Hanging pot' : 'Shelf pot'}{isRare ? '  ·  Rare' : ''}
             </Text>
 
             {unlocked ? (

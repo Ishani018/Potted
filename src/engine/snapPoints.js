@@ -23,82 +23,63 @@ export function getSnapPoints(room, type, screenWidth, screenHeight) {
 // Raw snap coordinates — anchor: bottom-center for pots, top-center for hanging
 const RAW_SNAP_POINTS = {
   1: {
+    // the greenhouse: four pots on the window ledge, five on the long bench
     potted: [
-      // ── Room 1 pot positions (base coords, 1376×768 image) ──────────────────
-      // y = shelf surface (pot bottoms anchor here). Increase y to move pots DOWN.
-      // x spacing between pots on top shelf = ~186px. Decrease to pack tighter.
-      // Top shelf: 5 pots. Shelf surface y ≈ 490.
-      { id: 'r1_p1', x: 340, y: 400 }, // leftmost
-      { id: 'r1_p2', x: 516, y: 400 },
-      { id: 'r1_p3', x: 709, y: 400 }, // center
-      { id: 'r1_p4', x: 896, y: 400 },
-      { id: 'r1_p5', x: 1060, y: 400 }, // rightmost
-      // Bottom shelf: 4 pots. Shelf surface y ≈ 638. x spacing ≈ 192px.
-      { id: 'r1_p6', x: 424, y: 630 }, // leftmost
-      { id: 'r1_p7', x: 616, y: 630 },
-      { id: 'r1_p8', x: 806, y: 630 },
-      { id: 'r1_p9', x: 998, y: 630 }, // rightmost
-      // ────────────────────────────────────────────────────────────────────────
+      { id: 'r1_p1', x: 222, y: 317 },
+      { id: 'r1_p2', x: 333, y: 317 },
+      { id: 'r1_p3', x: 444, y: 317 },
+      { id: 'r1_p4', x: 556, y: 317 },
+      { id: 'r1_p5', x: 148, y: 441 },
+      { id: 'r1_p6', x: 411, y: 441 },
+      { id: 'r1_p7', x: 675, y: 441 },
+      { id: 'r1_p8', x: 938, y: 441 },
+      { id: 'r1_p9', x: 1202, y: 441 },
     ],
     hanging: [],
   },
   2: {
+    // the balcony: eight hooks along the rod
     potted: [],
     hanging: [
-      // ── Room 2 hanging snap points (base coords, 1376×768) ──────────────────
-      // Anchor: top-center (where the rope meets the rod).
-      // y = rod height. Increase y to move hooks DOWN the rod.
-      // x = horizontal position. Adjust spacing to spread across the rod.
-      //
-      // Rod 1 (top rod) — 4 hooks
-      { id: 'r2_h1', x: 310, y: 60 }, // leftmost
-      { id: 'r2_h2', x: 415, y: 60 },
-      { id: 'r2_h3', x: 520, y: 60 },
-      { id: 'r2_h4', x: 625, y: 60 }, // rightmost
-      //
-      // Rod 2 (bottom rod) — 4 hooks
-      { id: 'r2_h5', x: 310, y: 360 }, // leftmost
-      { id: 'r2_h6', x: 415, y: 360 },
-      { id: 'r2_h7', x: 520, y: 360 },
-      { id: 'r2_h8', x: 625, y: 360 }, // rightmost
-      // ────────────────────────────────────────────────────────────────────────
+      { id: 'r2_h1', x: 329, y: 82 },
+      { id: 'r2_h2', x: 445, y: 82 },
+      { id: 'r2_h3', x: 578, y: 82 },
+      { id: 'r2_h4', x: 695, y: 82 },
+      { id: 'r2_h5', x: 813, y: 82 },
+      { id: 'r2_h6', x: 905, y: 82 },
+      { id: 'r2_h7', x: 1000, y: 82 },
+      { id: 'r2_h8', x: 1103, y: 82 },
     ],
   },
   3: {
-    // Laid out on summer/spring/winter.jpeg (1376×768). Pot anchor = bottom-centre,
-    // y = the shelf/table surface the pot stands on.
+    // the sunroom: eight pots along the sill, twelve on the stone floor, four hooks on the rod
     potted: [
-      // Left rack — top board (y≈488) and bottom board (y≈612)
-      { id: 'r3_p1', x: 325, y: 488 },
-      { id: 'r3_p2', x: 440, y: 488 },
-      { id: 'r3_p3', x: 330, y: 612 },
-      { id: 'r3_p4', x: 440, y: 612 },
-      // Table top (y≈536)
-      { id: 'r3_p5', x: 650, y: 536 },
-      { id: 'r3_p6', x: 758, y: 536 },
-      { id: 'r3_p7', x: 866, y: 536 },
-      // Right rack — top (y≈404), middle (y≈536), bottom (y≈666)
-      { id: 'r3_p8',  x: 1070, y: 404 },
-      { id: 'r3_p9',  x: 1170, y: 404 },
-      { id: 'r3_p10', x: 1265, y: 404 },
-      { id: 'r3_p11', x: 1070, y: 536 },
-      { id: 'r3_p12', x: 1170, y: 536 },
-      { id: 'r3_p13', x: 1265, y: 536 },
-      { id: 'r3_p14', x: 1070, y: 666 },
-      { id: 'r3_p15', x: 1170, y: 666 },
-      { id: 'r3_p16', x: 1265, y: 666 },
-      // Wall shelves (y≈272 left, y≈266 right)
-      { id: 'r3_p17', x: 345, y: 272 },
-      { id: 'r3_p18', x: 455, y: 272 },
-      { id: 'r3_p19', x: 1085, y: 266 },
-      { id: 'r3_p20', x: 1195, y: 266 },
+      { id: 'r3_p1', x: 346, y: 467 },
+      { id: 'r3_p2', x: 449, y: 467 },
+      { id: 'r3_p3', x: 551, y: 467 },
+      { id: 'r3_p4', x: 654, y: 467 },
+      { id: 'r3_p5', x: 757, y: 467 },
+      { id: 'r3_p6', x: 860, y: 467 },
+      { id: 'r3_p7', x: 963, y: 467 },
+      { id: 'r3_p8', x: 1066, y: 467 },
+      { id: 'r3_p9', x: 395, y: 645 },
+      { id: 'r3_p10', x: 518, y: 645 },
+      { id: 'r3_p11', x: 642, y: 645 },
+      { id: 'r3_p12', x: 765, y: 645 },
+      { id: 'r3_p13', x: 889, y: 645 },
+      { id: 'r3_p14', x: 1012, y: 645 },
+      { id: 'r3_p15', x: 461, y: 726 },
+      { id: 'r3_p16', x: 584, y: 726 },
+      { id: 'r3_p17', x: 708, y: 726 },
+      { id: 'r3_p18', x: 831, y: 726 },
+      { id: 'r3_p19', x: 955, y: 726 },
+      { id: 'r3_p20', x: 1078, y: 726 },
     ],
-    // Hooks along the top rod (rod spans x≈470–1250; the painted vines sit at the ends)
     hanging: [
-      { id: 'r3_h1', x: 590, y: 88 },
-      { id: 'r3_h2', x: 770, y: 88 },
-      { id: 'r3_h3', x: 950, y: 88 },
-      { id: 'r3_h4', x: 1130, y: 88 },
+      { id: 'r3_h1', x: 630, y: 135 },
+      { id: 'r3_h2', x: 729, y: 135 },
+      { id: 'r3_h3', x: 823, y: 135 },
+      { id: 'r3_h4', x: 918, y: 135 },
     ],
   },
 };
@@ -115,9 +96,9 @@ const RAW_SNAP_POINTS = {
 // Increase x to move right, increase y to move down.
 // ──────────────────────────────────────────────────────────────────────────────
 export const WATERING_CAN_POSITIONS = {
-  1: { x: 1135, y: 130 },  // ← Room 1: on window sill right side
-  2: { x: 1255, y: 405 },  // ← Room 2: on stool, left of pot — CHANGE THIS
-  3: { x: 1140, y: 220 },  // ← Room 3: on the right wall shelf (centre anchor; shelf surface y≈262)
+  1: { x: 1029, y: 677 },   // greenhouse: on the floor by the bench
+  2: { x: 1144, y: 384 },  // balcony: on the rail
+  3: { x: 1169, y: 428 },   // sunroom: at the end of the sill
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -129,14 +110,12 @@ export const WATERING_CAN_POSITIONS = {
 // ──────────────────────────────────────────────────────────────────────────────
 export const FLOOR_SILL_POINTS = {
   2: [
-    // Back row — offset RIGHT (nestles into the gaps of the front row)
-    { id: 'r2_sill_1', x: 160, y: 655 },
-    { id: 'r2_sill_2', x: 265, y: 655 },
-    { id: 'r2_sill_3', x: 370, y: 655 },
-    // Front row — offset LEFT & down (opposite diagonal to the back row)
-    { id: 'r2_sill_4', x: 110, y: 700 },
-    { id: 'r2_sill_5', x: 215, y: 700 },
-    { id: 'r2_sill_6', x: 320, y: 700 },
+    { id: 'r2_sill_1', x: 370, y: 661 },
+    { id: 'r2_sill_2', x: 469, y: 661 },
+    { id: 'r2_sill_3', x: 568, y: 661 },
+    { id: 'r2_sill_4', x: 321, y: 710 },
+    { id: 'r2_sill_5', x: 420, y: 710 },
+    { id: 'r2_sill_6', x: 518, y: 710 },
   ],
 };
 
@@ -161,15 +140,15 @@ export const DECOR_POSITIONS = {
 // Increase x to move right, increase y to move down.
 // ──────────────────────────────────────────────────────────────────────────────
 export const POT_SOURCE_POSITIONS = {
-  1: { x: 222, y: 190 },   // ← Room 1 window sill pot — CHANGE THIS
-  2: { x: 105, y: 440 },    // ← Room 2 railing pot — CHANGE THIS
-  3: { x: 330, y: 742 },   // ← Room 3: on the floor, left of centre
+  1: { x: 741, y: 702 },   // greenhouse: floor, right of the seed bags
+  2: { x: 214, y: 653 },   // balcony: floor by the door
+  3: { x: 247, y: 661 },   // sunroom: floor, left
 };
 
 // Hanging-pot source (stool) for rooms with hooks AND a separate shelf pot
 // source. Room 2 uses POT_SOURCE_POSITIONS[2] for its only (hanging) pot.
 export const HANGING_POT_SOURCE_POSITIONS = {
-  3: { x: 470, y: 742 },   // ← Room 3 hook-pot stool, on the floor next to the pot — CHANGE THIS
+  3: { x: 247, y: 726 },   // sunroom: floor, below the pot
 };
 
 export const SNAP_RADIUS = 40;
@@ -186,11 +165,11 @@ export const SNAP_RADIUS = 40;
 //       If you change sill_1 here, update GardenScreen.js too!
 // ──────────────────────────────────────────────────────────────────────────────
 const RAW_SILL_POINTS = [
-  { id: 'sill_1', x: 300, y: 125 },  // slot 1 — leftmost (ghost bag position)
-  { id: 'sill_2', x: 415, y: 125 },  // slot 2  (115px gap)
-  { id: 'sill_3', x: 530, y: 125 },  // slot 3  (115px gap)
-  { id: 'sill_4', x: 645, y: 125 },  // slot 4
-  { id: 'sill_5', x: 760, y: 125 },  // slot 5 — rightmost
+  { id: 'sill_1', x: 132, y: 694 },
+  { id: 'sill_2', x: 247, y: 694 },
+  { id: 'sill_3', x: 362, y: 694 },
+  { id: 'sill_4', x: 477, y: 694 },
+  { id: 'sill_5', x: 593, y: 694 },
 ];
 
 export function getSillPoints(screenWidth, screenHeight) {

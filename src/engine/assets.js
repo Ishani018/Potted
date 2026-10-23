@@ -2,33 +2,11 @@ export const MAIN_BG = require('../../assets/ui_comps/mainscreen.jpeg');
 export const GAME_MUSIC = require('../../assets/Sunlight_on_the_Sprouts.mp3');
 
 // ─── Backgrounds ────────────────────────────────────────────────────────────
-export const BACKGROUNDS = {
-  room1: {
-    white: {
-      spring: require('../../assets/room1/white/spring.jpeg'),
-      summer: require('../../assets/room1/white/summer.jpeg'),
-      autumn: require('../../assets/room1/white/autumn.jpeg'),
-      winter: require('../../assets/room1/white/winter.jpeg'),
-    },
-  },
-  room2: {
-    white: {
-      spring: require('../../assets/room2/white/spring.jpeg'),
-      summer: require('../../assets/room2/white/summer.jpeg'),
-      autumn: require('../../assets/room2/white/autumn.jpeg'),
-      winter: require('../../assets/room2/white/winter.jpeg'),
-    },
-  },
-  room3: {
-    white: {
-      spring: require('../../assets/room3/white/spring.jpeg'),
-      summer: require('../../assets/room3/white/summer.jpeg'),
-      autumn: require('../../assets/room3/white/summer.jpeg'), // placeholder
-      winter: require('../../assets/room3/white/winter.jpeg'),
-    },
-  },
+export const ROOM_BGS = {   // one picture per room: no seasons, no wall colours
+  room1: require('../../assets/rooms/greenhouse.png'),
+  room2: require('../../assets/rooms/balcony.png'),
+  room3: require('../../assets/rooms/sunroom.png'),
 };
-
 // ─── Potted Plants ───────────────────────────────────────────────────────────
 // stage 0 = potwithseed (shared), 1-3 = growth stages, 4 = dead (marigold3)
 export const POTTED_PLANT_IMAGES = {

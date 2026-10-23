@@ -3,7 +3,7 @@ import {
   View, Text, Image, TouchableOpacity, Pressable, StyleSheet, TextInput, Animated, Easing, Platform,
 } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { PETSHOP_STATES, ORDER_ART, ORDER_ART as  PET_IMAGES, UI_IMAGES, BACKGROUNDS } from '../engine/assets';
+import { PETSHOP_STATES, ORDER_ART, ORDER_ART as  PET_IMAGES, UI_IMAGES } from '../engine/assets';
 import { PETS, ROOM_NAMES, playerLevel } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';

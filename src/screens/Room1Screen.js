@@ -4,9 +4,9 @@ import { useLayout } from '../context/LayoutContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useGame } from '../context/GameContext';
-import { BACKGROUNDS, UI_IMAGES, POTTED_PLANT_IMAGES, SEED_IMAGES } from '../engine/assets';
+import { ROOM_BGS, UI_IMAGES, POTTED_PLANT_IMAGES, SEED_IMAGES } from '../engine/assets';
 import { getSnapPoints, WATERING_CAN_POSITIONS, POT_SOURCE_POSITIONS, scalePoint } from '../engine/snapPoints';
-import { getCurrentSeason, seedType, heldSeedHint, PETS, pestInfo } from '../constants/gameData';
+import { seedType, heldSeedHint, PETS, pestInfo } from '../constants/gameData';
 import { pestRewardFor } from '../engine/petEffects';
 import { useToast } from '../components/Toast';
 import { projectSize, projectPoint } from '../engine/project';
@@ -34,7 +34,6 @@ export default function Room1Screen({ navigation }) {
   const canDragging = useRef(false);
   const [toast, showToast] = useToast();
   const tryRemedy = useRemedyUse(showToast);
-  const season = getCurrentSeason();
 
   useEffect(() => {
     if (state.initialized) {
@@ -42,8 +41,7 @@ export default function Room1Screen({ navigation }) {
     }
   }, [state.initialized, sw, sh]);
 
-  const wallColor = player.wallColor?.room1 ?? 'white';
-  const bgSource = BACKGROUNDS.room1?.[wallColor]?.[season] ?? BACKGROUNDS.room1.white.spring;
+  const bgSource = ROOM_BGS.room1;
 
   const pottedPoints = getSnapPoints(1, 'potted', sw, sh);
   const allSnapPoints = pottedPoints;
