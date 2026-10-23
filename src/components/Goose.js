@@ -9,8 +9,8 @@ import { playSfx } from '../engine/audio';
 //   zOf(y)   stacking order at a given foot position (so it passes behind or in front of furniture)
 //   disabled stops it reacting to touch;  onHold(true/false) tells a scrolling parent to stand still while it is carried.
 // Tap it and it runs away. Pick it up (drag) and it honks loudly; let go and it drops where you left it.
-const TICK = 100;          // ms per animation step (about 10 frames a second)
-const SPEED = 5.5;         // picture pixels per tick
+const TICK = 80;           // ms per animation step: every step is a new walking frame
+const STRIDE = 0.032;      // distance per frame as a share of the goose's width, a little less than its legs cover, so it never skates
 const rand = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -50,7 +50,7 @@ export default function Goose({ k, bounds, imgH = 941, base, zOf, disabled, onHo
       // the scene may have moved the floor under it (another storey): bring it along
       if (s.y < bd.y0 - 40 || s.y > bd.y1 + 40) { s.y = clamp(s.y, bd.y0, bd.y1) + (s.y < bd.y0 ? 0 : 0); s.y = (bd.y0 + bd.y1) / 2; s.x = clamp(s.x, bd.x0, bd.x1); }
       if (s.mode === 'walk') {
-        const dx = s.tx - s.x, dy = s.ty - s.y, d = Math.hypot(dx, dy), sp = SPEED * s.mul;
+        const dx = s.tx - s.x, dy = s.ty - s.y, d = Math.hypot(dx, dy), sp = (GOOSE[1].w * size * STRIDE) * s.mul * (0.8 + 0.4 * clamp((s.y - bd.y0) / Math.max(1, bd.y1 - bd.y0), 0, 1));
         if (d <= sp) { rest(now, s.mul > 1 ? 'front' : pickIdle()); }
         else {
           s.x += (dx / d) * sp; s.y += (dy / d) * sp * 0.75;
