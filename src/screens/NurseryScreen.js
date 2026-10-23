@@ -33,14 +33,15 @@ const row = (n, x0, gap, y, salt) => Array.from({ length: n }, (_, i) => [x0 + i
 const SEED_AT = [
   [545, 268], [725, 268], [785, 268],
   [622, 385], [725, 385], [785, 385],
-  [625, 497], [990, 447], [1125, 447],
-  [1020, 548], [1010, 650], [1115, 650],
+  [560, 503], [990, 447], [1125, 447],
+  [1030, 556], [1010, 650], [1115, 650],
 ];
 const SPOT_OF = {};
+const SPOT_SCALE = { 's:jasmine': 1.7, 's:rose': 1.7 };   // the bag that hides the painted crate
 SEED_ORDER.forEach((k, n) => { SPOT_OF['s:' + k] = SEED_AT[n]; });
 const HOOK_SPOTS = [955, 1028, 1100, 1175].map((x) => [x, 236]);   // where a hanging pot's top sits
 const CAN_SPOT = [330, 735];
-const BAG = { w: 50, h: 46 };
+const BAG = { w: 60, h: 55 };
 const POT_W = 44;                                           // shelf pot width on the shelf
 const HOOK_H = 96;                                          // hanging pot height on its hook
 const COUNTER_TOP = 770;                                    // drop an item below this line to put it on the counter
@@ -171,7 +172,7 @@ export default function NurseryScreen({ navigation }) {
         <>
           {onShelf.map(({ id, at }) => {
             const d = describe(id);
-            const sc = lay[id]?.s ?? 1;
+            const sc = lay[id]?.s ?? SPOT_SCALE[id] ?? 1;
             return (
               <React.Fragment key={id}>
                 <DragItem it={d} at={at} k={k} z={6} mul={sc}
