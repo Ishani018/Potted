@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { useGame } from '../context/GameContext';
+import { HPOT_META, HPOT_ORDER, UI_IMAGES } from '../engine/assets';
 import { PixelPanel, PixelButton, PixelText, COLORS } from './Pixel';
 import { useLayout } from '../context/LayoutContext';
 import { projectSize } from '../engine/project';
 import { msUntilThirsty, maxStageFor } from '../engine/gameEngine';
-import { POTTED_FLOWERS, HANGING_PLANTS, formatDuration, pestInfo, isShielded } from '../constants/gameData';
+import { POTTED_FLOWERS, HANGING_PLANTS, HPOT_INFO, formatDuration, pestInfo, isShielded } from '../constants/gameData';
+
+const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 
 // Re-render every `ms` so countdowns tick while the popup is open.
 function useNow(ms = 1000) {
@@ -37,7 +41,12 @@ function plantStatus(slot, now) {
 export default function PlantPopup({ slot, position, onHarvest, onRemove, onClose }) {
   const { width: sw, height: sh } = useLayout();
   const now = useNow(1000);
+  const { state, dispatch } = useGame();
   if (!slot) return null;
+  const isHang = slot.type === 'hanging';
+  const owned = state.player.ownedHPots ?? ['macrame'];
+  const curPot = slot.pot ?? state.player.hangingPot ?? 'macrame';
+  const coins = state.player.coins;
 
   // Full bloom is harvestable: potted stage 3, hanging stage 2.
   const canHarvest = !!slot.flowerKey && slot.stage >= maxStageFor(slot.type, slot.flowerKey);
@@ -47,9 +56,9 @@ export default function PlantPopup({ slot, position, onHarvest, onRemove, onClos
 
   // Sit the popup right on the tapped plant: centred over a shelf pot, or just
   // under the hook for a hanging one. Clamped so it never leaves the screen.
-  const W = 190;
+  const W = isHang ? 250 : 190;
   const shielded = hasPlant && isShielded(slot, now);
-  const H = (canHarvest ? 112 : 58) + (hasPlant ? 46 : 0) + (shielded ? 14 : 0);
+  const H = (canHarvest ? 112 : 58) + (hasPlant ? 46 : 0) + (shielded ? 14 : 0) + (isHang ? 96 : 0);
   const plantH = projectSize(slot.type === 'potted' ? 120 : 140, sw, sh);
   const left = Math.max(8, Math.min(position.x - W / 2, sw - W - 8));
   const rawTop = slot.type === 'potted' ? position.y - plantH * 0.75 - H : position.y + plantH * 0.35;
@@ -69,6 +78,24 @@ export default function PlantPopup({ slot, position, onHarvest, onRemove, onClos
                 )}
               </View>
             )}
+            {isHang && (
+              <View>
+                <Text style={styles.potsTitle}>Pots</Text>
+                <View style={styles.potRow}>
+                  {HPOT_ORDER.map((id) => {
+                    const m = HPOT_META[id], have = owned.includes(id), price = HPOT_INFO[id].price, can = have || coins >= price;
+                    return (
+                      <TouchableOpacity key={id} activeOpacity={0.8} disabled={!can}
+                        onPress={() => { if (!have) dispatch({ type: 'BUY_HPOT', pot: id, price }); dispatch({ type: 'SET_SLOT_POT', slotId: slot.slotId, pot: id }); }}
+                        style={[styles.potTile, curPot === id && styles.potOn, !can && { opacity: 0.45 }]}>
+                        <Image source={m.src} style={{ width: 22, height: 22 * m.h / m.w > 40 ? 40 : 22 * m.h / m.w, maxHeight: 40 }} resizeMode="contain" />
+                        {!have && <Text style={styles.potPrice}>{price}</Text>}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
             {canHarvest && <PixelButton label="HARVEST" onPress={onHarvest} />}
             <PixelButton label="REMOVE" tone="wood" onPress={onRemove} />
           </View>
@@ -81,5 +108,10 @@ export default function PlantPopup({ slot, position, onHarvest, onRemove, onClos
 const styles = StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFillObject, zIndex: 200 },
   popup: { position: 'absolute' },
+  potsTitle: { fontFamily: SERIF, fontSize: 14, color: '#fff3d0', textAlign: 'center', marginBottom: 2 },
+  potRow: { flexDirection: 'row', gap: 3, justifyContent: 'center' },
+  potTile: { width: 29, height: 52, borderRadius: 6, backgroundColor: 'rgba(255,240,200,0.18)', borderWidth: 2, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
+  potOn: { borderColor: '#ffe29a', backgroundColor: 'rgba(255,240,200,0.35)' },
+  potPrice: { fontFamily: SERIF, fontSize: 11, color: '#ffe29a' },
   info: { alignItems: 'center', gap: 5, paddingBottom: 2 },
 });

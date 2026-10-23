@@ -4,7 +4,7 @@ import { useLayout } from '../context/LayoutContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useGame } from '../context/GameContext';
-import { ROOM_BGS, SEED_IMAGES, POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES } from '../engine/assets';
+import { ROOM_BGS, SEED_IMAGES, POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES, HPOT_META } from '../engine/assets';
 import { getSnapPoints, WATERING_CAN_POSITIONS, POT_SOURCE_POSITIONS, HANGING_POT_SOURCE_POSITIONS, scalePoint } from '../engine/snapPoints';
 import { seedType, heldSeedHint, PETS, pestInfo } from '../constants/gameData';
 import { pestRewardFor } from '../engine/petEffects';
@@ -207,8 +207,8 @@ export default function Room3Screen({ navigation }) {
           ghostH={hookDragW}
           targets={emptyHookTargets}
           onPlace={handlePlacePot}
-          dragSource={HANGING_PLANT_IMAGES._seed}
-          ghostSource={HANGING_PLANT_IMAGES._seed}
+          dragSource={HPOT_META[player.hangingPot || 'macrame'].src}
+          ghostSource={HPOT_META[player.hangingPot || 'macrame'].src}
         />
 
         {/* Empty hanging pots — tap to plant the held seed */}
@@ -224,7 +224,7 @@ export default function Room3Screen({ navigation }) {
               activeOpacity={0.85}
               onPress={() => handleEmptyPotPress(pt.id, s, pt)}
             >
-              <Image source={HANGING_PLANT_IMAGES._seed} style={{ width: hookDragW, height: hookDragW }} resizeMode="contain" />
+              <Image source={HPOT_META[s.pot || player.hangingPot || 'macrame'].src} style={{ width: hookDragW, height: hookDragW }} resizeMode="contain" />
             </TouchableOpacity>
           );
         })}
@@ -235,7 +235,7 @@ export default function Room3Screen({ navigation }) {
           if (!pt) return null;
           // Hanging pots use the Balcony's sizing (stage 0 image is tall & narrow).
           const hangingSize = slot.type === 'hanging'
-            ? { baseWidthOverride: slot.stage === 0 ? 100 : SUN_HANG_W }
+            ? { baseWidthOverride: slot.stage === 0 ? 100 : SUN_HANG_W, potHeightOverride: SUN_HANG_W }
             : { baseWidthOverride: SUN_POT_W };
           return <PlantSlot key={slot.slotId} slot={slot} position={pt} onPress={handleSlotPress} onPestPress={handlePestPress} {...hangingSize} />;
         })}

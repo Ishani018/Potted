@@ -592,6 +592,25 @@ export const ROT_IMAGES = {
   rot_bookshelf_right: { src: require('../../assets/rot/bookshelf_right.png'), w: 152, h: 249 },
   rot_bookshelf_side: { src: require('../../assets/rot/bookshelf_side.png'), w: 97, h: 244 },
 };
+
+// Hanging pots (side view): picture + where the soil sits in it (cx, cy = centre of the soil, sw = its width), all in picture pixels.
+export const HPOT_META = {
+  macrame: { src: require('../../assets/hpots/r1_01.png'), w: 165, h: 411, cx: 81, cy: 233, sw: 162 },
+  macramethin: { src: require('../../assets/hpots/r1_02.png'), w: 136, h: 404, cx: 68, cy: 242, sw: 134 },
+  terracotta: { src: require('../../assets/hpots/r1_03.png'), w: 183, h: 385, cx: 86, cy: 235, sw: 181 },
+  basket: { src: require('../../assets/hpots/r1_04.png'), w: 199, h: 363, cx: 100, cy: 242, sw: 198 },
+  chain: { src: require('../../assets/hpots/r1_05.png'), w: 196, h: 363, cx: 97, cy: 241, sw: 194 },
+  bowl: { src: require('../../assets/hpots/r1_06.png'), w: 149, h: 359, cx: 73, cy: 234, sw: 147 },
+  barrel: { src: require('../../assets/hpots/r1_07.png'), w: 177, h: 362, cx: 90, cy: 239, sw: 176 },
+};
+export const HPOT_ORDER = ["macrame", "macramethin", "terracotta", "basket", "chain", "bowl", "barrel"];
+// Plants made for the hanging pots (no pot in the picture): three growth stages each.
+export const HPLANT_IMAGES = {
+  Philodendron: [{ src: require('../../assets/hplants/philodendron_1.png'), w: 213, h: 334 }, { src: require('../../assets/hplants/philodendron_2.png'), w: 344, h: 357 }, { src: require('../../assets/hplants/philodendron_3.png'), w: 558, h: 375 }],
+  petunia: [{ src: require('../../assets/hplants/petunia_1.png'), w: 215, h: 318 }, { src: require('../../assets/hplants/petunia_2.png'), w: 365, h: 342 }, { src: require('../../assets/hplants/petunia_3.png'), w: 657, h: 395 }],
+  jasmine: [{ src: require('../../assets/hplants/jasmine_1.png'), w: 191, h: 313 }, { src: require('../../assets/hplants/jasmine_2.png'), w: 320, h: 358 }, { src: require('../../assets/hplants/jasmine_3.png'), w: 458, h: 374 }],
+  Bougainvillea: [{ src: require('../../assets/hplants/bougainvillea_1.png'), w: 211, h: 297 }, { src: require('../../assets/hplants/bougainvillea_2.png'), w: 354, h: 343 }, { src: require('../../assets/hplants/bougainvillea_3.png'), w: 678, h: 395 }],
+};
 export const LOBBY_BG = require('../../assets/building/lobby.png');   // the apartment building's entrance hall
 export const APT_ART = {   // the empty rooms: picture + its pixel size
   1: { src: require('../../assets/building/apt1.png'), w: 1672, h: 941 },

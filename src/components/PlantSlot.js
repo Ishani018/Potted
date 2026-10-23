@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Image, View, StyleSheet } from 'react-native';
-import { POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES, UI_IMAGES } from '../engine/assets';
+import { POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES, HPLANT_IMAGES, UI_IMAGES } from '../engine/assets';
+import HangingArt, { hangingBox } from './HangingArt';
 import { projectSize } from '../engine/project';
 import { useLayout } from '../context/LayoutContext';
 import { isThirsty } from '../engine/gameEngine';
@@ -90,11 +91,14 @@ function getPlantImage(slot) {
   return imgs[idx] ?? imgs[0];
 }
 
-export default function PlantSlot({ slot, position, onPress, onPestPress, baseWidthOverride, aspectOverride }) {
+export default function PlantSlot({ slot, position, onPress, onPestPress, baseWidthOverride, aspectOverride, potHeightOverride }) {
   const { width: sw, height: sh } = useLayout();
   const { state } = useGame();
   const armed = !!state.heldRemedy;   // a remedy is picked up: taps go to the plant
   const isPotted = slot.type === 'potted';
+  // Hanging plants with the new art: a chosen pot (bare while a seed) with the plant drawn on top of its rim.
+  const newHang = !isPotted && !!slot.flowerKey && !!HPLANT_IMAGES[slot.flowerKey];
+  const potStyle = slot.pot ?? state.player.hangingPot ?? 'macrame';
   // baseWidthOverride lets a room set its own hanging-pot width (room 2) without
   // affecting other rooms that use the shared BASE_HANGING_W.
   const baseW = baseWidthOverride ?? (isPotted ? BASE_POT_W : BASE_HANGING_W);
@@ -129,6 +133,27 @@ export default function PlantSlot({ slot, position, onPress, onPestPress, baseWi
   // Use raw responder instead of TouchableOpacity so the watering can's pan
   // gesture always wins — TouchableOpacity intercepts drags and causes a jump.
   const pressStart = useRef(null);
+  if (newHang) {
+    const ph = Math.round(projectSize(potHeightOverride ?? 235, sw, sh));
+    const bx = hangingBox(potStyle, ph);
+    return (
+      <View
+        style={[styles.container, { left: position.x - bx.hookX, top: position.y, width: bx.w, height: ph }]}
+        onStartShouldSetResponder={() => true}
+        onResponderGrant={() => { pressStart.current = Date.now(); }}
+        onResponderRelease={() => { if (pressStart.current && Date.now() - pressStart.current < 300) onPress(slot, position); pressStart.current = null; }}
+      >
+        <HangingArt pot={potStyle} plantKey={slot.flowerKey} stage={slot.stage} h={ph} wilting={slot.wilting} />
+        {thirsty && <Image source={UI_IMAGES.waterdrop} style={{ position: 'absolute', width: Math.round(ph * 0.1), height: Math.round(ph * 0.116), left: bx.hookX - ph * 0.05, top: ph * 0.2, zIndex: 9 }} resizeMode="contain" />}
+        {slot.pest && <Pest type={slot.pest} size={Math.round(projectSize(64, sw, sh))} cx={bx.hookX} cy={ph * 0.6} onClear={() => onPestPress && onPestPress(slot)} armed={armed} interactive={PEST_CONFIG.handClearing} />}
+        {isShielded(slot) && (
+          <View style={{ position: 'absolute', right: -Math.round(ph * 0.02), top: Math.round(ph * 0.3), zIndex: 9 }} pointerEvents="none">
+            <RemedyIcon kind="sachet" size={Math.max(18, Math.round(ph * 0.14))} />
+          </View>
+        )}
+      </View>
+    );
+  }
   if (!img) return null;
   return (
     <View

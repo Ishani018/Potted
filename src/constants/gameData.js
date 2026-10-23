@@ -617,6 +617,8 @@ export const INITIAL_PLAYER_STATE = {
   harvestedFlowers: { daisy: 8, rose: 5, marigold: 6, jasmine: 4, peony: 3, poppy: 7, hydrenga: 5, snapdragon: 6 },
   ownedPaintings: [],
   apartmentItems: {},  // aptId → [{ id, key, kind, x, y }] decor placed in each flat (x,y are fractions of the room picture)
+  ownedHPots: ['macrame'],   // hanging pot styles you own
+  hangingPot: 'macrame',     // the style new hanging pots use
   ownedApartments: [], // apartment ids you have bought (see APARTMENTS)
   ownedPets: [],
   petNames: {},      // petKey → custom name chosen at adoption
@@ -905,3 +907,14 @@ export const APARTMENTS = {
 
 // Seed levels are switched off for now: every seed can be bought and planted from the start. (Customers still use the levels to decide what to ask for.)
 export const SEED_LOCKS = false;
+
+// The pot styles for hanging plants. The first is free; the rest are bought once and can go on any hanging plant.
+export const HPOT_INFO = {
+  macrame:     { name: 'Cream macramé', price: 0 },
+  macramethin: { name: 'Slim macramé',  price: 40 },
+  terracotta:  { name: 'Terracotta',    price: 60 },
+  basket:      { name: 'Wicker basket', price: 80 },
+  chain:       { name: 'Green chains',  price: 100 },
+  bowl:        { name: 'Ceramic bowl',  price: 120 },
+  barrel:      { name: 'Oak barrel',    price: 140 },
+};
