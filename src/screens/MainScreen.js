@@ -10,12 +10,12 @@ export default function MainScreen({ navigation }) {
   useEffect(() => subscribeAudio(setAudio), []);
 
   // ── PLAY button — EDIT THESE TWO to resize/move ──────────────────────────────
-  const PLAY_SCALE = 0.24; // fraction of screen width (bigger number = bigger button)
+  const PLAY_SCALE = 0.26; // fraction of screen width (bigger number = bigger button)
   const PLAY_LEFT = '79%'; // horizontal center of the button
   const PLAY_TOP = '65%'; // vertical position (smaller % = higher up)
   // play.png aspect ≈ 2.2 : 1 (width : height)
   const playW = Math.round(sw * PLAY_SCALE);
-  const playH = Math.round(playW / 2.2);
+  const playH = Math.round(playW * 185 / 374);   // the new PLAY picture is 374x185
 
   // Load the saved volume / on-off, then best-effort autoplay (works on native;
   // may be blocked on web until PLAY).
@@ -35,16 +35,16 @@ export default function MainScreen({ navigation }) {
 
       {/* Top-left: settings */}
       <TouchableOpacity style={styles.settingsBtn} activeOpacity={0.8} onPress={() => navigation.navigate('Settings')}>
-        <Image source={UI_IMAGES.settings} style={styles.cornerImg} resizeMode="contain" />
+        <Image source={UI_IMAGES.mainGear} style={styles.cornerImg} resizeMode="contain" />
       </TouchableOpacity>
 
       {/* Top-right: info + sound (placeholders) */}
       <View style={styles.topRight}>
         <TouchableOpacity style={styles.cornerBtn} activeOpacity={0.8} onPress={() => navigation.navigate('Settings')}>
-          <Image source={UI_IMAGES.info} style={styles.cornerImg} resizeMode="contain" />
+          <Image source={UI_IMAGES.mainInfo} style={styles.cornerImg} resizeMode="contain" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.cornerBtn} activeOpacity={0.8} onPress={toggleMute}>
-          <Image source={audio.musicOn ? UI_IMAGES.sound : UI_IMAGES.mutedsound} style={styles.cornerImg} resizeMode="contain" />
+          <Image source={audio.musicOn ? UI_IMAGES.mainSound : UI_IMAGES.mainMuted} style={styles.cornerImg} resizeMode="contain" />
         </TouchableOpacity>
       </View>
 
@@ -54,7 +54,7 @@ export default function MainScreen({ navigation }) {
         activeOpacity={0.85}
         onPress={handlePlay}
       >
-        <Image source={UI_IMAGES.play} style={styles.playImg} resizeMode="contain" />
+        <Image source={UI_IMAGES.mainPlay} style={styles.playImg} resizeMode="contain" />
       </TouchableOpacity>
     </View>
   );

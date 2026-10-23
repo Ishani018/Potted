@@ -65,6 +65,10 @@ assets/*
 !assets/granny/
 !assets/granny/*.png
 !assets/goose/
+!assets/goose2/
+!assets/goose2/*.png
+!assets/ui_sheet2/
+!assets/ui_sheet2/*.png
 !assets/goose/*.png
 !assets/sfx/
 !assets/sfx/*.mp3

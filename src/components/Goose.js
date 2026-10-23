@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Image, View, PanResponder } from 'react-native';
-import { GOOSE, GOOSE_HONK, GOOSE_PICKUP } from '../engine/assets';
+import { GOOSE, GOOSE2, GOOSE_HONK, GOOSE_PICKUP } from '../engine/assets';
 import { playSfx } from '../engine/audio';
 
 // A goose that wanders the floor. Everything is in the scene picture's own pixels; `k` converts to screen pixels.
@@ -11,7 +11,11 @@ import { playSfx } from '../engine/audio';
 // Tap it and it runs away. Pick it up (drag) and it honks loudly; let go and it drops where you left it.
 const TICK = 80;           // ms per animation step: every step is a new walking frame
 const STRIDE = 0.032;      // distance per frame as a share of the goose's width, a little less than its legs cover, so it never skates
-const FRAME_KEYS = Object.keys(GOOSE).map(Number);
+const AWAY = [28, 29, 30, 31, 32, 33, 34, 35, 36];   // first sheet: walking away from us (the second sheet has no such frames)
+const FRAMES2 = Object.keys(GOOSE2).map(Number);
+const away = (i) => 100 + i;                         // key for a first-sheet frame in the combined list
+const frameOf = (n) => (n >= 100 ? GOOSE[n - 100] : GOOSE2[n]);
+const FRAME_KEYS = [...FRAMES2, ...AWAY.map(away)];
 const rand = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -23,7 +27,7 @@ function pickIdle() {
 }
 
 export default function Goose({ k, bounds, imgH = 941, base, zOf, disabled, onHold }) {
-  const size = base ?? imgH * 0.00066;
+  const size = (base ?? imgH * 0.00066) * 1.25;   // the second sheet draws the goose smaller
   const g = useRef({ x: bounds.x0, y: (bounds.y0 + bounds.y1) / 2, tx: 0, ty: 0, mode: 'idle', pose: 'front', until: 0, frame: 0, dir: 1, vert: 0, mul: 1, held: false });
   const b = useRef(bounds); b.current = bounds;
   const live = useRef({ k, disabled, onHold }); live.current = { k, disabled, onHold };
@@ -52,13 +56,13 @@ export default function Goose({ k, bounds, imgH = 941, base, zOf, disabled, onHo
       if (s.y < bd.y0 - 40 || s.y > bd.y1 + 40) { s.y = (bd.y0 + bd.y1) / 2; s.x = clamp(s.x, bd.x0, bd.x1); s.mode = 'idle'; s.pose = 'front'; s.until = now + 600; }
       s.tx = clamp(s.tx, bd.x0, bd.x1); s.ty = clamp(s.ty, bd.y0, bd.y1);
       if (s.mode === 'walk') {
-        const dx = s.tx - s.x, dy = s.ty - s.y, d = Math.hypot(dx, dy), sp = (GOOSE[1].w * size * STRIDE) * s.mul * (0.8 + 0.4 * clamp((s.y - bd.y0) / Math.max(1, bd.y1 - bd.y0), 0, 1));
+        const dx = s.tx - s.x, dy = s.ty - s.y, d = Math.hypot(dx, dy), sp = (GOOSE2[1].w * size * STRIDE) * s.mul * (0.8 + 0.4 * clamp((s.y - bd.y0) / Math.max(1, bd.y1 - bd.y0), 0, 1));
         if (d <= sp) { rest(now, s.mul > 1 ? 'front' : pickIdle()); }
         else {
           s.x += (dx / d) * sp; s.y += (dy / d) * sp * 0.75;
           if (Math.abs(dx) > 8) s.dir = dx > 0 ? 1 : -1;
           s.vert = Math.abs(dx) < Math.abs(dy) * 0.6 && dy < 0 ? -1 : 0;   // heading away from us
-          s.frame = (s.frame + 1) % 9;
+          s.frame = (s.frame + 1) % 52;   // wraps by whichever walk cycle is showing
         }
       } else {
         s.frame += 1;
@@ -100,19 +104,22 @@ export default function Goose({ k, bounds, imgH = 941, base, zOf, disabled, onHo
 
   const s = g.current;
   let n, flip = false, lift = 0;
-  if (s.held) { n = s.frame % 4 < 2 ? 24 : 23; flip = s.dir < 0; lift = 22; }
-  else if (s.mode === 'walk') n = s.vert < 0 ? 28 + s.frame : (s.dir > 0 ? 1 : 10) + s.frame;
-  else {
+  if (s.held) { n = s.frame % 4 < 2 ? 38 : 35; flip = s.dir < 0; lift = 22; }
+  else if (s.mode === 'walk') {
+    if (s.vert < 0) n = away(AWAY[s.frame % AWAY.length]);
+    else if (s.dir > 0) n = 1 + (s.frame % 13);          // right-facing cycle
+    else n = 14 + (s.frame % 12);                         // left-facing cycle
+  } else {
     flip = s.dir < 0;
-    if (s.pose === 'front') { n = 19; flip = false; }
-    else if (s.pose === 'stand') n = s.frame % 30 < 15 ? 20 : 21;
-    else if (s.pose === 'peck') n = s.frame % 8 < 4 ? 25 : 20;
-    else if (s.pose === 'preen') n = 27;
-    else if (s.pose === 'sleep') n = 26;
-    else if (s.pose === 'wings') n = s.frame % 6 < 3 ? 24 : 23;
-    else n = s.frame % 10 < 6 ? 22 : 23;   // honk
+    if (s.pose === 'front') { n = 26; flip = false; }
+    else if (s.pose === 'stand') n = s.frame % 30 < 15 ? 27 : 32;
+    else if (s.pose === 'peck') n = [39, 40, 41, 40][Math.floor(s.frame / 2) % 4];
+    else if (s.pose === 'preen') n = 47;
+    else if (s.pose === 'sleep') n = 44;
+    else if (s.pose === 'wings') n = s.frame % 6 < 3 ? 35 : 34;
+    else n = s.frame % 10 < 6 ? 36 : 37;   // honk
   }
-  const f = GOOSE[n];
+  const f = frameOf(n);
   const bd = bounds;
   const depth = 0.8 + 0.4 * clamp((s.y - bd.y0) / Math.max(1, bd.y1 - bd.y0), 0, 1);   // nearer = bigger
   const w = f.w * size * depth * k, h = f.h * size * depth * k;
@@ -121,7 +128,7 @@ export default function Goose({ k, bounds, imgH = 941, base, zOf, disabled, onHo
     <View {...pan.panHandlers} style={{ position: 'absolute', left: s.x * k - w / 2, top: (s.y - lift) * k - h, width: w, height: h, zIndex: s.held ? 900 : zOf ? zOf(s.y) : 6 + Math.round(s.y / 10) }}>
       {/* every frame stays mounted and only the current one is shown, so swapping never reloads a picture (no flicker) */}
       {FRAME_KEYS.map((i) => (
-        <Image key={i} source={GOOSE[i].src} resizeMode="contain" pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: w, height: h, opacity: i === n ? 1 : 0, transform: flip ? [{ scaleX: -1 }] : undefined }} />
+        <Image key={i} source={frameOf(i).src} resizeMode="contain" pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: w, height: h, opacity: i === n ? 1 : 0, transform: flip ? [{ scaleX: -1 }] : undefined }} />
       ))}
     </View>
   );
