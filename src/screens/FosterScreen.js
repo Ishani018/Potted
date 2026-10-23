@@ -6,7 +6,7 @@ import { STRAYS, FOSTER_SEATS, strayFits, FOSTER_SIZE, FOSTER_BASE_W, CUSTOMERS 
 import ScreenHud from '../components/ScreenHud';
 import InventoryOverlay from '../components/InventoryOverlay';
 import PetSprite from '../components/PetSprite';
-import { PixelText, PixelPanel, PixelButton } from '../components/Pixel';
+import { PixelText, PixelPanel } from '../components/Pixel';
 import PetTag from '../components/PetTag';
 import { AdoptModal } from '../components/PetCard';
 
@@ -80,9 +80,17 @@ export default function FosterScreen({ navigation }) {
         </View>
       )}
 
-      <View style={styles.back}>
-        <PixelButton label="< PET SHOP" tone="wood" size={8} onPress={() => navigation.navigate('PetShop')} />
-      </View>
+      {/* the door on the right leads back into the pet shop */}
+      {sw > 0 && (
+        <Pressable
+          style={{ position: 'absolute', left: fx(1150), top: fy(70), width: fx(1480 - 1150), height: fy(580 - 70), zIndex: 6 }}
+          onHoverIn={() => setHovered('door')}
+          onHoverOut={() => setHovered((h) => (h === 'door' ? null : h))}
+          onPress={() => navigation.navigate('PetShop')}
+        >
+          <View style={[styles.tagWrap, { top: '30%' }]} pointerEvents="none"><PetTag show={hovered === 'door'} label="PET SHOP" /></View>
+        </Pressable>
+      )}
 
       <ScreenHud sw={sw} sh={sh} onSettings={() => navigation.navigate('Settings')} onMap={() => navigation.navigate('Map')} onInventory={() => setInvOpen(true)} />
 
