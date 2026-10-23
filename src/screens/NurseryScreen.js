@@ -25,21 +25,27 @@ const jit = (i, n) => (((i * 37 + n * 17) % 11) - 5);          // a steady littl
 // board tops measured from the picture; an item's feet rest 11 px below the top edge, on the board's lit surface
 const SEED_BOARDS = [251, 351, 450, 549];
 const POT_BOARDS = [299, 394, 490, 587];
-const SEEDLINGS = SEED_ORDER.filter((k) => PPLANT_IMAGES[k]);            // the seven shelf flowers, shown as little potted seedlings
-const BAG_SEEDS = SEED_ORDER.filter((k) => !PPLANT_IMAGES[k]);           // hanging-plant seeds, shown as bags
 const row = (n, x0, gap, y, salt) => Array.from({ length: n }, (_, i) => [x0 + i * gap + jit(i, salt) * 1.5, y + 11]);
-// left unit: top board = the seedlings, the three boards below = shelf pots, packed in
-const SEED_SPOTS_BY_KEY = {};
-SEEDLINGS.forEach((k, i) => { SEED_SPOTS_BY_KEY[k] = row(SEEDLINGS.length, 380, 66, SEED_BOARDS[0], 1)[i]; });
-const LEFT_POT_SPOTS = [...row(8, 372, 58, SEED_BOARDS[1], 2), ...row(8, 372, 58, SEED_BOARDS[2], 3), ...row(8, 372, 58, SEED_BOARDS[3], 4)];
-// right unit: the hooks above, then a board of hanging-plant seed bags, then two boards of pots
-const BAG_SPOTS = BAG_SEEDS.map((k, i) => [938 + i * 44 + jit(i, 5), POT_BOARDS[1] + 11]);
-const RIGHT_POT_SPOTS = [...row(6, 936, 41, POT_BOARDS[2], 6), ...row(5, 936, 41, POT_BOARDS[3], 7)];
-const SEED_SPOTS = SEED_ORDER.map((k) => SEED_SPOTS_BY_KEY[k] || BAG_SPOTS[BAG_SEEDS.indexOf(k)]);
-const POT_SPOTS = [...LEFT_POT_SPOTS, ...RIGHT_POT_SPOTS];     // 24 + 11 = all 35 shelf pots, no paging
+// Every board is one long row of slots, left unit then right unit. Seed bags and pots are mixed together in a fixed
+// shuffled order, with a few slots left empty on purpose (room for lanterns, gloves and other decor).
+const SLOTS = [
+  ...row(10, 372, 48, SEED_BOARDS[0], 1), ...row(10, 372, 48, SEED_BOARDS[1], 2), ...row(10, 372, 48, SEED_BOARDS[2], 3), ...row(10, 372, 48, SEED_BOARDS[3], 4),
+  ...row(5, 936, 46, POT_BOARDS[1], 6), ...row(5, 936, 46, POT_BOARDS[2], 7), ...row(5, 936, 46, POT_BOARDS[3], 8),
+];
+const EMPTY_SLOTS = new Set([4, 9, 15, 23, 27, 34, 41, 47]);
+const FREE_SLOTS = SLOTS.map((p, i) => i).filter((i) => !EMPTY_SLOTS.has(i));
+// a fixed shuffle (the same every time) of every seed bag and shelf pot
+const SHUFFLED = (() => {
+  const all = [...SEED_ORDER.map((k) => 's:' + k), ...PPOT_IDS.map((k) => 'p:' + k)];
+  let r = 7; const rnd = () => (r = (r * 9301 + 49297) % 233280) / 233280;
+  for (let i = all.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [all[i], all[j]] = [all[j], all[i]]; }
+  return all;
+})();
+const SPOT_OF = {};
+SHUFFLED.forEach((id, n) => { SPOT_OF[id] = SLOTS[FREE_SLOTS[n]] || [200 + (n % 12) * 90, 700]; });
 const HOOK_SPOTS = [955, 1028, 1100, 1175].map((x) => [x, 236]);   // where a hanging pot's top sits
 const CAN_SPOT = [330, 735];
-const BAG = { w: 52, h: 47 };
+const BAG = { w: 46, h: 42 };
 const POT_W = 44;                                           // shelf pot width on the shelf
 const HOOK_H = 96;                                          // hanging pot height on its hook
 const COUNTER_TOP = 770;                                    // drop an item below this line to put it on the counter
@@ -53,10 +59,6 @@ const MAX_BASKET = 12;
 // what an item id means: 's:daisy' seed, 'p:12' shelf pot, 'h:chain' hanging pot, 'c:red' can
 function describe(id) {
   const [kind, key] = id.split(':');
-  if (kind === 's' && PPLANT_IMAGES[key]) {
-    const L = pottedLayout(4, key, 1, 44);   // a seedling: the plain clay pot with the smallest plant
-    return { name: SEED_INFO[key].name + ' seeds', price: SEED_INFO[key].price, seedling: key, w: L.boxW, h: L.boxH, src: SEED_IMAGES[key], layout: L };
-  }
   if (kind === 's') return { name: SEED_INFO[key].name, price: SEED_INFO[key].price, src: SEED_IMAGES[key], w: BAG.w, h: BAG.h };
   if (kind === 'p') { const m = PPOT_META[key]; return { name: 'A shelf pot', price: PPOT_PRICE[key], src: m.src, w: POT_W, h: POT_W * m.h / m.w }; }
   if (kind === 'h') { const m = HPOT_META[key]; return { name: HPOT_INFO[key].name, price: HPOT_INFO[key].price, src: m.src, w: HOOK_H * m.w / m.h, h: HOOK_H, hanging: true }; }
@@ -90,7 +92,7 @@ function DragItem({ it, at, k, onDrop, onTap, z, mul = 1 }) {
   return (
     <View {...pan.panHandlers} style={{ position: 'absolute', left: x * k - w / 2, top, width: w, height: h, zIndex: pos ? 500 : z }}>
       {it.seedling
-        ? <PottedArt layout={pottedLayout(4, it.seedling, 1, 44 * k * mul)} potW={44 * k * mul} pot={4} />
+        ? null
         : <Image source={it.src} pointerEvents="none" style={{ width: w, height: h }} resizeMode="contain" />}
     </View>
   );
@@ -150,20 +152,11 @@ export default function NurseryScreen({ navigation }) {
     setBasket([]);
   };
 
-  const stock = (ids, spots, extra = {}) => ids.map((id, i) => (spots[i] ? { id, at: lay[id] ? [lay[id].x, lay[id].y] : spots[i], ...extra } : null)).filter(Boolean).filter((e) => !basket.includes(e.id));
-  // in LAYOUT mode everything is out at once: all 35 shelf pots and all 7 hanging pots (the ones past the shelf spots wait in rows on the floor)
-  const spare = (n, y0) => Array.from({ length: n }, (_, i) => [140 + (i % 13) * 118, y0 + Math.floor(i / 13) * 62]);
-  const allPots = PPOT_IDS.map((p) => 'p:' + p), allHooks = HPOT_ORDER.map((h) => 'h:' + h);
-  const onShelf = edit ? [
-    ...stock(SEED_ORDER.map((s) => 's:' + s), SEED_SPOTS),
-    ...stock(allPots, [...POT_SPOTS, ...spare(allPots.length - 12, 690)]),
-    ...stock(allHooks, [...HOOK_SPOTS, ...spare(3, 800)]),
-    ...stock(['c:red'], [CAN_SPOT]),
-  ] : [
-    ...stock(SEED_ORDER.map((s) => 's:' + s), SEED_SPOTS),
-    ...stock(seats.map((p) => 'p:' + p), POT_SPOTS),
-    ...stock(hooks.map((h) => 'h:' + h), HOOK_SPOTS),
-    ...(!ownedCans.includes('red') ? stock(['c:red'], [CAN_SPOT]) : []),
+  const place = (ids) => ids.map((id) => ({ id, at: lay[id] ? [lay[id].x, lay[id].y] : SPOT_OF[id] })).filter((e) => !basket.includes(e.id));
+  const onShelf = [
+    ...place([...SEED_ORDER.map((k) => 's:' + k), ...(edit ? PPOT_IDS : shelfPots).map((k) => 'p:' + k)]),
+    ...place(edit ? HPOT_ORDER.map((h) => 'h:' + h) : hooks.map((h) => 'h:' + h)).map((e, i) => ({ ...e, at: lay[e.id] ? e.at : HOOK_SPOTS[i] || [200 + i * 90, 800] })),
+    ...(edit || !ownedCans.includes('red') ? place(['c:red']).map((e) => ({ ...e, at: lay[e.id] ? e.at : CAN_SPOT })) : []),
   ];
 
   const arrow = (key, x, y, on, label) => (
