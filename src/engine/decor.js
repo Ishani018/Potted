@@ -70,8 +70,9 @@ export const STANDS = {
   tiers: { img: require('../../assets/stands/stand_02.png'), w: 0.4, ratio: 452 / 255 },
   ladder: { img: require('../../assets/stands/stand_08.png'), w: 0.6, ratio: 396 / 336 },
 };
-export const STAND_ORDER = ['stool', 'pedestal', 'column', 'crate', 'wicker', 'iron', 'tiers', 'ladder', 'none'];
-export const standOf = (item) => (item.stand === undefined ? 'stool' : (STANDS[item.stand] || item.stand === 'none' ? item.stand : 'stool'));
+// only the stands that sat naturally under the pots (the stool, wicker, crate, tiers and ladder were dropped)
+export const STAND_ORDER = ['pedestal', 'column', 'iron', 'none'];
+export const standOf = (item) => (item.stand === 'none' ? 'none' : (STAND_ORDER.includes(item.stand) ? item.stand : 'pedestal'));
 
 // tabs: each furniture colour set, then plants, hanging plants and art
 export const DECOR_TABS = [
