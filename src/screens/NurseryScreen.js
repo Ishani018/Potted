@@ -37,11 +37,11 @@ const SEED_AT = [
   [1030, 556], [1010, 650], [1115, 650],
 ];
 const SPOT_OF = {};
-const SPOT_SCALE = { 's:jasmine': 1.7, 's:rose': 1.7 };   // the bag that hides the painted crate
+const SPOT_SCALE = {};
 SEED_ORDER.forEach((k, n) => { SPOT_OF['s:' + k] = SEED_AT[n]; });
 const HOOK_SPOTS = [955, 1028, 1100, 1175].map((x) => [x, 236]);   // where a hanging pot's top sits
 const CAN_SPOT = [330, 735];
-const BAG = { w: 60, h: 55 };
+const BAG = { w: 68, h: 62 };
 const POT_W = 44;                                           // shelf pot width on the shelf
 const HOOK_H = 96;                                          // hanging pot height on its hook
 const COUNTER_TOP = 770;                                    // drop an item below this line to put it on the counter
