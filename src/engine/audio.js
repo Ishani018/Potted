@@ -1,5 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Audio } from 'expo-av';
+import { Asset } from 'expo-asset';
+import { Platform } from 'react-native';
 
 // One shared music player for the whole game, so the title screen and the
 // settings screen control the same thing. Preferences are saved on the device.
@@ -105,9 +107,19 @@ export async function setSfxVolume(v) { prefs = { ...prefs, sfxVolume: Math.roun
 // opts.goose marks a goose sound, which also needs the goose switch on.
 export async function playSfx(source, gain = 1, opts = {}) {
   if (!prefs.sfxOn || (opts.goose && !prefs.gooseOn)) return;
+  const volume = Math.max(0, Math.min(1, prefs.sfxVolume * gain));
   try {
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.Audio) {
+      // on the web a plain audio element is the most dependable way to fire a short sound
+      const uri = Asset.fromModule(source).uri;
+      const a = new window.Audio(uri);
+      a.volume = volume;
+      const p = a.play();
+      if (p && p.catch) p.catch((e) => console.warn('Sound effect was blocked:', e?.message ?? e));
+      return;
+    }
     await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: false });
-    const { sound: fx } = await Audio.Sound.createAsync(source, { volume: Math.max(0, Math.min(1, prefs.sfxVolume * gain)), shouldPlay: true });
+    const { sound: fx } = await Audio.Sound.createAsync(source, { volume, shouldPlay: true });
     fx.setOnPlaybackStatusUpdate((st) => { if (st.didJustFinish) fx.unloadAsync(); });
-  } catch { /* sound is a nicety, never a crash */ }
+  } catch (e) { console.warn('Sound effect failed:', e?.message ?? e); }
 }
