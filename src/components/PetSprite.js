@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, View } from 'react-native';
 import { PET_IMAGES } from '../engine/assets';
 import { PixelText } from './Pixel';
+import { PET_FRAMES, PET_POSES } from '../engine/petAnim';
 
 // Pets that are drawn asleep: slow breathing + floating "Z", no hopping.
 const SLEEPERS = { koazy: true, ebonyandivory: true, smoky: true, inky: true };
@@ -10,7 +11,59 @@ const SLEEPERS = { koazy: true, ebonyandivory: true, smoky: true, inky: true };
 // room full of pets never moves in lockstep. Layout (position/size) is the
 // caller's job — this fills a w×h box.
 // source: draw this picture instead of the pet's usual one; asleep: force sleeping (or awake).
-export default function PetSprite({ petKey, w, h, flip, children, source, asleep: asleepProp }) {
+// Which pose comes next: [pose, weight, min ms, max ms]. Pets that nap by default sleep most of the time.
+const AWAKE_MIX = [['sit', 4, 3500, 7000], ['stand', 3, 2500, 5000], ['groom', 2, 2200, 3500], ['stretch', 1.2, 2200, 3200], ['rest', 1.5, 3500, 6500], ['sleep', 1, 5000, 9000]];
+const NAP_MIX = [['sleep', 7, 6000, 11000], ['rest', 1.5, 3000, 5000], ['stretch', 1, 2200, 3000], ['sit', 1, 3000, 5000]];
+const SLEEP_ONLY = [['sleep', 1, 6000, 11000]];
+const pickFrom = (mix) => { const t = mix.reduce((n, m) => n + m[1], 0); let r = Math.random() * t; for (const m of mix) { r -= m[1]; if (r <= 0) return m; } return mix[0]; };
+
+// A pet drawn from its sprite-sheet frames: it settles into poses (sit, groom, stretch, nap...) and changes now and then.
+// All frames stay mounted and only the current one is visible, so swapping never flickers.
+function PosedPet({ petKey, w, h, flip, children, asleepForced, napper }) {
+  const frames = PET_FRAMES[petKey], poses = PET_POSES[petKey];
+  const mix = asleepForced ? SLEEP_ONLY : napper ? NAP_MIX : AWAKE_MIX;
+  const [cur, setCur] = useState(() => { const m = pickFrom(mix); return { pose: m[0], n: 0 }; });
+  const breath = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    let t;
+    const go = () => {
+      const m = pickFrom(mix);
+      setCur((c) => ({ pose: m[0], n: c.n + 1 }));
+      t = setTimeout(go, m[2] + Math.random() * (m[3] - m[2]));
+    };
+    t = setTimeout(go, 1500 + Math.random() * 3000);
+    return () => clearTimeout(t);
+  }, [petKey, asleepForced, napper]);
+  useEffect(() => {
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(breath, { toValue: 1, duration: cur.pose === 'sleep' ? 2600 : 1500, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      Animated.timing(breath, { toValue: 0, duration: cur.pose === 'sleep' ? 2600 : 1500, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+    ]));
+    loop.start();
+    return () => loop.stop();
+  }, [cur.pose]);
+
+  const list = poses[cur.pose] || poses.sit;
+  const frame = list[cur.n % list.length];
+  const base = frames[poses.base];
+  const sc = Math.min(w / base.w, h / base.h);
+  const sleeping = cur.pose === 'sleep';
+  const scaleY = breath.interpolate({ inputRange: [0, 1], outputRange: [1, 1.025] });
+  return (
+    <View style={{ width: w, height: h }}>
+      <Animated.View style={{ width: w, height: h, transform: [{ scaleY }, { scaleX: flip ? -1 : 1 }], transformOrigin: 'bottom' }}>
+        {Object.keys(frames).map((k) => {
+          const f = frames[k], fw = f.w * sc, fh = f.h * sc;
+          return <Image key={k} source={f.src} resizeMode="stretch" style={{ position: 'absolute', left: (w - fw) / 2, top: h - fh, width: fw, height: fh, opacity: Number(k) === frame ? 1 : 0 }} />;
+        })}
+      </Animated.View>
+      {sleeping && <View pointerEvents="none" style={{ position: 'absolute', right: w * 0.12, top: h * 0.05 }}><PixelText size={Math.max(8, w * 0.1)}>Z</PixelText></View>}
+      {children}
+    </View>
+  );
+}
+
+function PlainPet({ petKey, w, h, flip, children, source, asleep: asleepProp }) {
   const breath = useRef(new Animated.Value(0)).current;
   const zz = useRef(new Animated.Value(0)).current;
   const asleep = asleepProp ?? !!SLEEPERS[petKey];
@@ -61,4 +114,12 @@ export default function PetSprite({ petKey, w, h, flip, children, source, asleep
       {children}
     </View>
   );
+}
+
+// Pets with sprite-sheet frames get the posed version; the rest keep their single picture.
+// `source` (a specific picture, e.g. a stray resting) or any pet without frames stays as before.
+export default function PetSprite(props) {
+  const { petKey, source, asleep } = props;
+  if (!source && PET_FRAMES[petKey]) return <PosedPet {...props} asleepForced={asleep === true} napper={asleep === undefined && !!SLEEPERS[petKey]} />;
+  return <PlainPet {...props} />;
 }
