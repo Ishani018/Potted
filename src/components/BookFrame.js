@@ -1,11 +1,9 @@
 import React from 'react';
 import { View, Image, Text, TouchableOpacity, Animated, Platform, StyleSheet } from 'react-native';
-import { BOOK_IMG } from '../engine/assets';
+import { BOOK_IMG, SET_UI } from '../engine/assets';
 import { useLayout } from '../context/LayoutContext';
 import { useBook } from './BookNav';
-import { BOOK_ARROWS } from '../engine/assets';
 
-const PIXEL_FONT = 'PressStart2P';
 // A swipe across the page would otherwise start selecting text on web (and cancel the turn).
 const NO_SELECT = Platform.OS === 'web' ? { userSelect: 'none' } : null;
 
@@ -64,16 +62,16 @@ export default function BookFrame({ left, right }) {
         {right}
         {book && book.dir > 0 && <Animated.View pointerEvents="none" style={[styles.shade, { opacity: shade }]} />}
       </Animated.View>
-      {/* the two red clasps at the sides are big flip tabs: tap to turn the page */}
+      {/* page arrows: the painted arrow buttons on either side of the book */}
       {book && (
         <>
-          <TouchableOpacity accessibilityLabel="Previous page" disabled={book.page === 0} onPress={() => book.flip(-1)} activeOpacity={0.7}
-            style={[styles.clasp, { left: mx + 0.012 * W, top: my + 0.34 * H, width: 0.1 * W, height: 0.3 * H }, book.page === 0 && styles.off]}>
-            <Image source={BOOK_ARROWS.left} style={styles.claspImg} resizeMode="contain" />
+          <TouchableOpacity accessibilityLabel="Previous page" disabled={book.page === 0} onPress={() => book.flip(-1)} activeOpacity={0.8}
+            style={[styles.arrow, { left: mx + 0.018 * W, top: my + 0.47 * H }, book.page === 0 && styles.off]}>
+            <Image source={SET_UI.left.src} style={{ width: 48, height: 48 * SET_UI.left.h / SET_UI.left.w }} resizeMode="contain" />
           </TouchableOpacity>
-          <TouchableOpacity accessibilityLabel="Next page" disabled={book.page === book.total - 1} onPress={() => book.flip(1)} activeOpacity={0.7}
-            style={[styles.clasp, { right: mx + 0.012 * W, top: my + 0.34 * H, width: 0.1 * W, height: 0.3 * H }, book.page === book.total - 1 && styles.off]}>
-            <Image source={BOOK_ARROWS.right} style={styles.claspImg} resizeMode="contain" />
+          <TouchableOpacity accessibilityLabel="Next page" disabled={book.page === book.total - 1} onPress={() => book.flip(1)} activeOpacity={0.8}
+            style={[styles.arrow, { right: mx + 0.018 * W, top: my + 0.47 * H }, book.page === book.total - 1 && styles.off]}>
+            <Image source={SET_UI.right.src} style={{ width: 48, height: 48 * SET_UI.right.h / SET_UI.right.w }} resizeMode="contain" />
           </TouchableOpacity>
         </>
       )}
@@ -90,10 +88,9 @@ const styles = StyleSheet.create({
   center: { alignItems: 'center', justifyContent: 'center' },
   pager: { flexDirection: 'row', gap: 10 },
   arrowBtn: { paddingHorizontal: 14, paddingVertical: 10 },
-  clasp: { position: 'absolute', alignItems: 'center', justifyContent: 'center', zIndex: 20 },
-  claspImg: { width: '62%', height: '30%' },
+  arrow: { position: 'absolute', zIndex: 20 },
   off: { opacity: 0.25 },
   arrowImg: { width: 44, height: 38 },
-  pageNum: { fontFamily: PIXEL_FONT, color: '#8a6a40', fontSize: 7 },
+  pageNum: { fontFamily: Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' }), color: '#7a5030', fontSize: 14 },
   shade: { ...StyleSheet.absoluteFillObject, backgroundColor: '#5a3410' },
 });

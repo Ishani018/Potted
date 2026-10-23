@@ -1,8 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Image } from 'react-native';
-import { PixelButton } from './Pixel';
-import { BOOK_BANNER } from '../engine/assets';
+import PaintedButton from './PaintedButton';
 import { useBook } from './BookNav';
 
 // Shared pieces for the garden journal's pages.
@@ -16,13 +15,12 @@ export const PIXEL_FONT = 'PressStart2P';
 export const HEAD = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 export const BODY = Platform.select({ web: "'PatrickHand', Georgia, serif", default: 'PatrickHand' });
 
-// A title lettered on the painted parchment ribbon.
+// A page title: serif lettering between two little rules (the old parchment ribbon is gone).
 export function RibbonTitle({ children, width = 196, size = 19 }) {
-  const height = width * 0.2 + 6;
   return (
-    <View style={{ width, height, alignSelf: 'center', alignItems: 'center', justifyContent: 'center' }}>
-      <Image source={BOOK_BANNER} style={{ position: 'absolute', width, height }} resizeMode="stretch" />
-      <Text style={[s.titleTxt, { fontSize: size }]} numberOfLines={1}>{children}</Text>
+    <View style={{ width, alignSelf: 'center', alignItems: 'center' }}>
+      <Text style={[s.titleTxt, { fontSize: size + 3 }]} numberOfLines={1}>{children}</Text>
+      <View style={{ width: width * 0.8, height: 2, backgroundColor: '#cdae78', borderRadius: 1, marginTop: 1 }} />
     </View>
   );
 }
@@ -43,16 +41,7 @@ export function BookTabs() {
 // An action button in the game's own pixel-button style. on = the chosen option
 // (green); otherwise the dark wood one.
 export function BookButton({ label, onPress, on, disabled, style }) {
-  return (
-    <PixelButton
-      label={String(label).toUpperCase()}
-      onPress={onPress}
-      tone={on ? 'green' : 'wood'}
-      disabled={disabled}
-      size={7}
-      style={style}
-    />
-  );
+  return <PaintedButton label={String(label)} onPress={onPress} tone={on ? 'btnCream' : 'btnCream'} disabled={disabled} h={30} fontSize={14} style={[on ? { opacity: 1 } : null, style]} />;
 }
 
 export const bookStyles = StyleSheet.create({
@@ -87,6 +76,6 @@ export const bookStyles = StyleSheet.create({
 const s = StyleSheet.create({
   tabs: { marginBottom: 4 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  titleTxt: { fontFamily: HEAD, fontSize: 19, color: '#7a3e1a', letterSpacing: 0.5 },
+  titleTxt: { fontFamily: HEAD, fontSize: 22, color: '#4a2a10', fontWeight: 'bold' },
   leaf: { width: 14, height: 14 },
 });

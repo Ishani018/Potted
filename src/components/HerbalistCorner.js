@@ -3,6 +3,7 @@ import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Platform }
 import { useGame } from '../context/GameContext';
 import { TRADE_IMAGES, SET_UI, UI_IMAGES } from '../engine/assets';
 import { Skinned } from './NineSlice';
+import Btn from './PaintedButton';
 import { pixelText } from './Pixel';
 import { HERBALIST, HERBALIST_TRADES, REMEDIES, TRADE_FLOWERS } from '../constants/gameData';
 import { dayKey } from '../engine/petEffects';
@@ -16,24 +17,6 @@ import RemedyIcon from './RemedyIcon';
 const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 const INK = '#4a2a10';
 const bw = (key, h) => h * SET_UI[key].w / SET_UI[key].h;
-
-// A painted button: left and right ends of the cream button picture with its middle stretched, so the vine
-// corners keep their shape however long the label is.
-function Btn({ label, onPress, disabled, tone = 'btnCream', h = 34, style }) {
-  const full = bw(tone, h), cap = Math.round(full * 0.34);
-  const img = SET_UI[tone].src;
-  return (
-    <TouchableOpacity activeOpacity={0.8} disabled={disabled} onPress={onPress} style={[{ height: h, minWidth: full, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'stretch', opacity: disabled ? 0.5 : 1 }, style]}>
-      <View style={{ width: cap, height: h, overflow: 'hidden' }}><Image source={img} resizeMode="stretch" style={{ width: full, height: h }} /></View>
-      <View style={{ flex: 1, height: h, overflow: 'hidden', paddingHorizontal: 6 }}>
-        {/* the middle slice of the picture, stretched sideways */}
-        <Image source={img} resizeMode="stretch" style={{ position: 'absolute', top: 0, left: -(full * 25) + 0, width: full * 50, height: h }} />
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><Text style={styles.btnText}>{label}</Text></View>
-      </View>
-      <View style={{ width: cap, height: h, overflow: 'hidden' }}><Image source={img} resizeMode="stretch" style={{ width: full, height: h, marginLeft: -(full - cap) }} /></View>
-    </TouchableOpacity>
-  );
-}
 
 // Granny Mae's menu: today's free balm and herb swaps. Controlled: the map's walking Granny opens it. `onFlag` isn't needed.
 export function useHerbalistFlag() {
@@ -111,7 +94,7 @@ export default function HerbalistMenu({ sw, sh, open, setOpen }) {
                   <RemedyIcon kind={t.get} size={30} />
                   <Text style={styles.label}>{REMEDIES[t.get].name}</Text>
                 </View>
-                <Btn label="Swap" disabled={!ok} h={32} onPress={() => dispatch({ type: 'TRADE_REMEDY', id: t.id })} />
+                <Btn label="Swap" disabled={!ok} h={32} fontSize={14} onPress={() => dispatch({ type: 'TRADE_REMEDY', id: t.id })} />
               </View>
             );
           })}
