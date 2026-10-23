@@ -21,30 +21,29 @@ const SEED_INFO = {};
 const IMG_W = 1672;
 const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 const SEED_ORDER = ['daisy', 'snapdragon', 'poppy', 'marigold', 'peony', 'hydrenga', 'rose', 'stringofpearls', 'Philodendron', 'jasmine', 'petunia', 'Bougainvillea'];
-const jit = (i, n) => (((i * 37 + n * 17) % 11) - 5);          // a steady little wobble, so things look put there by hand
-// board tops measured from the picture; an item's feet rest 11 px below the top edge, on the board's lit surface
-const SEED_BOARDS = [251, 351, 450, 549];
-const POT_BOARDS = [299, 394, 490, 587];
-const row = (n, x0, gap, y, salt) => Array.from({ length: n }, (_, i) => [x0 + i * gap + jit(i, salt) * 1.5, y + 11]);
-// Every board is one long row of slots, left unit then right unit. Seed bags and pots are mixed together in a fixed
-// shuffled order, with a few slots left empty on purpose (room for lanterns, gloves and other decor).
-// The painted shop already has pots, hanging plants and a few bags on its shelves. Our seed bags (bigger) go on top of the
-// painted bags and into the gaps, one spot per seed (picture pixels, feet on the board).
-// Nine bags are painted on the counter (their flowers are our seeds'); the other three are sold from the POTS panel.
-const COUNTER_SEEDS = ['daisy', 'marigold', 'rose', 'hydrenga', 'jasmine', 'peony', 'poppy', 'petunia', 'snapdragon'];   // left to right, matching the painted flowers
-const EXTRA_SEEDS = SEED_ORDER.filter((k) => !COUNTER_SEEDS.includes(k));
-const SEED_AT = COUNTER_SEEDS.map((_, n) => [263 + [0, 126, 248, 374, 500, 623, 748, 874, 1000][n], 858]);
-const GHOST = { w: 100, h: 105 };   // the invisible handle laid over each painted bag
+// Nine seed bags stand on the counter (their art is cut from the painted bags); the other three seeds are sold from the POTS panel.
+const COUNTER_SEEDS = ['daisy', 'marigold', 'rose', 'hydrenga', 'jasmine', 'peony', 'poppy', 'petunia', 'snapdragon'];
+const EXTRA_SEEDS = SEED_ORDER.filter((kk) => !COUNTER_SEEDS.includes(kk));
 const SPOT_OF = {};
 const SPOT_SCALE = {};
-COUNTER_SEEDS.forEach((k, n) => { SPOT_OF['s:' + k] = SEED_AT[n]; });
-const HOOK_SPOTS = [955, 1028, 1100, 1175].map((x) => [x, 236]);   // where a hanging pot's top sits
-const CAN_SPOT = [330, 735];
-const BAG = { w: 78, h: 71 };
-const POT_W = 44;                                           // shelf pot width on the shelf
-const HOOK_H = 96;                                          // hanging pot height on its hook
+COUNTER_SEEDS.forEach((kk, n) => { SPOT_OF['s:' + kk] = [275 + n * 96, 878]; });
+// Shelf pots: every pot has its own fixed seat on the empty shelves (feet resting on a board). Buy one and its seat is empty.
+// Left unit: 4 boards x 5; right unit: 3 boards x 4; the last few stand on the floor. Order is a fixed shuffle so styles mix.
+const LEFT_BOARDS = [265, 362, 462, 567];
+const RIGHT_BOARDS = [405, 503, 603];
+const SEATS = [];
+LEFT_BOARDS.forEach((y, r) => { for (let i = 0; i < 5; i++) SEATS.push({ at: [385 + i * 98, y], s: 0.42 }); });
+RIGHT_BOARDS.forEach((y, r) => { for (let i = 0; i < 4; i++) SEATS.push({ at: [955 + i * 87, y], s: 0.36 }); });
+[[420, 722], [1120, 716], [1215, 722]].forEach((at) => SEATS.push({ at, s: 0.42 }));
+const SHUFFLED = [...PPOT_IDS].sort((x, y) => ((x * 7919) % 101) - ((y * 7919) % 101));
+SHUFFLED.forEach((pid, n) => { SPOT_OF['p:' + pid] = SEATS[n].at; SPOT_SCALE['p:' + pid] = SEATS[n].s; });
+const HOOK_SPOTS = [957, 1027, 1100, 1177].map((x) => [x, 236]);   // where a hanging pot's top sits
+const CAN_SPOT = [600, 735];
+const BAG = { w: 88, h: 114 };
+const POT_K = 1;
+const HOOK_H = 122;                                         // hanging pot height on its hook
 const COUNTER_TOP = 770;                                    // drop an item below this line to put it on the counter
-const PAY_X = 1040;                                         // bags dropped right of this line (or tapped in) wait by the register
+const PAY_X = 1040;                                         // items dropped right of this line (or tapped in) wait by the register
 const COUNTER_X = (i) => 1085 + (i % 6) * 52;
 const COUNTER_Y = (i) => 752 - Math.floor(i / 6) * 46;
 const COUNTER_MUL = 0.85;
@@ -56,7 +55,7 @@ const MAX_BASKET = 12;
 function describe(id) {
   const [kind, key] = id.split(':');
   if (kind === 's') return { name: SEED_INFO[key].name, price: SEED_INFO[key].price, src: SEED_IMAGES[key], w: BAG.w, h: BAG.h };
-  if (kind === 'p') { const m = PPOT_META[key]; return { name: 'A shelf pot', price: PPOT_PRICE[key], src: m.src, w: POT_W, h: POT_W * m.h / m.w }; }
+  if (kind === 'p') { const m = PPOT_META[key]; return { name: 'A shelf pot', price: PPOT_PRICE[key], src: m.src, w: m.w, h: m.h }; }
   if (kind === 'h') { const m = HPOT_META[key]; return { name: HPOT_INFO[key].name, price: HPOT_INFO[key].price, src: m.src, w: HOOK_H * m.w / m.h, h: HOOK_H, hanging: true }; }
   return { name: 'The red watering can', price: CAN_INFO.red.price, src: CAN_IMAGES.red.up.src, w: 130, h: 118 };
 }
@@ -150,8 +149,13 @@ export default function NurseryScreen({ navigation }) {
   };
 
   const place = (ids) => ids.map((id) => ({ id, at: lay[id] ? [lay[id].x, lay[id].y] : SPOT_OF[id] })).filter((e) => !basket.includes(e.id));
-  const onShelf = place(COUNTER_SEEDS.map((k) => 's:' + k));
-  // pots and the red can are bought from the POTS panel (the painted shelves are just for show)
+  const onShelf = [
+    ...place(COUNTER_SEEDS.map((kk) => 's:' + kk)),
+    ...place(shelfPots.map((pid) => 'p:' + pid)),
+    ...hooks.map((hid, i) => ({ id: 'h:' + hid, at: HOOK_SPOTS[i] })).filter((e) => !basket.includes(e.id)),
+    ...(ownedCans.includes('red') || basket.includes('c:red') ? [] : [{ id: 'c:red', at: CAN_SPOT }]),
+  ];
+  // the POTS panel also sells everything (and the seeds that are not on the counter)
   const addToCounter = (id) => {
     if (basket.includes(id)) return;
     if (basket.length >= MAX_BASKET) { notify({ title: 'The counter is full', subtitle: 'Pay for these first.' }); return; }
@@ -175,7 +179,7 @@ export default function NurseryScreen({ navigation }) {
             const sc = lay[id]?.s ?? SPOT_SCALE[id] ?? 1;
             return (
               <React.Fragment key={id}>
-                <DragItem it={{ ...d, w: GHOST.w, h: GHOST.h }} ghost at={at} k={k} z={6} mul={sc}
+                <DragItem it={d} at={at} k={k} z={6} mul={sc}
                   onDrop={(p) => (edit ? (setSel(id), setLay((l) => ({ ...l, [id]: { x: Math.round(p[0]), y: Math.round(p[1]), s: l[id]?.s ?? 1 } }))) : dropOnCounter(id, p))}
                   onTap={() => (edit ? setSel(id) : tellAbout(id))} />
                 {edit && sel === id && <View pointerEvents="none" style={{ position: 'absolute', left: (at[0] - d.w * sc / 2 - 3) * k, top: (d.hanging ? at[1] : at[1] - d.h * sc) * k - 3, width: (d.w * sc + 6) * k, height: (d.h * sc + 6) * k, borderWidth: 2, borderColor: '#ffe29a', borderStyle: 'dashed', zIndex: 20 }} />}

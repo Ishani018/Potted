@@ -65,6 +65,13 @@ export const SEED_IMAGES = {
   Bougainvillea:  require('../../assets/seeds2/bougenvillaseed.png'),
 };
 
+// Painted seed bags (cut from the nursery counter); the other three keep the old bag art.
+Object.assign(SEED_IMAGES, {
+  daisy: require('../../assets/seeds3/daisy.png'), marigold: require('../../assets/seeds3/marigold.png'), rose: require('../../assets/seeds3/rose.png'),
+  hydrenga: require('../../assets/seeds3/hydrenga.png'), jasmine: require('../../assets/seeds3/jasmine.png'), peony: require('../../assets/seeds3/peony.png'),
+  poppy: require('../../assets/seeds3/poppy.png'), petunia: require('../../assets/seeds3/petunia.png'), snapdragon: require('../../assets/seeds3/snapdragon.png'),
+});
+
 Object.assign(SEED_IMAGES, {
   goldenrose: require('../../assets/rare/goldenrose_seed.png'),
   moonbell: require('../../assets/rare/moonbell_seed.png'),
@@ -346,7 +353,7 @@ Object.assign(TRADE_IMAGES, {
 });
 
 // ─── Nursery background ───────────────────────────────────────────────────────
-export const NURSERY_BG = require('../../assets/shop/nursery_v10.png');
+export const NURSERY_BG = require('../../assets/shop/nursery_empty.png');
 
 // ─── Inventory grid background (7 cols × 5 rows, 1226×912) ────────────────────
 export const INVENTORY_BG = require('../../assets/ui_comps/inventory.png');
