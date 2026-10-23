@@ -20,13 +20,14 @@ const SEED_INFO = {};
 const IMG_W = 1672;
 const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 const SEED_ORDER = ['daisy', 'snapdragon', 'poppy', 'marigold', 'peony', 'hydrenga', 'rose', 'stringofpearls', 'Philodendron', 'jasmine', 'petunia', 'Bougainvillea'];
-const jit = (i, n) => (((i * 37 + n * 17) % 11) - 5);          // a steady little wobble, so things look put there by hand, not on a grid
-const SHELF_Y = [262, 360, 460, 562];                       // top of each board on the big shelf unit
-// seeds: four to a shelf on the top three boards, bunched towards the left, a little uneven
-const SEED_SPOTS = SEED_ORDER.map((k, i) => [350 + (i % 4) * 92 + jit(i, 1) * 2, SHELF_Y[Math.floor(i / 4)] + 8 + (jit(i, 2) > 2 ? 2 : 0)]);
-const POT_Y = [312, 410, 508, 604];                         // boards of the right shelf unit
-// pots: four to a board on the lower three boards (the top board is left for the hooks' pots)
-const POT_SPOTS = Array.from({ length: 12 }, (_, i) => [930 + (i % 4) * 80 + jit(i, 3) * 1.5, POT_Y[1 + Math.floor(i / 4)] + 8]);
+const jit = (i, n) => (((i * 37 + n * 17) % 11) - 5);          // a steady little wobble, so things look put there by hand
+// board tops measured from the picture; an item's feet rest 11 px below the top edge, on the board's lit surface
+const SEED_BOARDS = [251, 351, 450, 549];
+const POT_BOARDS = [394, 490, 587];
+// seeds: three to a shelf, bunched in the middle of each board, slightly uneven
+const SEED_SPOTS = SEED_ORDER.map((k, i) => [470 + (i % 3) * 88 + jit(i, 1) * 3, SEED_BOARDS[Math.floor(i / 3)] + 11]);
+// pots: four to a board on the three lower boards of the right unit
+const POT_SPOTS = Array.from({ length: 12 }, (_, i) => [940 + (i % 4) * 78 + jit(i, 3) * 2, POT_BOARDS[Math.floor(i / 4)] + 11]);
 const HOOK_SPOTS = [955, 1028, 1100, 1175].map((x) => [x, 236]);   // where a hanging pot's top sits
 const CAN_SPOT = [330, 735];
 const BAG = { w: 62, h: 56 };
@@ -154,9 +155,6 @@ export default function NurseryScreen({ navigation }) {
             return (
               <React.Fragment key={id}>
                 <DragItem it={d} at={at} k={k} z={6} onDrop={(p) => dropOnCounter(id, p)} onTap={() => tellAbout(id)} />
-                <View pointerEvents="none" style={{ position: 'absolute', left: (at[0] + (d.hanging ? d.w / 2 - 10 : d.w / 2 - 22)) * k, top: (at[1] + (d.hanging ? d.h - 18 : -14)) * k, zIndex: 7 }}>
-                  <View style={styles.priceChip}><Text style={styles.priceText}>{d.price}</Text></View>
-                </View>
               </React.Fragment>
             );
           })}
