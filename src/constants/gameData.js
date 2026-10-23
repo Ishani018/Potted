@@ -924,6 +924,13 @@ export const HPOT_INFO = {
 };
 
 // Shelf pot styles. Pot 4 (the plain clay pot) is free; the rest are bought once and can go on any shelf plant.
+export const PPOT_NAME = {
+  1: 'Ivy Terracotta Pot', 2: 'Cream Leaf Pot', 3: 'Sage Pumpkin Pot', 4: 'Terracotta Pot', 5: 'Bluebell Pot', 6: 'Mint Leaf Planter', 7: 'Daisy Scallop Pot',
+  8: 'Tulip Handle Pot', 9: 'Rope Bow Pot', 10: 'Blue Stripe Pot', 11: 'Tulip Petal Pot', 12: 'Garden Vine Pot', 13: 'Fluted Terracotta Pot', 14: 'Lilac Footed Pot',
+  15: 'Wooden Crate', 16: 'Wicker Basket', 17: 'Daisy Belly Pot', 18: 'Blue Bow Pot', 19: 'Ivy Saucer Pot', 20: 'Oak Barrel', 21: 'Mossy Stone Pot',
+  22: 'Lavender Pot', 23: 'Blue Handle Pot', 24: 'Cream Urn', 25: 'Peach Ruffle Pot', 26: 'Trailing Ivy Crate', 27: 'Sage Fluted Pot', 28: 'Ribbon Scallop Pot',
+  29: 'Green Daisy Pot', 30: 'Lemon Pot', 31: 'Mauve Leaf Pot', 32: 'Cream Handle Urn', 33: 'Rustic Clay Bowl', 34: 'Bluebell Scallop Pot', 35: 'Pearl Trail Pot',
+};
 export const PPOT_PRICE = {
   1: 30,
   2: 40,

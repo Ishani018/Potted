@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, Image, ScrollView, PanResponder, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, Image, ScrollView, Animated, PanResponder, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { NURSERY_BG, SEED_ICONS, SEED_IMAGES, UI_IMAGES, PPOT_META, PPOT_IDS, PPLANT_IMAGES, HPOT_META, HPOT_ORDER, CAN_IMAGES, SET_UI } from '../engine/assets';
-import { POTTED_FLOWERS, HANGING_PLANTS, seedType, FLOWER_GROWTH, formatDuration, HPOT_INFO, PPOT_PRICE, CAN_INFO } from '../constants/gameData';
+import { POTTED_FLOWERS, HANGING_PLANTS, seedType, FLOWER_GROWTH, formatDuration, HPOT_INFO, PPOT_PRICE, PPOT_NAME, CAN_INFO } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
 import { useNotice } from '../components/PurchaseNotice';
@@ -78,7 +78,7 @@ const MAX_BASKET = 12;
 function describe(id) {
   const [kind, key] = id.split(':');
   if (kind === 's') return { name: SEED_INFO[key].name, price: SEED_INFO[key].price, src: SEED_IMAGES[key], icon: SEED_ICONS[key], w: BAG.w, h: BAG.h };
-  if (kind === 'p') { const m = PPOT_META[key]; return { name: 'A shelf pot', price: PPOT_PRICE[key], src: m.src, w: 80, h: 80 * m.h / m.w }; }
+  if (kind === 'p') { const m = PPOT_META[key]; return { name: PPOT_NAME[key], price: PPOT_PRICE[key], src: m.src, w: 80, h: 80 * m.h / m.w }; }
   if (kind === 'h') { const m = HPOT_META[key]; return { name: HPOT_INFO[key].name, price: HPOT_INFO[key].price, src: m.src, w: 60, h: 60 * m.h / m.w }; }
   return { name: 'The red watering can', price: CAN_INFO.red.price, src: CAN_IMAGES.red.up.src, w: 130, h: 118 };
 }
@@ -132,6 +132,15 @@ export default function NurseryScreen({ navigation }) {
   const [sel, setSel] = useState(null);
   const [dump, setDump] = useState('');
   const [receipt, setReceipt] = useState(null);   // the order summary shown after paying
+  const bounce = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(bounce, { toValue: 1, duration: 450, useNativeDriver: false }),
+      Animated.timing(bounce, { toValue: 0, duration: 450, useNativeDriver: false }),
+    ]));
+    loop.start();
+    return () => loop.stop();
+  }, [bounce]);
   const [cartOpen, setCartOpen] = useState(false);  // the cart (same card, with a Pay button)
   const [panel, setPanel] = useState(false);   // the POTS panel
   const sw = box.w;
@@ -265,9 +274,15 @@ export default function NurseryScreen({ navigation }) {
         </TouchableOpacity>
       )}
 
-      <TouchableOpacity activeOpacity={0.8} onPress={() => setCartOpen(true)} style={styles.cartBtn}>
-        <Text style={styles.layoutTxt}>CART{basket.length ? ` (${basket.length})` : ''}</Text>
-      </TouchableOpacity>
+      {sw > 0 && basket.length > 0 && (
+        <TouchableOpacity activeOpacity={0.85} onPress={() => setCartOpen(true)}
+          style={{ position: 'absolute', left: 1255 * k, top: 665 * k, zIndex: 60, alignItems: 'center' }}>
+          <Animated.View style={{ transform: [{ translateX: bounce.interpolate({ inputRange: [0, 1], outputRange: [0, 14 * k] }) }] }}>
+            <Image source={SET_UI.right.src} resizeMode="contain" style={{ width: 70 * k, height: 70 * k * SET_UI.right.h / SET_UI.right.w }} />
+          </Animated.View>
+          <Text style={[styles.cartCount, { fontSize: 16 * k }]}>{basket.length} in cart</Text>
+        </TouchableOpacity>
+      )}
 
       {(cartOpen || receipt) && (() => {
         const paid = !!receipt;
@@ -344,6 +359,7 @@ const styles = StyleSheet.create({
   panelGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, justifyContent: 'center' },
   tile: { width: 66, alignItems: 'center', backgroundColor: '#e8cf9a', borderWidth: 2, borderColor: '#b98a4e', borderRadius: 10, paddingVertical: 4 },
   tileTxt: { fontFamily: SERIF, fontSize: 12, color: '#4a2a10', fontWeight: 'bold' },
+  cartCount: { fontFamily: SERIF, color: '#fff3d0', fontWeight: 'bold', textShadowColor: '#4a2a10', textShadowRadius: 3, textShadowOffset: { width: 0, height: 1 } },
   cartBtn: { position: 'absolute', right: 14, bottom: 10, zIndex: 60, backgroundColor: '#8a5a2a', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 5 },
   cartBtns: { flexDirection: 'row', gap: 10, marginTop: 8, justifyContent: 'center' },
   cartAct: { borderRadius: 12, paddingHorizontal: 14, paddingVertical: 6 },
