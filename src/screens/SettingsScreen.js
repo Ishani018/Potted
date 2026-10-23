@@ -3,8 +3,7 @@ import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Platform }
 import LevelBadge from '../components/LevelBadge';
 import { useGame } from '../context/GameContext';
 import { MAP_BG, SET_UI } from '../engine/assets';
-import { getAudioPrefs, subscribeAudio, setMusicOn, setMusicVolume, setSfxOn, setSfxVolume, setGooseOn, playSfx } from '../engine/audio';
-import { GOOSE_HONK } from '../engine/assets';
+import { getAudioPrefs, subscribeAudio, setMusicOn, setMusicVolume, setSfxOn, setSfxVolume } from '../engine/audio';
 import { useLayout } from '../context/LayoutContext';
 
 // Settings: sound and the basics, drawn with the painted UI pieces. Everything about your pets,
@@ -20,7 +19,8 @@ function Toggle({ on, onPress }) {
   const k = on ? 'toggleOn' : 'toggleOff';
   return (
     <TouchableOpacity activeOpacity={0.8} onPress={onPress}>
-      <Image source={SET_UI[k].src} resizeMode="contain" style={pic(k, 30)} />
+      {/* the painted OFF switch has its knob on the right; mirror it so the knob sits on the left when off */}
+      <Image source={SET_UI[k].src} resizeMode="contain" style={[pic(k, 30), on ? null : { transform: [{ scaleX: -1 }] }]} />
     </TouchableOpacity>
   );
 }
@@ -113,12 +113,6 @@ export default function SettingsScreen({ navigation }) {
 
             <Row icon="sound" label="Sound effects"><Toggle on={audio.sfxOn} onPress={() => setSfxOn(!audio.sfxOn)} /></Row>
             <Row label="Effects volume"><Volume level={sfxLevel} on={audio.sfxOn} onChange={setSfxVolume} /></Row>
-            <Row label="Goose honks">
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Button k="btnCream" label="Test" h={34} onPress={() => playSfx(GOOSE_HONK, 1, { goose: true })} />
-                <Toggle on={audio.gooseOn} onPress={() => setGooseOn(!audio.gooseOn)} />
-              </View>
-            </Row>
 
             <View style={styles.rule} />
 

@@ -615,13 +615,15 @@ function reducer(state, action) {
       };
     }
 
-    case 'PLACE_APT_ITEM': case 'MOVE_APT_ITEM': case 'REMOVE_APT_ITEM': case 'STAND_APT_ITEM': case 'FLIP_APT_ITEM': case 'ROTATE_APT_ITEM': {
+    case 'PLACE_APT_ITEM': case 'MOVE_APT_ITEM': case 'REMOVE_APT_ITEM': case 'STAND_APT_ITEM': case 'FLIP_APT_ITEM': case 'ROTATE_APT_ITEM': case 'TURN_APT_ITEM': case 'SCALE_APT_ITEM': {
       const { aptId } = action;
       const all = state.player.apartmentItems ?? {};
       const list = all[aptId] ?? [];
       let next = list;
       if (action.type === 'PLACE_APT_ITEM') next = [...list, action.item];
       else if (action.type === 'MOVE_APT_ITEM') next = list.map((it) => (it.id === action.id ? { ...it, x: action.x, y: action.y } : it));
+      else if (action.type === 'SCALE_APT_ITEM') next = list.map((it) => (it.id === action.id ? { ...it, scale: Math.max(0.4, Math.min(2.5, (it.scale || 1) * action.by)) } : it));
+      else if (action.type === 'TURN_APT_ITEM') next = list.map((it) => (it.id === action.id ? { ...it, turn: ((it.turn || 0) + 1) % 5 } : it));
       else if (action.type === 'ROTATE_APT_ITEM') next = list.map((it) => (it.id === action.id ? { ...it, key: action.key } : it));
       else if (action.type === 'FLIP_APT_ITEM') next = list.map((it) => (it.id === action.id ? { ...it, flip: !it.flip } : it));
       else if (action.type === 'STAND_APT_ITEM') next = list.map((it) => (it.id === action.id ? { ...it, stand: action.stand } : it));

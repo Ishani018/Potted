@@ -9,16 +9,16 @@ import Bubble from './Bubble';
 // Granny picks a road at each junction, so she can head up to the florist, down the left turn before the nursery,
 // or across to the market.
 const NODES = {
-  L:  [40, 735],    // end of the left turn (down-left)
-  J1: [250, 655],   // junction by the lamp, before the nursery
-  J2: [520, 612],   // in front of the nursery
-  J3: [700, 575],   // the big junction: up the street, or across to the market
+  L:  [150, 735],   // end of the left turn (down-left) 
+  J1: [260, 650],   // junction by the lamp, before the nursery
+  J2: [520, 610],   // in front of the nursery
+  J3: [690, 552],   // the big junction: up the street, or across to the market
   P:  [900, 470],   // outside the pet shop
   F:  [1080, 365],  // along the cobbles to the florist
   FL: [1235, 285],  // the florist's end of the street
-  M1: [860, 650],   // heading to the market
-  M2: [1010, 660],  // the market square
-  M3: [1110, 695],  // among the stalls
+  M1: [800, 560],   // heading to the market, above the apartment roof
+  M2: [1000, 640],  // the market square, between the stalls and the roof  // the market square
+  M3: [1050, 695],  // among the stalls  // among the stalls
 };
 const EDGES = [['L', 'J1'], ['J1', 'J2'], ['J2', 'J3'], ['J3', 'P'], ['P', 'F'], ['F', 'FL'], ['J3', 'M1'], ['M1', 'M2'], ['M2', 'M3']];
 const nbrs = (n) => EDGES.filter((e) => e.includes(n)).map((e) => (e[0] === n ? e[1] : e[0]));
