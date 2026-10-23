@@ -120,7 +120,7 @@ export default function BuildingScreen({ navigation }) {
                 <Image source={bp.src} resizeMode="contain" style={{ width: bw, height: bh }} />
               </TouchableOpacity>
             </Animated.View>
-            {say && <Bubble width={300} text={say} style={{ left: BUTLER_X * k - 0.78 * 300, top: FLOOR_Y[floor] * k - bh - 118 }} />}
+            {say && <Bubble flip width={235 * k} text={say} style={{ left: BUTLER_X * k - 0.22 * 235 * k, top: FLOOR_Y[floor] * k - bh - 235 * k * 0.414 - 6 * k }} />}
           </View>
         </ScrollView>
       )}
