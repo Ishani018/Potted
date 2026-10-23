@@ -11,6 +11,7 @@ import { playSfx } from '../engine/audio';
 // Tap it and it runs away. Pick it up (drag) and it honks loudly; let go and it drops where you left it.
 const TICK = 80;           // ms per animation step: every step is a new walking frame
 const STRIDE = 0.032;      // distance per frame as a share of the goose's width, a little less than its legs cover, so it never skates
+const FRAME_KEYS = Object.keys(GOOSE).map(Number);
 const rand = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -118,7 +119,10 @@ export default function Goose({ k, bounds, imgH = 941, base, zOf, disabled, onHo
 
   return (
     <View {...pan.panHandlers} style={{ position: 'absolute', left: s.x * k - w / 2, top: (s.y - lift) * k - h, width: w, height: h, zIndex: s.held ? 900 : zOf ? zOf(s.y) : 6 + Math.round(s.y / 10) }}>
-      <Image source={f.src} resizeMode="contain" pointerEvents="none" style={{ width: w, height: h, transform: flip ? [{ scaleX: -1 }] : undefined }} />
+      {/* every frame stays mounted and only the current one is shown, so swapping never reloads a picture (no flicker) */}
+      {FRAME_KEYS.map((i) => (
+        <Image key={i} source={GOOSE[i].src} resizeMode="contain" pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: w, height: h, opacity: i === n ? 1 : 0, transform: flip ? [{ scaleX: -1 }] : undefined }} />
+      ))}
     </View>
   );
 }

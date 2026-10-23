@@ -15,6 +15,7 @@ const LINES = [
   'Come by the house, I will put the kettle on.',
   'Such a nice night for a walk.',
 ];
+const USED = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
 const WALK_BACK = [7, 8, 9, 10, 18, 19, 20, 21];
 const WALK_FRONT = [1, 2, 3, 4, 5, 6];
 
@@ -66,7 +67,10 @@ export default function GrannyWalker({ k, z = 8 }) {
   return (
     <>
       <TouchableOpacity activeOpacity={1} onPress={poke} style={{ position: 'absolute', left, top, width: w, height: H, zIndex: z }}>
-        <Image source={f.src} resizeMode="contain" style={{ width: w, height: H, transform: flip ? [{ scaleX: -1 }] : undefined }} />
+        {/* all frames stay mounted; only the current one is visible, so nothing reloads between steps (no flicker) */}
+        {USED.map((i) => (
+          <Image key={i} source={GRANNY[i].src} resizeMode="contain" style={{ position: 'absolute', left: 0, top: 0, width: w, height: H, opacity: i === n ? 1 : 0, transform: flip ? [{ scaleX: -1 }] : undefined }} />
+        ))}
       </TouchableOpacity>
       {talking && <Bubble width={Math.max(230, 260 * k * 1.1)} text={LINES[s.talk]} style={{ left: Math.max(6, Math.min(x * k - 120, 1376 * k - 250)), top: Math.max(6, top - 80 * k - 40), zIndex: 60 }} />}
     </>
