@@ -601,6 +601,20 @@ function reducer(state, action) {
       };
     }
 
+    case 'BUY_APARTMENT': {
+      const { aptId, price } = action;
+      if (state.player.coins < price) return state;
+      if ((state.player.ownedApartments ?? []).includes(aptId)) return state;
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          coins: state.player.coins - price,
+          ownedApartments: [...(state.player.ownedApartments ?? []), aptId],
+        },
+      };
+    }
+
     case 'BUY_PET': {
       const { petKey, price } = action;
       if (state.player.coins < price) return state;

@@ -611,6 +611,7 @@ export const INITIAL_PLAYER_STATE = {
   // TEMP: seeded with test flowers so trading is testable — clear to {} before release.
   harvestedFlowers: { daisy: 8, rose: 5, marigold: 6, jasmine: 4, peony: 3, poppy: 7, hydrenga: 5, snapdragon: 6 },
   ownedPaintings: [],
+  ownedApartments: [], // apartment ids you have bought (see APARTMENTS)
   ownedPets: [],
   petNames: {},      // petKey → custom name chosen at adoption
   petPlacements: {}, // petKey → room number where the owned pet is currently placed
@@ -888,3 +889,10 @@ export function knownPetKeys(player) {
   const met = new Set([...(player.ownedPets ?? []), ...(player.strays ?? []).map((s) => s.key)]);
   return Object.keys(PETS).filter((k) => !PETS[k].stray || met.has(k));
 }
+
+// The apartment building: three floors, each flat bigger than the one below.
+export const APARTMENTS = {
+  1: { name: 'Little Green Door', floor: 'Ground floor', price: 300,  size: 'Cosy studio' },
+  2: { name: 'Cream Arch',        floor: 'First floor',  price: 900,  size: 'Two rooms' },
+  3: { name: 'Grand Suite',       floor: 'Top floor',    price: 2500, size: 'Three rooms and a balcony' },
+};

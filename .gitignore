@@ -54,6 +54,8 @@ assets/*
 !assets/perks/*.png
 !assets/boxes/
 !assets/boxes/*.png
+!assets/building/
+!assets/building/*.png
 !assets/pests/
 !assets/pests/*.png
 !assets/herbalist/
