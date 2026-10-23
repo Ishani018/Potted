@@ -11,9 +11,9 @@ export default function MainScreen({ navigation }) {
   useEffect(() => subscribeAudio(setAudio), []);
 
   // ── PLAY button — EDIT THESE TWO to resize/move ──────────────────────────────
-  const PLAY_SCALE = 0.24; // fraction of screen width (bigger number = bigger button)
-  const PLAY_LEFT = '79%'; // horizontal center of the button
-  const PLAY_TOP = '65%'; // vertical position (smaller % = higher up)
+  const PLAY_SCALE = 0.31; // fraction of screen width (bigger number = bigger button)
+  const PLAY_LEFT = '78%'; // horizontal center of the button
+  const PLAY_TOP = '63%'; // vertical position (smaller % = higher up)
   // play.png aspect ≈ 2.2 : 1 (width : height)
   const playW = Math.round(sw * PLAY_SCALE);
   const playH = Math.round(playW * 185 / 374);   // the new PLAY picture is 374x185
