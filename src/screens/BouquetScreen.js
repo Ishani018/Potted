@@ -46,14 +46,14 @@ function SheetLayers({ paper, w, h, shadow = false }) {
 }
 // The six spools on the ribbon tray (base units); each pulls its own ribbon. The twine isn't one.
 const SPOOLS = [
-  { x: 1158, y: 138, key: 'ribbonRed' }, { x: 1211, y: 138, key: 'ribbonPink' }, { x: 1264, y: 138, key: 'ribbonCream' },
-  { x: 1158, y: 247, key: 'ribbonPinkFloral' }, { x: 1215, y: 247, key: 'ribbonCreamFloral' }, { x: 1280, y: 247, key: 'ribbonGreen' },
+  { x: 1062, y: 128, key: 'ribbonRed' }, { x: 1148, y: 128, key: 'ribbonPink' }, { x: 1226, y: 128, key: 'ribbonCream' },
+  { x: 1070, y: 222, key: 'ribbonPinkFloral' }, { x: 1148, y: 222, key: 'ribbonCreamFloral' }, { x: 1230, y: 222, key: 'ribbonGreen' },
 ];
 const PAPER_ASPECT = 700 / 617;
 const RIBBON_ASPECT = 11.2;                          // the ribbon pictures are 1000×~89
-const MAT = { x0: 535, y0: 196, x1: 1088, y1: 583 };  // the wooden work mat
-const CX = 792;                                       // centre of the sheet lying on the mat (it is painted into the picture)
-const CY = 390;                                       // (the painted sheet is a little wider than it is tall; ours covers it)
+const MAT = { x0: 509, y0: 251, x1: 992, y1: 588 };  // the wooden work mat
+const CX = 750;                                       // centre of the sheet lying on the mat (it is painted into the picture)
+const CY = 419;                                       // (the painted sheet is a little wider than it is tall; ours covers it)
 const PAPER_BOX = { w: 379, h: Math.round(379 / PAPER_ASPECT) };   // the sheet once it is on the mat
 PAPER_BOX.top = Math.round(CY - PAPER_BOX.h / 2);
 const FLAP_TOP = PAPER_BOX.top + Math.round(0.42 * PAPER_BOX.h);   // where the ribbon waist sits; the blooms stay above
@@ -63,17 +63,17 @@ const WRAP_ASPECT = 630 / 600;                                       // height /
 const WRAP_W = 330;
 const WAIST = 0.79;                                                  // where the twine sits, as a fraction of the wrapper's height
 const FOLD_DEG = 20;                                                // tilt of the diagonal fold lines
-const TRAY = { cx: 1247, cy: 562, w: 247, h: 169 };  // the hand-over tray, bottom right
+const TRAY = { cx: 1181, cy: 477, w: 330, h: 215 };  // the hand-over tray, bottom right
 // The nine bins down the left (basket, bucket, basket ...), centres in base space; each has a name plate under it
 const BINS = [
-  { x: 100, y: 140 }, { x: 267, y: 138 }, { x: 433, y: 138 },
-  { x: 96, y: 315 }, { x: 263, y: 315 }, { x: 433, y: 313 },
-  { x: 92, y: 490 }, { x: 266, y: 488 }, { x: 435, y: 490 },
+  { x: 111, y: 155 }, { x: 267, y: 155 }, { x: 421, y: 151 },
+  { x: 99, y: 318 }, { x: 263, y: 322 }, { x: 412, y: 322 },
+  { x: 107, y: 481 }, { x: 263, y: 481 }, { x: 420, y: 481 },
 ];
 const BIN_D = 160;
 // centre of each bin's painted name tag, in base space (same order as BINS)
 const PLATES = [
-  { x: 96, y: 201 }, { x: 267, y: 201 }, { x: 435, y: 201 }, { x: 96, y: 371 }, { x: 265, y: 370 }, { x: 435, y: 372 }, { x: 95, y: 544 }, { x: 265, y: 543 }, { x: 435, y: 544 },
+  { x: 111, y: 220 }, { x: 267, y: 220 }, { x: 421, y: 220 }, { x: 103, y: 385 }, { x: 267, y: 385 }, { x: 419, y: 385 }, { x: 111, y: 545 }, { x: 265, y: 545 }, { x: 416, y: 545 },
 ];
 const PLATE_W = 60, PLATE_H = 29;
 const STRIP_SLOTS = [606, 700, 794, 888, 982];   // left edges of the five painted slots on the order strip
@@ -210,7 +210,7 @@ export default function BouquetScreen({ navigation, route }) {
             <PaperStack
               paper={paper} chosen={chosenPaper} level={level} coins={coins}
               onCycle={(id) => setPaper(id)} onChoose={() => setStep(1)}
-              box={{ x: fx(547), y: 0, w: fx(476), h: fy(190) }} matTop={fy(MAT.y0)} fx={fx} fy={fy}
+              box={{ x: fx(517), y: fy(40), w: fx(442), h: fy(200) }} matTop={fy(MAT.y0)} fx={fx} fy={fy}
             />
           )}
 
@@ -308,6 +308,11 @@ export default function BouquetScreen({ navigation, route }) {
             </View>
           )}
 
+          {/* the order strip along the bottom of the table: a cream board with a round frame for the customer */}
+          <View pointerEvents="none" style={[styles.stripBoard, { left: fx(222), top: fy(606), width: fx(840), height: fy(142) }]}>
+            <View style={[styles.stripRing, { left: fx(16), top: fy(14), width: fx(112), height: fx(112) }]} />
+          </View>
+
           {/* the order slip and the prompt along the bottom of the table */}
           {(packOrder || want) && (
             <>
@@ -323,7 +328,7 @@ export default function BouquetScreen({ navigation, route }) {
               ] : [
                 { cluster: strip.combo, src: TRADE_IMAGES[TRADE_FLOWERS[strip.flowerKey]?.img], ok: strip.combo ? remainingCombo.length === 0 : picks.includes(strip.flowerKey) },
                 strip.paper && { src: { plain: MAKE_IMAGES.paper, layered: MAKE_IMAGES.wrapLayered }[strip.paper] || MAKE_IMAGES.paper, ok: step >= 1 && paper === strip.paper },
-                strip.ribbon && { src: MAKE_IMAGES[strip.ribbon], strip: true, ok: tied && ribbonKey === strip.ribbon },
+                strip.ribbon && { src: MAKE_IMAGES[strip.ribbon.replace('ribbon', 'spool')], ok: tied && ribbonKey === strip.ribbon },
                 strip.ribbon && { src: (BOW_IMAGES[BOW_COLOR[strip.ribbon]] || [])[0], ok: bow != null && bow.color === BOW_COLOR[strip.ribbon] },
                 { src: UI_IMAGES.goldcoins, label: `+${strip.tip}` },
               ]).map((it, i) => it && (
@@ -340,12 +345,12 @@ export default function BouquetScreen({ navigation, route }) {
               ))}
             </>
           )}
-          <View style={[styles.prompt, { left: fx(541), width: fx(547), top: fy(step >= 3 ? 554 : step === 0 ? 236 : 203) }]} pointerEvents="none">
+          <View style={[styles.prompt, { left: fx(509), width: fx(483), top: fy(step >= 3 ? 596 : step === 0 ? 246 : 232) }]} pointerEvents="none">
             <Text style={styles.promptTxt} numberOfLines={1}>{prompt}</Text>
           </View>
 
           {/* buttons, right column (beside the scissors) */}
-          <View style={{ position: 'absolute', left: fx(1160), top: fy(316), width: fx(170), alignItems: 'center', gap: fy(4), zIndex: 30 }}>
+          <View style={{ position: 'absolute', left: fx(1070), top: fy(604), width: fx(250), alignItems: 'center', gap: fy(4), zIndex: 30 }}>
             {packOrder && (
               <>
                 <PixelButton onPress={closeBox} disabled={!full || boxLid !== 'open'} size={fs(8, 6)} label="CLOSE THE BOX" style={{ alignSelf: 'stretch' }} />
@@ -878,6 +883,8 @@ const styles = StyleSheet.create({
   dotNow: { backgroundColor: '#fbf0cf', borderColor: '#c9780a' },
   stepTxt: { fontFamily: HEAD, fontSize: 14, color: '#d9c39a', textShadowColor: '#2a1608', textShadowRadius: 3 },
   stepTxtNow: { color: '#fff3d6' },
+  stripBoard: { position: 'absolute', backgroundColor: '#f3e0b6', borderWidth: 4, borderColor: '#8a5a2a', borderRadius: 16, zIndex: 8 },
+  stripRing: { position: 'absolute', borderRadius: 100, backgroundColor: '#e8cf9a', borderWidth: 3, borderColor: '#b98a4e' },
   stripName: { position: 'absolute', fontFamily: HEAD, fontSize: 17, color: '#4a2a10', zIndex: 10 },
   stripSub: { position: 'absolute', fontFamily: HEAD, fontSize: 13, lineHeight: 14, color: '#7a5a30', zIndex: 10 },
   stripTip: { position: 'absolute', bottom: 0, fontFamily: HEAD, fontSize: 13, color: '#6a4a18' },

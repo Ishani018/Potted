@@ -189,8 +189,11 @@ export const BOW_IMAGES = {
 
 // Bouquet-making: the flat kraft sheet (700×617) and two wavy ribbons (red, pink).
 export const MAKE_IMAGES = {
-  paper: require('../../assets/shop/paper_kraft.png'),
-  paperFancy: require('../../assets/shop/paper_fancy.png'),
+  paper: require('../../assets/make2/pap_05.png'),        // kraft sheet
+  paperFancy: require('../../assets/make2/pap_01.png'),   // flowered sheet
+  // the ribbon spools (picture + tail), same order as the rack
+  spoolRed: require('../../assets/make2/spl_01.png'), spoolPink: require('../../assets/make2/spl_02.png'), spoolCream: require('../../assets/make2/spl_03.png'),
+  spoolPinkFloral: require('../../assets/make2/spl_04.png'), spoolCreamFloral: require('../../assets/make2/spl_05.png'), spoolGreen: require('../../assets/make2/spl_06.png'),
   // the wrapped bouquet (an empty folded wrapper) once the flaps are over; fancy borrows layered's until it has its own
   wrapKraft: require('../../assets/shop/wrap_kraft.png'),
   wrapLayered: require('../../assets/shop/wrap_layered.png'),
@@ -386,7 +389,7 @@ export const TRADING_BG = require('../../assets/tradingscreen.png');    // the 6
 export const COUNTER_BG = require('../../assets/shop/counter.png');   // florist counter seen from behind the till (1678×937)
 // The bouquet workspace seen from above (1536×1024, zoomed-in version). workspace_wide.png is the
 // same scene pulled back a little; swap the line to try it.
-export const BOUQUET_BG = require('../../assets/shop/workspace_v3.png');   // the zoomed workspace with a box of bows
+export const BOUQUET_BG = require('../../assets/shop/workspace_v4.png');   // the zoomed workspace with a box of bows
 export const PETROOM_BG = require('../../assets/petroom.png');       // pet lounge (beds)
 export const GALLERY_BGS = { a: require('../../assets/ui_comps/cafe.png'), b: require('../../assets/ui_comps/cafe2.png'), c: require('../../assets/ui_comps/cafe3.png'), d: require('../../assets/ui_comps/cafe4.png') };   // the gallery is now a café (two pictures to choose from)
 // The apartment building's butler (picture + its pixel size, so he keeps his proportions)
