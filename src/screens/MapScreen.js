@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { MAP_BG } from '../engine/assets';
+import GrannyWalker from '../components/GrannyWalker';
 import { MapTagButton } from '../components/MapTag';
 import ScreenHud from '../components/ScreenHud';
 
@@ -29,6 +30,9 @@ export default function MapScreen({ navigation }) {
       onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
     >
       <Image source={MAP_BG} style={styles.bg} resizeMode="stretch" />
+
+      {/* Granny Mae strolls up and down the street */}
+      {sw > 0 && <GrannyWalker k={sw / PLOPPER_W} />}
 
       {BUTTONS.map((b, i) => (
         <MapTagButton

@@ -64,7 +64,7 @@ export default function LobbyScreen({ navigation }) {
             <Image source={BUTLER[pose].src} resizeMode="contain" style={{ position: 'absolute', left: ((BUTLER_AT.x - (BUTLER_AT.h * BUTLER[pose].w / BUTLER[pose].h) / 2) / IMG_W) * sw, top: ((BUTLER_AT.feet - BUTLER_AT.h) / IMG_H) * sh, width: ((BUTLER_AT.h * BUTLER[pose].w / BUTLER[pose].h) / IMG_W) * sw, height: (BUTLER_AT.h / IMG_H) * sh }} />
           </View>
           <TouchableOpacity activeOpacity={1} onPress={talk} style={{ position: 'absolute', left: ((BUTLER_AT.x - 130) / IMG_W) * sw, top: ((BUTLER_AT.feet - BUTLER_AT.h) / IMG_H) * sh, width: (260 / IMG_W) * sw, height: ((BUTLER_AT.desk - BUTLER_AT.feet + BUTLER_AT.h) / IMG_H) * sh }} />
-          <Bubble width={(380 / IMG_W) * sw} text={LINES[line].text} style={{ left: (560 / IMG_W) * sw, top: (170 / IMG_H) * sh }} />
+          <Bubble width={(380 / IMG_W) * sw} text={LINES[line].text} style={{ left: ((BUTLER_AT.x - 0.78 * 380 + 10) / IMG_W) * sw, top: ((BUTLER_AT.feet - BUTLER_AT.h - 150) / IMG_H) * sh }} />
           {/* the front door goes back out to the map */}
           <TouchableOpacity activeOpacity={1} onPress={() => navigation.navigate('Map')} style={px(DOOR, sw, sh)} />
         </>

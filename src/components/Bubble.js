@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, Platform } from 'react-native';
+import { View, Text, Image, Platform } from 'react-native';
 import { BUBBLE_WIDE } from '../engine/assets';
 
 const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
@@ -9,9 +9,9 @@ export default function Bubble({ width, text, style }) {
   const height = width * BUBBLE_WIDE.h / BUBBLE_WIDE.w;
   return (
     <View pointerEvents="none" style={[{ position: 'absolute', width, height }, style]}>
-      <Image source={BUBBLE_WIDE.src} resizeMode="stretch" style={StyleSheet.absoluteFill} />
-      <View style={{ position: 'absolute', left: width * 0.1, right: width * 0.06, top: height * 0.1, bottom: height * 0.26, alignItems: 'center', justifyContent: 'center' }}>
-        <Text style={{ fontFamily: SERIF, fontSize: Math.max(10, width * 0.058), color: '#4a2a10', textAlign: 'center' }}>{text}</Text>
+      <Image source={BUBBLE_WIDE.src} resizeMode="stretch" style={{ position: 'absolute', left: 0, top: 0, width, height }} />
+      <View style={{ position: 'absolute', left: width * 0.1, top: height * 0.1, width: width * 0.84, height: height * 0.64, alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ fontFamily: SERIF, fontSize: Math.max(10, Math.min(20, width * 0.058)), width: '100%', color: '#4a2a10', textAlign: 'center' }}>{text}</Text>
       </View>
     </View>
   );

@@ -21,7 +21,7 @@ const FLOOR_Y = { 3: 300, 2: 585, 1: 875 };     // where the floor is on each st
 const FLOOR_NAME = { 1: 'Ground floor', 2: 'First floor', 3: 'Top floor' };
 const ZOOM = 1.6;                                // how far the picture is zoomed in; you scroll between floors
 const FOCUS_X = 0.42;                            // the doors' side of the picture stays in view
-const BUTLER_X = 905;                            // he waits just right of each door
+const BUTLER_X = 405;                            // he waits just left of each door
 const BUTLER_H = 172;                            // about 1.65 m next to a ~2.1 m door (213 px)
 const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -120,7 +120,7 @@ export default function BuildingScreen({ navigation }) {
                 <Image source={bp.src} resizeMode="contain" style={{ width: bw, height: bh }} />
               </TouchableOpacity>
             </Animated.View>
-            {say && <Bubble width={300} text={say} style={{ left: BUTLER_X * k - 150, top: FLOOR_Y[floor] * k - bh - 112 }} />}
+            {say && <Bubble width={300} text={say} style={{ left: BUTLER_X * k - 0.78 * 300, top: FLOOR_Y[floor] * k - bh - 118 }} />}
           </View>
         </ScrollView>
       )}

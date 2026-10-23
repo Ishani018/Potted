@@ -62,6 +62,8 @@ assets/*
 !assets/butler/*.png
 !assets/ui_sheet/
 !assets/ui_sheet/*.png
+!assets/granny/
+!assets/granny/*.png
 !assets/goose/
 !assets/goose/*.png
 !assets/sfx/
