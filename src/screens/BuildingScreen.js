@@ -112,7 +112,7 @@ export default function BuildingScreen({ navigation }) {
             })}
 
             {/* the goose follows you up the stairs and waddles along the landing */}
-            <Goose k={k} bounds={{ x0: 150, x1: 1120, y0: FLOOR_Y[floor] - 14, y1: FLOOR_Y[floor] + 18 }} imgH={IMG_H} base={0.42} disabled={busy} onHold={setHeld} zOf={() => 8} />
+            <Goose k={k} bounds={{ x0: 500, x1: 1150, y0: FLOOR_Y[floor] - 14, y1: FLOOR_Y[floor] + 18 }} imgH={IMG_H} base={0.42} disabled={busy} onHold={setHeld} zOf={() => 8} />
 
             {/* the butler waits beside the door on whichever floor you are on */}
             <Animated.View style={{ position: 'absolute', left: BUTLER_X * k - bw / 2, top: FLOOR_Y[floor] * k - bh, width: bw, height: bh, transform: [{ translateX: slide }] }}>
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#1a1208', overflow: 'hidden' },
   lockChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(40,22,8,0.78)', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 3 },
   lockText: { fontFamily: SERIF, fontSize: 15, color: '#ffe9b8' },
-  floorName: { position: 'absolute', top: 14, left: 0, right: 0, textAlign: 'center', fontFamily: SERIF, fontSize: 20, color: '#fff3d0', textShadowColor: 'rgba(40,20,5,0.95)', textShadowRadius: 6, zIndex: 40 },
+  floorName: { position: 'absolute', top: 12, alignSelf: 'center', overflow: 'hidden', backgroundColor: 'rgba(60,34,14,0.82)', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 3, fontFamily: SERIF, fontSize: 18, color: '#fff3d0', zIndex: 40 },
   arrows: { position: 'absolute', right: 14, top: '40%', gap: 10, zIndex: 40 },
   arrowBtn: { paddingVertical: 9, paddingHorizontal: 18, alignItems: 'center', justifyContent: 'center' },
   bubble: { position: 'absolute', backgroundColor: '#f6e6bd', borderWidth: 2, borderColor: '#8a5a2a', borderRadius: 14, paddingVertical: 6, paddingHorizontal: 10 },

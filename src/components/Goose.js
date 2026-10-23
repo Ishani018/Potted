@@ -47,8 +47,9 @@ export default function Goose({ k, bounds, imgH = 941, base, zOf, disabled, onHo
     const iv = setInterval(() => {
       const s = g.current, now = Date.now(), bd = b.current;
       if (s.held) { s.frame += 1; tick((n) => n + 1); return; }
-      // the scene may have moved the floor under it (another storey): bring it along
-      if (s.y < bd.y0 - 40 || s.y > bd.y1 + 40) { s.y = clamp(s.y, bd.y0, bd.y1) + (s.y < bd.y0 ? 0 : 0); s.y = (bd.y0 + bd.y1) / 2; s.x = clamp(s.x, bd.x0, bd.x1); }
+      // the scene may have moved the floor under it (another storey): put it on the new floor, standing still
+      if (s.y < bd.y0 - 40 || s.y > bd.y1 + 40) { s.y = (bd.y0 + bd.y1) / 2; s.x = clamp(s.x, bd.x0, bd.x1); s.mode = 'idle'; s.pose = 'front'; s.until = now + 600; }
+      s.tx = clamp(s.tx, bd.x0, bd.x1); s.ty = clamp(s.ty, bd.y0, bd.y1);
       if (s.mode === 'walk') {
         const dx = s.tx - s.x, dy = s.ty - s.y, d = Math.hypot(dx, dy), sp = (GOOSE[1].w * size * STRIDE) * s.mul * (0.8 + 0.4 * clamp((s.y - bd.y0) / Math.max(1, bd.y1 - bd.y0), 0, 1));
         if (d <= sp) { rest(now, s.mul > 1 ? 'front' : pickIdle()); }
