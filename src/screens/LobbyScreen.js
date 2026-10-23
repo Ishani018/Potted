@@ -10,7 +10,7 @@ const STAIRS = { x0: 1190, y0: 270, x1: 1672, y1: 770 };
 const DOOR = { x0: 40, y0: 80, x1: 300, y1: 730 };
 // The butler stands behind the reception desk (picture pixels): centre x, where his feet would be, his height,
 // and the desk's top edge, where he is cut off so the desk hides his legs.
-const BUTLER_AT = { x: 985, feet: 650, h: 340, desk: 528 };
+const BUTLER_AT = { x: 985, feet: 640, h: 270, desk: 528 };   // a grown man behind a ~1 m desk: head to waist show
 const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 const LINES = [
   { pose: 'wave',    text: 'Welcome home! The flats are up the stairs.' },
