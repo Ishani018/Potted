@@ -54,7 +54,7 @@ export default function GrannyWalker({ k, z = 8 }) {
   const depth = 0.7 + 0.5 * ((y - 285) / (730 - 285));        // lower on the map = closer = bigger
   const up = s.dir > 0;                                        // heading up the street, away from us
   let n, flip = false;
-  if (talking) n = [22, 25, 27, 26, 29][s.talk % 5];
+  if (talking) { n = [11, 12, 13, 14, 15, 16, 17][Math.floor(Date.now() / 450) % 7]; flip = !up; }   // full-body frames, hands clasped, while she chats
   else if (up) n = WALK_BACK[s.frame % WALK_BACK.length];
   else { n = WALK_FRONT[s.frame % WALK_FRONT.length]; flip = true; }   // coming down the street, facing us and to the left
   const f = GRANNY[n];
