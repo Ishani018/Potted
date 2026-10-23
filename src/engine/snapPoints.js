@@ -38,17 +38,17 @@ const RAW_SNAP_POINTS = {
     hanging: [],
   },
   2: {
-    // the balcony: eight hooks along the rod
+    // the balcony: four pots hang from the painted hooks (y 100) and four straight from the rod (y 66)
     potted: [],
     hanging: [
-      { id: 'r2_h1', x: 329, y: 82 },
-      { id: 'r2_h2', x: 445, y: 82 },
-      { id: 'r2_h3', x: 578, y: 82 },
-      { id: 'r2_h4', x: 695, y: 82 },
-      { id: 'r2_h5', x: 813, y: 82 },
-      { id: 'r2_h6', x: 905, y: 82 },
-      { id: 'r2_h7', x: 1000, y: 82 },
-      { id: 'r2_h8', x: 1103, y: 82 },
+      { id: 'r2_h1', x: 329, y: 66 },
+      { id: 'r2_h2', x: 445, y: 100 },
+      { id: 'r2_h3', x: 578, y: 100 },
+      { id: 'r2_h4', x: 695, y: 66 },
+      { id: 'r2_h5', x: 813, y: 100 },
+      { id: 'r2_h6', x: 905, y: 66 },
+      { id: 'r2_h7', x: 1000, y: 100 },
+      { id: 'r2_h8', x: 1103, y: 66 },
     ],
   },
   3: {
@@ -76,10 +76,16 @@ const RAW_SNAP_POINTS = {
       { id: 'r3_p20', x: 1078, y: 726 },
     ],
     hanging: [
+      // from the rings on the inner rod
       { id: 'r3_h1', x: 630, y: 135 },
       { id: 'r3_h2', x: 729, y: 135 },
       { id: 'r3_h3', x: 823, y: 135 },
       { id: 'r3_h4', x: 918, y: 135 },
+      // straight from the back rod
+      { id: 'r3_h5', x: 480, y: 92 },
+      { id: 'r3_h6', x: 570, y: 92 },
+      { id: 'r3_h7', x: 1000, y: 92 },
+      { id: 'r3_h8', x: 1080, y: 92 },
     ],
   },
 };
