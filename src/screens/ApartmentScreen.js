@@ -58,7 +58,7 @@ export default function ApartmentScreen({ navigation, route }) {
   const { state, dispatch } = useGame();
   const [box, setBox] = useState({ w: 0, h: 0 });
   const [edit, setEdit] = useState(false);
-  const [tab, setTab] = useState(Object.values(DECOR).some((d) => d.furniture) ? 'furn' : 'floor');
+  const [tab, setTab] = useState(Object.values(DECOR).some((d) => d.furniture) ? 'green' : 'floor');
   const [selected, setSelected] = useState(null);
   const [dragging, setDragging] = useState(false);
   const [invOpen, setInvOpen] = useState(false);
@@ -81,7 +81,7 @@ export default function ApartmentScreen({ navigation, route }) {
     setSelected(item.id);
   };
 
-  const tabItems = Object.values(DECOR).filter((d) => (tab === 'furn' ? d.furniture : d.kind === tab && !d.furniture) && (d.kind !== 'wall' || ownedArt.includes(d.painting)));
+  const tabItems = Object.values(DECOR).filter((d) => DECOR_TABS.find((t) => t.id === tab).match(d) && (d.kind !== 'wall' || ownedArt.includes(d.painting)));
 
   return (
     <View style={styles.root} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
@@ -136,18 +136,18 @@ export default function ApartmentScreen({ navigation, route }) {
 
       {edit && (
         <View style={styles.tray}>
-          <View style={styles.tabs}>
-            {DECOR_TABS.filter((t) => t.id !== 'furn' || Object.values(DECOR).some((d) => d.furniture)).map((t) => (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={styles.tabs}>
+            {DECOR_TABS.filter((t) => Object.values(DECOR).some((d) => t.match(d))).map((t) => (
               <TouchableOpacity key={t.id} onPress={() => setTab(t.id)} activeOpacity={0.8} style={[styles.tab, tab === t.id && styles.tabOn]}>
                 <Text style={[styles.tabText, tab === t.id && { color: '#fff3d0' }]}>{t.label}</Text>
               </TouchableOpacity>
             ))}
-          </View>
+          </ScrollView>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 10, gap: 8, alignItems: 'center' }} style={{ flex: 1 }}>
             {tabItems.length === 0 && <Text style={styles.empty}>Buy paintings in the gallery to hang them here.</Text>}
             {tabItems.map((d) => (
               <TouchableOpacity key={d.key} activeOpacity={0.8} onPress={() => add(d)} style={styles.tile}>
-                <Image source={d.img} resizeMode="contain" style={{ width: 46, height: 46 }} />
+                <Image source={d.img} resizeMode="contain" style={{ width: 48, height: 48 }} />
               </TouchableOpacity>
             ))}
           </ScrollView>

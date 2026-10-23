@@ -1,6 +1,6 @@
 """Cut a furniture sprite sheet (items on a white or transparent background) into separate transparent PNGs.
 
-usage: python3 tools/cut_furniture.py <sheet.png> <prefix> [--rugs 3,9]
+usage: python3 tools/cut_furniture.py <sheet.png> <prefix> [--rugs 3,9] [--skip 1,2] [--scale 1.2]
 Writes assets/furniture/<prefix>_NN.png (numbered left-to-right, top-to-bottom) and merges them into
 src/engine/furnitureItems.js, which the apartment tray reads. --rugs lists item numbers that are floor mats.
 """
@@ -10,20 +10,26 @@ from PIL import Image
 from scipy import ndimage as ndi
 
 sheet, prefix = sys.argv[1], sys.argv[2]
-rugs = set()
-if '--rugs' in sys.argv:
-    rugs = {int(x) for x in sys.argv[sys.argv.index('--rugs') + 1].split(',') if x}
+def opt(name):
+    return sys.argv[sys.argv.index(name) + 1] if name in sys.argv else ''
+rugs = {int(x) for x in opt('--rugs').split(',') if x}
+skip = {int(x) for x in opt('--skip').split(',') if x}
+scale = float(opt('--scale') or 1)   # sheets are drawn at different sizes; this brings them to one scale
 
 im = Image.open(sheet).convert('RGBA')
 a = np.array(im)
 rgb, alpha = a[..., :3].astype(int), a[..., 3]
-near_white = (rgb.min(axis=2) > 238) | (alpha < 20)
-lab, n = ndi.label(near_white)
-border = set(np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))) - {0}
-bg = np.isin(lab, list(border))                      # white that touches the edge = background
-fg = ~bg
-fg = ndi.binary_opening(fg, iterations=1)
-blobs, nb = ndi.label(ndi.binary_dilation(fg, iterations=7))   # merge pieces of one item (fringe, cushions)
+has_alpha = (alpha < 20).mean() > 0.05
+if has_alpha:                                         # real transparency: soft halos must not glue items together
+    bg = alpha < 110
+    fg = ndi.binary_opening(~bg, iterations=2)
+else:
+    near_white = rgb.min(axis=2) > 238
+    lab, n = ndi.label(near_white)
+    border = set(np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))) - {0}
+    bg = np.isin(lab, list(border))                   # white that touches the edge = background
+    fg = ndi.binary_opening(~bg, iterations=2)
+blobs, nb = ndi.label(ndi.binary_dilation(fg, iterations=1))   # merge pieces of one item (fringe, cushions)
 boxes = []
 for i, sl in enumerate(ndi.find_objects(blobs), 1):
     h, w = sl[0].stop - sl[0].start, sl[1].stop - sl[1].start
@@ -44,13 +50,15 @@ os.makedirs('assets/furniture', exist_ok=True)
 items = []
 for k, (y0, x0, y1, x1, bi) in enumerate(ordered, 1):
     crop = a[y0:y1, x0:x1].copy()
-    keep = ndi.binary_dilation(blobs[y0:y1, x0:x1] == bi, iterations=0) & ~bg[y0:y1, x0:x1]
-    crop[..., 3] = np.where(keep, 255, 0)
+    keep = (blobs[y0:y1, x0:x1] == bi) & ~bg[y0:y1, x0:x1]
+    crop[..., 3] = np.where(keep, np.maximum(crop[..., 3], 200) if has_alpha else 255, 0)
+    if k in skip:
+        continue
     name = f'{prefix}_{k:02d}'
     pic = Image.fromarray(crop)
     pic = pic.crop(pic.split()[3].getbbox())          # trim the merge margin
     pic.save(f'assets/furniture/{name}.png')
-    items.append({'key': name, 'w': pic.size[0], 'h': pic.size[1], 'rug': k in rugs})
+    items.append({'key': name, 'w': round(pic.size[0] * scale), 'h': round(pic.size[1] * scale), 'rug': k in rugs})
 print(len(items), 'items')
 
 # merge into the manifest the app reads

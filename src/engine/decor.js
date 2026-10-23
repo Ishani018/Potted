@@ -17,7 +17,9 @@ Object.keys(PAINTING_IMAGES).forEach((k) => { DECOR['w_' + k] = { key: 'w_' + k,
 // Furniture cut from the sprite sheets. Height as a fraction of the room follows the picture's own pixel size,
 // so pieces from one sheet keep their proportions. Rugs lie flat on the floor (drawn skewed, under everything).
 FURNITURE_ITEMS.forEach((f) => {
-  DECOR[f.key] = { key: f.key, kind: 'floor', img: f.img, furniture: true, rug: f.rug, aspect: f.w / f.h, size: f.h * 0.0011 * (f.rug ? 0.8 : 1) };
+  const n = Number(f.key.split('_')[1]);
+  const set = f.key.startsWith('g_') ? 'green' : f.key.startsWith('pk_') ? 'pink' : n <= 26 ? 'purple' : 'red';
+  DECOR[f.key] = { key: f.key, kind: 'floor', img: f.img, furniture: true, set, rug: f.rug, aspect: f.w / f.h, size: f.h * 0.0011 * (f.rug ? 1.9 : 1) };
 });
 
 export const STANDS = {
@@ -28,11 +30,15 @@ export const STANDS = {
 export const STAND_ORDER = ['stool', 'tall', 'pedestal', 'none'];
 export const standOf = (item) => (item.stand === undefined ? 'stool' : item.stand);
 
+// tabs: each furniture colour set, then plants, hanging plants and art
 export const DECOR_TABS = [
-  { id: 'furn',  label: 'FURNITURE' },
-  { id: 'floor', label: 'PLANTS' },
-  { id: 'hang',  label: 'HANGING' },
-  { id: 'wall',  label: 'ART' },
+  { id: 'green',  label: 'GREEN',   match: (d) => d.furniture && d.set === 'green' },
+  { id: 'purple', label: 'PURPLE',  match: (d) => d.furniture && d.set === 'purple' },
+  { id: 'red',    label: 'RED',     match: (d) => d.furniture && d.set === 'red' },
+  { id: 'pink',   label: 'CREAM',   match: (d) => d.furniture && d.set === 'pink' },
+  { id: 'floor',  label: 'PLANTS',  match: (d) => d.kind === 'floor' && !d.furniture },
+  { id: 'hang',   label: 'HANGING', match: (d) => d.kind === 'hang' },
+  { id: 'wall',   label: 'ART',     match: (d) => d.kind === 'wall' },
 ];
 
 // where a new item first appears and how far it may be dragged (fractions of the room picture)
