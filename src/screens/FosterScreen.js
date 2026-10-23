@@ -84,12 +84,8 @@ export default function FosterScreen({ navigation }) {
       {sw > 0 && (
         <Pressable
           style={{ position: 'absolute', left: fx(1150), top: fy(70), width: fx(1480 - 1150), height: fy(580 - 70), zIndex: 6 }}
-          onHoverIn={() => setHovered('door')}
-          onHoverOut={() => setHovered((h) => (h === 'door' ? null : h))}
           onPress={() => navigation.navigate('PetShop')}
-        >
-          <View style={[styles.tagWrap, { top: '30%' }]} pointerEvents="none"><PetTag show={hovered === 'door'} label="PET SHOP" /></View>
-        </Pressable>
+        />
       )}
 
       <ScreenHud sw={sw} sh={sh} onSettings={() => navigation.navigate('Settings')} onMap={() => navigation.navigate('Map')} onInventory={() => setInvOpen(true)} />

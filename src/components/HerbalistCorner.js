@@ -5,7 +5,6 @@ import { TRADE_IMAGES } from '../engine/assets';
 import { HERBALIST, HERBALIST_TRADES, REMEDIES, TRADE_FLOWERS } from '../constants/gameData';
 import { dayKey } from '../engine/petEffects';
 import { PixelPanel, PixelButton, PixelText, COLORS } from './Pixel';
-import HerbalistSprite, { HERBALIST_ASPECT } from './HerbalistSprite';
 import Portrait from './Portrait';
 import RemedyIcon from './RemedyIcon';
 
@@ -17,10 +16,17 @@ const PLOPPER_W = 1376;
 const PLOPPER_H = 768;
 export const HERBALIST_SPOT = { x: 1210, feetY: 700, h: 270 };
 
-export default function HerbalistCorner({ sw, sh }) {
+// Granny Mae's menu: today's free balm and herb swaps. Controlled: the map's walking Granny opens it. `onFlag` isn't needed.
+export function useHerbalistFlag() {
+  const { state } = useGame();
+  const harvested = state.player.harvestedFlowers ?? {};
+  const canClaim = state.player.herbalistDay !== dayKey(Date.now());
+  return canClaim || HERBALIST_TRADES.some((t) => Object.entries(t.give).every(([k, n]) => (harvested[k] ?? 0) >= n));
+}
+
+export default function HerbalistMenu({ sw, sh, open, setOpen }) {
   const { state, dispatch } = useGame();
-  const [open, setOpen] = useState(false);
-  if (!sw || !sh) return null;
+  if (!sw || !sh || !open) return null;
 
   const harvested = state.player.harvestedFlowers ?? {};
   const rem = state.player.remedies ?? {};
@@ -29,20 +35,9 @@ export default function HerbalistCorner({ sw, sh }) {
   const canAfford = (t) => Object.entries(t.give).every(([k, n]) => have(k) >= n);
   const anyTrade = HERBALIST_TRADES.some(canAfford);
 
-  const h = HERBALIST_SPOT.h * (sh / PLOPPER_H);
-  const w = h * HERBALIST_ASPECT;
-  const left = HERBALIST_SPOT.x * (sw / PLOPPER_W) - w / 2;
-  const top = HERBALIST_SPOT.feetY * (sh / PLOPPER_H) - h;
-  const flag = canClaim || anyTrade;
-
   return (
     <>
-      <TouchableOpacity activeOpacity={0.85} onPress={() => setOpen(true)} style={{ position: 'absolute', left, top, width: w, height: h, zIndex: 20 }}>
-        <HerbalistSprite height={h} />
-        {flag && <View style={styles.bubble}><PixelText size={Math.max(8, Math.round(h * 0.07))} color={COLORS.gold}>!</PixelText></View>}
-      </TouchableOpacity>
-
-      {open && (
+      {(
         <TouchableOpacity activeOpacity={1} style={styles.overlay} onPress={() => setOpen(false)}>
           <TouchableOpacity activeOpacity={1} onPress={() => {}} style={{ width: Math.min(sw - 24, 400), maxHeight: sh - 24 }}>
             <PixelPanel>

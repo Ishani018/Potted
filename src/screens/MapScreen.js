@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { MAP_BG } from '../engine/assets';
 import GrannyWalker from '../components/GrannyWalker';
+import HerbalistMenu, { useHerbalistFlag } from '../components/HerbalistCorner';
 import { MapTagButton } from '../components/MapTag';
 import ScreenHud from '../components/ScreenHud';
 
@@ -23,6 +24,8 @@ const BUTTONS = [
 export default function MapScreen({ navigation }) {
   const [box, setBox] = useState({ w: 0, h: 0 });
   const sw = box.w, sh = box.h;
+  const [granny, setGranny] = useState(false);
+  const flag = useHerbalistFlag();
 
   return (
     <View
@@ -32,7 +35,7 @@ export default function MapScreen({ navigation }) {
       <Image source={MAP_BG} style={styles.bg} resizeMode="stretch" />
 
       {/* Granny Mae strolls up and down the street */}
-      {sw > 0 && <GrannyWalker k={sw / PLOPPER_W} />}
+      {sw > 0 && <GrannyWalker k={sw / PLOPPER_W} flag={flag} onOpen={() => setGranny(true)} />}
 
       {BUTTONS.map((b, i) => (
         <MapTagButton
@@ -40,6 +43,8 @@ export default function MapScreen({ navigation }) {
           onPress={() => navigation.navigate(b.dest)}
         />
       ))}
+
+      <HerbalistMenu sw={sw} sh={sh} open={granny} setOpen={setGranny} />
 
       {/* Standard HUD — settings (top-left). Map has no inventory button. */}
       <ScreenHud sw={sw} sh={sh} onSettings={() => navigation.navigate('Settings')} onBook={() => navigation.navigate('FlowerBook')} />
