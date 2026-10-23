@@ -630,7 +630,7 @@ function Bunch({ flowerKey, count, size, disabled, dim = true, x, y, dropRight, 
     onPanResponderTerminate: () => { setLifted(false); Animated.spring(drag, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start(); },
   })).current;
   // a loose heap of the flower in its bin, back to front; the top one lifts out when you drag
-  const n = Math.min(count, PILE.length);
+  const n = Math.min(count, 4);   // a tidy heap, not a spilling one
   const fl = size * 0.74;
   const src = TRADE_IMAGES[TRADE_FLOWERS[flowerKey].img];
   return (
