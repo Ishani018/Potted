@@ -611,6 +611,7 @@ export const INITIAL_PLAYER_STATE = {
   // TEMP: seeded with test flowers so trading is testable — clear to {} before release.
   harvestedFlowers: { daisy: 8, rose: 5, marigold: 6, jasmine: 4, peony: 3, poppy: 7, hydrenga: 5, snapdragon: 6 },
   ownedPaintings: [],
+  apartmentItems: {},  // aptId → [{ id, key, kind, x, y }] decor placed in each flat (x,y are fractions of the room picture)
   ownedApartments: [], // apartment ids you have bought (see APARTMENTS)
   ownedPets: [],
   petNames: {},      // petKey → custom name chosen at adoption

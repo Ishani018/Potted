@@ -21,14 +21,13 @@ export default function BuildingScreen({ navigation }) {
   const { state, dispatch } = useGame();
   const [box, setBox] = useState({ w: 0, h: 0 });
   const [asking, setAsking] = useState(null);
-  const [msg, setMsg] = useState(null);
   const [invOpen, setInvOpen] = useState(false);
   const sw = box.w, sh = box.h;
   const owned = state.player.ownedApartments ?? [];
   const coins = state.player.coins;
 
   const tapDoor = (id) => {
-    if (owned.includes(id)) setMsg(id);
+    if (owned.includes(id)) navigation.navigate('Apartment', { aptId: id });
     else setAsking(id);
   };
 
@@ -72,14 +71,6 @@ export default function BuildingScreen({ navigation }) {
         </TouchableOpacity>
       )}
 
-      {msg && (
-        <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={() => setMsg(null)}>
-          <View style={styles.card}>
-            <Text style={styles.title}>{APARTMENTS[msg].name}</Text>
-            <Text style={styles.sub}>It's yours! The room is still empty, furnishing is coming next.</Text>
-          </View>
-        </TouchableOpacity>
-      )}
       {invOpen && <InventoryOverlay onClose={() => setInvOpen(false)} onPick={() => setInvOpen(false)} />}
     </View>
   );

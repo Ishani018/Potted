@@ -25,6 +25,7 @@ import TradeScreen from './src/screens/TradeScreen';
 import TradingScreen from './src/screens/TradingScreen';
 import GalleryScreen from './src/screens/GalleryScreen';
 import BuildingScreen from './src/screens/BuildingScreen';
+import ApartmentScreen from './src/screens/ApartmentScreen';
 import LobbyScreen from './src/screens/LobbyScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import FlowerBookScreen from './src/screens/FlowerBookScreen';
@@ -86,6 +87,7 @@ export default function App() {
                   <Stack.Screen name="Gallery" component={GalleryScreen} />
                   <Stack.Screen name="Lobby" component={LobbyScreen} />
                   <Stack.Screen name="Building" component={BuildingScreen} />
+                  <Stack.Screen name="Apartment" component={ApartmentScreen} />
                   <Stack.Screen name="Settings" component={SettingsScreen} />
                   <Stack.Screen name="FlowerBook" component={FlowerBookScreen} />
                   <Stack.Screen name="Bouquet" component={BouquetScreen} />
