@@ -31,7 +31,7 @@ const row = (n, x0, gap, y, salt) => Array.from({ length: n }, (_, i) => [x0 + i
 // The painted shop already has pots, hanging plants and a few bags on its shelves. Our seed bags (bigger) go on top of the
 // painted bags and into the gaps, one spot per seed (picture pixels, feet on the board).
 // Nine bags are painted on the counter (their flowers are our seeds'); the other three are sold from the POTS panel.
-const COUNTER_SEEDS = ['daisy', 'snapdragon', 'poppy', 'marigold', 'peony', 'hydrenga', 'rose', 'jasmine', 'petunia'];
+const COUNTER_SEEDS = ['daisy', 'marigold', 'rose', 'hydrenga', 'jasmine', 'peony', 'poppy', 'petunia', 'snapdragon'];   // left to right, matching the painted flowers
 const EXTRA_SEEDS = SEED_ORDER.filter((k) => !COUNTER_SEEDS.includes(k));
 const SEED_AT = COUNTER_SEEDS.map((_, n) => [263 + [0, 126, 248, 374, 500, 623, 748, 874, 1000][n], 858]);
 const GHOST = { w: 100, h: 105 };   // the invisible handle laid over each painted bag
