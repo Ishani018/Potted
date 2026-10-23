@@ -32,7 +32,7 @@ const HOOK_SPOTS = [955, 1028, 1100, 1175].map((x) => [x, 236]);   // where a ha
 const CAN_SPOT = [330, 735];
 const BAG = { w: 62, h: 56 };
 const POT_W = 58;                                           // shelf pot width on the shelf
-const HOOK_H = 66;                                          // hanging pot height on its hook
+const HOOK_H = 96;                                          // hanging pot height on its hook
 const COUNTER_TOP = 770;                                    // drop an item below this line to put it on the counter
 const COUNTER_X = (i) => 150 + (i % 8) * 150;
 const COUNTER_Y = (i) => 872 + Math.floor(i / 8) * 55;
@@ -91,6 +91,11 @@ export default function NurseryScreen({ navigation }) {
   const [basket, setBasket] = useState([]);                 // item ids put down on the counter
   const [potPage, setPotPage] = useState(0);
   const [hookPage, setHookPage] = useState(0);
+  // LAYOUT mode: arrange the shop by hand. lay[id] = { x, y, s } overrides an item's spot and size.
+  const [edit, setEdit] = useState(false);
+  const [lay, setLay] = useState({});
+  const [sel, setSel] = useState(null);
+  const [dump, setDump] = useState('');
   const sw = box.w;
   const k = sw / IMG_W;
 
@@ -130,7 +135,7 @@ export default function NurseryScreen({ navigation }) {
     setBasket([]);
   };
 
-  const stock = (ids, spots, extra = {}) => ids.map((id, i) => (spots[i] ? { id, at: spots[i], ...extra } : null)).filter(Boolean).filter((e) => !basket.includes(e.id));
+  const stock = (ids, spots, extra = {}) => ids.map((id, i) => (spots[i] ? { id, at: lay[id] ? [lay[id].x, lay[id].y] : spots[i], ...extra } : null)).filter(Boolean).filter((e) => !basket.includes(e.id));
   const onShelf = [
     ...stock(SEED_ORDER.map((s) => 's:' + s), SEED_SPOTS),
     ...stock(seats.map((p) => 'p:' + p), POT_SPOTS),
@@ -152,9 +157,13 @@ export default function NurseryScreen({ navigation }) {
         <>
           {onShelf.map(({ id, at }) => {
             const d = describe(id);
+            const sc = lay[id]?.s ?? 1;
             return (
               <React.Fragment key={id}>
-                <DragItem it={d} at={at} k={k} z={6} onDrop={(p) => dropOnCounter(id, p)} onTap={() => tellAbout(id)} />
+                <DragItem it={d} at={at} k={k} z={6} mul={sc}
+                  onDrop={(p) => (edit ? (setSel(id), setLay((l) => ({ ...l, [id]: { x: Math.round(p[0]), y: Math.round(p[1]), s: l[id]?.s ?? 1 } }))) : dropOnCounter(id, p))}
+                  onTap={() => (edit ? setSel(id) : tellAbout(id))} />
+                {edit && sel === id && <View pointerEvents="none" style={{ position: 'absolute', left: (at[0] - d.w * sc / 2 - 3) * k, top: (d.hanging ? at[1] : at[1] - d.h * sc) * k - 3, width: (d.w * sc + 6) * k, height: (d.h * sc + 6) * k, borderWidth: 2, borderColor: '#ffe29a', borderStyle: 'dashed', zIndex: 20 }} />}
               </React.Fragment>
             );
           })}
@@ -203,6 +212,18 @@ export default function NurseryScreen({ navigation }) {
         onBook={() => navigation.navigate('FlowerBook')}
       />
 
+      {/* LAYOUT mode (for arranging the shop): drag items anywhere, + / - resize the selected one, COPY shows the numbers */}
+      <TouchableOpacity activeOpacity={0.8} onPress={() => { setEdit(!edit); setSel(null); }} style={styles.layoutBtn}><Text style={styles.layoutTxt}>{edit ? 'DONE' : 'LAYOUT'}</Text></TouchableOpacity>
+      {edit && (
+        <View style={styles.layoutBar}>
+          <TouchableOpacity style={styles.layoutBtn2} onPress={() => sel && setLay((l) => ({ ...l, [sel]: { ...(l[sel] || { x: (onShelf.find((o) => o.id === sel) || { at: [0, 0] }).at[0], y: (onShelf.find((o) => o.id === sel) || { at: [0, 0] }).at[1] }), s: Math.max(0.3, (l[sel]?.s ?? 1) / 1.1) } }))}><Text style={styles.layoutTxt}>–</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.layoutBtn2} onPress={() => sel && setLay((l) => ({ ...l, [sel]: { ...(l[sel] || { x: (onShelf.find((o) => o.id === sel) || { at: [0, 0] }).at[0], y: (onShelf.find((o) => o.id === sel) || { at: [0, 0] }).at[1] }), s: Math.min(4, (l[sel]?.s ?? 1) * 1.1) } }))}><Text style={styles.layoutTxt}>+</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.layoutBtn2} onPress={() => { const t = JSON.stringify(onShelf.reduce((o, e) => ({ ...o, [e.id]: { x: Math.round(e.at[0]), y: Math.round(e.at[1]), s: Math.round((lay[e.id]?.s ?? 1) * 100) / 100 } }), {})); setDump(t); try { navigator.clipboard && navigator.clipboard.writeText(t); } catch (e) { /* the text is shown below anyway */ } }}><Text style={styles.layoutTxt}>COPY</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.layoutBtn2} onPress={() => { setLay({}); setSel(null); setDump(''); }}><Text style={styles.layoutTxt}>RESET</Text></TouchableOpacity>
+        </View>
+      )}
+      {edit && dump !== '' && <View style={styles.dumpBox}><Text selectable style={styles.dumpTxt}>{dump}</Text></View>}
+
       <View style={styles.coinBox}>
         <Image source={UI_IMAGES.goldcoins} style={styles.coinIcon} resizeMode="contain" />
         <Text style={styles.coinText}>{coins}</Text>
@@ -227,6 +248,12 @@ const styles = StyleSheet.create({
   priceChip: { backgroundColor: 'rgba(243,224,182,0.95)', borderWidth: 1.5, borderColor: '#8a5a2a', borderRadius: 8, paddingHorizontal: 4, paddingVertical: 0 },
   priceText: { userSelect: 'none', fontFamily: SERIF, fontSize: 10, color: '#4a2a10', fontWeight: 'bold' },
   pageChip: { position: 'absolute', alignItems: 'center', backgroundColor: 'rgba(243,224,182,0.95)', borderWidth: 2, borderColor: '#8a5a2a', borderRadius: 9, zIndex: 12 },
+  layoutBtn: { position: 'absolute', left: 14, top: 74, zIndex: 60, backgroundColor: '#8a5a2a', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3 },
+  layoutBar: { position: 'absolute', left: 14, top: 104, zIndex: 60, flexDirection: 'row', gap: 6 },
+  layoutBtn2: { backgroundColor: '#3a6a8a', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 3 },
+  layoutTxt: { fontFamily: SERIF, fontSize: 14, color: '#fff3d0', fontWeight: 'bold' },
+  dumpBox: { position: 'absolute', left: 14, right: 14, bottom: 8, zIndex: 70, backgroundColor: 'rgba(30,16,6,0.92)', borderRadius: 8, padding: 6, maxHeight: 90, overflow: 'hidden' },
+  dumpTxt: { fontSize: 8, color: '#ffe9b8' },
   hintChip: { backgroundColor: '#f3e0b6', borderWidth: 3, borderColor: '#8a5a2a', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 2 },
   hintText: { fontFamily: SERIF, fontSize: 13, color: '#4a2a10' },
 });
