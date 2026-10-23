@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { TRADE_IMAGES, SET_UI } from '../engine/assets';
+import { TRADE_IMAGES, SET_UI, UI_IMAGES } from '../engine/assets';
+import { Skinned } from './NineSlice';
+import { pixelText } from './Pixel';
 import { HERBALIST, HERBALIST_TRADES, REMEDIES, TRADE_FLOWERS } from '../constants/gameData';
 import { dayKey } from '../engine/petEffects';
 import Portrait from './Portrait';
@@ -76,9 +78,18 @@ export default function HerbalistMenu({ sw, sh, open, setOpen }) {
             <Text style={styles.speechText}>{canClaim ? HERBALIST.greetDaily : HERBALIST.greetNone}</Text>
           </View>
 
-          <View style={styles.row}>
-            <RemedyIcon kind="balm" size={36} />
-            <Btn label={canClaim ? "Take today's bug balm" : 'Back tomorrow for more'} disabled={!canClaim} onPress={() => dispatch({ type: 'CLAIM_DAILY_REMEDY' })} />
+          {/* today's gift: a ticket with a green CLAIM button, or a note that it is already taken */}
+          <View style={styles.gift}>
+            <RemedyIcon kind="balm" size={40} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.giftTitle}>Today's free bug balm</Text>
+              <Text style={styles.sub}>{canClaim ? 'A gift from Granny Mae, once a day.' : 'Already taken. Come back tomorrow!'}</Text>
+            </View>
+            {canClaim ? (
+              <Skinned src={UI_IMAGES.pcBtnGreen} sw={112} sh={80} inset={18} scale={0.5} onPress={() => dispatch({ type: 'CLAIM_DAILY_REMEDY' })} style={{ paddingVertical: 8, paddingHorizontal: 18, alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={styles.claimText}>CLAIM</Text>
+              </Skinned>
+            ) : <Text style={styles.done}>✓</Text>}
           </View>
 
           <View style={styles.rule} />
@@ -123,7 +134,10 @@ const styles = StyleSheet.create({
   speech: { backgroundColor: '#fbf0cf', borderRadius: 12, borderWidth: 2, borderColor: '#d2b27a', padding: 10 },
   speechText: { fontFamily: SERIF, fontSize: 14, color: INK, lineHeight: 19 },
   rule: { height: 3, backgroundColor: '#d2b27a', borderRadius: 2 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  gift: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fbf0cf', borderRadius: 12, borderWidth: 2, borderColor: '#d2b27a', borderStyle: 'dashed', paddingVertical: 8, paddingHorizontal: 10 },
+  giftTitle: { fontFamily: SERIF, fontSize: 16, color: INK, fontWeight: 'bold' },
+  claimText: { ...pixelText(10, '#fff') },
+  done: { fontFamily: SERIF, fontSize: 26, color: '#3c6a28', paddingHorizontal: 10 },
   trade: { flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'space-between', backgroundColor: '#e8cf9a', borderRadius: 12, borderWidth: 2, borderColor: '#b98a4e', paddingVertical: 6, paddingHorizontal: 8 },
   give: { flexDirection: 'row', gap: 6 },
   giveItem: { alignItems: 'center', gap: 2 },
