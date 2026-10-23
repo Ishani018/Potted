@@ -27,7 +27,7 @@ import InventoryOverlay from '../components/InventoryOverlay';
 const ROOM_TYPES = ['hanging'];
 
 // height of a hanging pot in the room, in base pixels (the PlantSlot default is the same)
-const HANG_POT_H = 150;
+const HANG_POT_H = 200;
 
 export default function Room2Screen({ navigation }) {
   const { width: sw, height: sh } = useLayout();

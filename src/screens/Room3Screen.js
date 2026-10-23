@@ -103,7 +103,7 @@ export default function Room3Screen({ navigation }) {
   // drag/ghost/placed pots share the (square) hanging pot image.
   const hookPotW = Math.round(projectSize(120, sw, sh));
   const hookPotH = Math.round(hookPotW * 0.93);
-  const hookDragW = Math.round(projectSize(160, sw, sh));
+  const hookDragW = Math.round(projectSize(205, sw, sh));
   const rawHookSrc = HANGING_POT_SOURCE_POSITIONS[3];
   const hookSrcPos = projectPoint(rawHookSrc.x, rawHookSrc.y, sw, sh);
 
@@ -236,7 +236,7 @@ export default function Room3Screen({ navigation }) {
           if (!pt) return null;
           // Hanging pots use the Balcony's sizing (stage 0 image is tall & narrow).
           const hangingSize = slot.type === 'hanging'
-            ? { baseWidthOverride: slot.stage === 0 ? 100 : SUN_HANG_W, potHeightOverride: 160 }
+            ? { baseWidthOverride: slot.stage === 0 ? 100 : SUN_HANG_W, potHeightOverride: 205 }
             : { baseWidthOverride: SUN_POT_W };
           return <PlantSlot key={slot.slotId} slot={slot} position={pt} onPress={handleSlotPress} onPestPress={handlePestPress} {...hangingSize} />;
         })}

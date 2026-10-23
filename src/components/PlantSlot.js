@@ -159,7 +159,7 @@ export default function PlantSlot({ slot, position, onPress, onPestPress, baseWi
     );
   }
   if (newHang) {
-    const ph = Math.round(projectSize(potHeightOverride ?? 150, sw, sh));
+    const ph = Math.round(projectSize(potHeightOverride ?? 200, sw, sh));
     const bx = hangingBox(potStyle, ph);
     return (
       <View
