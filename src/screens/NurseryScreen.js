@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Image, PanResponder, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { NURSERY_BG, SEED_IMAGES, UI_IMAGES } from '../engine/assets';
-import { POTTED_FLOWERS, HANGING_PLANTS, seedType, seedUnlockLevel, playerLevel, FLOWER_GROWTH, formatDuration } from '../constants/gameData';
+import { POTTED_FLOWERS, HANGING_PLANTS, seedType, FLOWER_GROWTH, formatDuration } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
 import { useNotice } from '../components/PurchaseNotice';
@@ -76,7 +76,6 @@ export default function NurseryScreen({ navigation }) {
   const sw = box.w, sh = box.h;
   const kx = sw / IMG_W;   // the picture fills the box (its shape is within 1% of the box's), so one scale serves both axes
 
-  const level = playerLevel(state.player);
   const INVENTORY_CAP = 35;
   const free = INVENTORY_CAP - (state.inventory?.length ?? 0);
   const total = basket.reduce((n, key) => n + (SEED_INFO[key]?.price ?? 0), 0);
@@ -84,9 +83,8 @@ export default function NurseryScreen({ navigation }) {
   // drop a bag: onto the counter puts it in the basket; anywhere else sends it back to its shelf
   const dropOnCounter = (key, p) => {
     if (p[1] < COUNTER_TOP) return;
-    const info = SEED_INFO[key], need = seedUnlockLevel(key);
+    const info = SEED_INFO[key];
     if (basket.includes(key)) return;
-    if (level < need) { notify({ icon: SEED_IMAGES[key], title: `${info.name} is locked`, subtitle: `Reach level ${need} to unlock these seeds. You are level ${level}.` }); return; }
     if (basket.length >= Math.min(12, free)) { notify({ icon: UI_IMAGES.inventorybtn, title: 'Bag is full', subtitle: 'Plant some seeds to make room.' }); return; }
     setBasket((b) => [...b, key]);
   };
@@ -116,14 +114,14 @@ export default function NurseryScreen({ navigation }) {
         <>
           {/* seed bags on the shelves: drag one to the counter (or tap to see its price) */}
           {shelfBags.map((key) => {
-            const info = SEED_INFO[key], lockedAt = seedUnlockLevel(key), locked = level < lockedAt;
+            const info = SEED_INFO[key];
             return (
               <React.Fragment key={key}>
-                <DragBag item={key} at={SPOTS[key]} k={kx} z={6} dim={locked}
+                <DragBag item={key} at={SPOTS[key]} k={kx} z={6}
                   onDrop={(p) => dropOnCounter(key, p)}
-                  onTap={() => notify({ icon: SEED_IMAGES[key], title: info.name, subtitle: locked ? `Unlocks at level ${lockedAt}.` : `${info.price} coins. Drag it to the counter to buy.` })} />
+                  onTap={() => notify({ icon: SEED_IMAGES[key], title: info.name, subtitle: `${info.price} coins. Drag it to the counter to buy.` })} />
                 <View pointerEvents="none" style={{ position: 'absolute', left: SPOTS[key][0] * kx - 26 * kx, top: (SPOTS[key][1] + 4) * kx, width: 52 * kx, alignItems: 'center', zIndex: 7 }}>
-                  <View style={styles.priceChip}><Text style={styles.priceText}>{locked ? `LV ${lockedAt}` : info.price}</Text></View>
+                  <View style={styles.priceChip}><Text style={styles.priceText}>{info.price}</Text></View>
                 </View>
               </React.Fragment>
             );

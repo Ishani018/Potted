@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import LevelBadge from '../components/LevelBadge';
 import { useGame } from '../context/GameContext';
 import { MAP_BG, SET_UI } from '../engine/assets';
 import { getAudioPrefs, subscribeAudio, setMusicOn, setMusicVolume, setSfxOn, setSfxVolume } from '../engine/audio';
@@ -104,8 +103,6 @@ export default function SettingsScreen({ navigation }) {
             </TouchableOpacity>
           </View>
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
-            <LevelBadge inline />
-
             <Row icon="music" label="Music"><Toggle on={audio.musicOn} onPress={() => setMusicOn(!audio.musicOn)} /></Row>
             <Row label="Music volume"><Volume level={level} on={audio.musicOn} onChange={setMusicVolume} /></Row>
 

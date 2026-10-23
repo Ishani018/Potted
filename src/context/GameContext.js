@@ -5,7 +5,7 @@ import {
   INITIAL_PLAYER_STATE, ROOM_UNLOCK_COSTS, CATCH_UP, BOUQUET_SIZE,
   POTTED_FLOWERS, HANGING_PLANTS, PETS, ROOM_NAMES,
   seedType, evaluateBouquet, bouquetPaper,
-  XP_CONFIG, levelInfo, playerLevel, seedUnlockLevel, unlocksAtLevel, TRADE_FLOWERS, CUSTOMERS,
+  XP_CONFIG, SEED_LOCKS, levelInfo, playerLevel, seedUnlockLevel, unlocksAtLevel, TRADE_FLOWERS, CUSTOMERS,
   roomScentShield, HERBALIST, HERBALIST_TRADES, REMEDIES, SACHET_MS, isShielded,
   PET_FOOD, PET_SPECIES, FED_MAX_HOURS, ADVENTURE, orderGrade,
 } from '../constants/gameData';
@@ -269,7 +269,7 @@ function reducer(state, action) {
     // action: { flowerKey, price }
     case 'BUY_SEED': {
       const { flowerKey, price = 0 } = action;
-      if (playerLevel(state.player) < seedUnlockLevel(flowerKey)) return state; // not unlocked yet
+      if (SEED_LOCKS && playerLevel(state.player) < seedUnlockLevel(flowerKey)) return state; // not unlocked yet
       if (state.player.coins < price) return state;          // can't afford
       if (state.inventory.length >= INVENTORY_CAP) return state; // inventory full
       const id = `inv_${Date.now()}_${Math.random().toString(36).slice(2)}`;

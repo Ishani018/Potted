@@ -3,6 +3,7 @@ import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from 'rea
 import { useGame } from '../context/GameContext';
 import { POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES, UI_IMAGES, TRADE_IMAGES, PET_IMAGES, PAINTING_IMAGES, BOOK_DIVIDER } from '../engine/assets';
 import {
+  SEED_LOCKS,
   FLOWER_BOOK, RARE_BOOK, POTTED_FLOWERS, HANGING_PLANTS, BOUQUET_RECIPES, TRADE_FLOWERS, seedType,
   FLOWER_GROWTH, formatDuration, seedUnlockLevel, playerLevel, CUSTOMERS, knownPetKeys,
 } from '../constants/gameData';
@@ -199,7 +200,7 @@ function FlowerBookPages({ navigation }) {
             {list.map((f) => {
               const isFound = !!book[f.key];
               const isSel = f.key === selected;
-              const seedLocked = !isRare && !isFound && level < seedUnlockLevel(f.key);
+              const seedLocked = SEED_LOCKS && !isRare && !isFound && level < seedUnlockLevel(f.key);
               return (
                 <TouchableOpacity
                   key={f.key}
@@ -271,7 +272,7 @@ function FlowerBookPages({ navigation }) {
                     Water every {formatDuration((FLOWER_GROWTH[selected]?.hours ?? 3) * 3600000)} · bloom in {formatDuration((FLOWER_GROWTH[selected]?.hours ?? 3) * 3600000 * (type === 'hanging' || isRare ? 1 : 2))}
                   </Text>
                   <Text style={styles.stat}>
-                    {isRare ? 'Rare' : `Level ${seedUnlockLevel(selected)}`} · grown {record.grown}× · first {new Date(record.firstAt).toLocaleDateString()}
+                    {isRare ? 'Rare' : 'Common'} · grown {record.grown}× · first {new Date(record.firstAt).toLocaleDateString()}
                   </Text>
                 </View>
               </>
@@ -281,7 +282,7 @@ function FlowerBookPages({ navigation }) {
                 <Text style={styles.lockedLevel}>
                   {isRare
                     ? 'Pets sometimes bring its seed home from an adventure.'
-                    : level >= seedUnlockLevel(selected)
+                    : !SEED_LOCKS || level >= seedUnlockLevel(selected)
                     ? 'The seeds are waiting for you at the nursery.'
                     : `Its seeds unlock at level ${seedUnlockLevel(selected)}.`}
                 </Text>

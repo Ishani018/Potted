@@ -897,3 +897,6 @@ export const APARTMENTS = {
   2: { name: 'Cream Arch',        floor: 'First floor',  price: 900,  size: 'Two rooms' },
   3: { name: 'Grand Suite',       floor: 'Top floor',    price: 2500, size: 'Three rooms and a balcony' },
 };
+
+// Seed levels are switched off for now: every seed can be bought and planted from the start. (Customers still use the levels to decide what to ask for.)
+export const SEED_LOCKS = false;
