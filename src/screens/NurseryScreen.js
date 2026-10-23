@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, PanResponder, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { NURSERY_BG, SEED_IMAGES, UI_IMAGES } from '../engine/assets';
 import { POTTED_FLOWERS, HANGING_PLANTS, seedType, seedUnlockLevel, playerLevel, FLOWER_GROWTH, formatDuration } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
-import { PixelText, COLORS } from '../components/Pixel';
 import { useNotice } from '../components/PurchaseNotice';
 
 // All buyable seeds keyed by flowerKey → { name, price }.
@@ -14,24 +13,57 @@ const SEED_INFO = {};
   SEED_INFO[s.key] = { name: s.name, price: s.seedPrice ?? 10 };
 });
 
-// Seed-bag positions on the nursery shelves, laid out in Plopper (1376×768 base,
-// CENTER anchor). The JSON keys are seed-image filenames; map them to flowerKeys.
-const PLOPPER_W = 1376;
-const PLOPPER_H = 768;
-const SHELF_ITEMS = [
-  { key: 'snapdragon',     x: 475, y: 131, w: 61, h: 68, z: 1 },
-  { key: 'stringofpearls', x: 749, y: 467, w: 65, h: 72, z: 2 },
-  { key: 'hydrenga',       x: 362, y: 388, w: 63, h: 71, z: 3 },
-  { key: 'daisy',          x: 534, y: 218, w: 63, h: 70, z: 4 },
-  { key: 'peony',          x: 537, y: 131, w: 61, h: 69, z: 5 },
-  { key: 'poppy',          x: 527, y: 392, w: 64, h: 71, z: 6 },
-  { key: 'rose',           x: 445, y: 302, w: 67, h: 73, z: 7 },
-  { key: 'marigold',       x: 368, y: 304, w: 65, h: 72, z: 8 },
-  { key: 'petunia',        x: 733, y: 131, w: 61, h: 68, z: 9 },
-  { key: 'Bougainvillea',  x: 817, y: 307, w: 62, h: 69, z: 10 },
-  { key: 'jasmine',        x: 822, y: 389, w: 71, h: 71, z: 11 },
-  { key: 'Philodendron',   x: 642, y: 297, w: 67, h: 74, z: 12 },
-];
+// The shop picture is 1671x941. Each seed bag has a spot on the shelves (centre x, y of the plank it stands on).
+const IMG_W = 1671;
+const IMG_H = 941;
+const BAG = { w: 74, h: 80 };
+const SPOTS = {
+  snapdragon:     [630, 188],
+  peony:          [680, 294],
+  hydrenga:       [470, 398],
+  daisy:          [545, 398],
+  poppy:          [440, 503],
+  rose:           [665, 503],
+  marigold:       [622, 593],
+  stringofpearls: [917, 188],
+  petunia:        [922, 294],
+  jasmine:        [812, 398],
+  Philodendron:   [1065, 398],
+  Bougainvillea:  [1062, 503],
+};
+const COUNTER_TOP = 725;                                  // the counter's back edge: drop a bag below this line to put it down
+const COUNTER_SLOTS = Array.from({ length: 12 }, (_, i) => [250 + (i % 6) * 150, 800 + Math.floor(i / 6) * 85]);   // where bags sit on the counter
+const REGISTER = { x0: 1255, y0: 640, x1: 1545, y1: 880 };
+const LCD = { x: 1425, y: 690 };                          // the register's little screen
+
+// One seed bag you can pick up and drag (on a shelf or on the counter).
+function DragBag({ item, at, k, onDrop, onTap, dim, z }) {
+  const [pos, setPos] = useState(null);
+  const start = React.useRef([0, 0]);
+  const live = React.useRef({ at, k, onDrop, onTap });
+  live.current = { at, k, onDrop, onTap };
+  const pan = React.useRef(PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderTerminationRequest: () => false,
+    onPanResponderGrant: () => { start.current = [live.current.at[0], live.current.at[1]]; },
+    onPanResponderMove: (_, g) => setPos([start.current[0] + g.dx / live.current.k, start.current[1] + g.dy / live.current.k]),
+    onPanResponderRelease: (_, g) => {
+      const moved = Math.abs(g.dx) + Math.abs(g.dy) > 6;
+      const p = [start.current[0] + g.dx / live.current.k, start.current[1] + g.dy / live.current.k];
+      setPos(null);
+      if (moved) live.current.onDrop(p); else live.current.onTap();
+    },
+    onPanResponderTerminate: () => setPos(null),
+  })).current;
+  const [x, y] = pos ?? at;
+  const w = BAG.w * k, h = BAG.h * k;
+  return (
+    <View {...pan.panHandlers} style={{ position: 'absolute', left: x * k - w / 2, top: y * k - h, width: w, height: h, zIndex: pos ? 500 : z, opacity: dim ? 0.4 : 1 }}>
+      <Image source={SEED_IMAGES[item]} pointerEvents="none" style={{ width: w, height: h }} resizeMode="contain" />
+    </View>
+  );
+}
 
 export default function NurseryScreen({ navigation }) {
   const { state, dispatch } = useGame();
@@ -40,25 +72,34 @@ export default function NurseryScreen({ navigation }) {
   const [notice, notify] = useNotice();
   const [invOpen, setInvOpen] = useState(false);
   const [box, setBox] = useState({ w: 0, h: 0 });
+  const [basket, setBasket] = useState([]);                 // seed keys put down on the counter
   const sw = box.w, sh = box.h;
+  const kx = sw / IMG_W;   // the picture fills the box (its shape is within 1% of the box's), so one scale serves both axes
 
   const level = playerLevel(state.player);
   const INVENTORY_CAP = 35;
-  const invFull = (state.inventory?.length ?? 0) >= INVENTORY_CAP;
+  const free = INVENTORY_CAP - (state.inventory?.length ?? 0);
+  const total = basket.reduce((n, key) => n + (SEED_INFO[key]?.price ?? 0), 0);
 
-  const handleBuy = (flowerKey, price, name) => {
-    const need = seedUnlockLevel(flowerKey);
-    if (level < need) { notify({ icon: SEED_IMAGES[flowerKey], title: `${name} is locked`, subtitle: `Reach level ${need} to unlock these seeds. You are level ${level}.` }); return; }
-    if (coins < price) { notify({ icon: UI_IMAGES.goldcoins, title: 'Not enough coins', subtitle: `You need ${price - coins} more for ${name}.` }); return; }
-    if (invFull) { notify({ icon: UI_IMAGES.inventorybtn, title: 'Inventory full', subtitle: 'Plant some seeds to make room.' }); return; }
-    dispatch({ type: 'BUY_SEED', flowerKey, price });
-    const hrs = FLOWER_GROWTH[flowerKey]?.hours;
-    notify({
-      icon: SEED_IMAGES[flowerKey],
-      title: `Bought ${name}!`,
-      subtitle: `${seedType(flowerKey) === 'hanging' ? 'Grows in a hanging pot' : 'Grows in a shelf pot'}${hrs ? ` · water every ${formatDuration(hrs * 3600000)}` : ''}.`,
-    });
+  // drop a bag: onto the counter puts it in the basket; anywhere else sends it back to its shelf
+  const dropOnCounter = (key, p) => {
+    if (p[1] < COUNTER_TOP) return;
+    const info = SEED_INFO[key], need = seedUnlockLevel(key);
+    if (basket.includes(key)) return;
+    if (level < need) { notify({ icon: SEED_IMAGES[key], title: `${info.name} is locked`, subtitle: `Reach level ${need} to unlock these seeds. You are level ${level}.` }); return; }
+    if (basket.length >= Math.min(12, free)) { notify({ icon: UI_IMAGES.inventorybtn, title: 'Bag is full', subtitle: 'Plant some seeds to make room.' }); return; }
+    setBasket((b) => [...b, key]);
   };
+
+  const checkout = () => {
+    if (basket.length === 0) { notify({ icon: UI_IMAGES.goldcoins, title: 'The counter is empty', subtitle: 'Drag seed bags from the shelves to the counter.' }); return; }
+    if (coins < total) { notify({ icon: UI_IMAGES.goldcoins, title: 'Not enough coins', subtitle: `You need ${total - coins} more for these.` }); return; }
+    basket.forEach((key) => dispatch({ type: 'BUY_SEED', flowerKey: key, price: SEED_INFO[key].price }));
+    notify({ icon: SEED_IMAGES[basket[0]], title: basket.length === 1 ? `Bought ${SEED_INFO[basket[0]].name}!` : `Bought ${basket.length} seed bags!`, subtitle: `${total} coins. They are in your bag.` });
+    setBasket([]);
+  };
+
+  const shelfBags = Object.keys(SPOTS).filter((key) => SEED_INFO[key] && !basket.includes(key));
 
   return (
     <View
@@ -71,6 +112,44 @@ export default function NurseryScreen({ navigation }) {
         resizeMode="stretch"
       />
 
+      {sw > 0 && (
+        <>
+          {/* seed bags on the shelves: drag one to the counter (or tap to see its price) */}
+          {shelfBags.map((key) => {
+            const info = SEED_INFO[key], lockedAt = seedUnlockLevel(key), locked = level < lockedAt;
+            return (
+              <React.Fragment key={key}>
+                <DragBag item={key} at={SPOTS[key]} k={kx} z={6} dim={locked}
+                  onDrop={(p) => dropOnCounter(key, p)}
+                  onTap={() => notify({ icon: SEED_IMAGES[key], title: info.name, subtitle: locked ? `Unlocks at level ${lockedAt}.` : `${info.price} coins. Drag it to the counter to buy.` })} />
+                <View pointerEvents="none" style={{ position: 'absolute', left: SPOTS[key][0] * kx - 26 * kx, top: (SPOTS[key][1] + 4) * kx, width: 52 * kx, alignItems: 'center', zIndex: 7 }}>
+                  <View style={styles.priceChip}><Text style={styles.priceText}>{locked ? `LV ${lockedAt}` : info.price}</Text></View>
+                </View>
+              </React.Fragment>
+            );
+          })}
+
+          {/* the bags put down on the counter: drag them off, or tap, to put one back */}
+          {basket.map((key, i) => (
+            <DragBag key={key} item={key} at={COUNTER_SLOTS[i]} k={kx} z={8}
+              onDrop={(p) => { if (p[1] < COUNTER_TOP) setBasket((b) => b.filter((x) => x !== key)); }}
+              onTap={() => setBasket((b) => b.filter((x) => x !== key))} />
+          ))}
+
+          {/* the register: its screen shows the total; tap it to check out */}
+          <TouchableOpacity activeOpacity={0.85} onPress={checkout}
+            style={{ position: 'absolute', left: REGISTER.x0 * kx, top: REGISTER.y0 * kx, width: (REGISTER.x1 - REGISTER.x0) * kx, height: (REGISTER.y1 - REGISTER.y0) * kx, zIndex: 9 }} />
+          <View pointerEvents="none" style={{ position: 'absolute', left: (LCD.x - 55) * kx, top: LCD.y * kx - 12 * kx, width: 110 * kx, alignItems: 'center', zIndex: 10 }}>
+            <Text style={{ fontFamily: Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' }), fontSize: 20 * kx, color: '#9cff9c', fontWeight: 'bold' }}>{total}</Text>
+          </View>
+          {basket.length > 0 && (
+            <View pointerEvents="none" style={{ position: 'absolute', left: (REGISTER.x0 - 10) * kx, top: (REGISTER.y0 - 52) * kx, width: (REGISTER.x1 - REGISTER.x0 + 20) * kx, alignItems: 'center', zIndex: 10 }}>
+              <View style={styles.hintChip}><Text style={styles.hintText}>Tap the register to pay</Text></View>
+            </View>
+          )}
+        </>
+      )}
+
       {/* Standard HUD — settings (TL) + map (TR) + inventory (BL) */}
       <ScreenHud
         sw={sw} sh={sh}
@@ -80,49 +159,11 @@ export default function NurseryScreen({ navigation }) {
         onBook={() => navigation.navigate('FlowerBook')}
       />
 
-      {/* Coins — bottom-right */}
+      {/* Coins — top, beside the HUD */}
       <View style={styles.coinBox}>
         <Image source={UI_IMAGES.goldcoins} style={styles.coinIcon} resizeMode="contain" />
-        <PixelText size={11}>{coins}</PixelText>
+        <Text style={styles.coinText}>{coins}</Text>
       </View>
-
-      {/* Seed bags on the painted shelves (Plopper base-px coords) — tap to buy */}
-      {SHELF_ITEMS.map(({ key, x, y, w, h, z }) => {
-        const info = SEED_INFO[key];
-        if (!info) return null;
-        const cx = (x / PLOPPER_W) * sw;
-        const cy = (y / PLOPPER_H) * sh;
-        const bw = (w / PLOPPER_W) * sw;
-        const bh = (h / PLOPPER_H) * sh;
-        const affordable = coins >= info.price;
-        const lockedAt = seedUnlockLevel(key);
-        const locked = level < lockedAt;
-        return (
-          <TouchableOpacity
-            key={key}
-            style={{ position: 'absolute', left: cx - bw / 2, top: cy - bh / 2, width: bw, height: bh, alignItems: 'center', zIndex: z + 5 }}
-            activeOpacity={0.7}
-            onPress={() => handleBuy(key, info.price, info.name)}
-          >
-            <Image
-              source={SEED_IMAGES[key]}
-              style={{ width: bw, height: bh, opacity: locked ? 0.3 : affordable ? 1 : 0.5 }}
-              resizeMode="contain"
-            />
-            {/* Price tag under the bag — or the level it unlocks at */}
-            {locked ? (
-              <View style={styles.priceTag}>
-                <PixelText size={8} color="#cfe8a0">LV {lockedAt}</PixelText>
-              </View>
-            ) : (
-              <View style={styles.priceTag}>
-                <Image source={UI_IMAGES.goldcoins} style={styles.priceIcon} resizeMode="contain" />
-                <PixelText size={8} color={affordable ? '#fff' : '#ff8a8a'}>{info.price}</PixelText>
-              </View>
-            )}
-          </TouchableOpacity>
-        );
-      })}
 
       {notice}
 
@@ -133,30 +174,19 @@ export default function NurseryScreen({ navigation }) {
   );
 }
 
+const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#1a0f00', overflow: 'hidden' },
-
-  // Standard HUD
-  hudTL: { position: 'absolute', top: 12, left: 12,   width: 48, height: 48, zIndex: 50 },
-  hudTR: { position: 'absolute', top: 12, right: 14,  width: 48, height: 48, zIndex: 50 },
-  hudBL: { position: 'absolute', bottom: 14, left: 14, width: 48, height: 48, zIndex: 50 },
-  hudImg: { width: '100%', height: '100%' },
-
+  root: { flex: 1, backgroundColor: '#1a0f00', overflow: 'hidden', userSelect: 'none' },
   coinBox: {
-    position: 'absolute', bottom: 14, right: 14, zIndex: 50,
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: COLORS.woodDark, borderWidth: 3, borderColor: COLORS.woodEdge, borderRadius: 4,
-    paddingHorizontal: 8, paddingVertical: 4,
+    position: 'absolute', top: 14, left: 0, right: 0, alignSelf: 'center', zIndex: 50,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    backgroundColor: '#f3e0b6', borderWidth: 3, borderColor: '#8a5a2a', borderRadius: 14,
+    paddingHorizontal: 12, paddingVertical: 3, width: 96, marginLeft: 'auto', marginRight: 'auto',
   },
   coinIcon: { width: 22, height: 22 },
-
-  priceTag: {
-    flexDirection: 'row', alignItems: 'center', gap: 3,
-    backgroundColor: COLORS.woodDark, borderWidth: 2, borderColor: COLORS.woodEdge,
-    borderRadius: 3, paddingHorizontal: 5, paddingVertical: 2, marginTop: -4,
-  },
-  priceIcon: { width: 13, height: 13 },
-  priceText: { color: '#ffd060', fontSize: 11, fontWeight: 'bold' },
-  priceBroke: { color: '#c06060' },
-
+  coinText: { fontFamily: SERIF, fontSize: 18, color: '#4a2a10', fontWeight: 'bold' },
+  priceChip: { backgroundColor: 'rgba(243,224,182,0.95)', borderWidth: 2, borderColor: '#8a5a2a', borderRadius: 9, paddingHorizontal: 6, paddingVertical: 0 },
+  priceText: { userSelect: 'none', fontFamily: SERIF, fontSize: 12, color: '#4a2a10', fontWeight: 'bold' },
+  hintChip: { backgroundColor: '#f3e0b6', borderWidth: 3, borderColor: '#8a5a2a', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 2 },
+  hintText: { fontFamily: SERIF, fontSize: 13, color: '#4a2a10' },
 });
