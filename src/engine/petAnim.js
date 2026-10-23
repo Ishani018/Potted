@@ -96,18 +96,32 @@ export const PET_FRAMES = {
     11: { src: require('../../assets/petsheets/calA_11.png'), w: 360, h: 300 },
   },
   milk: {
-    2: { src: require('../../assets/petsheets/bwA_02.png'), w: 378, h: 208 },
-    4: { src: require('../../assets/petsheets/bwA_04.png'), w: 275, h: 326 },
-    6: { src: require('../../assets/petsheets/bwA_06.png'), w: 374, h: 324 },
-    8: { src: require('../../assets/petsheets/bwA_08.png'), w: 396, h: 276 },
-    10: { src: require('../../assets/petsheets/bwA_10.png'), w: 337, h: 295 },
+    1: { src: require('../../assets/petsheets/milkA_01.png'), w: 242, h: 323 },
+    3: { src: require('../../assets/petsheets/milkA_03.png'), w: 331, h: 299 },
+    4: { src: require('../../assets/petsheets/milkA_04.png'), w: 321, h: 283 },
+    6: { src: require('../../assets/petsheets/milkA_06.png'), w: 324, h: 286 },
+    7: { src: require('../../assets/petsheets/milkA_07.png'), w: 294, h: 292 },
+    8: { src: require('../../assets/petsheets/milkA_08.png'), w: 221, h: 293 },
+    9: { src: require('../../assets/petsheets/milkA_09.png'), w: 218, h: 308 },
+    10: { src: require('../../assets/petsheets/milkA_10.png'), w: 264, h: 303 },
+    11: { src: require('../../assets/petsheets/milkA_11.png'), w: 318, h: 202 },
+    12: { src: require('../../assets/petsheets/milkA_12.png'), w: 261, h: 189 },
+    14: { src: require('../../assets/petsheets/milkA_14.png'), w: 244, h: 291 },
+    15: { src: require('../../assets/petsheets/milkA_15.png'), w: 331, h: 276 },
   },
   oreo: {
-    3: { src: require('../../assets/petsheets/bwA_03.png'), w: 372, h: 229 },
-    5: { src: require('../../assets/petsheets/bwA_05.png'), w: 289, h: 318 },
-    7: { src: require('../../assets/petsheets/bwA_07.png'), w: 394, h: 330 },
-    9: { src: require('../../assets/petsheets/bwA_09.png'), w: 405, h: 262 },
-    11: { src: require('../../assets/petsheets/bwA_11.png'), w: 320, h: 285 },
+    1: { src: require('../../assets/petsheets/oreoA_01.png'), w: 242, h: 321 },
+    3: { src: require('../../assets/petsheets/oreoA_03.png'), w: 352, h: 298 },
+    4: { src: require('../../assets/petsheets/oreoA_04.png'), w: 351, h: 273 },
+    6: { src: require('../../assets/petsheets/oreoA_06.png'), w: 331, h: 286 },
+    7: { src: require('../../assets/petsheets/oreoA_07.png'), w: 311, h: 285 },
+    8: { src: require('../../assets/petsheets/oreoA_08.png'), w: 231, h: 294 },
+    9: { src: require('../../assets/petsheets/oreoA_09.png'), w: 226, h: 311 },
+    10: { src: require('../../assets/petsheets/oreoA_10.png'), w: 271, h: 304 },
+    11: { src: require('../../assets/petsheets/oreoA_11.png'), w: 327, h: 199 },
+    12: { src: require('../../assets/petsheets/oreoA_12.png'), w: 299, h: 192 },
+    14: { src: require('../../assets/petsheets/oreoA_14.png'), w: 250, h: 286 },
+    15: { src: require('../../assets/petsheets/oreoA_15.png'), w: 345, h: 263 },
   },
   ebonyandivory: {
     1: { src: require('../../assets/petsheets/bwA_01.png'), w: 462, h: 337 },
@@ -318,51 +332,63 @@ export const PET_POSES = {
   ]
  },
  "milk": {
-  "base": 4,
+  "base": 1,
   "sit": [
-   4
+   1,
+   9,
+   10
   ],
   "stand": [
-   4
+   1
   ],
   "walk": [
-   10
+   3,
+   4,
+   14,
+   15
   ],
   "groom": [
    8
   ],
   "stretch": [
-   6
-  ],
-  "rest": [
-   2
-  ],
-  "sleep": [
-   2
-  ]
- },
- "oreo": {
-  "base": 5,
-  "sit": [
-   5
-  ],
-  "stand": [
-   5
-  ],
-  "walk": [
-   11
-  ],
-  "groom": [
-   9
-  ],
-  "stretch": [
+   6,
    7
   ],
   "rest": [
-   3
+   12
   ],
   "sleep": [
-   3
+   11
+  ]
+ },
+ "oreo": {
+  "base": 1,
+  "sit": [
+   1,
+   9,
+   10
+  ],
+  "stand": [
+   1
+  ],
+  "walk": [
+   3,
+   4,
+   14,
+   15
+  ],
+  "groom": [
+   8
+  ],
+  "stretch": [
+   6,
+   7
+  ],
+  "rest": [
+   12
+  ],
+  "sleep": [
+   11
   ]
  },
  "ebonyandivory": {
