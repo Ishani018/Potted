@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Image, ScrollView, PanResponder, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { NURSERY_BG, SEED_IMAGES, UI_IMAGES, PPOT_META, PPOT_IDS, PPLANT_IMAGES, HPOT_META, HPOT_ORDER, CAN_IMAGES, SET_UI } from '../engine/assets';
+import { NURSERY_BG, NURSERY_BARE, SEED_IMAGES, UI_IMAGES, PPOT_META, PPOT_IDS, PPLANT_IMAGES, HPOT_META, HPOT_ORDER, CAN_IMAGES, SET_UI } from '../engine/assets';
 import { POTTED_FLOWERS, HANGING_PLANTS, seedType, FLOWER_GROWTH, formatDuration, HPOT_INFO, PPOT_PRICE, CAN_INFO } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
@@ -19,30 +19,57 @@ const SEED_INFO = {};
 
 // The shop picture is 1672x941; every position below is in its own pixels. A spot is where an item's feet rest.
 const IMG_W = 1672;
+const IMG_H = 941;
 const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 const SEED_ORDER = ['daisy', 'snapdragon', 'poppy', 'marigold', 'peony', 'hydrenga', 'rose', 'stringofpearls', 'Philodendron', 'jasmine', 'petunia', 'Bougainvillea'];
-// Nine seed bags stand on the counter (their art is cut from the painted bags); the other three seeds are sold from the POTS panel.
+// The shop picture has everything painted in. Each painted bag, pot and hanging pot gets an invisible handle laid over it;
+// when it is bought, a copy of the picture without it ("bare") is shown through that spot, so the spot looks empty.
+// Nine bags are painted on the counter (their flowers are our seeds'); the other three seeds are sold from the POTS panel.
 const COUNTER_SEEDS = ['daisy', 'marigold', 'rose', 'hydrenga', 'jasmine', 'peony', 'poppy', 'petunia', 'snapdragon'];
 const EXTRA_SEEDS = SEED_ORDER.filter((kk) => !COUNTER_SEEDS.includes(kk));
-const SPOT_OF = {};
-const SPOT_SCALE = {};
-COUNTER_SEEDS.forEach((kk, n) => { SPOT_OF['s:' + kk] = [275 + n * 96, 878]; });
-// Shelf pots: every pot has its own fixed seat on the empty shelves (feet resting on a board). Buy one and its seat is empty.
-// Left unit: 4 boards x 5; right unit: 3 boards x 4; the last few stand on the floor. Order is a fixed shuffle so styles mix.
-const LEFT_BOARDS = [265, 362, 462, 567];
-const RIGHT_BOARDS = [405, 503, 603];
-const SEATS = [];
-LEFT_BOARDS.forEach((y, r) => { for (let i = 0; i < 5; i++) SEATS.push({ at: [385 + i * 98, y], s: 0.42 }); });
-RIGHT_BOARDS.forEach((y, r) => { for (let i = 0; i < 4; i++) SEATS.push({ at: [955 + i * 87, y], s: 0.36 }); });
-[[420, 722], [1120, 716], [1215, 722]].forEach((at) => SEATS.push({ at, s: 0.42 }));
-const SHUFFLED = [...PPOT_IDS].sort((x, y) => ((x * 7919) % 101) - ((y * 7919) % 101));
-SHUFFLED.forEach((pid, n) => { SPOT_OF['p:' + pid] = SEATS[n].at; SPOT_SCALE['p:' + pid] = SEATS[n].s; });
-const HOOK_SPOTS = [957, 1027, 1100, 1177].map((x) => [x, 236]);   // where a hanging pot's top sits
+const SEED_BOX = (n) => { const cx = 263 + [0, 126, 248, 374, 500, 623, 748, 874, 1000][n]; return [cx - 50, 750, cx + 50, 862]; };
+const POT_SLOTS = [
+  { id: 'p:2', box: [325, 200, 405, 266] },
+  { id: 'p:6', box: [420, 205, 512, 267] },
+  { id: 'p:7', box: [530, 200, 612, 265] },
+  { id: 'p:3', box: [633, 202, 710, 265] },
+  { id: 'p:4', box: [732, 198, 800, 267] },
+  { id: 'p:8', box: [326, 312, 420, 385] },
+  { id: 'p:16', box: [435, 322, 522, 385] },
+  { id: 'p:11', box: [535, 318, 612, 385] },
+  { id: 'p:5', box: [635, 316, 710, 385] },
+  { id: 'p:13', box: [733, 318, 808, 385] },
+  { id: 'p:12', box: [330, 428, 415, 500] },
+  { id: 'p:14', box: [430, 435, 507, 497] },
+  { id: 'p:15', box: [520, 432, 620, 503] },
+  { id: 'p:10', box: [630, 428, 717, 500] },
+  { id: 'p:18', box: [732, 428, 812, 503] },
+  { id: 'p:23', box: [322, 548, 428, 625] },
+  { id: 'p:24', box: [435, 543, 510, 627] },
+  { id: 'p:17', box: [524, 551, 612, 622] },
+  { id: 'p:21', box: [633, 546, 715, 621] },
+  { id: 'p:22', box: [735, 548, 815, 625] },
+  { id: 'p:19', box: [905, 388, 985, 450] },
+  { id: 'p:9', box: [1000, 382, 1080, 450] },
+  { id: 'p:31', box: [1098, 385, 1180, 450] },
+  { id: 'p:28', box: [1195, 385, 1275, 450] },
+  { id: 'p:29', box: [908, 495, 982, 550] },
+  { id: 'p:35', box: [1000, 490, 1072, 550] },
+  { id: 'p:26', box: [1085, 485, 1185, 552] },
+  { id: 'p:25', box: [1190, 487, 1272, 550] },
+  { id: 'p:32', box: [900, 578, 998, 650] },
+  { id: 'p:30', box: [1003, 583, 1078, 650] },
+  { id: 'p:27', box: [1092, 583, 1175, 648] },
+  { id: 'p:34', box: [1188, 584, 1268, 645] },
+];
+const HANG_SLOTS = [
+  { id: 'h:macramethin', box: [898, 238, 992, 350] },
+  { id: 'h:terracotta', box: [990, 236, 1082, 352] },
+  { id: 'h:basket', box: [1080, 236, 1175, 352] },
+  { id: 'h:chain', box: [1170, 236, 1268, 344] },
+];
 const CAN_SPOT = [600, 735];
 const BAG = { w: 88, h: 114 };
-const POT_K = 1;
-const HOOK_H = 122;                                         // hanging pot height on its hook
-const COUNTER_TOP = 770;                                    // drop an item below this line to put it on the counter
 const PAY_X = 1040;                                         // items dropped right of this line (or tapped in) wait by the register
 const COUNTER_X = (i) => 1085 + (i % 6) * 52;
 const COUNTER_Y = (i) => 752 - Math.floor(i / 6) * 46;
@@ -55,8 +82,8 @@ const MAX_BASKET = 12;
 function describe(id) {
   const [kind, key] = id.split(':');
   if (kind === 's') return { name: SEED_INFO[key].name, price: SEED_INFO[key].price, src: SEED_IMAGES[key], w: BAG.w, h: BAG.h };
-  if (kind === 'p') { const m = PPOT_META[key]; return { name: 'A shelf pot', price: PPOT_PRICE[key], src: m.src, w: m.w, h: m.h }; }
-  if (kind === 'h') { const m = HPOT_META[key]; return { name: HPOT_INFO[key].name, price: HPOT_INFO[key].price, src: m.src, w: HOOK_H * m.w / m.h, h: HOOK_H, hanging: true }; }
+  if (kind === 'p') { const m = PPOT_META[key]; return { name: 'A shelf pot', price: PPOT_PRICE[key], src: m.src, w: 80, h: 80 * m.h / m.w }; }
+  if (kind === 'h') { const m = HPOT_META[key]; return { name: HPOT_INFO[key].name, price: HPOT_INFO[key].price, src: m.src, w: 60, h: 60 * m.h / m.w }; }
   return { name: 'The red watering can', price: CAN_INFO.red.price, src: CAN_IMAGES.red.up.src, w: 130, h: 118 };
 }
 
@@ -117,13 +144,8 @@ export default function NurseryScreen({ navigation }) {
   const free = INVENTORY_CAP - (state.inventory?.length ?? 0);
   const total = basket.reduce((n, id) => n + describe(id).price, 0);
 
-  // pots you do not own yet, shown 12 (shelf) and 4 (hooks) at a time
-  const shelfPots = PPOT_IDS.filter((id) => !ownedPPots.includes(id));
-  const hookPots = HPOT_ORDER.filter((id) => !ownedHPots.includes(id));
-  const potPages = 1, hookPages = Math.max(1, Math.ceil(hookPots.length / 4));
-  const pPage = Math.min(potPage, potPages - 1), hPage = Math.min(hookPage, hookPages - 1);
-  const seats = shelfPots.slice(0, 35);
-  const hooks = hookPots.slice(hPage * 4, hPage * 4 + 4);
+  // a painted pot / hanging pot is gone from the shelf once you own it or have put it on the counter
+  const slotGone = (id) => { const [kind, key] = id.split(':'); return basket.includes(id) || (kind === 'p' ? ownedPPots.includes(Number(key)) : ownedHPots.includes(key)); };
 
   const dropOnCounter = (id, p) => {
     if (p[0] < PAY_X || basket.includes(id)) return;
@@ -153,13 +175,14 @@ export default function NurseryScreen({ navigation }) {
     setBasket([]);
   };
 
-  const place = (ids) => ids.map((id) => ({ id, at: lay[id] ? [lay[id].x, lay[id].y] : SPOT_OF[id] })).filter((e) => !basket.includes(e.id));
+  const boxItem = (id, box, extra = {}) => ({ id, box, at: [(box[0] + box[2]) / 2, box[3]], ...extra });
   const onShelf = [
-    ...place(COUNTER_SEEDS.map((kk) => 's:' + kk)),
-    ...place(shelfPots.map((pid) => 'p:' + pid)),
-    ...hooks.map((hid, i) => ({ id: 'h:' + hid, at: HOOK_SPOTS[i] })).filter((e) => !basket.includes(e.id)),
-    ...(ownedCans.includes('red') || basket.includes('c:red') ? [] : [{ id: 'c:red', at: CAN_SPOT }]),
-  ];
+    ...COUNTER_SEEDS.map((kk, n) => boxItem('s:' + kk, SEED_BOX(n))),
+    ...POT_SLOTS.filter((sl) => !slotGone(sl.id)).map((sl) => boxItem(sl.id, sl.box)),
+    ...HANG_SLOTS.filter((sl) => !slotGone(sl.id)).map((sl) => boxItem(sl.id, sl.box)),
+  ].map((e) => (lay[e.id] ? { ...e, at: [lay[e.id].x, lay[e.id].y] } : e));
+  const goneSlots = [...POT_SLOTS, ...HANG_SLOTS].filter((sl) => slotGone(sl.id));
+  const showCan = !(ownedCans.includes('red') || basket.includes('c:red'));
   // the POTS panel also sells everything (and the seeds that are not on the counter)
   const addToCounter = (id) => {
     if (basket.includes(id)) return;
@@ -179,18 +202,29 @@ export default function NurseryScreen({ navigation }) {
 
       {sw > 0 && (
         <>
-          {onShelf.map(({ id, at }) => {
-            const d = describe(id);
-            const sc = lay[id]?.s ?? SPOT_SCALE[id] ?? 1;
+          {/* bought pots: show the picture without them through their spot */}
+          {goneSlots.map(({ id, box: [bx0, by0, bx1, by1] }) => (
+            <View key={'gone' + id} pointerEvents="none" style={{ position: 'absolute', left: (bx0 - 10) * k, top: (by0 - 10) * k, width: (bx1 - bx0 + 20) * k, height: (by1 - by0 + 24) * k, overflow: 'hidden', zIndex: 4 }}>
+              <Image source={NURSERY_BARE} style={{ position: 'absolute', left: -(bx0 - 10) * k, top: -(by0 - 10) * k, width: IMG_W * k, height: IMG_H * k }} />
+            </View>
+          ))}
+
+          {onShelf.map(({ id, at, box: [bx0, by0, bx1, by1] }) => {
+            const d = { ...describe(id), w: bx1 - bx0, h: by1 - by0 };
             return (
               <React.Fragment key={id}>
-                <DragItem it={d} at={at} k={k} z={6} mul={sc}
-                  onDrop={(p) => (edit ? (setSel(id), setLay((l) => ({ ...l, [id]: { x: Math.round(p[0]), y: Math.round(p[1]), s: l[id]?.s ?? 1 } }))) : dropOnCounter(id, p))}
+                <DragItem it={d} ghost at={at} k={k} z={6}
+                  onDrop={(p) => (edit ? (setSel(id), setLay((l) => ({ ...l, [id]: { x: Math.round(p[0]), y: Math.round(p[1]), s: 1 } }))) : dropOnCounter(id, p))}
                   onTap={() => (edit ? setSel(id) : tellAbout(id))} />
-                {edit && sel === id && <View pointerEvents="none" style={{ position: 'absolute', left: (at[0] - d.w * sc / 2 - 3) * k, top: (d.hanging ? at[1] : at[1] - d.h * sc) * k - 3, width: (d.w * sc + 6) * k, height: (d.h * sc + 6) * k, borderWidth: 2, borderColor: '#ffe29a', borderStyle: 'dashed', zIndex: 20 }} />}
+                {edit && sel === id && <View pointerEvents="none" style={{ position: 'absolute', left: (at[0] - d.w / 2 - 3) * k, top: (at[1] - d.h) * k - 3, width: (d.w + 6) * k, height: (d.h + 6) * k, borderWidth: 2, borderColor: '#ffe29a', borderStyle: 'dashed', zIndex: 20 }} />}
               </React.Fragment>
             );
           })}
+
+          {showCan && (
+            <DragItem it={describe('c:red')} at={CAN_SPOT} k={k} z={6}
+              onDrop={(p) => dropOnCounter('c:red', p)} onTap={() => tellAbout('c:red')} />
+          )}
 
           {/* what is on the counter: drag it off, or tap, to put it back */}
           {basket.map((id, i) => (
