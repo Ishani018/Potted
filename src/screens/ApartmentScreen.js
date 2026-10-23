@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, Image, ScrollView, PanResponder, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, Image, ScrollView, PanResponder, Animated, Easing, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { APT_ART, UI_IMAGES } from '../engine/assets';
+import { APT_ART, UI_IMAGES, BUTLER } from '../engine/assets';
 import { APARTMENTS } from '../constants/gameData';
 import { DECOR, DECOR_TABS, DECOR_START_Y, DECOR_Y_RANGE, STANDS, STAND_ORDER, standOf } from '../engine/decor';
 import ScreenHud from '../components/ScreenHud';
@@ -10,6 +10,17 @@ import { Skinned } from '../components/NineSlice';
 import InventoryOverlay from '../components/InventoryOverlay';
 
 const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
+// The butler is in the flat with you, just inside the front door. Tap him to chat.
+const BUTLER_X = { 1: 0.2, 2: 0.14, 3: 0.14 };
+const BUTLER_FEET = 0.93;
+const BUTLER_M = 1.55;   // metres tall (1 m = 0.25 of the room's height, like the furniture)
+const BUTLER_LINES = [
+  { pose: 'wave',   text: 'Make yourself at home. I am just by the door.' },
+  { pose: 'offer',  text: 'Tap DECORATE and the whole house is yours to arrange.' },
+  { pose: 'tip',    text: 'The light here is lovely at sunset.' },
+  { pose: 'clip',   text: 'A rug under the sofa ties a room together, I always say.' },
+  { pose: 'pointR', text: 'There is more room further along, just slide across.' },
+];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 // One placed item. In decorate mode you can drag it; a tap selects it (and shows a remove button).
@@ -62,6 +73,31 @@ export default function ApartmentScreen({ navigation, route }) {
   const [selected, setSelected] = useState(null);
   const [dragging, setDragging] = useState(false);
   const [invOpen, setInvOpen] = useState(false);
+  const welcome = !!route?.params?.welcome;
+  const [bLine, setBLine] = useState(welcome ? -1 : 0);   // -1 = handing over the keys
+  const [bPose, setBPose] = useState(welcome ? 'keys' : 'idle');
+  // When you walk in he strolls over from the door and acts it out with his poses; later he fidgets now and then.
+  const slide = useRef(new Animated.Value(-70)).current;
+  React.useEffect(() => {
+    Animated.timing(slide, { toValue: 0, duration: 1100, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();
+    const steps = welcome
+      ? [[0, 'tip', -1], [1400, 'keys', -1], [4300, 'offer', 0], [6300, 'wave', 0], [8300, 'idle', 0]]
+      : [[0, 'wave', 0], [1700, 'offer', 0], [3600, 'idle', 0]];
+    const ts = steps.map(([at, pose, line]) => setTimeout(() => { setBPose(pose); setBLine(line); }, at));
+    return () => ts.forEach(clearTimeout);
+  }, []);
+  React.useEffect(() => {
+    const iv = setInterval(() => {
+      setBPose((cur) => {
+        if (cur !== 'idle') return cur;
+        const pick = ['tip', 'clip', 'bow', 'wave'][Math.floor(Math.random() * 4)];
+        setTimeout(() => setBPose((c) => (c === pick ? 'idle' : c)), 2400);
+        return pick;
+      });
+    }, 9000);
+    return () => clearInterval(iv);
+  }, []);
+  const chat = () => { const n = bLine < 0 ? 0 : (bLine + 1) % BUTLER_LINES.length; setBLine(n); setBPose(BUTLER_LINES[n].pose); };
   const scrollX = useRef(0);
   const sw = box.w, sh = box.h;
   const art = APT_ART[aptId];
@@ -94,6 +130,24 @@ export default function ApartmentScreen({ navigation, route }) {
               <Image source={art.src} style={{ width: W, height: H }} resizeMode="stretch" />
             </TouchableOpacity>
             <View style={{ position: 'absolute', left: 0, top: sh - H - lift, width: W, height: H }}>
+              {/* the butler, standing in the flat just inside the door */}
+              {(() => {
+                const bh = BUTLER_M * 0.25 * H, bp = BUTLER[bPose], bw = bh * bp.w / bp.h, bx = BUTLER_X[aptId] * W, by = BUTLER_FEET * H;
+                return (
+                  <>
+                    <Animated.View style={{ position: 'absolute', left: bx - bw / 2, top: by - bh, width: bw, height: bh, zIndex: 10 + Math.round(BUTLER_FEET * 100), transform: [{ translateX: slide }] }}>
+                      <TouchableOpacity activeOpacity={1} onPress={edit ? undefined : chat} disabled={edit} style={{ width: bw, height: bh }}>
+                        <Image source={bp.src} resizeMode="contain" style={{ width: bw, height: bh }} />
+                      </TouchableOpacity>
+                    </Animated.View>
+                    {!edit && (
+                      <View pointerEvents="none" style={[styles.bubble, { left: bx - 110, top: by - bh - 46, width: 220, zIndex: 400 }]}>
+                        <Text style={styles.bubbleText}>{bLine < 0 ? 'Here are your keys! Welcome home.' : BUTLER_LINES[bLine].text}</Text>
+                      </View>
+                    )}
+                  </>
+                );
+              })()}
               {items.map((it) => (
                 <Placed key={it.id} item={it} W={W} H={H} edit={edit} selected={selected === it.id}
                   onSelect={() => setSelected(selected === it.id ? null : it.id)}
@@ -173,5 +227,7 @@ const styles = StyleSheet.create({
   tabOn: { backgroundColor: '#8a5a2a' },
   tabText: { fontFamily: SERIF, fontSize: 13, color: '#e8cf9a' },
   tile: { width: 56, height: 56, borderRadius: 12, backgroundColor: '#f3e0b6', borderWidth: 2, borderColor: '#8a5a2a', alignItems: 'center', justifyContent: 'center' },
+  bubble: { position: 'absolute', backgroundColor: '#f6e6bd', borderWidth: 2, borderColor: '#8a5a2a', borderRadius: 14, paddingVertical: 6, paddingHorizontal: 10 },
+  bubbleText: { fontFamily: SERIF, fontSize: 13, color: '#4a2a10', textAlign: 'center' },
   empty: { fontFamily: SERIF, fontSize: 14, color: '#e8cf9a' },
 });

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { BUILDING_BG, UI_IMAGES, BUTLER } from '../engine/assets';
+import { BUILDING_BG, UI_IMAGES } from '../engine/assets';
 import { APARTMENTS } from '../constants/gameData';
 import ScreenHud from '../components/ScreenHud';
 import { pixelText } from '../components/Pixel';
@@ -21,7 +21,6 @@ export default function BuildingScreen({ navigation }) {
   const { state, dispatch } = useGame();
   const [box, setBox] = useState({ w: 0, h: 0 });
   const [asking, setAsking] = useState(null);
-  const [keys, setKeys] = useState(null);   // the butler hands over the keys after a purchase
   const [invOpen, setInvOpen] = useState(false);
   const sw = box.w, sh = box.h;
   const owned = state.player.ownedApartments ?? [];
@@ -64,7 +63,7 @@ export default function BuildingScreen({ navigation }) {
               <Text style={[styles.title, { fontSize: 24 }]}>{APARTMENTS[asking].price}</Text>
             </View>
             <Skinned src={UI_IMAGES.pcBtnGreen} sw={112} sh={80} inset={18} scale={0.5} disabled={coins < APARTMENTS[asking].price}
-              onPress={coins >= APARTMENTS[asking].price ? () => { dispatch({ type: 'BUY_APARTMENT', aptId: asking, price: APARTMENTS[asking].price }); setKeys(asking); setAsking(null); } : undefined}
+              onPress={coins >= APARTMENTS[asking].price ? () => { dispatch({ type: 'BUY_APARTMENT', aptId: asking, price: APARTMENTS[asking].price }); const id = asking; setAsking(null); navigation.navigate('Apartment', { aptId: id, welcome: true }); } : undefined}
               style={{ paddingVertical: 11, paddingHorizontal: 28, alignItems: 'center', justifyContent: 'center' }}>
               <Text style={pixelText(11, '#fff')}>{coins >= APARTMENTS[asking].price ? 'BUY' : `NEED ${APARTMENTS[asking].price - coins} MORE`}</Text>
             </Skinned>
@@ -72,20 +71,6 @@ export default function BuildingScreen({ navigation }) {
         </TouchableOpacity>
       )}
 
-      {keys && (
-        <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={() => setKeys(null)}>
-          <View style={[styles.card, { flexDirection: 'row', gap: 14, alignItems: 'center', maxWidth: 440 }]}>
-            <Image source={BUTLER.keys.src} resizeMode="contain" style={{ width: 90, height: 90 * BUTLER.keys.h / BUTLER.keys.w }} />
-            <View style={{ flexShrink: 1, alignItems: 'center' }}>
-              <Text style={styles.title}>Your new home!</Text>
-              <Text style={styles.sub}>Here are the keys to {APARTMENTS[keys].name}. Enjoy it!</Text>
-              <Skinned src={UI_IMAGES.pcBtnGreen} sw={112} sh={80} inset={18} scale={0.5} onPress={() => { const id = keys; setKeys(null); navigation.navigate('Apartment', { aptId: id }); }} style={{ marginTop: 10, paddingVertical: 9, paddingHorizontal: 24, alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={pixelText(10, '#fff')}>GO IN</Text>
-              </Skinned>
-            </View>
-          </View>
-        </TouchableOpacity>
-      )}
       {invOpen && <InventoryOverlay onClose={() => setInvOpen(false)} onPick={() => setInvOpen(false)} />}
     </View>
   );
