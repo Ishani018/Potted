@@ -108,6 +108,7 @@ export default function NurseryScreen({ navigation }) {
   const [lay, setLay] = useState({});
   const [sel, setSel] = useState(null);
   const [dump, setDump] = useState('');
+  const [receipt, setReceipt] = useState(null);   // the order summary shown after paying
   const [panel, setPanel] = useState(false);   // the POTS panel
   const sw = box.w;
   const k = sw / IMG_W;
@@ -143,8 +144,12 @@ export default function NurseryScreen({ navigation }) {
       else if (kind === 'h') dispatch({ type: 'BUY_HPOT', pot: key, price: HPOT_INFO[key].price });
       else dispatch({ type: 'BUY_CAN', can: key, price: CAN_INFO[key].price });
     });
-    const first = describe(basket[0]);
-    notify({ icon: first.src, title: basket.length === 1 ? `Bought ${first.name}!` : `Bought ${basket.length} things!`, subtitle: `${total} coins. Pots and cans are yours to use in the rooms.` });
+    const lines = [];
+    basket.forEach((id) => {
+      const d = describe(id), at = lines.find((l) => l.id === id);
+      if (at) { at.qty += 1; } else lines.push({ id, src: d.src, name: d.name, price: d.price, qty: 1 });
+    });
+    setReceipt({ lines, total, left: coins - total });
     setBasket([]);
   };
 
@@ -250,6 +255,27 @@ export default function NurseryScreen({ navigation }) {
         </TouchableOpacity>
       )}
 
+      {receipt && (
+        <TouchableOpacity activeOpacity={1} style={styles.panelWrap} onPress={() => setReceipt(null)}>
+          <TouchableOpacity activeOpacity={1} style={[styles.panel, { width: '46%' }]}>
+            <Text style={styles.panelTitle}>Order summary</Text>
+            <ScrollView style={{ maxHeight: 220 }} showsVerticalScrollIndicator={false}>
+              {receipt.lines.map((l) => (
+                <View key={l.id} style={styles.recRow}>
+                  <Image source={l.src} resizeMode="contain" style={{ width: 38, height: 38 }} />
+                  <Text style={styles.recName} numberOfLines={1}>{l.name}{l.qty > 1 ? ` x${l.qty}` : ''}</Text>
+                  <Text style={styles.recPrice}>{l.price * l.qty}</Text>
+                </View>
+              ))}
+            </ScrollView>
+            <View style={styles.recRule} />
+            <View style={styles.recRow}><Text style={[styles.recName, { fontWeight: 'bold' }]}>Total</Text><Text style={[styles.recPrice, { fontWeight: 'bold' }]}>{receipt.total}</Text></View>
+            <View style={styles.recRow}><Text style={styles.recName}>Coins left</Text><Text style={styles.recPrice}>{receipt.left}</Text></View>
+            <Text style={styles.panelHint}>Thank you! Tap anywhere to close.</Text>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      )}
+
       <View style={styles.coinBox}>
         <Image source={UI_IMAGES.goldcoins} style={styles.coinIcon} resizeMode="contain" />
         <Text style={styles.coinText}>{coins}</Text>
@@ -287,6 +313,10 @@ const styles = StyleSheet.create({
   panelGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, justifyContent: 'center' },
   tile: { width: 66, alignItems: 'center', backgroundColor: '#e8cf9a', borderWidth: 2, borderColor: '#b98a4e', borderRadius: 10, paddingVertical: 4 },
   tileTxt: { fontFamily: SERIF, fontSize: 12, color: '#4a2a10', fontWeight: 'bold' },
+  recRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 2 },
+  recName: { flex: 1, fontFamily: SERIF, fontSize: 16, color: '#4a2a10' },
+  recPrice: { fontFamily: SERIF, fontSize: 16, color: '#4a2a10', minWidth: 40, textAlign: 'right' },
+  recRule: { height: 2, backgroundColor: '#b98a4e', marginVertical: 4 },
   panelHint: { fontFamily: SERIF, fontSize: 13, color: '#7a5030', textAlign: 'center', marginTop: 6 },
   hintChip: { backgroundColor: '#f3e0b6', borderWidth: 3, borderColor: '#8a5a2a', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 2 },
   hintText: { fontFamily: SERIF, fontSize: 13, color: '#4a2a10' },
