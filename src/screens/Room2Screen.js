@@ -25,6 +25,9 @@ import InventoryOverlay from '../components/InventoryOverlay';
 // Pot types in this room (Balcony: hanging pots only) — seeds of another type can't be planted here.
 const ROOM_TYPES = ['hanging'];
 
+// height of a hanging pot in the room, in base pixels (the PlantSlot default is the same)
+const HANG_POT_H = 150;
+
 export default function Room2Screen({ navigation }) {
   const { width: sw, height: sh } = useLayout();
   const { state, dispatch } = useGame();
@@ -57,7 +60,7 @@ export default function Room2Screen({ navigation }) {
   // Hanging plants hang DOWN from the rod snap point; the waterable point must
   // sit at the plant's visual center (~half the displayed plant height below the
   // rod) so the watering-can spout actually hovers over the plant.
-  const hangingDisplayH = projectSize(235, sw, sh);
+  const hangingDisplayH = projectSize(HANG_POT_H, sw, sh);
   const plantedHangingPoints = hangingPoints
     .filter((pt) => { const s = slots[pt.id]; return s && s.flowerKey; })
     .map((pt) => ({ ...pt, y: pt.y + hangingDisplayH * 0.45 }));
@@ -124,7 +127,7 @@ export default function Room2Screen({ navigation }) {
   const potH = Math.round(potW * 0.93);
   // drag + ghost + placed empty pot share the same image (emptyhangingpotwithseed)
   // and size so they all match. Bump this number to resize all three together.
-  const dragW = Math.round(projectSize(235, sw, sh));
+  const dragW = Math.round(projectSize(HANG_POT_H, sw, sh));
   const dragH = dragW; // square (1024×1024)
   const ghostW = dragW;
   const ghostH = dragH;
@@ -154,8 +157,8 @@ export default function Room2Screen({ navigation }) {
 
         {/* Pot source on stool — static image at rest, gesture layer on top */}
         <Image
-          source={HANGING_PLANT_IMAGES._stool}
-          style={{ position: 'absolute', left: potSrcPos.x - potW / 2, top: potSrcPos.y - potH, width: potW, height: potH, zIndex: 2 }}
+          source={HPOT_META[player.hangingPot || 'macrame'].src}
+          style={{ position: 'absolute', left: potSrcPos.x - potW / 2, top: potSrcPos.y - potW * 1.5, width: potW, height: potW * 1.5, zIndex: 2 }}
           resizeMode="contain"
         />
         <DraggableHangingPot
@@ -186,7 +189,7 @@ export default function Room2Screen({ navigation }) {
               activeOpacity={0.85}
               onPress={() => handleEmptyPotPress(pt.id, s, pt)}
             >
-              <Image source={HPOT_META[s.pot || player.hangingPot || 'macrame'].src} style={{ width: dragW, height: dragH }} resizeMode="contain" />
+              <Image source={HPOT_META[s.pot || 'macrame'].src} style={{ width: dragW, height: dragH }} resizeMode="contain" />
             </TouchableOpacity>
           );
         })}

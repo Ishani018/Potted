@@ -45,11 +45,11 @@ export default function PlantPopup({ slot, position, onHarvest, onRemove, onClos
   if (!slot) return null;
   const isHang = slot.type === 'hanging';
   const owned = state.player.ownedHPots ?? ['macrame'];
-  const curPot = slot.pot ?? state.player.hangingPot ?? 'macrame';
+  const curPot = slot.pot ?? 'macrame';
   const coins = state.player.coins;
   const isShelf = slot.type === 'potted';
   const ownedP = state.player.ownedPPots ?? [4];
-  const curP = slot.pot ?? state.player.pottedPot ?? 4;
+  const curP = slot.pot ?? 4;
 
   // Full bloom is harvestable: potted stage 3, hanging stage 2.
   const canHarvest = !!slot.flowerKey && slot.stage >= maxStageFor(slot.type, slot.flowerKey);

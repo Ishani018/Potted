@@ -99,10 +99,10 @@ export default function PlantSlot({ slot, position, onPress, onPestPress, baseWi
   const isPotted = slot.type === 'potted';
   // Hanging plants with the new art: a chosen pot (bare while a seed) with the plant drawn on top of its rim.
   const newHang = !isPotted && !!slot.flowerKey && !!HPLANT_IMAGES[slot.flowerKey];
-  const potStyle = slot.pot ?? state.player.hangingPot ?? 'macrame';
+  const potStyle = slot.pot ?? 'macrame';
   // Shelf plants with the new art: a chosen pot (bare while a seed) with the plant growing out of its soil.
   const newPot = isPotted && !!slot.flowerKey && !!PPLANT_IMAGES[slot.flowerKey];
-  const shelfPot = slot.pot ?? state.player.pottedPot ?? 4;
+  const shelfPot = slot.pot ?? 4;
   // baseWidthOverride lets a room set its own hanging-pot width (room 2) without
   // affecting other rooms that use the shared BASE_HANGING_W.
   const baseW = baseWidthOverride ?? (isPotted ? BASE_POT_W : BASE_HANGING_W);
@@ -159,7 +159,7 @@ export default function PlantSlot({ slot, position, onPress, onPestPress, baseWi
     );
   }
   if (newHang) {
-    const ph = Math.round(projectSize(potHeightOverride ?? 235, sw, sh));
+    const ph = Math.round(projectSize(potHeightOverride ?? 150, sw, sh));
     const bx = hangingBox(potStyle, ph);
     return (
       <View

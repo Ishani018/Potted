@@ -315,7 +315,8 @@ function reducer(state, action) {
       const type = slotId.includes('_h') ? 'hanging' : 'potted';
       return {
         ...state,
-        slots: { ...state.slots, [slotId]: createEmptySlot(slotId, room, type, true) },
+        // the pot gets the style that is selected right now and keeps it (later changes on other pots don't touch it)
+        slots: { ...state.slots, [slotId]: { ...createEmptySlot(slotId, room, type, true), pot: type === 'hanging' ? (state.player.hangingPot ?? 'macrame') : (state.player.pottedPot ?? 4) } },
       };
     }
 
@@ -380,7 +381,7 @@ function reducer(state, action) {
         notices: lucky
           ? [...state.notices, { id: `harvest_${Date.now()}`, text: `${PETS[luckyPet?.key]?.name ?? 'Your pet'} found an extra flower!` }]
           : state.notices,
-        slots: { ...state.slots, [slotId]: { ...clearedSlot, hasPot: slot.hasPot } },
+        slots: { ...state.slots, [slotId]: { ...clearedSlot, hasPot: slot.hasPot, pot: slot.pot } },
         player: {
           ...state.player,
           harvestedFlowers: harvested,
@@ -583,7 +584,7 @@ function reducer(state, action) {
       // Hanging default: clear the plant but preserve hasPot so the empty pot stays
       return {
         ...state,
-        slots: { ...state.slots, [slotId]: createEmptySlot(slotId, slot.room, slot.type, true) },
+        slots: { ...state.slots, [slotId]: { ...createEmptySlot(slotId, slot.room, slot.type, true), pot: slot.pot } },
       };
     }
 
