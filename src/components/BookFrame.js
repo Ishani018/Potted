@@ -66,11 +66,11 @@ export default function BookFrame({ left, right }) {
       {book && (
         <>
           <TouchableOpacity accessibilityLabel="Previous page" disabled={book.page === 0} onPress={() => book.flip(-1)} activeOpacity={0.8}
-            style={[styles.arrow, { left: mx + 0.018 * W, top: my + 0.47 * H }, book.page === 0 && styles.off]}>
+            style={[styles.arrow, { left: mx + 0.018 * W, top: my + 0.385 * H }, book.page === 0 && styles.off]}>
             <Image source={SET_UI.left.src} style={{ width: 48, height: 48 * SET_UI.left.h / SET_UI.left.w }} resizeMode="contain" />
           </TouchableOpacity>
           <TouchableOpacity accessibilityLabel="Next page" disabled={book.page === book.total - 1} onPress={() => book.flip(1)} activeOpacity={0.8}
-            style={[styles.arrow, { right: mx + 0.018 * W, top: my + 0.47 * H }, book.page === book.total - 1 && styles.off]}>
+            style={[styles.arrow, { right: mx + 0.018 * W, top: my + 0.385 * H }, book.page === book.total - 1 && styles.off]}>
             <Image source={SET_UI.right.src} style={{ width: 48, height: 48 * SET_UI.right.h / SET_UI.right.w }} resizeMode="contain" />
           </TouchableOpacity>
         </>
