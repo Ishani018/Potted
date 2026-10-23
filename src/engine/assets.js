@@ -661,6 +661,12 @@ export const PPLANT_IMAGES = {
   hydrenga: [{ src: require('../../assets/pplants/hydrangea_1.png'), w: 423, h: 408 }, { src: require('../../assets/pplants/hydrangea_2.png'), w: 577, h: 606 }, { src: require('../../assets/pplants/hydrangea_3.png'), w: 736, h: 738 }],
   rose: [{ src: require('../../assets/pplants/rose_1.png'), w: 307, h: 303 }, { src: require('../../assets/pplants/rose_2.png'), w: 417, h: 372 }, { src: require('../../assets/pplants/rose_3.png'), w: 623, h: 450 }],
 };
+
+// Watering cans: blue (everyone has it) and the red premium one (sold at the nursery, waters twice as fast). up = resting, tilt = while pouring.
+export const CAN_IMAGES = {
+  blue: { up: { src: require('../../assets/cans/blue.png') }, tilt: { src: require('../../assets/cans/blue_tilt.png') } },
+  red: { up: { src: require('../../assets/cans/red.png') }, tilt: { src: require('../../assets/cans/red_tilt.png') } },
+};
 export const LOBBY_BG = require('../../assets/building/lobby.png');   // the apartment building's entrance hall
 export const APT_ART = {   // the empty rooms: picture + its pixel size
   1: { src: require('../../assets/building/apt1.png'), w: 1672, h: 941 },

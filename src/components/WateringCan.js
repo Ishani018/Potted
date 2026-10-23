@@ -2,7 +2,9 @@ import React, { useRef } from 'react';
 import { Image, StyleSheet } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated';
-import { UI_IMAGES } from '../engine/assets';
+import { CAN_IMAGES } from '../engine/assets';
+import { CAN_INFO } from '../constants/gameData';
+import { useGame } from '../context/GameContext';
 import { useLayout } from '../context/LayoutContext';
 import { projectSize } from '../engine/project';
 
@@ -13,10 +15,12 @@ import { projectSize } from '../engine/project';
 const BASE_CAN_SIZE = 200;  // ← CHANGE THIS to resize can globally
 // ────────────────────────────────────────────────────────────────────────────
 const WATER_RADIUS = 100;
-const HOLD_MS = 2000;
 
 export default function WateringCan({ position, plantedSnapPoints = [], onWater, onDragStart, onDragEnd, baseCanSize }) {
   const { width: sw, height: sh } = useLayout();
+  const { state } = useGame();
+  const canKey = CAN_IMAGES[state.player.can] ? state.player.can : 'blue';
+  const HOLD_MS = CAN_INFO[canKey].holdMs;   // the red can pours twice as fast
   const size = Math.round(projectSize(baseCanSize ?? BASE_CAN_SIZE, sw, sh));
   const half = size / 2;
 
@@ -80,7 +84,7 @@ export default function WateringCan({ position, plantedSnapPoints = [], onWater,
 
   // Show wateringcan2 while dragging (can tilted)
   const [isDragging, setIsDragging] = React.useState(false);
-  const src = isDragging ? UI_IMAGES.wateringcan2 : UI_IMAGES.wateringcan1;
+  const src = isDragging ? CAN_IMAGES[canKey].tilt.src : CAN_IMAGES[canKey].up.src;
 
   const gestureWithState = Gesture.Pan()
     .onStart(() => {

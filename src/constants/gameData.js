@@ -617,6 +617,8 @@ export const INITIAL_PLAYER_STATE = {
   harvestedFlowers: { daisy: 8, rose: 5, marigold: 6, jasmine: 4, peony: 3, poppy: 7, hydrenga: 5, snapdragon: 6 },
   ownedPaintings: [],
   apartmentItems: {},  // aptId → [{ id, key, kind, x, y }] decor placed in each flat (x,y are fractions of the room picture)
+  ownedCans: ['blue'],       // watering cans you own (the red premium can is bought at the nursery)
+  can: 'blue',               // the can in use
   ownedPPots: [4],           // shelf pot styles you own
   pottedPot: 4,              // the style new shelf pots use
   ownedHPots: ['macrame'],   // hanging pot styles you own
@@ -958,4 +960,9 @@ export const PPOT_PRICE = {
   33: 50,
   34: 60,
   35: 70,
+};
+
+export const CAN_INFO = {
+  blue: { name: 'Blue can', price: 0,   holdMs: 2000 },
+  red:  { name: 'Red can',  price: 250, holdMs: 1000 },   // premium: waters twice as fast
 };

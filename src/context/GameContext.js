@@ -632,6 +632,18 @@ function reducer(state, action) {
       return { ...state, player: { ...state.player, apartmentItems: { ...all, [aptId]: next } } };
     }
 
+    case 'BUY_CAN': {   // buy a watering can and start using it
+      const { can, price } = action;
+      const owned = state.player.ownedCans ?? ['blue'];
+      if (owned.includes(can) || state.player.coins < price) return state;
+      return { ...state, player: { ...state.player, coins: state.player.coins - price, ownedCans: [...owned, can], can } };
+    }
+
+    case 'USE_CAN': {
+      if (!(state.player.ownedCans ?? ['blue']).includes(action.can)) return state;
+      return { ...state, player: { ...state.player, can: action.can } };
+    }
+
     case 'BUY_PPOT': {   // buy a shelf pot style (once)
       const { pot, price } = action;
       const owned = state.player.ownedPPots ?? [4];
