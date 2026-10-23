@@ -30,24 +30,20 @@ const row = (n, x0, gap, y, salt) => Array.from({ length: n }, (_, i) => [x0 + i
 // shuffled order, with a few slots left empty on purpose (room for lanterns, gloves and other decor).
 // The painted shop already has pots, hanging plants and a few bags on its shelves. Our seed bags (bigger) go on top of the
 // painted bags and into the gaps, one spot per seed (picture pixels, feet on the board).
-const SEED_AT = [
-  [545, 268], [725, 268], [785, 268],
-  [622, 385], [725, 385], [785, 385],
-  [560, 503], [990, 447], [1125, 447],
-  [1030, 556], [1010, 650], [1115, 650],
-];
+const SEED_AT = SEED_ORDER.map((_, n) => [290 + (n % 6) * 135, n < 6 ? 838 : 912]);   // two rows of six bags on the counter
 const SPOT_OF = {};
 const SPOT_SCALE = {};
 SEED_ORDER.forEach((k, n) => { SPOT_OF['s:' + k] = SEED_AT[n]; });
 const HOOK_SPOTS = [955, 1028, 1100, 1175].map((x) => [x, 236]);   // where a hanging pot's top sits
 const CAN_SPOT = [330, 735];
-const BAG = { w: 68, h: 62 };
+const BAG = { w: 78, h: 71 };
 const POT_W = 44;                                           // shelf pot width on the shelf
 const HOOK_H = 96;                                          // hanging pot height on its hook
 const COUNTER_TOP = 770;                                    // drop an item below this line to put it on the counter
-const COUNTER_X = (i) => 150 + (i % 8) * 150;
-const COUNTER_Y = (i) => 872 + Math.floor(i / 8) * 55;
-const COUNTER_MUL = 1.5;
+const PAY_X = 1040;                                         // bags dropped right of this line (or tapped in) wait by the register
+const COUNTER_X = (i) => 1090 + (i % 5) * 62;
+const COUNTER_Y = (i) => 835 + Math.floor(i / 5) * 48;
+const COUNTER_MUL = 0.7;
 const REGISTER = { x0: 1360, y0: 690, x1: 1610, y1: 890 };
 const LCD = { x: 1488, y: 755 };
 const MAX_BASKET = 12;
@@ -126,16 +122,16 @@ export default function NurseryScreen({ navigation }) {
   const hooks = hookPots.slice(hPage * 4, hPage * 4 + 4);
 
   const dropOnCounter = (id, p) => {
-    if (p[1] < COUNTER_TOP || basket.includes(id)) return;
+    if (p[0] < PAY_X || p[1] < COUNTER_TOP || basket.includes(id)) return;
     const seeds = basket.filter((b) => b.startsWith('s:')).length + (id.startsWith('s:') ? 1 : 0);
     if (seeds > free) { notify({ icon: UI_IMAGES.inventorybtn, title: 'Bag is full', subtitle: 'Plant some seeds to make room.' }); return; }
     if (basket.length >= MAX_BASKET) { notify({ title: 'The counter is full', subtitle: 'Pay for these first.' }); return; }
     setBasket((b) => [...b, id]);
   };
-  const tellAbout = (id) => { const d = describe(id); notify({ icon: d.src, title: d.name, subtitle: `${d.price} coins. Drag it to the counter to buy.` }); };
+  const tellAbout = (id) => { const d = describe(id); notify({ icon: d.src, title: d.name, subtitle: `${d.price} coins. Drag it next to the register to buy.` }); };
 
   const checkout = () => {
-    if (basket.length === 0) { notify({ icon: UI_IMAGES.goldcoins, title: 'The counter is empty', subtitle: 'Drag things from the shelves to the counter.' }); return; }
+    if (basket.length === 0) { notify({ icon: UI_IMAGES.goldcoins, title: 'The counter is empty', subtitle: 'Drag seed bags next to the register.' }); return; }
     if (coins < total) { notify({ icon: UI_IMAGES.goldcoins, title: 'Not enough coins', subtitle: `You need ${total - coins} more for these.` }); return; }
     basket.forEach((id) => {
       const [kind, key] = id.split(':');
@@ -186,7 +182,7 @@ export default function NurseryScreen({ navigation }) {
           {/* what is on the counter: drag it off, or tap, to put it back */}
           {basket.map((id, i) => (
             <DragItem key={id} it={describe(id)} at={[COUNTER_X(i), COUNTER_Y(i)]} k={k} z={8} mul={COUNTER_MUL}
-              onDrop={(p) => { if (p[1] < COUNTER_TOP) setBasket((b) => b.filter((x) => x !== id)); }}
+              onDrop={(p) => { if (p[0] < PAY_X || p[1] < COUNTER_TOP) setBasket((b) => b.filter((x) => x !== id)); }}
               onTap={() => setBasket((b) => b.filter((x) => x !== id))} />
           ))}
 
