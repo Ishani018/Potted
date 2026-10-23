@@ -45,9 +45,9 @@ const POT_W = 44;                                           // shelf pot width o
 const HOOK_H = 96;                                          // hanging pot height on its hook
 const COUNTER_TOP = 770;                                    // drop an item below this line to put it on the counter
 const PAY_X = 1040;                                         // bags dropped right of this line (or tapped in) wait by the register
-const COUNTER_X = (i) => 1090 + (i % 6) * 46;
-const COUNTER_Y = (i) => 748 - Math.floor(i / 6) * 40;
-const COUNTER_MUL = 0.6;
+const COUNTER_X = (i) => 1085 + (i % 6) * 52;
+const COUNTER_Y = (i) => 752 - Math.floor(i / 6) * 46;
+const COUNTER_MUL = 0.85;
 const REGISTER = { x0: 1360, y0: 690, x1: 1610, y1: 890 };
 const LCD = { x: 1488, y: 755 };
 const MAX_BASKET = 12;
