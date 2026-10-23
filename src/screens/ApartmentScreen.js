@@ -45,7 +45,7 @@ function Placed({ item, W, H, edit, selected, onSelect, onMove, onDragState }) {
   const left = x * W - bw / 2;
   const top = def.rug ? y * H - boxH / 2 : def.kind === 'floor' ? y * H - boxH : y * H - size / 2;
   return (
-    <View {...(edit ? pan.panHandlers : {})} pointerEvents={edit ? 'auto' : 'none'} style={{ position: 'absolute', left, top, width: bw, height: boxH, zIndex: def.rug ? 1 : def.kind === 'floor' ? 10 + Math.round(y * 100) : 5 }}>
+    <View {...(edit ? pan.panHandlers : {})} pointerEvents={edit ? 'auto' : 'none'} style={{ position: 'absolute', left, top, width: bw, height: boxH, transform: item.flip ? [{ scaleX: -1 }] : undefined, zIndex: def.rug ? 1 : def.kind === 'floor' ? 10 + Math.round(y * 100) : 5 }}>
       {stand && <Image source={stand.img} resizeMode="stretch" style={{ position: 'absolute', left: (size - stand.w * size) / 2, bottom: 0, width: stand.w * size, height: standH }} />}
       <Image source={def.img} resizeMode={def.furniture ? 'stretch' : 'contain'} style={{ position: 'absolute', left: 0, top: 0, width: bw, height: def.furniture ? size : size,
         ...(def.rug ? { transform: [{ perspective: 520 }, { rotateX: '58deg' }] } : null) }} />
@@ -120,6 +120,11 @@ export default function ApartmentScreen({ navigation, route }) {
 
       {selected && edit && (
         <View style={[styles.removeWrap, { bottom: trayH + 70 }]} pointerEvents="box-none">
+          {['floor', 'hang'].includes(DECOR[items.find((it) => it.id === selected)?.key]?.kind) && (
+            <TouchableOpacity activeOpacity={0.8} onPress={() => dispatch({ type: 'FLIP_APT_ITEM', aptId, id: selected })} style={[styles.removeBtn, { backgroundColor: '#5a7a3a', borderColor: '#2a4a1a', marginRight: 8 }]}>
+              <Text style={styles.removeText}>FLIP</Text>
+            </TouchableOpacity>
+          )}
           {DECOR[items.find((it) => it.id === selected)?.key]?.plant && (
             <TouchableOpacity activeOpacity={0.8} onPress={() => { const it = items.find((i) => i.id === selected); dispatch({ type: 'STAND_APT_ITEM', aptId, id: selected, stand: STAND_ORDER[(STAND_ORDER.indexOf(standOf(it) ?? 'none') + 1) % STAND_ORDER.length] }); }} style={[styles.removeBtn, { backgroundColor: '#8a5a2a', borderColor: '#4a2a10', marginRight: 8 }]}>
               <Text style={styles.removeText}>CHANGE STAND</Text>
