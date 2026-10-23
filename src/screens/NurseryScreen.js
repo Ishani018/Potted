@@ -32,12 +32,13 @@ const SPOTS = {
   Bougainvillea:  [1062, 503],
 };
 const COUNTER_TOP = 725;                                  // the counter's back edge: drop a bag below this line to put it down
-const COUNTER_SLOTS = Array.from({ length: 12 }, (_, i) => [250 + (i % 6) * 150, 800 + Math.floor(i / 6) * 85]);   // where bags sit on the counter
+const COUNTER_MUL = 1.9;                                  // the counter is nearer the camera, so bags standing on it are bigger
+const COUNTER_SLOTS = Array.from({ length: 12 }, (_, i) => [260 + (i % 6) * 175, 835 + Math.floor(i / 6) * 90]);   // where bags sit on the counter
 const REGISTER = { x0: 1255, y0: 640, x1: 1545, y1: 880 };
 const LCD = { x: 1425, y: 690 };                          // the register's little screen
 
 // One seed bag you can pick up and drag (on a shelf or on the counter).
-function DragBag({ item, at, k, onDrop, onTap, dim, z }) {
+function DragBag({ item, at, k, onDrop, onTap, dim, z, mul = 1 }) {
   const [pos, setPos] = useState(null);
   const start = React.useRef([0, 0]);
   const live = React.useRef({ at, k, onDrop, onTap });
@@ -57,7 +58,7 @@ function DragBag({ item, at, k, onDrop, onTap, dim, z }) {
     onPanResponderTerminate: () => setPos(null),
   })).current;
   const [x, y] = pos ?? at;
-  const w = BAG.w * k, h = BAG.h * k;
+  const w = BAG.w * k * mul, h = BAG.h * k * mul;
   return (
     <View {...pan.panHandlers} style={{ position: 'absolute', left: x * k - w / 2, top: y * k - h, width: w, height: h, zIndex: pos ? 500 : z, opacity: dim ? 0.4 : 1 }}>
       <Image source={SEED_IMAGES[item]} pointerEvents="none" style={{ width: w, height: h }} resizeMode="contain" />
@@ -129,7 +130,7 @@ export default function NurseryScreen({ navigation }) {
 
           {/* the bags put down on the counter: drag them off, or tap, to put one back */}
           {basket.map((key, i) => (
-            <DragBag key={key} item={key} at={COUNTER_SLOTS[i]} k={kx} z={8}
+            <DragBag key={key} item={key} at={COUNTER_SLOTS[i]} k={kx} z={8} mul={COUNTER_MUL}
               onDrop={(p) => { if (p[1] < COUNTER_TOP) setBasket((b) => b.filter((x) => x !== key)); }}
               onTap={() => setBasket((b) => b.filter((x) => x !== key))} />
           ))}
