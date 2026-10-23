@@ -70,10 +70,6 @@ const HANG_SLOTS = [
 ];
 const CAN_SPOT = [600, 735];
 const BAG = { w: 88, h: 114 };
-const PAY_X = 1040;                                         // items dropped right of this line (or tapped in) wait by the register
-const COUNTER_X = (i) => 1030 + (i % 6) * 54;
-const COUNTER_Y = (i) => 918 - Math.floor(i / 6) * 38;
-const COUNTER_MUL = 0.7;
 const REGISTER = { x0: 1360, y0: 690, x1: 1610, y1: 890 };
 const LCD = { x: 1488, y: 755 };
 const MAX_BASKET = 12;
@@ -127,7 +123,7 @@ export default function NurseryScreen({ navigation }) {
   const [notice, notify] = useNotice();
   const [invOpen, setInvOpen] = useState(false);
   const [box, setBox] = useState({ w: 0, h: 0 });
-  const [basket, setBasket] = useState([]);                 // item ids put down on the counter
+  const [basket, setBasket] = useState([]);                 // item ids in the cart
   const [potPage, setPotPage] = useState(0);
   const [hookPage, setHookPage] = useState(0);
   // LAYOUT mode: arrange the shop by hand. lay[id] = { x, y, s } overrides an item's spot and size.
@@ -136,6 +132,7 @@ export default function NurseryScreen({ navigation }) {
   const [sel, setSel] = useState(null);
   const [dump, setDump] = useState('');
   const [receipt, setReceipt] = useState(null);   // the order summary shown after paying
+  const [cartOpen, setCartOpen] = useState(false);  // the cart (same card, with a Pay button)
   const [panel, setPanel] = useState(false);   // the POTS panel
   const sw = box.w;
   const k = sw / IMG_W;
@@ -147,18 +144,19 @@ export default function NurseryScreen({ navigation }) {
   // the painted pots stay where they are; you just cannot buy one you already own
   const owns = (id) => { const [kind, key] = id.split(':'); return kind === 'p' ? ownedPPots.includes(Number(key)) : kind === 'h' ? ownedHPots.includes(key) : kind === 'c' ? ownedCans.includes(key) : false; };
 
-  const dropOnCounter = (id, p) => {
-    if (p[0] < PAY_X || basket.includes(id)) return;
-    if (owns(id)) { notify({ title: 'You already have this one', subtitle: 'Pick another.' }); return; }
+  const addToCart = (id) => {
+    const d = describe(id);
+    if (basket.includes(id)) { notify({ icon: d.src, title: d.name, subtitle: 'Already in your cart.' }); return; }
+    if (owns(id)) { notify({ icon: d.src, title: d.name, subtitle: 'You already have this one.' }); return; }
     const seeds = basket.filter((b) => b.startsWith('s:')).length + (id.startsWith('s:') ? 1 : 0);
     if (seeds > free) { notify({ icon: UI_IMAGES.inventorybtn, title: 'Bag is full', subtitle: 'Plant some seeds to make room.' }); return; }
-    if (basket.length >= MAX_BASKET) { notify({ title: 'The counter is full', subtitle: 'Pay for these first.' }); return; }
+    if (basket.length >= MAX_BASKET) { notify({ title: 'Your cart is full', subtitle: 'Pay for these first.' }); return; }
     setBasket((b) => [...b, id]);
+    notify({ icon: d.src, title: `Added ${d.name}`, subtitle: `${d.price} coins. Tap the cart to pay.` });
   };
-  const tellAbout = (id) => { const d = describe(id); if (owns(id)) { notify({ icon: d.src, title: d.name, subtitle: 'You already have this one.' }); return; } notify({ icon: d.src, title: d.name, subtitle: `${d.price} coins. Drag it next to the register to buy.` }); };
 
   const checkout = () => {
-    if (basket.length === 0) { notify({ icon: UI_IMAGES.goldcoins, title: 'The counter is empty', subtitle: 'Drag seed bags next to the register.' }); return; }
+    if (basket.length === 0) { notify({ icon: UI_IMAGES.goldcoins, title: 'Your cart is empty', subtitle: 'Tap a bag or a pot to add it.' }); return; }
     if (coins < total) { notify({ icon: UI_IMAGES.goldcoins, title: 'Not enough coins', subtitle: `You need ${total - coins} more for these.` }); return; }
     basket.forEach((id) => {
       const [kind, key] = id.split(':');
@@ -173,6 +171,7 @@ export default function NurseryScreen({ navigation }) {
       if (at) { at.qty += 1; } else lines.push({ id, src: d.src, name: d.name, price: d.price, qty: 1 });
     });
     setReceipt({ lines, total, left: coins - total });
+    setCartOpen(false);
     setBasket([]);
   };
 
@@ -184,11 +183,7 @@ export default function NurseryScreen({ navigation }) {
   ].map((e) => (lay[e.id] ? { ...e, at: [lay[e.id].x, lay[e.id].y] } : e));
   const showCan = !(ownedCans.includes('red') || basket.includes('c:red'));
   // the POTS panel also sells everything (and the seeds that are not on the counter)
-  const addToCounter = (id) => {
-    if (basket.includes(id)) return;
-    if (basket.length >= MAX_BASKET) { notify({ title: 'The counter is full', subtitle: 'Pay for these first.' }); return; }
-    setBasket((b) => [...b, id]); setPanel(false);
-  };
+  const addToCounter = (id) => { addToCart(id); setPanel(false); };
 
   const arrow = (key, x, y, on, label) => (
     <TouchableOpacity activeOpacity={0.8} onPress={on} style={{ position: 'absolute', left: (x - 22) * k, top: (y - 22) * k, zIndex: 12 }}>
@@ -207,8 +202,8 @@ export default function NurseryScreen({ navigation }) {
             return (
               <React.Fragment key={id}>
                 <DragItem it={d} ghost at={at} k={k} z={6}
-                  onDrop={(p) => (edit ? (setSel(id), setLay((l) => ({ ...l, [id]: { x: Math.round(p[0]), y: Math.round(p[1]), s: 1 } }))) : dropOnCounter(id, p))}
-                  onTap={() => (edit ? setSel(id) : tellAbout(id))} />
+                  onDrop={(p) => (edit ? (setSel(id), setLay((l) => ({ ...l, [id]: { x: Math.round(p[0]), y: Math.round(p[1]), s: 1 } }))) : addToCart(id))}
+                  onTap={() => (edit ? setSel(id) : addToCart(id))} />
                 {edit && sel === id && <View pointerEvents="none" style={{ position: 'absolute', left: (at[0] - d.w / 2 - 3) * k, top: (at[1] - d.h) * k - 3, width: (d.w + 6) * k, height: (d.h + 6) * k, borderWidth: 2, borderColor: '#ffe29a', borderStyle: 'dashed', zIndex: 20 }} />}
               </React.Fragment>
             );
@@ -216,27 +211,15 @@ export default function NurseryScreen({ navigation }) {
 
           {showCan && (
             <DragItem it={describe('c:red')} at={CAN_SPOT} k={k} z={6}
-              onDrop={(p) => dropOnCounter('c:red', p)} onTap={() => tellAbout('c:red')} />
+              onDrop={() => addToCart('c:red')} onTap={() => addToCart('c:red')} />
           )}
 
-          {/* what is on the counter: drag it off, or tap, to put it back */}
-          {basket.map((id, i) => (
-            <DragItem key={id} it={describe(id)} at={[COUNTER_X(i), COUNTER_Y(i)]} k={k} z={8} mul={COUNTER_MUL}
-              onDrop={(p) => { if (p[0] < PAY_X) setBasket((b) => b.filter((x) => x !== id)); }}
-              onTap={() => setBasket((b) => b.filter((x) => x !== id))} />
-          ))}
-
           {/* the register: its screen shows the total; tap it to check out */}
-          <TouchableOpacity activeOpacity={0.85} onPress={checkout}
+          <TouchableOpacity activeOpacity={0.85} onPress={() => setCartOpen(true)}
             style={{ position: 'absolute', left: REGISTER.x0 * k, top: REGISTER.y0 * k, width: (REGISTER.x1 - REGISTER.x0) * k, height: (REGISTER.y1 - REGISTER.y0) * k, zIndex: 9 }} />
           <View pointerEvents="none" style={{ position: 'absolute', left: (LCD.x - 60) * k, top: LCD.y * k - 12 * k, width: 120 * k, alignItems: 'center', zIndex: 10 }}>
             <Text style={{ fontFamily: SERIF, fontSize: 22 * k, color: '#9cff9c', fontWeight: 'bold' }}>{total}</Text>
           </View>
-          {basket.length > 0 && (
-            <View pointerEvents="none" style={{ position: 'absolute', left: (REGISTER.x0 - 80) * k, top: (REGISTER.y0 - 60) * k, width: (REGISTER.x1 - REGISTER.x0 + 160) * k, alignItems: 'center', zIndex: 10 }}>
-              <View style={styles.hintChip}><Text style={styles.hintText}>Tap the register to pay</Text></View>
-            </View>
-          )}
         </>
       )}
 
@@ -277,31 +260,52 @@ export default function NurseryScreen({ navigation }) {
                 );
               })}
             </ScrollView>
-            <Text style={styles.panelHint}>Tap one to put it on the counter, then pay at the register.</Text>
+            <Text style={styles.panelHint}>Tap one to add it to your cart.</Text>
           </TouchableOpacity>
         </TouchableOpacity>
       )}
 
-      {receipt && (
-        <TouchableOpacity activeOpacity={1} style={styles.panelWrap} onPress={() => setReceipt(null)}>
-          <TouchableOpacity activeOpacity={1} style={[styles.panel, { width: '46%' }]}>
-            <Text style={styles.panelTitle}>Order summary</Text>
-            <ScrollView style={{ maxHeight: 220 }} showsVerticalScrollIndicator={false}>
-              {receipt.lines.map((l) => (
-                <View key={l.id} style={styles.recRow}>
-                  <Image source={l.src} resizeMode="contain" style={{ width: 38, height: 38 }} />
-                  <Text style={styles.recName} numberOfLines={1}>{l.name}{l.qty > 1 ? ` x${l.qty}` : ''}</Text>
-                  <Text style={styles.recPrice}>{l.price * l.qty}</Text>
+      <TouchableOpacity activeOpacity={0.8} onPress={() => setCartOpen(true)} style={styles.cartBtn}>
+        <Text style={styles.layoutTxt}>CART{basket.length ? ` (${basket.length})` : ''}</Text>
+      </TouchableOpacity>
+
+      {(cartOpen || receipt) && (() => {
+        const paid = !!receipt;
+        const lines = paid ? receipt.lines : basket.map((id) => { const d = describe(id); return { id, src: d.src, name: d.name, price: d.price, qty: 1 }; });
+        const sum = paid ? receipt.total : total;
+        const close = () => { setCartOpen(false); setReceipt(null); };
+        return (
+          <TouchableOpacity activeOpacity={1} style={styles.panelWrap} onPress={close}>
+            <TouchableOpacity activeOpacity={1} style={[styles.panel, { width: '46%' }]}>
+              <Text style={styles.panelTitle}>{paid ? 'Thank you!' : 'Order summary'}</Text>
+              <ScrollView style={{ maxHeight: 220 }} showsVerticalScrollIndicator={false}>
+                {lines.length === 0 && <Text style={styles.panelHint}>Your cart is empty. Tap a bag or a pot to add it.</Text>}
+                {lines.map((l) => (
+                  <View key={l.id} style={styles.recRow}>
+                    <Image source={l.src} resizeMode="contain" style={{ width: 38, height: 38 }} />
+                    <Text style={styles.recName} numberOfLines={1}>{l.name}{l.qty > 1 ? ` x${l.qty}` : ''}</Text>
+                    <Text style={styles.recPrice}>{l.price * l.qty}</Text>
+                    {!paid && (
+                      <TouchableOpacity onPress={() => setBasket((b) => b.filter((x) => x !== l.id))} style={styles.recX}><Text style={styles.recXTxt}>x</Text></TouchableOpacity>
+                    )}
+                  </View>
+                ))}
+              </ScrollView>
+              <View style={styles.recRule} />
+              <View style={styles.recRow}><Text style={[styles.recName, { fontWeight: 'bold' }]}>Total</Text><Text style={[styles.recPrice, { fontWeight: 'bold' }]}>{sum}</Text></View>
+              <View style={styles.recRow}><Text style={styles.recName}>{paid ? 'Coins left' : 'Your coins'}</Text><Text style={styles.recPrice}>{paid ? receipt.left : coins}</Text></View>
+              {paid ? (
+                <Text style={styles.panelHint}>Tap anywhere to close.</Text>
+              ) : (
+                <View style={styles.cartBtns}>
+                  <TouchableOpacity activeOpacity={0.8} onPress={close} style={[styles.cartAct, { backgroundColor: '#b98a4e' }]}><Text style={styles.layoutTxt}>KEEP SHOPPING</Text></TouchableOpacity>
+                  <TouchableOpacity activeOpacity={0.8} onPress={checkout} style={[styles.cartAct, { backgroundColor: lines.length ? '#4f8a3a' : '#9a8a70' }]}><Text style={styles.layoutTxt}>PAY {sum}</Text></TouchableOpacity>
                 </View>
-              ))}
-            </ScrollView>
-            <View style={styles.recRule} />
-            <View style={styles.recRow}><Text style={[styles.recName, { fontWeight: 'bold' }]}>Total</Text><Text style={[styles.recPrice, { fontWeight: 'bold' }]}>{receipt.total}</Text></View>
-            <View style={styles.recRow}><Text style={styles.recName}>Coins left</Text><Text style={styles.recPrice}>{receipt.left}</Text></View>
-            <Text style={styles.panelHint}>Thank you! Tap anywhere to close.</Text>
+              )}
+            </TouchableOpacity>
           </TouchableOpacity>
-        </TouchableOpacity>
-      )}
+        );
+      })()}
 
       <View style={styles.coinBox}>
         <Image source={UI_IMAGES.goldcoins} style={styles.coinIcon} resizeMode="contain" />
@@ -340,6 +344,11 @@ const styles = StyleSheet.create({
   panelGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, justifyContent: 'center' },
   tile: { width: 66, alignItems: 'center', backgroundColor: '#e8cf9a', borderWidth: 2, borderColor: '#b98a4e', borderRadius: 10, paddingVertical: 4 },
   tileTxt: { fontFamily: SERIF, fontSize: 12, color: '#4a2a10', fontWeight: 'bold' },
+  cartBtn: { position: 'absolute', right: 14, bottom: 10, zIndex: 60, backgroundColor: '#8a5a2a', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 5 },
+  cartBtns: { flexDirection: 'row', gap: 10, marginTop: 8, justifyContent: 'center' },
+  cartAct: { borderRadius: 12, paddingHorizontal: 14, paddingVertical: 6 },
+  recX: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#b98a4e', alignItems: 'center', justifyContent: 'center' },
+  recXTxt: { fontFamily: SERIF, fontSize: 16, color: '#fff', fontWeight: 'bold', lineHeight: 18 },
   recRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 2 },
   recName: { flex: 1, fontFamily: SERIF, fontSize: 16, color: '#4a2a10' },
   recPrice: { fontFamily: SERIF, fontSize: 16, color: '#4a2a10', minWidth: 40, textAlign: 'right' },
