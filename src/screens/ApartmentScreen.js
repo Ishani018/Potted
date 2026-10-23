@@ -24,7 +24,7 @@ function Placed({ item, W, H, edit, selected, onSelect, onMove, onDragState }) {
   const stand = def.plant ? STANDS[standOf(item)] : null;   // potted plants sit on a stool, stand or pedestal
   const standH = stand ? stand.w * size * stand.ratio : 0;
   const bw = def.furniture ? size * def.aspect : size;
-  const boxH = def.plant ? size * def.bf + standH * 0.86 : size;   // the stand tucks up under the pot
+  const boxH = def.plant ? size * def.bf + standH * 0.9 : size;   // the stand tucks up under the pot
   const x = (pos ?? item).x, y = (pos ?? item).y;
   const [lo, hi] = DECOR_Y_RANGE[def.kind];
 

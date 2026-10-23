@@ -64,6 +64,10 @@ assets/*
 !assets/ui_sheet/*.png
 !assets/granny/
 !assets/granny/*.png
+!assets/stands/
+!assets/stands/*.png
+!assets/petsheets/
+!assets/petsheets/*.png
 !assets/goose/
 !assets/goose2/
 !assets/goose2/*.png
