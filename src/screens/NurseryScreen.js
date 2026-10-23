@@ -136,7 +136,15 @@ export default function NurseryScreen({ navigation }) {
   };
 
   const stock = (ids, spots, extra = {}) => ids.map((id, i) => (spots[i] ? { id, at: lay[id] ? [lay[id].x, lay[id].y] : spots[i], ...extra } : null)).filter(Boolean).filter((e) => !basket.includes(e.id));
-  const onShelf = [
+  // in LAYOUT mode everything is out at once: all 35 shelf pots and all 7 hanging pots (the ones past the shelf spots wait in rows on the floor)
+  const spare = (n, y0) => Array.from({ length: n }, (_, i) => [140 + (i % 13) * 118, y0 + Math.floor(i / 13) * 62]);
+  const allPots = PPOT_IDS.map((p) => 'p:' + p), allHooks = HPOT_ORDER.map((h) => 'h:' + h);
+  const onShelf = edit ? [
+    ...stock(SEED_ORDER.map((s) => 's:' + s), SEED_SPOTS),
+    ...stock(allPots, [...POT_SPOTS, ...spare(allPots.length - 12, 690)]),
+    ...stock(allHooks, [...HOOK_SPOTS, ...spare(3, 800)]),
+    ...stock(['c:red'], [CAN_SPOT]),
+  ] : [
     ...stock(SEED_ORDER.map((s) => 's:' + s), SEED_SPOTS),
     ...stock(seats.map((p) => 'p:' + p), POT_SPOTS),
     ...stock(hooks.map((h) => 'h:' + h), HOOK_SPOTS),
@@ -169,14 +177,14 @@ export default function NurseryScreen({ navigation }) {
           })}
 
           {/* page the pots */}
-          {potPages > 1 && (
+          {!edit && potPages > 1 && (
             <>
               {arrow('left', 960, 700, () => setPotPage((pPage + potPages - 1) % potPages))}
               <View pointerEvents="none" style={[styles.pageChip, { left: 1030 * k, top: 686 * k, width: 70 * k }]}><Text style={styles.priceText}>{pPage + 1} / {potPages}</Text></View>
               {arrow('right', 1175, 700, () => setPotPage((pPage + 1) % potPages))}
             </>
           )}
-          {hookPages > 1 && (
+          {!edit && hookPages > 1 && (
             <>
               {arrow('left', 915, 140, () => setHookPage((hPage + hookPages - 1) % hookPages))}
               {arrow('right', 1218, 140, () => setHookPage((hPage + 1) % hookPages))}
