@@ -20,15 +20,18 @@ const SEED_INFO = {};
 const IMG_W = 1672;
 const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 const SEED_ORDER = ['daisy', 'snapdragon', 'poppy', 'marigold', 'peony', 'hydrenga', 'rose', 'stringofpearls', 'Philodendron', 'jasmine', 'petunia', 'Bougainvillea'];
+const jit = (i, n) => (((i * 37 + n * 17) % 11) - 5);          // a steady little wobble, so things look put there by hand, not on a grid
 const SHELF_Y = [262, 360, 460, 562];                       // top of each board on the big shelf unit
-const SEED_SPOTS = SEED_ORDER.map((k, i) => [440 + (i % 3) * 150, SHELF_Y[Math.floor(i / 3)] + 8]);
+// seeds: four to a shelf on the top three boards, bunched towards the left, a little uneven
+const SEED_SPOTS = SEED_ORDER.map((k, i) => [350 + (i % 4) * 92 + jit(i, 1) * 2, SHELF_Y[Math.floor(i / 4)] + 8 + (jit(i, 2) > 2 ? 2 : 0)]);
 const POT_Y = [312, 410, 508, 604];                         // boards of the right shelf unit
-const POT_SPOTS = Array.from({ length: 12 }, (_, i) => [992 + (i % 3) * 103, POT_Y[Math.floor(i / 3)] + 8]);
+// pots: four to a board on the lower three boards (the top board is left for the hooks' pots)
+const POT_SPOTS = Array.from({ length: 12 }, (_, i) => [930 + (i % 4) * 80 + jit(i, 3) * 1.5, POT_Y[1 + Math.floor(i / 4)] + 8]);
 const HOOK_SPOTS = [955, 1028, 1100, 1175].map((x) => [x, 236]);   // where a hanging pot's top sits
 const CAN_SPOT = [330, 735];
-const BAG = { w: 82, h: 74 };
-const POT_W = 74;                                           // shelf pot width on the shelf
-const HOOK_H = 68;                                          // hanging pot height on its hook
+const BAG = { w: 62, h: 56 };
+const POT_W = 58;                                           // shelf pot width on the shelf
+const HOOK_H = 66;                                          // hanging pot height on its hook
 const COUNTER_TOP = 770;                                    // drop an item below this line to put it on the counter
 const COUNTER_X = (i) => 150 + (i % 8) * 150;
 const COUNTER_Y = (i) => 872 + Math.floor(i / 8) * 55;
