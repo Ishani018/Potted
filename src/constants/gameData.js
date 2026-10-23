@@ -454,7 +454,12 @@ export function levelInfo(totalXp = 0) {
 // while testing. Leave at 1 for the real game.
 export const DEBUG_MIN_LEVEL = 1;
 
+// Levels are switched off for now: everyone counts as the top level, so nothing is locked or held back by level anywhere
+// (seeds, papers, customers' orders, the pet shop doors). Set LEVELS_ON to true to bring the old levels back.
+export const LEVELS_ON = false;
+export const OPEN_LEVEL = 99;
 export function playerLevel(player) {
+  if (!LEVELS_ON) return OPEN_LEVEL;
   return Math.max(levelInfo(player?.xp ?? 0).level, DEBUG_MIN_LEVEL);
 }
 

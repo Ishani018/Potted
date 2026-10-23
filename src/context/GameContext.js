@@ -5,7 +5,7 @@ import {
   INITIAL_PLAYER_STATE, ROOM_UNLOCK_COSTS, CATCH_UP, BOUQUET_SIZE,
   POTTED_FLOWERS, HANGING_PLANTS, PETS, ROOM_NAMES,
   seedType, evaluateBouquet, bouquetPaper,
-  XP_CONFIG, SEED_LOCKS, levelInfo, playerLevel, seedUnlockLevel, unlocksAtLevel, TRADE_FLOWERS, CUSTOMERS,
+  XP_CONFIG, SEED_LOCKS, LEVELS_ON, levelInfo, playerLevel, seedUnlockLevel, unlocksAtLevel, TRADE_FLOWERS, CUSTOMERS,
   roomScentShield, HERBALIST, HERBALIST_TRADES, REMEDIES, SACHET_MS, isShielded,
   PET_FOOD, PET_SPECIES, FED_MAX_HOURS, ADVENTURE, orderGrade,
 } from '../constants/gameData';
@@ -61,7 +61,7 @@ const initialState = {
 // Award XP; each level gained pays coins and queues a notice naming what it
 // unlocked. Returns the new state.
 function grantXp(state, amount) {
-  if (!(amount > 0)) return state;
+  if (!LEVELS_ON || !(amount > 0)) return state;   // no XP, no level-up notices while levels are off
   const oldXp = state.player.xp ?? 0;
   const before = levelInfo(oldXp).level;
   const xp = oldXp + Math.round(amount);
