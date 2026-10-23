@@ -60,6 +60,10 @@ assets/*
 !assets/furniture/*.png
 !assets/butler/
 !assets/butler/*.png
+!assets/goose/
+!assets/goose/*.png
+!assets/sfx/
+!assets/sfx/goose.mp3
 !assets/pests/
 !assets/pests/*.png
 !assets/herbalist/

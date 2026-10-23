@@ -91,3 +91,12 @@ export async function setMusicVolume(v) {
   save();
   await apply();
 }
+
+// A short one-off sound effect (a honk, a chime). Follows the game's volume; silent if the sound is switched off.
+export async function playSfx(source, gain = 1) {
+  if (!prefs.musicOn) return;
+  try {
+    const { sound: fx } = await Audio.Sound.createAsync(source, { volume: Math.max(0, Math.min(1, prefs.volume * gain)), shouldPlay: true });
+    fx.setOnPlaybackStatusUpdate((st) => { if (st.didJustFinish) fx.unloadAsync(); });
+  } catch { /* sound is a nicety, never a crash */ }
+}

@@ -3,6 +3,7 @@ import { View, Text, Image, Animated, Easing, TouchableOpacity, StyleSheet, Plat
 import { LOBBY_BG, BUTLER } from '../engine/assets';
 import ScreenHud from '../components/ScreenHud';
 import InventoryOverlay from '../components/InventoryOverlay';
+import Goose from '../components/Goose';
 
 // The lobby picture is 1672×941. Tap areas, as pixels of it.
 const IMG_W = 1672, IMG_H = 941;
@@ -19,6 +20,7 @@ const LINES = [
   { pose: 'offer',   text: 'Take your time. I am always here at the desk.' },
   { pose: 'tip',     text: 'Anything you need, just ask.' },
 ];
+const GOOSE_FLOOR = { x0: 150, x1: 1280, y0: 735, y1: 905 };   // the open floor in front of the desk (picture pixels)
 const px = (r, sw, sh) => ({ position: 'absolute', left: (r.x0 / IMG_W) * sw, top: (r.y0 / IMG_H) * sh, width: ((r.x1 - r.x0) / IMG_W) * sw, height: ((r.y1 - r.y0) / IMG_H) * sh });
 
 export default function LobbyScreen({ navigation }) {
@@ -52,6 +54,9 @@ export default function LobbyScreen({ navigation }) {
           <TouchableOpacity activeOpacity={1} onPress={() => navigation.navigate('Building')} style={px(STAIRS, sw, sh)}>
             <Animated.Text style={[styles.arrow, { left: '38%', top: '18%', opacity: bob.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }), transform: [{ translateY: bob.interpolate({ inputRange: [0, 1], outputRange: [4, -6] }) }] }]}>{'\u25B2\uFE0E'}</Animated.Text>
           </TouchableOpacity>
+
+          {/* the goose wanders the lobby floor */}
+          <Goose k={sw / IMG_W} bounds={GOOSE_FLOOR} />
 
           {/* the butler, behind the desk: his legs are cut off at the desk's top edge */}
           <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: sw, height: (BUTLER_AT.desk / IMG_H) * sh, overflow: 'hidden' }}>
