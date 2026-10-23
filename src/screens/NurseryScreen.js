@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, Image, PanResponder, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { NURSERY_BG, SEED_IMAGES, UI_IMAGES, PPOT_META, PPOT_IDS, HPOT_META, HPOT_ORDER, CAN_IMAGES, SET_UI } from '../engine/assets';
+import { NURSERY_BG, SEED_IMAGES, UI_IMAGES, PPOT_META, PPOT_IDS, PPLANT_IMAGES, HPOT_META, HPOT_ORDER, CAN_IMAGES, SET_UI } from '../engine/assets';
 import { POTTED_FLOWERS, HANGING_PLANTS, seedType, FLOWER_GROWTH, formatDuration, HPOT_INFO, PPOT_PRICE, CAN_INFO } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
 import { useNotice } from '../components/PurchaseNotice';
+import PottedArt, { pottedLayout } from '../components/PottedArt';
 
 // The nursery: seeds on the big left shelves, pots on the right shelves and hooks, the red watering can on the floor.
 // Drag anything to the counter, then tap the register to pay for it all.
@@ -23,15 +24,23 @@ const SEED_ORDER = ['daisy', 'snapdragon', 'poppy', 'marigold', 'peony', 'hydren
 const jit = (i, n) => (((i * 37 + n * 17) % 11) - 5);          // a steady little wobble, so things look put there by hand
 // board tops measured from the picture; an item's feet rest 11 px below the top edge, on the board's lit surface
 const SEED_BOARDS = [251, 351, 450, 549];
-const POT_BOARDS = [394, 490, 587];
-// seeds: three to a shelf, bunched in the middle of each board, slightly uneven
-const SEED_SPOTS = SEED_ORDER.map((k, i) => [470 + (i % 3) * 88 + jit(i, 1) * 3, SEED_BOARDS[Math.floor(i / 3)] + 11]);
-// pots: four to a board on the three lower boards of the right unit
-const POT_SPOTS = Array.from({ length: 12 }, (_, i) => [940 + (i % 4) * 78 + jit(i, 3) * 2, POT_BOARDS[Math.floor(i / 4)] + 11]);
+const POT_BOARDS = [299, 394, 490, 587];
+const SEEDLINGS = SEED_ORDER.filter((k) => PPLANT_IMAGES[k]);            // the seven shelf flowers, shown as little potted seedlings
+const BAG_SEEDS = SEED_ORDER.filter((k) => !PPLANT_IMAGES[k]);           // hanging-plant seeds, shown as bags
+const row = (n, x0, gap, y, salt) => Array.from({ length: n }, (_, i) => [x0 + i * gap + jit(i, salt) * 1.5, y + 11]);
+// left unit: top board = the seedlings, the three boards below = shelf pots, packed in
+const SEED_SPOTS_BY_KEY = {};
+SEEDLINGS.forEach((k, i) => { SEED_SPOTS_BY_KEY[k] = row(SEEDLINGS.length, 380, 66, SEED_BOARDS[0], 1)[i]; });
+const LEFT_POT_SPOTS = [...row(8, 372, 58, SEED_BOARDS[1], 2), ...row(8, 372, 58, SEED_BOARDS[2], 3), ...row(8, 372, 58, SEED_BOARDS[3], 4)];
+// right unit: the hooks above, then a board of hanging-plant seed bags, then two boards of pots
+const BAG_SPOTS = BAG_SEEDS.map((k, i) => [938 + i * 44 + jit(i, 5), POT_BOARDS[1] + 11]);
+const RIGHT_POT_SPOTS = [...row(6, 936, 41, POT_BOARDS[2], 6), ...row(5, 936, 41, POT_BOARDS[3], 7)];
+const SEED_SPOTS = SEED_ORDER.map((k) => SEED_SPOTS_BY_KEY[k] || BAG_SPOTS[BAG_SEEDS.indexOf(k)]);
+const POT_SPOTS = [...LEFT_POT_SPOTS, ...RIGHT_POT_SPOTS];     // 24 + 11 = all 35 shelf pots, no paging
 const HOOK_SPOTS = [955, 1028, 1100, 1175].map((x) => [x, 236]);   // where a hanging pot's top sits
 const CAN_SPOT = [330, 735];
-const BAG = { w: 62, h: 56 };
-const POT_W = 58;                                           // shelf pot width on the shelf
+const BAG = { w: 52, h: 47 };
+const POT_W = 44;                                           // shelf pot width on the shelf
 const HOOK_H = 96;                                          // hanging pot height on its hook
 const COUNTER_TOP = 770;                                    // drop an item below this line to put it on the counter
 const COUNTER_X = (i) => 150 + (i % 8) * 150;
@@ -44,6 +53,10 @@ const MAX_BASKET = 12;
 // what an item id means: 's:daisy' seed, 'p:12' shelf pot, 'h:chain' hanging pot, 'c:red' can
 function describe(id) {
   const [kind, key] = id.split(':');
+  if (kind === 's' && PPLANT_IMAGES[key]) {
+    const L = pottedLayout(4, key, 1, 44);   // a seedling: the plain clay pot with the smallest plant
+    return { name: SEED_INFO[key].name + ' seeds', price: SEED_INFO[key].price, seedling: key, w: L.boxW, h: L.boxH, src: SEED_IMAGES[key], layout: L };
+  }
   if (kind === 's') return { name: SEED_INFO[key].name, price: SEED_INFO[key].price, src: SEED_IMAGES[key], w: BAG.w, h: BAG.h };
   if (kind === 'p') { const m = PPOT_META[key]; return { name: 'A shelf pot', price: PPOT_PRICE[key], src: m.src, w: POT_W, h: POT_W * m.h / m.w }; }
   if (kind === 'h') { const m = HPOT_META[key]; return { name: HPOT_INFO[key].name, price: HPOT_INFO[key].price, src: m.src, w: HOOK_H * m.w / m.h, h: HOOK_H, hanging: true }; }
@@ -76,7 +89,9 @@ function DragItem({ it, at, k, onDrop, onTap, z, mul = 1 }) {
   const top = it.hanging && !pos ? y * k : y * k - h;
   return (
     <View {...pan.panHandlers} style={{ position: 'absolute', left: x * k - w / 2, top, width: w, height: h, zIndex: pos ? 500 : z }}>
-      <Image source={it.src} pointerEvents="none" style={{ width: w, height: h }} resizeMode="contain" />
+      {it.seedling
+        ? <PottedArt layout={pottedLayout(4, it.seedling, 1, 44 * k * mul)} potW={44 * k * mul} pot={4} />
+        : <Image source={it.src} pointerEvents="none" style={{ width: w, height: h }} resizeMode="contain" />}
     </View>
   );
 }
@@ -106,9 +121,9 @@ export default function NurseryScreen({ navigation }) {
   // pots you do not own yet, shown 12 (shelf) and 4 (hooks) at a time
   const shelfPots = PPOT_IDS.filter((id) => !ownedPPots.includes(id));
   const hookPots = HPOT_ORDER.filter((id) => !ownedHPots.includes(id));
-  const potPages = Math.max(1, Math.ceil(shelfPots.length / 12)), hookPages = Math.max(1, Math.ceil(hookPots.length / 4));
+  const potPages = 1, hookPages = Math.max(1, Math.ceil(hookPots.length / 4));
   const pPage = Math.min(potPage, potPages - 1), hPage = Math.min(hookPage, hookPages - 1);
-  const seats = shelfPots.slice(pPage * 12, pPage * 12 + 12);
+  const seats = shelfPots.slice(0, 35);
   const hooks = hookPots.slice(hPage * 4, hPage * 4 + 4);
 
   const dropOnCounter = (id, p) => {
