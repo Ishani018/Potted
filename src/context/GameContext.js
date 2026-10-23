@@ -236,7 +236,7 @@ function reducer(state, action) {
         lastSeen: now,
         awaySummary: summary ?? state.awaySummary,
         player,
-        notices: [...state.notices, ...notices.map((text, i) => ({ id: `${now}_${i}`, text }))],
+        notices: [...state.notices, ...notices.map((n, i) => (typeof n === 'string' ? { id: `${now}_${i}`, text: n } : { id: `${now}_${i}`, ...n }))],
       };
     }
 

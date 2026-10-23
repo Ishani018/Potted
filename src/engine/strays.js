@@ -26,6 +26,7 @@ export function maybeArriveStray(player, now, rand) {
   const stray = { key, finder, seat, at: now };
   return {
     player: { ...player, strays: [...present, stray], lastStrayAt: now },
-    notice: `${CUSTOMERS[finder].name} brought a stray to the Foster Center: ${STRAYS[key].breed}!`,
+    // a notice with buttons (see NoticeToast): dismiss, or go and see it
+    notice: { kind: 'stray', petKey: key, icon: '🐾', title: 'A stray turned up!', text: `${CUSTOMERS[finder].name} brought a ${STRAYS[key].breed} to the Foster Center.` },
   };
 }

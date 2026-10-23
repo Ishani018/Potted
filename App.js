@@ -3,7 +3,7 @@ import 'react-native-gesture-handler';
 import React, { useState, useCallback } from 'react';
 import { View } from 'react-native';
 import { useFonts } from 'expo-font';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -36,6 +36,8 @@ import NoticeToast from './src/components/NoticeToast';
 
 const Stack = createStackNavigator();
 
+const navRef = createNavigationContainerRef();
+
 export default function App() {
   const [layout, setLayout] = useState({ width: 854, height: 480 });
   // Current screen — the catch-up summary waits until you're past the title.
@@ -61,7 +63,7 @@ export default function App() {
         <GameProvider>
           <LayoutContext.Provider value={layout}>
             <View style={{ flex: 1 }} onLayout={onLayout}>
-              <NavigationContainer onStateChange={(nav) => nav && setRoute(nav.routes[nav.index]?.name)}>
+              <NavigationContainer ref={navRef} onStateChange={(nav) => nav && setRoute(nav.routes[nav.index]?.name)}>
                 <StatusBar hidden />
                 <Stack.Navigator
                   initialRouteName="Main"
@@ -96,7 +98,7 @@ export default function App() {
               </NavigationContainer>
               <CatchUpSummary hidden={route === 'Main' || route === 'Loading'} />
               {/* Pet notices wait until the welcome-back card is closed */}
-              <NoticeToast hidden={route === 'Main' || route === 'Loading'} />
+              <NoticeToast hidden={route === 'Main' || route === 'Loading'} onVisit={() => navRef.isReady() && navRef.navigate('PetShop')} />
             </View>
           </LayoutContext.Provider>
         </GameProvider>
