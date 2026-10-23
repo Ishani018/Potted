@@ -71,9 +71,9 @@ const HANG_SLOTS = [
 const CAN_SPOT = [600, 735];
 const BAG = { w: 88, h: 114 };
 const PAY_X = 1040;                                         // items dropped right of this line (or tapped in) wait by the register
-const COUNTER_X = (i) => 1085 + (i % 6) * 52;
-const COUNTER_Y = (i) => 752 - Math.floor(i / 6) * 46;
-const COUNTER_MUL = 0.85;
+const COUNTER_X = (i) => 1030 + (i % 6) * 54;
+const COUNTER_Y = (i) => 918 - Math.floor(i / 6) * 38;
+const COUNTER_MUL = 0.7;
 const REGISTER = { x0: 1360, y0: 690, x1: 1610, y1: 890 };
 const LCD = { x: 1488, y: 755 };
 const MAX_BASKET = 12;
