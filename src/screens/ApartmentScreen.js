@@ -96,7 +96,7 @@ export default function ApartmentScreen({ navigation, route }) {
             </TouchableOpacity>
             <View style={{ position: 'absolute', left: 0, top: sh - H - lift, width: W, height: H }}>
               {/* the goose has followed you in */}
-              <Goose k={scale} bounds={{ x0: art.w * 0.08, x1: art.w * 0.94, y0: art.h * 0.8, y1: art.h * 0.95 }} imgH={art.h} base={art.h * 0.0007} disabled={edit} onHold={setDragging} zOf={(y) => 10 + Math.round((y / art.h) * 100)} />
+              <Goose k={scale} bounds={{ x0: art.w * 0.08, x1: art.w * 0.94, y0: art.h * 0.8, y1: art.h * 0.95 }} imgH={art.h} base={art.h * 0.0007} disabled={edit} onHold={setDragging} audibleAt={(x) => x * scale >= scrollX.current - 20 && x * scale <= scrollX.current + sw + 20} zOf={(y) => 10 + Math.round((y / art.h) * 100)} />
               {items.map((it) => (
                 <Placed key={it.id} item={it} W={W} H={H} edit={edit} selected={selected === it.id}
                   onSelect={() => setSelected(selected === it.id ? null : it.id)}

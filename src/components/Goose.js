@@ -26,14 +26,15 @@ function pickIdle() {
   return 'front';
 }
 
-export default function Goose({ k, bounds, imgH = 941, base, zOf, disabled, onHold }) {
+export default function Goose({ k, bounds, imgH = 941, base, zOf, disabled, onHold, audibleAt }) {
   const size = (base ?? imgH * 0.00066) * 1.25;   // the second sheet draws the goose smaller
   const g = useRef({ x: bounds.x0, y: (bounds.y0 + bounds.y1) / 2, tx: 0, ty: 0, mode: 'idle', pose: 'front', until: 0, frame: 0, dir: 1, vert: 0, mul: 1, held: false });
   const b = useRef(bounds); b.current = bounds;
-  const live = useRef({ k, disabled, onHold }); live.current = { k, disabled, onHold };
+  const live = useRef({ k, disabled, onHold, audibleAt }); live.current = { k, disabled, onHold, audibleAt };
   const [, tick] = useState(0);
 
-  const honk = (gain) => { playSfx(GOOSE_HONK, gain, { goose: true }); };
+  // its own honks are only heard while the goose is actually in view (audibleAt tells us, for scrolling rooms)
+  const honk = (gain) => { const a = live.current.audibleAt; if (a && !a(g.current.x)) return; playSfx(GOOSE_HONK, gain, { goose: true }); };
   const rest = (now, pose) => {
     const s = g.current; s.mode = 'idle'; s.pose = pose; s.frame = 0; s.mul = 1;
     s.until = now + (pose === 'sleep' ? rand(6000, 9000) : pose === 'honk' ? 1500 : rand(1800, 4200));
