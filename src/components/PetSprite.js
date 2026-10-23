@@ -57,7 +57,8 @@ function PosedPet({ petKey, w, h, flip, children, asleepForced, napper }) {
   // The box was sized for the pet's old single picture (sitting, lying, wide or tall). Match its area so a pet that was drawn
   // lying down doesn't shrink when its sheet's base frame is a sitting pose; never let it spill far outside the box.
   const base = frames[napper || asleepForced ? poses.sleep[0] : poses.base];
-  const sc = Math.min(Math.sqrt((w * h) / (base.w * base.h)), (w * 1.3) / base.w, (h * 1.3) / base.h);
+  const sc0 = Math.min(Math.sqrt((w * h) / (base.w * base.h)), (w * 1.3) / base.w, (h * 1.3) / base.h);
+  const sc = napper || asleepForced ? Math.min(sc0, (w * 0.82) / base.w) : sc0;   // a napper's box is its curled-up size: keep it from growing when it sits up
   useEffect(() => {
     if (shown.current === null) { shown.current = frame; return; }
     if (shown.current === frame) return;
@@ -72,7 +73,7 @@ function PosedPet({ petKey, w, h, flip, children, asleepForced, napper }) {
       <Animated.View style={{ width: w, height: h, transform: [{ scaleY }, { scaleX: flip ? -1 : 1 }], transformOrigin: 'bottom' }}>
         {Object.keys(frames).map((k) => {
           // gently even out size between poses: a long lying frame is drawn a touch smaller than a tall sitting one
-          const f = frames[k], norm = Math.pow((base.w * base.h) / (f.w * f.h), 0.18), fw = f.w * sc * norm, fh = f.h * sc * norm;
+          const f = frames[k], norm = Math.pow((base.w * base.h) / (f.w * f.h), 0.18), cap = Math.min(1, (h * 1.1) / (f.h * sc * norm), (w * 1.15) / (f.w * sc * norm)), fw = f.w * sc * norm * cap, fh = f.h * sc * norm * cap;   // no pose may tower over the pet's box
           const isCur = Number(k) === frame, isPrev = Number(k) === prevFrame;
           const st = { position: 'absolute', left: (w - fw) / 2, top: h - fh, width: fw, height: fh };
           if (isCur) return <Animated.Image key={k} source={f.src} resizeMode="stretch" style={[st, { opacity: prevFrame === null ? 1 : fade }]} />;
