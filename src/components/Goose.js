@@ -32,7 +32,7 @@ const FrameImg = React.memo(function FrameImg({ src, w, h, show, flip }) {
   return <Image source={src} resizeMode="contain" pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: w, height: h, opacity: show ? 1 : 0, transform: flip ? [{ scaleX: -1 }] : undefined }} />;
 });
 
-export default function Goose({ k, bounds, imgH = 941, base, zOf, disabled, onHold, audibleAt }) {
+function WanderGoose({ k, bounds, imgH = 941, base, zOf, disabled, onHold, audibleAt }) {
   const size = (base ?? imgH * 0.00066) * 1.25;   // the second sheet draws the goose smaller
   const g = useRef({ x: bounds.x0, y: (bounds.y0 + bounds.y1) / 2, tx: 0, ty: 0, mode: 'idle', pose: 'front', until: 0, frame: 0, dir: 1, vert: 0, mul: 1, held: false });
   const b = useRef(bounds); b.current = bounds;
@@ -139,4 +139,18 @@ export default function Goose({ k, bounds, imgH = 941, base, zOf, disabled, onHo
       {FRAME_KEYS.map((i) => <FrameImg key={i} src={frameOf(i).src} w={w} h={h} show={i === n} flip={flip} />)}
     </View>
   );
+}
+
+// A goose asleep on a perch (the ottoman at home): { x, y } is where its feet rest, in the scene's own pixels.
+function PerchGoose({ k, base = 0.6, perch }) {
+  const f = frameOf(43), w = f.w * base * 1.25 * k, h = f.h * base * 1.25 * k;
+  return (
+    <View pointerEvents="none" style={{ position: 'absolute', left: perch.x * k - w / 2, top: perch.y * k - h, width: w, height: h, zIndex: perch.z ?? 12 }}>
+      <Image source={f.src} resizeMode="contain" style={{ width: w, height: h }} />
+    </View>
+  );
+}
+
+export default function Goose(props) {
+  return props.perch ? <PerchGoose k={props.k} base={props.base} perch={props.perch} /> : <WanderGoose {...props} />;
 }
