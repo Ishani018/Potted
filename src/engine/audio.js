@@ -8,7 +8,8 @@ const KEY = '@potted_audio_v1';
 
 let sound = null;
 let starting = null;
-let prefs = { musicOn: true, volume: 0.8 };   // volume 0..1
+// music = the looping song; sfx = one-off sounds; goose = the goose's honks (a part of sfx, with its own switch)
+let prefs = { musicOn: true, volume: 0.8, sfxOn: true, sfxVolume: 1, gooseOn: true };   // volumes 0..1
 const listeners = new Set();
 
 const emit = () => listeners.forEach((fn) => fn({ ...prefs }));
@@ -42,6 +43,9 @@ export async function loadAudioPrefs() {
       prefs = {
         musicOn: saved.musicOn !== false,
         volume: typeof saved.volume === 'number' ? Math.max(0, Math.min(1, saved.volume)) : prefs.volume,
+        sfxOn: saved.sfxOn !== false,
+        sfxVolume: typeof saved.sfxVolume === 'number' ? Math.max(0, Math.min(1, saved.sfxVolume)) : prefs.sfxVolume,
+        gooseOn: saved.gooseOn !== false,
       };
       emit();
       await apply();
@@ -92,11 +96,18 @@ export async function setMusicVolume(v) {
   await apply();
 }
 
-// A short one-off sound effect (a honk, a chime). Follows the game's volume; silent if the sound is switched off.
-export async function playSfx(source, gain = 1) {
-  if (!prefs.musicOn) return;
+export async function setSfxOn(on) { prefs = { ...prefs, sfxOn: !!on }; emit(); save(); }
+export async function setGooseOn(on) { prefs = { ...prefs, gooseOn: !!on }; emit(); save(); }
+// v: 0..1 (rounded to steps of 0.1)
+export async function setSfxVolume(v) { prefs = { ...prefs, sfxVolume: Math.round(Math.max(0, Math.min(1, v)) * 10) / 10 }; emit(); save(); }
+
+// A short one-off sound effect (a honk, a chime). Follows the sound-effects switch and volume.
+// opts.goose marks a goose sound, which also needs the goose switch on.
+export async function playSfx(source, gain = 1, opts = {}) {
+  if (!prefs.sfxOn || (opts.goose && !prefs.gooseOn)) return;
   try {
-    const { sound: fx } = await Audio.Sound.createAsync(source, { volume: Math.max(0, Math.min(1, prefs.volume * gain)), shouldPlay: true });
+    await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: false });
+    const { sound: fx } = await Audio.Sound.createAsync(source, { volume: Math.max(0, Math.min(1, prefs.sfxVolume * gain)), shouldPlay: true });
     fx.setOnPlaybackStatusUpdate((st) => { if (st.didJustFinish) fx.unloadAsync(); });
   } catch { /* sound is a nicety, never a crash */ }
 }

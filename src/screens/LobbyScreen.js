@@ -4,6 +4,7 @@ import { LOBBY_BG, BUTLER } from '../engine/assets';
 import ScreenHud from '../components/ScreenHud';
 import InventoryOverlay from '../components/InventoryOverlay';
 import Goose from '../components/Goose';
+import Bubble from '../components/Bubble';
 
 // The lobby picture is 1672×941. Tap areas, as pixels of it.
 const IMG_W = 1672, IMG_H = 941;
@@ -56,16 +57,14 @@ export default function LobbyScreen({ navigation }) {
           </TouchableOpacity>
 
           {/* the goose wanders the lobby floor */}
-          <Goose k={sw / IMG_W} bounds={GOOSE_FLOOR} />
+          <Goose k={sw / IMG_W} bounds={GOOSE_FLOOR} imgH={IMG_H} base={0.62} />
 
           {/* the butler, behind the desk: his legs are cut off at the desk's top edge */}
           <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: sw, height: (BUTLER_AT.desk / IMG_H) * sh, overflow: 'hidden' }}>
             <Image source={BUTLER[pose].src} resizeMode="contain" style={{ position: 'absolute', left: ((BUTLER_AT.x - (BUTLER_AT.h * BUTLER[pose].w / BUTLER[pose].h) / 2) / IMG_W) * sw, top: ((BUTLER_AT.feet - BUTLER_AT.h) / IMG_H) * sh, width: ((BUTLER_AT.h * BUTLER[pose].w / BUTLER[pose].h) / IMG_W) * sw, height: (BUTLER_AT.h / IMG_H) * sh }} />
           </View>
           <TouchableOpacity activeOpacity={1} onPress={talk} style={{ position: 'absolute', left: ((BUTLER_AT.x - 130) / IMG_W) * sw, top: ((BUTLER_AT.feet - BUTLER_AT.h) / IMG_H) * sh, width: (260 / IMG_W) * sw, height: ((BUTLER_AT.desk - BUTLER_AT.feet + BUTLER_AT.h) / IMG_H) * sh }} />
-          <View pointerEvents="none" style={[styles.bubble, { left: (560 / IMG_W) * sw, top: (205 / IMG_H) * sh, width: (330 / IMG_W) * sw }]}>
-            <Text style={styles.bubbleText}>{LINES[line].text}</Text>
-          </View>
+          <Bubble width={(380 / IMG_W) * sw} text={LINES[line].text} style={{ left: (560 / IMG_W) * sw, top: (170 / IMG_H) * sh }} />
           {/* the front door goes back out to the map */}
           <TouchableOpacity activeOpacity={1} onPress={() => navigation.navigate('Map')} style={px(DOOR, sw, sh)} />
         </>

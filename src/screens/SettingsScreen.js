@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Image, ScrollView, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
 import LevelBadge from '../components/LevelBadge';
 import { useGame } from '../context/GameContext';
 import { MAP_BG } from '../engine/assets';
-import { getAudioPrefs, subscribeAudio, setMusicOn, setMusicVolume } from '../engine/audio';
+import { getAudioPrefs, subscribeAudio, setMusicOn, setMusicVolume, setSfxOn, setSfxVolume, setGooseOn, playSfx } from '../engine/audio';
+import { GOOSE_HONK } from '../engine/assets';
 import { PixelPanel, PixelButton, PixelText, COLORS } from '../components/Pixel';
 import BackSign from '../components/BackSign';
 
@@ -14,6 +15,7 @@ const STEPS = 10;          // volume bar segments
 
 export default function SettingsScreen({ navigation }) {
   const { dispatch } = useGame();
+  const { height: winH } = useWindowDimensions();
   const [audio, setAudio] = useState(getAudioPrefs());
   const [confirming, setConfirming] = useState(false);
   const [erased, setErased] = useState(false);
@@ -23,6 +25,7 @@ export default function SettingsScreen({ navigation }) {
   useEffect(() => () => timer.current && clearTimeout(timer.current), []);
 
   const level = Math.round(audio.volume * STEPS);
+  const sfxLevel = Math.round(audio.sfxVolume * STEPS);
 
   const erase = () => {
     if (!confirming) {
@@ -45,7 +48,7 @@ export default function SettingsScreen({ navigation }) {
       <View style={styles.center} pointerEvents="box-none">
         <View style={styles.board}>
           <PixelPanel>
-            <View style={{ gap: 14 }}>
+            <ScrollView style={{ maxHeight: winH * 0.8 }} contentContainerStyle={{ gap: 14 }} showsVerticalScrollIndicator={false}>
               <PixelText size={14} color={COLORS.gold} style={{ textAlign: 'center' }}>SETTINGS</PixelText>
 
               {/* level, XP and the next unlock live here now, not on every screen */}
@@ -79,6 +82,33 @@ export default function SettingsScreen({ navigation }) {
 
               <View style={styles.rule} />
 
+              {/* sound effects: on / off, volume, and the goose's honks on their own switch */}
+              <View style={styles.row}>
+                <PixelText size={10}>SOUND FX</PixelText>
+                <PixelButton label={audio.sfxOn ? 'ON' : 'OFF'} tone={audio.sfxOn ? 'green' : 'wood'} size={10} onPress={() => setSfxOn(!audio.sfxOn)} style={styles.toggle} />
+              </View>
+              <View style={styles.row}>
+                <PixelText size={10}>FX VOLUME</PixelText>
+                <View style={styles.volume}>
+                  <PixelButton label="-" size={12} tone="wood" disabled={sfxLevel <= 0} onPress={() => setSfxVolume((sfxLevel - 1) / STEPS)} style={styles.step} />
+                  <View style={styles.bar}>
+                    {Array.from({ length: STEPS }).map((_, i) => (
+                      <View key={i} style={[styles.seg, i < sfxLevel && styles.segOn, !audio.sfxOn && styles.segOff]} />
+                    ))}
+                  </View>
+                  <PixelButton label="+" size={12} tone="wood" disabled={sfxLevel >= STEPS} onPress={() => { setSfxVolume((sfxLevel + 1) / STEPS); }} style={styles.step} />
+                </View>
+              </View>
+              <View style={styles.row}>
+                <PixelText size={10}>GOOSE HONKS</PixelText>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <PixelButton label="TEST" size={9} tone="wood" onPress={() => playSfx(GOOSE_HONK, 1, { goose: true })} style={{ minWidth: 62 }} />
+                  <PixelButton label={audio.gooseOn ? 'ON' : 'OFF'} tone={audio.gooseOn ? 'green' : 'wood'} size={10} onPress={() => setGooseOn(!audio.gooseOn)} style={{ minWidth: 70 }} />
+                </View>
+              </View>
+
+              <View style={styles.rule} />
+
               {/* start over */}
               <View style={styles.row}>
                 <View style={{ flex: 1, paddingRight: 10 }}>
@@ -97,7 +127,7 @@ export default function SettingsScreen({ navigation }) {
               </View>
 
               <PixelText size={6} color="#e8d4a8" style={{ textAlign: 'center' }}>POTTED - A COZY PLANT NURSERY - V1.0</PixelText>
-            </View>
+            </ScrollView>
           </PixelPanel>
         </View>
       </View>

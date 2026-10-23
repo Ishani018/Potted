@@ -229,11 +229,11 @@ export const FOSTER_BG = require('../../assets/foster/center.png');
 export const UI_IMAGES = {
   nurseryshop:  require('../../assets/ui_comps/nurseryshop.png'),
   gallery:      require('../../assets/ui_comps/gallery.png'),
-  inventorybtn: require('../../assets/ui_comps/inventorybutton.png'),
+  inventorybtn: require('../../assets/ui_sheet/hud_bag.png'),
   goldcoins:    require('../../assets/ui_comps/goldcoins.png'),
   back:         require('../../assets/ui_comps/back.png'),
   settings:     require('../../assets/ui_comps/settings.png'),
-  settingsnobg: require('../../assets/ui_comps/settingsnobg.png'),
+  settingsnobg: require('../../assets/ui_sheet/hud_gear.png'),
   seed:         require('../../assets/ui_comps/seed.png'),
   wateringcan1: require('../../assets/wateringcan1.png'),
   wateringcan2: require('../../assets/wateringcan2.png'),
@@ -244,7 +244,7 @@ export const UI_IMAGES = {
   info:         require('../../assets/ui_comps/info.png'),
   // Navigation / hub buttons
   homebutton:   require('../../assets/ui_comps/homebutton.png'),
-  mapicon:      require('../../assets/ui_comps/mapicon.png'),
+  mapicon:      require('../../assets/ui_sheet/hud_map.png'),
   greenhousebtn: require('../../assets/ui_comps/greenhousebutton.png'),
   balconybtn:   require('../../assets/ui_comps/balconybutton.png'),
   sunroombtn:   require('../../assets/ui_comps/sunroombutton.png'),
@@ -298,7 +298,7 @@ export const UI_IMAGES = {
   decoPlant:     require('../../assets/ui_comps/deco_plant.png'),
   decoCrate:     require('../../assets/ui_comps/deco_crate.png'),
   waterdrop:     require('../../assets/ui_comps/waterdrop.png'),
-  flowerbook:    require('../../assets/ui_comps/flowerbook.png'),
+  flowerbook:    require('../../assets/ui_sheet/hud_book.png'),
   bouquetempty:  require('../../assets/ui_comps/bouquetempty.png'),
   bouquetmixed:  require('../../assets/ui_comps/bouquetmixed.png'),
   bouquetfancy:  require('../../assets/ui_comps/bouquetfancy.png'),
@@ -465,6 +465,9 @@ export const GOOSE = {
   38: { src: require('../../assets/goose/gs_38.png'), w: 177, h: 190 },
 };
 export const GOOSE_HONK = require('../../assets/sfx/goose.mp3');
+export const GOOSE_PICKUP = require('../../assets/sfx/goose_pickup.mp3');   // the loud honk when you pick the goose up
+// Speech bubbles (picture + pixel size)
+export const BUBBLE_WIDE = { src: require('../../assets/ui_sheet/bb_08.png'), w: 401, h: 166 };
 export const LOBBY_BG = require('../../assets/building/lobby.png');   // the apartment building's entrance hall
 export const APT_ART = {   // the empty rooms: picture + its pixel size
   1: { src: require('../../assets/building/apt1.png'), w: 1672, h: 941 },

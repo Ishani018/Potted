@@ -7,6 +7,8 @@ import ScreenHud from '../components/ScreenHud';
 import { pixelText } from '../components/Pixel';
 import { Skinned } from '../components/NineSlice';
 import InventoryOverlay from '../components/InventoryOverlay';
+import Bubble from '../components/Bubble';
+import Goose from '../components/Goose';
 
 // The building picture is 1672×941. Each door's tap area, in its pixels.
 const IMG_W = 1672, IMG_H = 941;
@@ -33,6 +35,7 @@ export default function BuildingScreen({ navigation }) {
   const [pose, setPose] = useState('wave');
   const [say, setSay] = useState(null);       // what the butler is saying (null = nothing)
   const [busy, setBusy] = useState(false);
+  const [held, setHeld] = useState(false);   // the goose is being carried: don't scroll the building
   const scroller = useRef(null);
   const slide = useRef(new Animated.Value(-60)).current;
   const sw = box.w, sh = box.h;
@@ -88,7 +91,7 @@ export default function BuildingScreen({ navigation }) {
   return (
     <View style={styles.root} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
       {sw > 0 && (
-        <ScrollView ref={scroller} showsVerticalScrollIndicator={false} scrollEventThrottle={32} onScroll={onScroll} style={StyleSheet.absoluteFill} contentContainerStyle={{ width: sw, height: H }}>
+        <ScrollView ref={scroller} scrollEnabled={!held} showsVerticalScrollIndicator={false} scrollEventThrottle={32} onScroll={onScroll} style={StyleSheet.absoluteFill} contentContainerStyle={{ width: sw, height: H }}>
           <View style={{ position: 'absolute', left: xOff, top: 0, width: W, height: H }}>
             <Image source={BUILDING_BG} style={{ width: W, height: H }} resizeMode="stretch" />
 
@@ -108,17 +111,16 @@ export default function BuildingScreen({ navigation }) {
               );
             })}
 
+            {/* the goose follows you up the stairs and waddles along the landing */}
+            <Goose k={k} bounds={{ x0: 150, x1: 1120, y0: FLOOR_Y[floor] - 14, y1: FLOOR_Y[floor] + 18 }} imgH={IMG_H} base={0.42} disabled={busy} onHold={setHeld} zOf={() => 8} />
+
             {/* the butler waits beside the door on whichever floor you are on */}
             <Animated.View style={{ position: 'absolute', left: BUTLER_X * k - bw / 2, top: FLOOR_Y[floor] * k - bh, width: bw, height: bh, transform: [{ translateX: slide }] }}>
               <TouchableOpacity activeOpacity={1} onPress={chat} style={{ width: bw, height: bh }}>
                 <Image source={bp.src} resizeMode="contain" style={{ width: bw, height: bh }} />
               </TouchableOpacity>
             </Animated.View>
-            {say && (
-              <View pointerEvents="none" style={[styles.bubble, { left: BUTLER_X * k - 120, top: FLOOR_Y[floor] * k - bh - 62, width: 240 }]}>
-                <Text style={styles.bubbleText}>{say}</Text>
-              </View>
-            )}
+            {say && <Bubble width={300} text={say} style={{ left: BUTLER_X * k - 150, top: FLOOR_Y[floor] * k - bh - 112 }} />}
           </View>
         </ScrollView>
       )}

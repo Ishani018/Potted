@@ -8,6 +8,7 @@ import ScreenHud from '../components/ScreenHud';
 import { pixelText } from '../components/Pixel';
 import { Skinned } from '../components/NineSlice';
 import InventoryOverlay from '../components/InventoryOverlay';
+import Goose from '../components/Goose';
 
 const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -94,6 +95,8 @@ export default function ApartmentScreen({ navigation, route }) {
               <Image source={art.src} style={{ width: W, height: H }} resizeMode="stretch" />
             </TouchableOpacity>
             <View style={{ position: 'absolute', left: 0, top: sh - H - lift, width: W, height: H }}>
+              {/* the goose has followed you in */}
+              <Goose k={scale} bounds={{ x0: art.w * 0.08, x1: art.w * 0.94, y0: art.h * 0.8, y1: art.h * 0.95 }} imgH={art.h} base={art.h * 0.0007} disabled={edit} onHold={setDragging} zOf={(y) => 10 + Math.round((y / art.h) * 100)} />
               {items.map((it) => (
                 <Placed key={it.id} item={it} W={W} H={H} edit={edit} selected={selected === it.id}
                   onSelect={() => setSelected(selected === it.id ? null : it.id)}

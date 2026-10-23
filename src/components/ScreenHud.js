@@ -12,11 +12,11 @@ const PLOPPER_H = 768;
 
 // { x, y, w, h } centre + size in base px (laid out in Plopper with safe margins).
 const HUD = {
-  settings:  { x: 58,   y: 47,  w: 70, h: 66 },
-  map:       { x: 1310, y: 43,  w: 77, h: 58 },
-  inventory: { x: 60,   y: 717, w: 87, h: 75 },
-  book:      { x: 1310, y: 124, w: 72, h: 66 }, // under the map button
-  bookTop:   { x: 1310, y: 46,  w: 72, h: 66 }, // top-right when there's no map button
+  settings:  { x: 58,   y: 47,  w: 72, h: 72 },
+  map:       { x: 1310, y: 47,  w: 72, h: 72 },
+  inventory: { x: 60,   y: 715, w: 76, h: 76 },
+  book:      { x: 1310, y: 130, w: 72, h: 72 }, // under the map button
+  bookTop:   { x: 1310, y: 47,  w: 72, h: 72 }, // top-right when there's no map button
 };
 
 function place(slot, sw, sh) {

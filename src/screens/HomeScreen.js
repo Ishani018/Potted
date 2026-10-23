@@ -6,6 +6,7 @@ import { MapTagButton } from '../components/MapTag';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
 import HerbalistCorner from '../components/HerbalistCorner';
+import Goose from '../components/Goose';
 
 // Entry buttons laid out in Plopper (1376×768 base, sprite CENTER anchor).
 // Render bg stretched + position against the measured box → exact placement.
@@ -42,6 +43,9 @@ export default function HomeScreen({ navigation }) {
         <MapTagButton key={e.label} label={e.label} x={e.x} y={e.y} box={box} z={10 + i} delay={i * 180} onPress={() => go(e)} />
       ))}
       <MapTagButton label={PET_TAG.label} x={PET_TAG.x} y={PET_TAG.y} box={box} z={14} delay={600} onPress={() => navigation.navigate('PetRoom')} />
+
+      {/* the goose lives here too: it has the run of the living-room floor (home picture is 1671×941) */}
+      {sw > 0 && <Goose k={sw / 1671} bounds={{ x0: 250, x1: 1480, y0: 735, y1: 812 }} imgH={941} base={0.6} zOf={() => 12} />}
 
       {/* Granny Mae the herbalist: free daily remedy + herb swaps (tap her) */}
       <HerbalistCorner sw={sw} sh={sh} />
