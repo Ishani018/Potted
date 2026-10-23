@@ -3,7 +3,7 @@ import { View, Text, Image, ScrollView, PanResponder, TouchableOpacity, StyleShe
 import { useGame } from '../context/GameContext';
 import { APT_ART, UI_IMAGES } from '../engine/assets';
 import { APARTMENTS } from '../constants/gameData';
-import { DECOR, DECOR_TABS, DECOR_START_Y, DECOR_Y_RANGE, STANDS, STAND_ORDER, standOf } from '../engine/decor';
+import { DECOR, ROT_VIEWS, DECOR_TABS, DECOR_START_Y, DECOR_Y_RANGE, STANDS, STAND_ORDER, standOf } from '../engine/decor';
 import ScreenHud from '../components/ScreenHud';
 import { pixelText } from '../components/Pixel';
 import { Skinned } from '../components/NineSlice';
@@ -120,6 +120,11 @@ export default function ApartmentScreen({ navigation, route }) {
 
       {selected && edit && (
         <View style={[styles.removeWrap, { bottom: trayH + 70 }]} pointerEvents="box-none">
+          {DECOR[items.find((it) => it.id === selected)?.key]?.rotGroup && (
+            <TouchableOpacity activeOpacity={0.8} onPress={() => { const it = items.find((i) => i.id === selected); const g = DECOR[it.key].rotGroup; const cur = ROT_VIEWS.findIndex((v) => `rot_${g}_${v}` === it.key); dispatch({ type: 'ROTATE_APT_ITEM', aptId, id: selected, key: `rot_${g}_${ROT_VIEWS[(cur + 1) % ROT_VIEWS.length]}` }); }} style={[styles.removeBtn, { backgroundColor: '#3a6a8a', borderColor: '#1a3a4a', marginRight: 8 }]}>
+              <Text style={styles.removeText}>TURN</Text>
+            </TouchableOpacity>
+          )}
           {['floor', 'hang'].includes(DECOR[items.find((it) => it.id === selected)?.key]?.kind) && (
             <TouchableOpacity activeOpacity={0.8} onPress={() => dispatch({ type: 'FLIP_APT_ITEM', aptId, id: selected })} style={[styles.removeBtn, { backgroundColor: '#5a7a3a', borderColor: '#2a4a1a', marginRight: 8 }]}>
               <Text style={styles.removeText}>FLIP</Text>

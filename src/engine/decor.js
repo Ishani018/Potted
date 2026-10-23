@@ -1,5 +1,5 @@
 import { FURNITURE_ITEMS } from './furnitureItems';
-import { POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES, PAINTING_IMAGES } from './assets';
+import { ROT_IMAGES, POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES, PAINTING_IMAGES } from './assets';
 
 // Everything you can put in a flat. kind: 'floor' (stands on the floor, y = its feet),
 // 'hang' (hangs from the ceiling beams) or 'wall' (a painting on the wall). size = height as a fraction of the room.
@@ -60,6 +60,17 @@ Object.keys(VASES).forEach((k) => {
   DECOR[k] = { key: k, kind: 'floor', img: VASE_IMG[k], furniture: true, set: 'vase', aspect: sz[0] / sz[1], size: VASES[k] * 0.25 };
 });
 
+// Pieces that can be turned: pick one in the tray, then press TURN to walk it round its four views.
+export const ROT_VIEWS = ['front', 'left', 'right', 'side'];
+const ROT_M = { sofa: 0.95, armchair: 1.05, bed: 1.25, bookshelf: 2 };
+Object.keys(ROT_M).forEach((n) => {
+  const fh = ROT_IMAGES[`rot_${n}_front`].h;
+  ROT_VIEWS.forEach((v) => {
+    const f = ROT_IMAGES[`rot_${n}_${v}`], key = `rot_${n}_${v}`;
+    DECOR[key] = { key, kind: 'floor', img: f.src, furniture: true, set: 'turn', hidden: v !== 'front', rotGroup: n, aspect: f.w / f.h, size: ROT_M[n] * 0.25 * (f.h / fh) };
+  });
+});
+
 export const STANDS = {
   stool: { img: require('../../assets/stands/stand_01.png'), w: 0.64, ratio: 206 / 303 },
   pedestal: { img: require('../../assets/stands/stand_03.png'), w: 0.5, ratio: 450 / 222 },
@@ -80,6 +91,7 @@ export const DECOR_TABS = [
   { id: 'purple', label: 'PURPLE',  match: (d) => d.furniture && d.set === 'purple' },
   { id: 'red',    label: 'RED',     match: (d) => d.furniture && d.set === 'red' },
   { id: 'pink',   label: 'CREAM',   match: (d) => d.furniture && d.set === 'pink' },
+  { id: 'turn',   label: 'TURN',    match: (d) => d.furniture && d.set === 'turn' && !d.hidden },
   { id: 'vase',   label: 'VASES',   match: (d) => d.furniture && d.set === 'vase' },
   { id: 'floor',  label: 'PLANTS',  match: (d) => d.kind === 'floor' && !d.furniture },
   { id: 'hang',   label: 'HANGING', match: (d) => d.kind === 'hang' },

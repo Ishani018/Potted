@@ -592,6 +592,25 @@ export const SET_UI = {
   btnCream: { src: require('../../assets/ui_sheet/ui_38.png'), w: 176, h: 76 },
   btnRed: { src: require('../../assets/ui_sheet/ui_39.png'), w: 187, h: 78 },
 };
+// Furniture seen from four sides (front, left and right three-quarter, side) so it can be turned
+export const ROT_IMAGES = {
+  rot_sofa_front: { src: require('../../assets/rot/sofa_front.png'), w: 341, h: 172 },
+  rot_sofa_left: { src: require('../../assets/rot/sofa_left.png'), w: 330, h: 180 },
+  rot_sofa_right: { src: require('../../assets/rot/sofa_right.png'), w: 290, h: 178 },
+  rot_sofa_side: { src: require('../../assets/rot/sofa_side.png'), w: 155, h: 175 },
+  rot_armchair_front: { src: require('../../assets/rot/armchair_front.png'), w: 166, h: 190 },
+  rot_armchair_left: { src: require('../../assets/rot/armchair_left.png'), w: 167, h: 189 },
+  rot_armchair_right: { src: require('../../assets/rot/armchair_right.png'), w: 171, h: 188 },
+  rot_armchair_side: { src: require('../../assets/rot/armchair_side.png'), w: 141, h: 169 },
+  rot_bed_front: { src: require('../../assets/rot/bed_front.png'), w: 347, h: 212 },
+  rot_bed_left: { src: require('../../assets/rot/bed_left.png'), w: 345, h: 215 },
+  rot_bed_right: { src: require('../../assets/rot/bed_right.png'), w: 336, h: 215 },
+  rot_bed_side: { src: require('../../assets/rot/bed_side.png'), w: 321, h: 201 },
+  rot_bookshelf_front: { src: require('../../assets/rot/bookshelf_front.png'), w: 160, h: 249 },
+  rot_bookshelf_left: { src: require('../../assets/rot/bookshelf_left.png'), w: 152, h: 248 },
+  rot_bookshelf_right: { src: require('../../assets/rot/bookshelf_right.png'), w: 152, h: 249 },
+  rot_bookshelf_side: { src: require('../../assets/rot/bookshelf_side.png'), w: 97, h: 244 },
+};
 export const LOBBY_BG = require('../../assets/building/lobby.png');   // the apartment building's entrance hall
 export const APT_ART = {   // the empty rooms: picture + its pixel size
   1: { src: require('../../assets/building/apt1.png'), w: 1672, h: 941 },
