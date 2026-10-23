@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { HPOT_META, HPOT_ORDER, UI_IMAGES } from '../engine/assets';
+import { HPOT_META, HPOT_ORDER, PPOT_META, PPOT_IDS, UI_IMAGES } from '../engine/assets';
 import { PixelPanel, PixelButton, PixelText, COLORS } from './Pixel';
 import { useLayout } from '../context/LayoutContext';
 import { projectSize } from '../engine/project';
 import { msUntilThirsty, maxStageFor } from '../engine/gameEngine';
-import { POTTED_FLOWERS, HANGING_PLANTS, HPOT_INFO, formatDuration, pestInfo, isShielded } from '../constants/gameData';
+import { POTTED_FLOWERS, HANGING_PLANTS, HPOT_INFO, PPOT_PRICE, formatDuration, pestInfo, isShielded } from '../constants/gameData';
 
 const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 
@@ -47,6 +47,9 @@ export default function PlantPopup({ slot, position, onHarvest, onRemove, onClos
   const owned = state.player.ownedHPots ?? ['macrame'];
   const curPot = slot.pot ?? state.player.hangingPot ?? 'macrame';
   const coins = state.player.coins;
+  const isShelf = slot.type === 'potted';
+  const ownedP = state.player.ownedPPots ?? [4];
+  const curP = slot.pot ?? state.player.pottedPot ?? 4;
 
   // Full bloom is harvestable: potted stage 3, hanging stage 2.
   const canHarvest = !!slot.flowerKey && slot.stage >= maxStageFor(slot.type, slot.flowerKey);
@@ -56,9 +59,9 @@ export default function PlantPopup({ slot, position, onHarvest, onRemove, onClos
 
   // Sit the popup right on the tapped plant: centred over a shelf pot, or just
   // under the hook for a hanging one. Clamped so it never leaves the screen.
-  const W = isHang ? 250 : 190;
+  const W = isHang ? 250 : isShelf ? 262 : 190;
   const shielded = hasPlant && isShielded(slot, now);
-  const H = (canHarvest ? 112 : 58) + (hasPlant ? 46 : 0) + (shielded ? 14 : 0) + (isHang ? 96 : 0);
+  const H = (canHarvest ? 112 : 58) + (hasPlant ? 46 : 0) + (shielded ? 14 : 0) + (isHang ? 96 : 0) + (isShelf ? 230 : 0);
   const plantH = projectSize(slot.type === 'potted' ? 120 : 140, sw, sh);
   const left = Math.max(8, Math.min(position.x - W / 2, sw - W - 8));
   const rawTop = slot.type === 'potted' ? position.y - plantH * 0.75 - H : position.y + plantH * 0.35;
@@ -94,6 +97,26 @@ export default function PlantPopup({ slot, position, onHarvest, onRemove, onClos
                     );
                   })}
                 </View>
+              </View>
+            )}
+            {isShelf && (
+              <View>
+                <Text style={styles.potsTitle}>Pots</Text>
+                <ScrollView style={{ maxHeight: 200 }} showsVerticalScrollIndicator={false}>
+                  <View style={[styles.potRow, { flexWrap: 'wrap' }]}>
+                    {PPOT_IDS.map((id) => {
+                      const m = PPOT_META[id], have = ownedP.includes(id), price = PPOT_PRICE[id], can = have || coins >= price;
+                      return (
+                        <TouchableOpacity key={id} activeOpacity={0.8} disabled={!can}
+                          onPress={() => { if (!have) dispatch({ type: 'BUY_PPOT', pot: id, price }); dispatch({ type: 'SET_SLOT_PPOT', slotId: slot.slotId, pot: id }); }}
+                          style={[styles.potTile, { height: 40 }, curP === id && styles.potOn, !can && { opacity: 0.45 }]}>
+                          <Image source={m.src} style={{ width: 24, height: 22 }} resizeMode="contain" />
+                          {!have && <Text style={styles.potPrice}>{price}</Text>}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </ScrollView>
               </View>
             )}
             {canHarvest && <PixelButton label="HARVEST" onPress={onHarvest} />}

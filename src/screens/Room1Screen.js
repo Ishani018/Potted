@@ -4,7 +4,7 @@ import { useLayout } from '../context/LayoutContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useGame } from '../context/GameContext';
-import { ROOM_BGS, UI_IMAGES, POTTED_PLANT_IMAGES, SEED_IMAGES } from '../engine/assets';
+import { ROOM_BGS, UI_IMAGES, POTTED_PLANT_IMAGES, PPOT_META, SEED_IMAGES } from '../engine/assets';
 import { getSnapPoints, WATERING_CAN_POSITIONS, POT_SOURCE_POSITIONS, scalePoint } from '../engine/snapPoints';
 import { seedType, heldSeedHint, PETS, pestInfo } from '../constants/gameData';
 import { pestRewardFor } from '../engine/petEffects';
@@ -131,7 +131,7 @@ export default function Room1Screen({ navigation }) {
 
         {/* Pot source on window sill */}
         <Image
-          source={POTTED_PLANT_IMAGES._seed}
+          source={PPOT_META[player.pottedPot || 4].src}
           style={{ position: 'absolute', left: potSrcPos.x - potW / 2, top: potSrcPos.y - potHSrc, width: potW, height: potHSrc, zIndex: 598 }}
           resizeMode="contain"
         />
@@ -142,9 +142,9 @@ export default function Room1Screen({ navigation }) {
           potH={potHSrc}
           targets={emptyPotTargets}
           onPlace={handlePlacePot}
-          source={POTTED_PLANT_IMAGES._seed}
-          dragSource={POTTED_PLANT_IMAGES._seed}
-          ghostSource={POTTED_PLANT_IMAGES._seed}
+          source={PPOT_META[player.pottedPot || 4].src}
+          dragSource={PPOT_META[player.pottedPot || 4].src}
+          ghostSource={PPOT_META[player.pottedPot || 4].src}
         />
 
         {/* Empty placed pots */}
@@ -162,7 +162,7 @@ export default function Room1Screen({ navigation }) {
               activeOpacity={0.85}
               onPress={() => handleEmptyPotPress(pt.id, s, pt)}
             >
-              <Image source={POTTED_PLANT_IMAGES._seed} style={{ width: pw, height: ph }} resizeMode="contain" />
+              <Image source={PPOT_META[player.pottedPot || 4].src} style={{ width: pw, height: ph }} resizeMode="contain" />
             </TouchableOpacity>
           );
         })}

@@ -631,6 +631,20 @@ function reducer(state, action) {
       return { ...state, player: { ...state.player, apartmentItems: { ...all, [aptId]: next } } };
     }
 
+    case 'BUY_PPOT': {   // buy a shelf pot style (once)
+      const { pot, price } = action;
+      const owned = state.player.ownedPPots ?? [4];
+      if (owned.includes(pot) || state.player.coins < price) return state;
+      return { ...state, player: { ...state.player, coins: state.player.coins - price, ownedPPots: [...owned, pot] } };
+    }
+
+    case 'SET_SLOT_PPOT': {   // put an owned shelf pot style on one shelf slot (and make it the default for new ones)
+      const { slotId, pot } = action;
+      const slot = state.slots[slotId];
+      if (!slot || !(state.player.ownedPPots ?? [4]).includes(pot)) return state;
+      return { ...state, slots: { ...state.slots, [slotId]: { ...slot, pot } }, player: { ...state.player, pottedPot: pot } };
+    }
+
     case 'BUY_HPOT': {   // buy a hanging pot style (once)
       const { pot, price } = action;
       const owned = state.player.ownedHPots ?? ['macrame'];

@@ -80,6 +80,10 @@ assets/*
 !assets/hplants/*.png
 !assets/hpots/
 !assets/hpots/*.png
+!assets/pplants/
+!assets/pplants/*.png
+!assets/ppots/
+!assets/ppots/*.png
 !assets/goose/
 !assets/goose2/
 !assets/goose2/*.png

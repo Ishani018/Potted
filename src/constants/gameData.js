@@ -617,6 +617,8 @@ export const INITIAL_PLAYER_STATE = {
   harvestedFlowers: { daisy: 8, rose: 5, marigold: 6, jasmine: 4, peony: 3, poppy: 7, hydrenga: 5, snapdragon: 6 },
   ownedPaintings: [],
   apartmentItems: {},  // aptId → [{ id, key, kind, x, y }] decor placed in each flat (x,y are fractions of the room picture)
+  ownedPPots: [4],           // shelf pot styles you own
+  pottedPot: 4,              // the style new shelf pots use
   ownedHPots: ['macrame'],   // hanging pot styles you own
   hangingPot: 'macrame',     // the style new hanging pots use
   ownedApartments: [], // apartment ids you have bought (see APARTMENTS)
@@ -917,4 +919,43 @@ export const HPOT_INFO = {
   chain:       { name: 'Green chains',  price: 100 },
   bowl:        { name: 'Ceramic bowl',  price: 120 },
   barrel:      { name: 'Oak barrel',    price: 140 },
+};
+
+// Shelf pot styles. Pot 4 (the plain clay pot) is free; the rest are bought once and can go on any shelf plant.
+export const PPOT_PRICE = {
+  1: 30,
+  2: 40,
+  3: 50,
+  4: 0,
+  5: 70,
+  6: 20,
+  7: 30,
+  8: 40,
+  9: 50,
+  10: 60,
+  11: 70,
+  12: 20,
+  13: 30,
+  14: 40,
+  15: 50,
+  16: 60,
+  17: 70,
+  18: 20,
+  19: 30,
+  20: 40,
+  21: 50,
+  22: 60,
+  23: 70,
+  24: 20,
+  25: 30,
+  26: 40,
+  27: 50,
+  28: 60,
+  29: 70,
+  30: 20,
+  31: 30,
+  32: 40,
+  33: 50,
+  34: 60,
+  35: 70,
 };

@@ -611,6 +611,56 @@ export const HPLANT_IMAGES = {
   jasmine: [{ src: require('../../assets/hplants/jasmine_1.png'), w: 191, h: 313 }, { src: require('../../assets/hplants/jasmine_2.png'), w: 320, h: 358 }, { src: require('../../assets/hplants/jasmine_3.png'), w: 458, h: 374 }],
   Bougainvillea: [{ src: require('../../assets/hplants/bougainvillea_1.png'), w: 211, h: 297 }, { src: require('../../assets/hplants/bougainvillea_2.png'), w: 354, h: 343 }, { src: require('../../assets/hplants/bougainvillea_3.png'), w: 678, h: 395 }],
 };
+
+// Shelf pots (35 styles): picture + where the soil sits in it (cx, cy = centre of the soil, sw = its width), in picture pixels.
+export const PPOT_META = {
+  1: { src: require('../../assets/ppots/pot_01.png'), w: 195, h: 181, cx: 99, cy: 40, sw: 188 },
+  2: { src: require('../../assets/ppots/pot_02.png'), w: 206, h: 188, cx: 102, cy: 43, sw: 200 },
+  3: { src: require('../../assets/ppots/pot_03.png'), w: 170, h: 175, cx: 85, cy: 34, sw: 155 },
+  4: { src: require('../../assets/ppots/pot_04.png'), w: 178, h: 191, cx: 85, cy: 39, sw: 174 },
+  5: { src: require('../../assets/ppots/pot_05.png'), w: 172, h: 174, cx: 85, cy: 34, sw: 168 },
+  6: { src: require('../../assets/ppots/pot_06.png'), w: 222, h: 205, cx: 109, cy: 46, sw: 216 },
+  7: { src: require('../../assets/ppots/pot_07.png'), w: 191, h: 192, cx: 94, cy: 40, sw: 184 },
+  8: { src: require('../../assets/ppots/pot_08.png'), w: 223, h: 181, cx: 112, cy: 38, sw: 218 },
+  9: { src: require('../../assets/ppots/pot_09.png'), w: 183, h: 183, cx: 91, cy: 36, sw: 180 },
+  10: { src: require('../../assets/ppots/pot_10.png'), w: 193, h: 183, cx: 96, cy: 42, sw: 190 },
+  11: { src: require('../../assets/ppots/pot_11.png'), w: 183, h: 169, cx: 89, cy: 46, sw: 178 },
+  12: { src: require('../../assets/ppots/pot_12.png'), w: 176, h: 187, cx: 89, cy: 35, sw: 166 },
+  13: { src: require('../../assets/ppots/pot_13.png'), w: 184, h: 181, cx: 87, cy: 35, sw: 181 },
+  14: { src: require('../../assets/ppots/pot_14.png'), w: 184, h: 178, cx: 91, cy: 36, sw: 181 },
+  15: { src: require('../../assets/ppots/pot_15.png'), w: 208, h: 184, cx: 125, cy: 77, sw: 202 },
+  16: { src: require('../../assets/ppots/pot_16.png'), w: 202, h: 166, cx: 103, cy: 37, sw: 199 },
+  17: { src: require('../../assets/ppots/pot_17.png'), w: 172, h: 161, cx: 85, cy: 32, sw: 161 },
+  18: { src: require('../../assets/ppots/pot_18.png'), w: 178, h: 177, cx: 88, cy: 33, sw: 174 },
+  19: { src: require('../../assets/ppots/pot_19.png'), w: 174, h: 171, cx: 86, cy: 33, sw: 170 },
+  20: { src: require('../../assets/ppots/pot_20.png'), w: 199, h: 179, cx: 125, cy: 92, sw: 193 },
+  21: { src: require('../../assets/ppots/pot_21.png'), w: 181, h: 171, cx: 87, cy: 36, sw: 176 },
+  22: { src: require('../../assets/ppots/pot_22.png'), w: 172, h: 176, cx: 85, cy: 32, sw: 167 },
+  23: { src: require('../../assets/ppots/pot_23.png'), w: 225, h: 173, cx: 111, cy: 36, sw: 220 },
+  24: { src: require('../../assets/ppots/pot_24.png'), w: 173, h: 186, cx: 85, cy: 31, sw: 169 },
+  25: { src: require('../../assets/ppots/pot_25.png'), w: 194, h: 169, cx: 98, cy: 41, sw: 190 },
+  26: { src: require('../../assets/ppots/pot_26.png'), w: 230, h: 220, cx: 116, cy: 43, sw: 222 },
+  27: { src: require('../../assets/ppots/pot_27.png'), w: 176, h: 178, cx: 84, cy: 35, sw: 172 },
+  28: { src: require('../../assets/ppots/pot_28.png'), w: 183, h: 186, cx: 90, cy: 36, sw: 179 },
+  29: { src: require('../../assets/ppots/pot_29.png'), w: 183, h: 188, cx: 93, cy: 37, sw: 167 },
+  30: { src: require('../../assets/ppots/pot_30.png'), w: 191, h: 187, cx: 93, cy: 35, sw: 172 },
+  31: { src: require('../../assets/ppots/pot_31.png'), w: 179, h: 186, cx: 85, cy: 37, sw: 176 },
+  32: { src: require('../../assets/ppots/pot_32.png'), w: 215, h: 189, cx: 107, cy: 33, sw: 212 },
+  33: { src: require('../../assets/ppots/pot_33.png'), w: 187, h: 170, cx: 96, cy: 40, sw: 183 },
+  34: { src: require('../../assets/ppots/pot_34.png'), w: 194, h: 188, cx: 97, cy: 45, sw: 189 },
+  35: { src: require('../../assets/ppots/pot_35.png'), w: 206, h: 183, cx: 101, cy: 33, sw: 191 },
+};
+export const PPOT_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35];
+// Plants made for the shelf pots (no pot in the picture): three growth stages each.
+export const PPLANT_IMAGES = {
+  daisy: [{ src: require('../../assets/pplants/daisy_1.png'), w: 257, h: 265 }, { src: require('../../assets/pplants/daisy_2.png'), w: 415, h: 365 }, { src: require('../../assets/pplants/daisy_3.png'), w: 551, h: 413 }],
+  snapdragon: [{ src: require('../../assets/pplants/snapdragon_1.png'), w: 244, h: 351 }, { src: require('../../assets/pplants/snapdragon_2.png'), w: 400, h: 432 }, { src: require('../../assets/pplants/snapdragon_3.png'), w: 564, h: 455 }],
+  poppy: [{ src: require('../../assets/pplants/poppy_1.png'), w: 269, h: 325 }, { src: require('../../assets/pplants/poppy_2.png'), w: 447, h: 424 }, { src: require('../../assets/pplants/poppy_3.png'), w: 684, h: 439 }],
+  marigold: [{ src: require('../../assets/pplants/marigold_1.png'), w: 275, h: 294 }, { src: require('../../assets/pplants/marigold_2.png'), w: 398, h: 346 }, { src: require('../../assets/pplants/marigold_3.png'), w: 617, h: 396 }],
+  peony: [{ src: require('../../assets/pplants/peony_1.png'), w: 321, h: 280 }, { src: require('../../assets/pplants/peony_2.png'), w: 480, h: 401 }, { src: require('../../assets/pplants/peony_3.png'), w: 697, h: 430 }],
+  hydrenga: [{ src: require('../../assets/pplants/hydrangea_1.png'), w: 423, h: 408 }, { src: require('../../assets/pplants/hydrangea_2.png'), w: 577, h: 606 }, { src: require('../../assets/pplants/hydrangea_3.png'), w: 736, h: 738 }],
+  rose: [{ src: require('../../assets/pplants/rose_1.png'), w: 307, h: 303 }, { src: require('../../assets/pplants/rose_2.png'), w: 417, h: 372 }, { src: require('../../assets/pplants/rose_3.png'), w: 623, h: 450 }],
+};
 export const LOBBY_BG = require('../../assets/building/lobby.png');   // the apartment building's entrance hall
 export const APT_ART = {   // the empty rooms: picture + its pixel size
   1: { src: require('../../assets/building/apt1.png'), w: 1672, h: 941 },
