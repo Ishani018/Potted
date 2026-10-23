@@ -78,6 +78,8 @@ assets/*
 !assets/make2/*.png
 !assets/hplants/
 !assets/hplants/*.png
+!assets/hpots/
+!assets/hpots/*.png
 !assets/goose/
 !assets/goose2/
 !assets/goose2/*.png
