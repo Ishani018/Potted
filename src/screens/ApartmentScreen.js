@@ -10,8 +10,6 @@ import { Skinned } from '../components/NineSlice';
 import InventoryOverlay from '../components/InventoryOverlay';
 
 const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
-// Furniture without its own side views is turned in pseudo-3D: perspective plus a rotation about the vertical axis.
-const TURN_DEG = ['0deg', '32deg', '-32deg', '62deg', '-62deg'];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 // One placed item. In decorate mode you can drag it; a tap selects it (and shows a remove button).
@@ -46,7 +44,7 @@ function Placed({ item, W, H, edit, selected, onSelect, onMove, onDragState }) {
   const left = x * W - bw / 2;
   const top = def.rug ? y * H - boxH / 2 : def.kind === 'floor' ? y * H - boxH : y * H - size / 2;
   return (
-    <View {...(edit ? pan.panHandlers : {})} pointerEvents={edit ? 'auto' : 'none'} style={{ position: 'absolute', left, top, width: bw, height: boxH, transform: [...(def.furniture && !def.rotGroup && item.turn ? [{ perspective: 900 }, { rotateY: TURN_DEG[item.turn] }] : []), ...(item.flip ? [{ scaleX: -1 }] : [])], zIndex: def.rug ? 1 : def.kind === 'floor' ? 10 + Math.round(y * 100) : 5 }}>
+    <View {...(edit ? pan.panHandlers : {})} pointerEvents={edit ? 'auto' : 'none'} style={{ position: 'absolute', left, top, width: bw, height: boxH, transform: item.flip ? [{ scaleX: -1 }] : undefined, zIndex: def.rug ? 1 : def.kind === 'floor' ? 10 + Math.round(y * 100) : 5 }}>
       {stand && <Image source={stand.img} resizeMode="stretch" style={{ position: 'absolute', left: (size - stand.w * size) / 2, bottom: 0, width: stand.w * size, height: standH }} />}
       <Image source={def.img} resizeMode={def.furniture ? 'stretch' : 'contain'} style={{ position: 'absolute', left: 0, top: 0, width: bw, height: def.furniture ? size : size,
         ...(def.rug ? { transform: [{ perspective: 520 }, { rotateX: '58deg' }] } : null) }} />
@@ -123,11 +121,6 @@ export default function ApartmentScreen({ navigation, route }) {
             <TouchableOpacity activeOpacity={0.8} onPress={() => dispatch({ type: 'SCALE_APT_ITEM', aptId, id: selected, by: 1 / 1.12 })} style={[styles.removeBtn, { backgroundColor: '#8a6a3a', borderColor: '#4a3a1a', paddingHorizontal: 14 }]}><Text style={styles.removeText}>–</Text></TouchableOpacity>
             <TouchableOpacity activeOpacity={0.8} onPress={() => dispatch({ type: 'SCALE_APT_ITEM', aptId, id: selected, by: 1.12 })} style={[styles.removeBtn, { backgroundColor: '#8a6a3a', borderColor: '#4a3a1a', paddingHorizontal: 14 }]}><Text style={styles.removeText}>+</Text></TouchableOpacity>
           </View>
-          {(() => { const d = DECOR[items.find((it) => it.id === selected)?.key]; return d && d.furniture && !d.rotGroup && !d.rug; })() && (
-            <TouchableOpacity activeOpacity={0.8} onPress={() => dispatch({ type: 'TURN_APT_ITEM', aptId, id: selected })} style={[styles.removeBtn, { backgroundColor: '#3a6a8a', borderColor: '#1a3a4a', marginRight: 8 }]}>
-              <Text style={styles.removeText}>TURN</Text>
-            </TouchableOpacity>
-          )}
           {DECOR[items.find((it) => it.id === selected)?.key]?.rotGroup && (
             <TouchableOpacity activeOpacity={0.8} onPress={() => { const it = items.find((i) => i.id === selected); const g = DECOR[it.key].rotGroup; const cur = ROT_VIEWS.findIndex((v) => `rot_${g}_${v}` === it.key); dispatch({ type: 'ROTATE_APT_ITEM', aptId, id: selected, key: `rot_${g}_${ROT_VIEWS[(cur + 1) % ROT_VIEWS.length]}` }); }} style={[styles.removeBtn, { backgroundColor: '#3a6a8a', borderColor: '#1a3a4a', marginRight: 8 }]}>
               <Text style={styles.removeText}>TURN</Text>
