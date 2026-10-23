@@ -580,6 +580,18 @@ export const GRANNY = {
   50: { src: require('../../assets/granny/gm_50.png'), w: 97, h: 94 },
   51: { src: require('../../assets/granny/gm_51.png'), w: 92, h: 102 },
 };
+// Painted UI pieces used by the settings screen (picture + pixel size)
+export const SET_UI = {
+  toggleOn: { src: require('../../assets/ui_sheet/ui_19.png'), w: 120, h: 60 },
+  toggleOff: { src: require('../../assets/ui_sheet/ui_27.png'), w: 121, h: 60 },
+  left: { src: require('../../assets/ui_sheet/ui_21.png'), w: 101, h: 92 },
+  right: { src: require('../../assets/ui_sheet/ui_22.png'), w: 105, h: 92 },
+  close: { src: require('../../assets/ui_sheet/ui_10.png'), w: 110, h: 106 },
+  music: { src: require('../../assets/ui_sheet/ui_15.png'), w: 94, h: 86 },
+  sound: { src: require('../../assets/ui_sheet/ui_13.png'), w: 100, h: 88 },
+  btnCream: { src: require('../../assets/ui_sheet/ui_38.png'), w: 176, h: 76 },
+  btnRed: { src: require('../../assets/ui_sheet/ui_39.png'), w: 187, h: 78 },
+};
 export const LOBBY_BG = require('../../assets/building/lobby.png');   // the apartment building's entrance hall
 export const APT_ART = {   // the empty rooms: picture + its pixel size
   1: { src: require('../../assets/building/apt1.png'), w: 1672, h: 941 },
