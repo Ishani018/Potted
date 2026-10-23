@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Image, ScrollView, PanResponder, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { NURSERY_BG, NURSERY_BARE, SEED_IMAGES, UI_IMAGES, PPOT_META, PPOT_IDS, PPLANT_IMAGES, HPOT_META, HPOT_ORDER, CAN_IMAGES, SET_UI } from '../engine/assets';
+import { NURSERY_BG, SEED_IMAGES, UI_IMAGES, PPOT_META, PPOT_IDS, PPLANT_IMAGES, HPOT_META, HPOT_ORDER, CAN_IMAGES, SET_UI } from '../engine/assets';
 import { POTTED_FLOWERS, HANGING_PLANTS, seedType, FLOWER_GROWTH, formatDuration, HPOT_INFO, PPOT_PRICE, CAN_INFO } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
@@ -144,17 +144,18 @@ export default function NurseryScreen({ navigation }) {
   const free = INVENTORY_CAP - (state.inventory?.length ?? 0);
   const total = basket.reduce((n, id) => n + describe(id).price, 0);
 
-  // a painted pot / hanging pot is gone from the shelf once you own it or have put it on the counter
-  const slotGone = (id) => { const [kind, key] = id.split(':'); return basket.includes(id) || (kind === 'p' ? ownedPPots.includes(Number(key)) : ownedHPots.includes(key)); };
+  // the painted pots stay where they are; you just cannot buy one you already own
+  const owns = (id) => { const [kind, key] = id.split(':'); return kind === 'p' ? ownedPPots.includes(Number(key)) : kind === 'h' ? ownedHPots.includes(key) : kind === 'c' ? ownedCans.includes(key) : false; };
 
   const dropOnCounter = (id, p) => {
     if (p[0] < PAY_X || basket.includes(id)) return;
+    if (owns(id)) { notify({ title: 'You already have this one', subtitle: 'Pick another.' }); return; }
     const seeds = basket.filter((b) => b.startsWith('s:')).length + (id.startsWith('s:') ? 1 : 0);
     if (seeds > free) { notify({ icon: UI_IMAGES.inventorybtn, title: 'Bag is full', subtitle: 'Plant some seeds to make room.' }); return; }
     if (basket.length >= MAX_BASKET) { notify({ title: 'The counter is full', subtitle: 'Pay for these first.' }); return; }
     setBasket((b) => [...b, id]);
   };
-  const tellAbout = (id) => { const d = describe(id); notify({ icon: d.src, title: d.name, subtitle: `${d.price} coins. Drag it next to the register to buy.` }); };
+  const tellAbout = (id) => { const d = describe(id); if (owns(id)) { notify({ icon: d.src, title: d.name, subtitle: 'You already have this one.' }); return; } notify({ icon: d.src, title: d.name, subtitle: `${d.price} coins. Drag it next to the register to buy.` }); };
 
   const checkout = () => {
     if (basket.length === 0) { notify({ icon: UI_IMAGES.goldcoins, title: 'The counter is empty', subtitle: 'Drag seed bags next to the register.' }); return; }
@@ -178,10 +179,9 @@ export default function NurseryScreen({ navigation }) {
   const boxItem = (id, box, extra = {}) => ({ id, box, at: [(box[0] + box[2]) / 2, box[3]], ...extra });
   const onShelf = [
     ...COUNTER_SEEDS.map((kk, n) => boxItem('s:' + kk, SEED_BOX(n))),
-    ...POT_SLOTS.filter((sl) => !slotGone(sl.id)).map((sl) => boxItem(sl.id, sl.box)),
-    ...HANG_SLOTS.filter((sl) => !slotGone(sl.id)).map((sl) => boxItem(sl.id, sl.box)),
+    ...POT_SLOTS.map((sl) => boxItem(sl.id, sl.box)),
+    ...HANG_SLOTS.map((sl) => boxItem(sl.id, sl.box)),
   ].map((e) => (lay[e.id] ? { ...e, at: [lay[e.id].x, lay[e.id].y] } : e));
-  const goneSlots = [...POT_SLOTS, ...HANG_SLOTS].filter((sl) => slotGone(sl.id));
   const showCan = !(ownedCans.includes('red') || basket.includes('c:red'));
   // the POTS panel also sells everything (and the seeds that are not on the counter)
   const addToCounter = (id) => {
@@ -202,13 +202,6 @@ export default function NurseryScreen({ navigation }) {
 
       {sw > 0 && (
         <>
-          {/* bought pots: show the picture without them through their spot */}
-          {goneSlots.map(({ id, box: [bx0, by0, bx1, by1] }) => (
-            <View key={'gone' + id} pointerEvents="none" style={{ position: 'absolute', left: (bx0 - 10) * k, top: (by0 - 10) * k, width: (bx1 - bx0 + 20) * k, height: (by1 - by0 + 24) * k, overflow: 'hidden', zIndex: 4 }}>
-              <Image source={NURSERY_BARE} style={{ position: 'absolute', left: -(bx0 - 10) * k, top: -(by0 - 10) * k, width: IMG_W * k, height: IMG_H * k }} />
-            </View>
-          ))}
-
           {onShelf.map(({ id, at, box: [bx0, by0, bx1, by1] }) => {
             const d = { ...describe(id), w: bx1 - bx0, h: by1 - by0 };
             return (

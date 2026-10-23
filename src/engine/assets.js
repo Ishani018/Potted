@@ -353,8 +353,7 @@ Object.assign(TRADE_IMAGES, {
 });
 
 // ─── Nursery background ───────────────────────────────────────────────────────
-export const NURSERY_BG = require('../../assets/shop/nursery_v6.png');
-export const NURSERY_BARE = require('../../assets/shop/nursery_bare.png');   // the same shop with no pots, hanging pots or flowers on the shelves
+export const NURSERY_BG = require('../../assets/shop/nursery_v10.png');
 
 // ─── Inventory grid background (7 cols × 5 rows, 1226×912) ────────────────────
 export const INVENTORY_BG = require('../../assets/ui_comps/inventory.png');
