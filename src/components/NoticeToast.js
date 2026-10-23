@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
+
+const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 import { useGame } from '../context/GameContext';
 
 // Shows queued game notices (pet gifts, bugs caught, lucky harvests) one at a
@@ -29,12 +31,12 @@ export default function NoticeToast({ hidden }) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { position: 'absolute', top: 14, left: 0, right: 0, alignItems: 'center', zIndex: 9400 },
+  wrap: { position: 'absolute', top: 12, left: 0, right: 0, alignItems: 'center', zIndex: 9400 },
   pill: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: '#f3e3c0', borderRadius: 12, borderWidth: 2, borderColor: '#7a3e1a',
-    paddingHorizontal: 16, paddingVertical: 8, maxWidth: '80%',
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: '#f3e0b6', borderRadius: 16, borderWidth: 4, borderColor: '#8a5a2a',
+    paddingHorizontal: 18, paddingVertical: 8, maxWidth: '78%',
   },
-  paw: { fontSize: 14 },
-  text: { color: '#4a2a10', fontSize: 13, fontWeight: 'bold', flexShrink: 1 },
+  paw: { fontSize: 16 },
+  text: { color: '#4a2a10', fontSize: 17, fontFamily: SERIF, fontWeight: 'bold', flexShrink: 1, textAlign: 'center' },
 });

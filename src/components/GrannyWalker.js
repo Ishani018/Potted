@@ -13,12 +13,12 @@ const NODES = {
   J1: [260, 650],   // junction by the lamp, before the nursery
   J2: [520, 610],   // in front of the nursery
   J3: [690, 552],   // the big junction: up the street, or across to the market
-  P:  [900, 470],   // outside the pet shop
-  F:  [1080, 365],  // along the cobbles to the florist
-  FL: [1235, 285],  // the florist's end of the street
-  M1: [800, 560],   // heading to the market, above the apartment roof
-  M2: [1000, 640],  // the market square, between the stalls and the roof  // the market square
-  M3: [1050, 695],  // among the stalls  // among the stalls
+  P:  [880, 388], // outside the pet shop, on the sidewalk edge above the stalls
+  F:  [1035, 318], // along the cobbles above the blue stall
+  FL: [1215, 262], // the florist end of the street
+  M1: [840, 598], // heading to the market, between the roof and the stall crates
+  M2: [980, 642], // the market square, in front of the stalls
+  M3: [1040, 695], // at the bottom of the square
 };
 const EDGES = [['L', 'J1'], ['J1', 'J2'], ['J2', 'J3'], ['J3', 'P'], ['P', 'F'], ['F', 'FL'], ['J3', 'M1'], ['M1', 'M2'], ['M2', 'M3']];
 const nbrs = (n) => EDGES.filter((e) => e.includes(n)).map((e) => (e[0] === n ? e[1] : e[0]));
