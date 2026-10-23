@@ -9,7 +9,8 @@ import { playSfx } from '../engine/audio';
 //   zOf(y)   stacking order at a given foot position (so it passes behind or in front of furniture)
 //   disabled stops it reacting to touch;  onHold(true/false) tells a scrolling parent to stand still while it is carried.
 // Tap it and it runs away. Pick it up (drag) and it honks loudly; let go and it drops where you left it.
-const TICK = 80;           // ms per animation step: every step is a new walking frame
+const TICK = 33;           // ms per update (about 30 a second): the goose glides smoothly
+const FRAME_EVERY = 2;     // a new walking frame every 2 updates (about 15 a second), so each leg position is held a moment
 const STRIDE = 0.032;      // distance per frame as a share of the goose's width, a little less than its legs cover, so it never skates
 const AWAY = [28, 29, 30, 31, 32, 33, 34, 35, 36];   // first sheet: walking away from us (the second sheet has no such frames)
 const FRAMES2 = Object.keys(GOOSE2).map(Number);
@@ -25,6 +26,11 @@ function pickIdle() {
   for (const [name, w] of IDLES) { r -= w; if (r <= 0) return name; }
   return 'front';
 }
+
+// one frame's picture; memoised so a step only re-renders the frame being hidden and the one being shown
+const FrameImg = React.memo(function FrameImg({ src, w, h, show, flip }) {
+  return <Image source={src} resizeMode="contain" pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: w, height: h, opacity: show ? 1 : 0, transform: flip ? [{ scaleX: -1 }] : undefined }} />;
+});
 
 export default function Goose({ k, bounds, imgH = 941, base, zOf, disabled, onHold, audibleAt }) {
   const size = (base ?? imgH * 0.00066) * 1.25;   // the second sheet draws the goose smaller
@@ -52,21 +58,23 @@ export default function Goose({ k, bounds, imgH = 941, base, zOf, disabled, onHo
     g.current.until = Date.now() + 500;
     const iv = setInterval(() => {
       const s = g.current, now = Date.now(), bd = b.current;
-      if (s.held) { s.frame += 1; tick((n) => n + 1); return; }
+      if (s.held) { s.sub = (s.sub || 0) + 1; if (s.sub >= 3) { s.sub = 0; s.frame += 1; } tick((n) => n + 1); return; }
       // the scene may have moved the floor under it (another storey): put it on the new floor, standing still
       if (s.y < bd.y0 - 40 || s.y > bd.y1 + 40) { s.y = (bd.y0 + bd.y1) / 2; s.x = clamp(s.x, bd.x0, bd.x1); s.mode = 'idle'; s.pose = 'front'; s.until = now + 600; }
       s.tx = clamp(s.tx, bd.x0, bd.x1); s.ty = clamp(s.ty, bd.y0, bd.y1);
       if (s.mode === 'walk') {
-        const dx = s.tx - s.x, dy = s.ty - s.y, d = Math.hypot(dx, dy), sp = (GOOSE2[1].w * size * STRIDE) * s.mul * (0.8 + 0.4 * clamp((s.y - bd.y0) / Math.max(1, bd.y1 - bd.y0), 0, 1));
+        const dx = s.tx - s.x, dy = s.ty - s.y, d = Math.hypot(dx, dy), sp = (GOOSE2[1].w * size * STRIDE / FRAME_EVERY) * s.mul * (0.8 + 0.4 * clamp((s.y - bd.y0) / Math.max(1, bd.y1 - bd.y0), 0, 1));
         if (d <= sp) { rest(now, s.mul > 1 ? 'front' : pickIdle()); }
         else {
           s.x += (dx / d) * sp; s.y += (dy / d) * sp * 0.75;
           if (Math.abs(dx) > 8) s.dir = dx > 0 ? 1 : -1;
           s.vert = Math.abs(dx) < Math.abs(dy) * 0.6 && dy < 0 ? -1 : 0;   // heading away from us
-          s.frame = (s.frame + 1) % 52;   // wraps by whichever walk cycle is showing
+          s.sub = (s.sub || 0) + 1;
+          if (s.sub >= FRAME_EVERY) { s.sub = 0; s.frame = (s.frame + 1) % 52; }   // wraps by whichever walk cycle is showing
         }
       } else {
-        s.frame += 1;
+        s.sub = (s.sub || 0) + 1;
+        if (s.sub >= 3) { s.sub = 0; s.frame += 1; }
         if (now > s.until) { if (Math.random() < 0.8) wander(); else rest(now, pickIdle()); }
       }
       tick((n) => n + 1);
@@ -128,9 +136,7 @@ export default function Goose({ k, bounds, imgH = 941, base, zOf, disabled, onHo
   return (
     <View {...pan.panHandlers} style={{ position: 'absolute', left: s.x * k - w / 2, top: (s.y - lift) * k - h, width: w, height: h, zIndex: s.held ? 900 : zOf ? zOf(s.y) : 6 + Math.round(s.y / 10) }}>
       {/* every frame stays mounted and only the current one is shown, so swapping never reloads a picture (no flicker) */}
-      {FRAME_KEYS.map((i) => (
-        <Image key={i} source={frameOf(i).src} resizeMode="contain" pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: w, height: h, opacity: i === n ? 1 : 0, transform: flip ? [{ scaleX: -1 }] : undefined }} />
-      ))}
+      {FRAME_KEYS.map((i) => <FrameImg key={i} src={frameOf(i).src} w={w} h={h} show={i === n} flip={flip} />)}
     </View>
   );
 }

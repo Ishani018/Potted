@@ -6,8 +6,9 @@ import Bubble from './Bubble';
 // Granny Mae strolls up and down the street on the map, forever. Coordinates are the map picture's base pixels (1376x768);
 // `k` converts them to screen pixels. Tap her and she stops to say something.
 const PATH = [[230, 730], [520, 600], [760, 500], [1010, 385], [1230, 285]];   // along the cobbles, bottom-left to top-right
-const SPEED = 3.2;        // base px per tick
-const TICK = 100;
+const SPEED = 1.15;       // base px per update
+const TICK = 36;          // about 28 updates a second: she glides
+const FRAME_EVERY = 3;    // a new walking frame every 3 updates (about 9 a second)
 const LINES = [
   'Good evening, dear! Mind the cobbles.',
   'The marigolds at the market are lovely today.',
@@ -31,6 +32,10 @@ function at(t) {
   return PATH[PATH.length - 1];
 }
 
+const FrameImg = React.memo(function FrameImg({ src, w, h, show, flip }) {
+  return <Image source={src} resizeMode="contain" style={{ position: 'absolute', left: 0, top: 0, width: w, height: h, opacity: show ? 1 : 0, transform: flip ? [{ scaleX: -1 }] : undefined }} />;
+});
+
 export default function GrannyWalker({ k, z = 8 }) {
   const s = useRef({ t: 0.35, dir: 1, frame: 0, talk: -1, until: 0 }).current;
   const [, tick] = useState(0);
@@ -41,9 +46,10 @@ export default function GrannyWalker({ k, z = 8 }) {
       if (s.talk >= 0) { if (now > s.until) s.talk = -1; }
       else {
         s.t += s.dir * (SPEED / total);
+        s.sub = (s.sub || 0) + 1;
         if (s.t >= 1) { s.t = 1; s.dir = -1; }
         if (s.t <= 0) { s.t = 0; s.dir = 1; }
-        s.frame += 1;
+        if (s.sub >= FRAME_EVERY) { s.sub = 0; s.frame += 1; }
       }
       tick((n) => n + 1);
     }, TICK);
@@ -68,9 +74,7 @@ export default function GrannyWalker({ k, z = 8 }) {
     <>
       <TouchableOpacity activeOpacity={1} onPress={poke} style={{ position: 'absolute', left, top, width: w, height: H, zIndex: z }}>
         {/* all frames stay mounted; only the current one is visible, so nothing reloads between steps (no flicker) */}
-        {USED.map((i) => (
-          <Image key={i} source={GRANNY[i].src} resizeMode="contain" style={{ position: 'absolute', left: 0, top: 0, width: w, height: H, opacity: i === n ? 1 : 0, transform: flip ? [{ scaleX: -1 }] : undefined }} />
-        ))}
+        {USED.map((i) => <FrameImg key={i} src={GRANNY[i].src} w={w} h={H} show={i === n} flip={flip} />)}
       </TouchableOpacity>
       {talking && <Bubble width={Math.max(230, 260 * k * 1.1)} text={LINES[s.talk]} style={{ left: Math.max(6, Math.min(x * k - 120, 1376 * k - 250)), top: Math.max(6, top - 80 * k - 40), zIndex: 60 }} />}
     </>
