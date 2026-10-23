@@ -12,6 +12,7 @@ import { useToast } from '../components/Toast';
 import { projectSize, projectPoint } from '../engine/project';
 
 import CoinHUD from '../components/CoinHUD';
+import HangingArt, { hangingBox } from '../components/HangingArt';
 import PlantSlot from '../components/PlantSlot';
 import HeldSeedBanner from '../components/HeldSeedBanner';
 import RemedyBar, { useRemedyUse } from '../components/RemedyBar';
@@ -220,11 +221,11 @@ export default function Room3Screen({ navigation }) {
           return (
             <TouchableOpacity
               key={`emptyhook_${pt.id}`}
-              style={{ position: 'absolute', left: pt.x - hookDragW / 2, top: pt.y, width: hookDragW, height: hookDragW, zIndex: 5 }}
+              style={{ position: 'absolute', left: pt.x - hangingBox(s.pot || 'macrame', hookDragW).hookX, top: pt.y, width: hangingBox(s.pot || 'macrame', hookDragW).w, height: hangingBox(s.pot || 'macrame', hookDragW).h, zIndex: 5 }}
               activeOpacity={0.85}
               onPress={() => handleEmptyPotPress(pt.id, s, pt)}
             >
-              <Image source={HPOT_META[s.pot || 'macrame'].src} style={{ width: hookDragW, height: hookDragW }} resizeMode="contain" />
+              <HangingArt pot={s.pot || 'macrame'} h={hookDragW} wire={pt.wire || 0} />
             </TouchableOpacity>
           );
         })}

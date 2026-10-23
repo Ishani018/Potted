@@ -1,4 +1,4 @@
-import { projectPoint } from './project';
+import { projectPoint, projectSize } from './project';
 
 // Base resolution the snap coordinates were designed against
 const BASE_W = 1376;
@@ -16,7 +16,7 @@ export function getSnapPoints(room, type, screenWidth, screenHeight) {
   const raw = RAW_SNAP_POINTS[room]?.[type] ?? [];
   return raw.map((pt) => {
     const p = projectPoint(pt.x, pt.y, screenWidth, screenHeight);
-    return { id: pt.id, x: p.x, y: p.y };
+    return { id: pt.id, x: p.x, y: p.y, wire: pt.wire ? projectSize(pt.wire, screenWidth, screenHeight) : 0 };
   });
 }
 
@@ -41,14 +41,14 @@ const RAW_SNAP_POINTS = {
     // the balcony: four pots hang from the painted hooks (y 100) and four straight from the rod (y 66)
     potted: [],
     hanging: [
-      { id: 'r2_h1', x: 329, y: 66 },
-      { id: 'r2_h2', x: 445, y: 100 },
-      { id: 'r2_h3', x: 578, y: 100 },
-      { id: 'r2_h4', x: 695, y: 66 },
-      { id: 'r2_h5', x: 813, y: 100 },
-      { id: 'r2_h6', x: 905, y: 66 },
-      { id: 'r2_h7', x: 1000, y: 100 },
-      { id: 'r2_h8', x: 1103, y: 66 },
+      { id: 'r2_h1', x: 329, y: 92, wire: 17 },
+      { id: 'r2_h2', x: 445, y: 110 },
+      { id: 'r2_h3', x: 578, y: 110 },
+      { id: 'r2_h4', x: 695, y: 92, wire: 17 },
+      { id: 'r2_h5', x: 813, y: 110 },
+      { id: 'r2_h6', x: 905, y: 92, wire: 17 },
+      { id: 'r2_h7', x: 1000, y: 110 },
+      { id: 'r2_h8', x: 1103, y: 92, wire: 17 },
     ],
   },
   3: {
@@ -82,10 +82,10 @@ const RAW_SNAP_POINTS = {
       { id: 'r3_h3', x: 823, y: 135 },
       { id: 'r3_h4', x: 918, y: 135 },
       // straight from the back rod
-      { id: 'r3_h5', x: 480, y: 92 },
-      { id: 'r3_h6', x: 570, y: 92 },
-      { id: 'r3_h7', x: 1000, y: 92 },
-      { id: 'r3_h8', x: 1080, y: 92 },
+      { id: 'r3_h5', x: 480, y: 112, wire: 18 },
+      { id: 'r3_h6', x: 570, y: 112, wire: 18 },
+      { id: 'r3_h7', x: 1000, y: 112, wire: 18 },
+      { id: 'r3_h8', x: 1080, y: 112, wire: 18 },
     ],
   },
 };

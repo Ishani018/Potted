@@ -595,13 +595,13 @@ export const ROT_IMAGES = {
 
 // Hanging pots (side view): picture + where the soil sits in it (cx, cy = centre of the soil, sw = its width), all in picture pixels.
 export const HPOT_META = {
-  macrame: { src: require('../../assets/hpots/r1_01.png'), w: 165, h: 411, cx: 81, cy: 233, sw: 162 },
-  macramethin: { src: require('../../assets/hpots/r1_02.png'), w: 136, h: 404, cx: 68, cy: 242, sw: 134 },
-  terracotta: { src: require('../../assets/hpots/r1_03.png'), w: 183, h: 385, cx: 86, cy: 235, sw: 181 },
-  basket: { src: require('../../assets/hpots/r1_04.png'), w: 199, h: 363, cx: 100, cy: 242, sw: 198 },
-  chain: { src: require('../../assets/hpots/r1_05.png'), w: 196, h: 363, cx: 97, cy: 241, sw: 194 },
-  bowl: { src: require('../../assets/hpots/r1_06.png'), w: 149, h: 359, cx: 73, cy: 234, sw: 147 },
-  barrel: { src: require('../../assets/hpots/r1_07.png'), w: 177, h: 362, cx: 90, cy: 239, sw: 176 },
+  macrame: { src: require('../../assets/hpots/r1_01.png'), w: 165, h: 411, cx: 81, cy: 233, sw: 162, cut: 34 },
+  macramethin: { src: require('../../assets/hpots/r1_02.png'), w: 136, h: 404, cx: 68, cy: 242, sw: 134, cut: 34 },
+  terracotta: { src: require('../../assets/hpots/r1_03.png'), w: 183, h: 385, cx: 86, cy: 235, sw: 181, cut: 34 },
+  basket: { src: require('../../assets/hpots/r1_04.png'), w: 199, h: 363, cx: 100, cy: 242, sw: 198, cut: 34 },
+  chain: { src: require('../../assets/hpots/r1_05.png'), w: 196, h: 363, cx: 97, cy: 241, sw: 194, cut: 34 },
+  bowl: { src: require('../../assets/hpots/r1_06.png'), w: 149, h: 359, cx: 73, cy: 234, sw: 147, cut: 34 },
+  barrel: { src: require('../../assets/hpots/r1_07.png'), w: 177, h: 362, cx: 90, cy: 239, sw: 176, cut: 0 },
 };
 export const HPOT_ORDER = ["macrame", "macramethin", "terracotta", "basket", "chain", "bowl", "barrel"];
 // Plants made for the hanging pots (no pot in the picture): three growth stages each.

@@ -163,12 +163,12 @@ export default function PlantSlot({ slot, position, onPress, onPestPress, baseWi
     const bx = hangingBox(potStyle, ph);
     return (
       <View
-        style={[styles.container, { left: position.x - bx.hookX, top: position.y, width: bx.w, height: ph }]}
+        style={[styles.container, { left: position.x - bx.hookX, top: position.y, width: bx.w, height: bx.h }]}
         onStartShouldSetResponder={() => true}
         onResponderGrant={() => { pressStart.current = Date.now(); }}
         onResponderRelease={() => { if (pressStart.current && Date.now() - pressStart.current < 300) onPress(slot, position); pressStart.current = null; }}
       >
-        <HangingArt pot={potStyle} plantKey={slot.flowerKey} stage={slot.stage} h={ph} wilting={slot.wilting} />
+        <HangingArt pot={potStyle} plantKey={slot.flowerKey} stage={slot.stage} h={ph} wilting={slot.wilting} wire={position.wire || 0} />
         {thirsty && <Image source={UI_IMAGES.waterdrop} style={{ position: 'absolute', width: Math.round(ph * 0.1), height: Math.round(ph * 0.116), left: bx.hookX - ph * 0.05, top: ph * 0.2, zIndex: 9 }} resizeMode="contain" />}
         {slot.pest && <Pest type={slot.pest} size={Math.round(projectSize(64, sw, sh))} cx={bx.hookX} cy={ph * 0.6} onClear={() => onPestPress && onPestPress(slot)} armed={armed} interactive={PEST_CONFIG.handClearing} />}
         {isShielded(slot) && (
