@@ -83,9 +83,9 @@ export default function PlantPopup({ slot, position, onHarvest, onRemove, onClos
             )}
             {isHang && (
               <View>
-                <Text style={styles.potsTitle}>Pots</Text>
+                <Text style={styles.potsTitle}>Change pot</Text>
                 <View style={styles.potRow}>
-                  {HPOT_ORDER.map((id) => {
+                  {HPOT_ORDER.filter((id) => owned.includes(id)).map((id) => {
                     const m = HPOT_META[id], have = owned.includes(id), price = HPOT_INFO[id].price, can = have || coins >= price;
                     return (
                       <TouchableOpacity key={id} activeOpacity={0.8} disabled={!can}
@@ -101,10 +101,10 @@ export default function PlantPopup({ slot, position, onHarvest, onRemove, onClos
             )}
             {isShelf && (
               <View>
-                <Text style={styles.potsTitle}>Pots</Text>
+                <Text style={styles.potsTitle}>Change pot</Text>
                 <ScrollView style={{ maxHeight: 200 }} showsVerticalScrollIndicator={false}>
                   <View style={[styles.potRow, { flexWrap: 'wrap' }]}>
-                    {PPOT_IDS.map((id) => {
+                    {PPOT_IDS.filter((id) => ownedP.includes(id)).map((id) => {
                       const m = PPOT_META[id], have = ownedP.includes(id), price = PPOT_PRICE[id], can = have || coins >= price;
                       return (
                         <TouchableOpacity key={id} activeOpacity={0.8} disabled={!can}
