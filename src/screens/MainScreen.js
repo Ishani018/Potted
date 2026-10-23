@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Image, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { MAIN_BG, UI_IMAGES } from '../engine/assets';
 import { ensureMusic, setMusicOn, getAudioPrefs, subscribeAudio, loadAudioPrefs } from '../engine/audio';
 
 export default function MainScreen({ navigation }) {
-  const { width: sw } = useWindowDimensions();
+  // size everything from the game's own box, not the browser window (the game can sit in a smaller frame)
+  const [sw, setSw] = useState(0);
   // Music is one shared player (engine/audio) — settings controls the same one.
   const [audio, setAudio] = useState(getAudioPrefs());
   useEffect(() => subscribeAudio(setAudio), []);
 
   // ── PLAY button — EDIT THESE TWO to resize/move ──────────────────────────────
-  const PLAY_SCALE = 0.26; // fraction of screen width (bigger number = bigger button)
+  const PLAY_SCALE = 0.24; // fraction of screen width (bigger number = bigger button)
   const PLAY_LEFT = '79%'; // horizontal center of the button
   const PLAY_TOP = '65%'; // vertical position (smaller % = higher up)
   // play.png aspect ≈ 2.2 : 1 (width : height)
@@ -30,7 +31,7 @@ export default function MainScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.root}>
+    <View style={styles.root} onLayout={(e) => setSw(e.nativeEvent.layout.width)}>
       <Image source={MAIN_BG} style={styles.bg} resizeMode="cover" />
 
       {/* Top-left: settings */}
