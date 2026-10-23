@@ -353,7 +353,7 @@ Object.assign(TRADE_IMAGES, {
 });
 
 // ─── Nursery background ───────────────────────────────────────────────────────
-export const NURSERY_BG = require('../../assets/shop/nursery_v10.png');
+export const NURSERY_BG = require('../../assets/shop/nursery_v11.png');
 
 // ─── Inventory grid background (7 cols × 5 rows, 1226×912) ────────────────────
 export const INVENTORY_BG = require('../../assets/ui_comps/inventory.png');
