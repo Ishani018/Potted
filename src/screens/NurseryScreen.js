@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Image, ScrollView, PanResponder, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { NURSERY_BG, SEED_IMAGES, UI_IMAGES, PPOT_META, PPOT_IDS, PPLANT_IMAGES, HPOT_META, HPOT_ORDER, CAN_IMAGES, SET_UI } from '../engine/assets';
+import { NURSERY_BG, SEED_ICONS, SEED_IMAGES, UI_IMAGES, PPOT_META, PPOT_IDS, PPLANT_IMAGES, HPOT_META, HPOT_ORDER, CAN_IMAGES, SET_UI } from '../engine/assets';
 import { POTTED_FLOWERS, HANGING_PLANTS, seedType, FLOWER_GROWTH, formatDuration, HPOT_INFO, PPOT_PRICE, CAN_INFO } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
@@ -77,7 +77,7 @@ const MAX_BASKET = 12;
 // what an item id means: 's:daisy' seed, 'p:12' shelf pot, 'h:chain' hanging pot, 'c:red' can
 function describe(id) {
   const [kind, key] = id.split(':');
-  if (kind === 's') return { name: SEED_INFO[key].name, price: SEED_INFO[key].price, src: SEED_IMAGES[key], w: BAG.w, h: BAG.h };
+  if (kind === 's') return { name: SEED_INFO[key].name, price: SEED_INFO[key].price, src: SEED_IMAGES[key], icon: SEED_ICONS[key], w: BAG.w, h: BAG.h };
   if (kind === 'p') { const m = PPOT_META[key]; return { name: 'A shelf pot', price: PPOT_PRICE[key], src: m.src, w: 80, h: 80 * m.h / m.w }; }
   if (kind === 'h') { const m = HPOT_META[key]; return { name: HPOT_INFO[key].name, price: HPOT_INFO[key].price, src: m.src, w: 60, h: 60 * m.h / m.w }; }
   return { name: 'The red watering can', price: CAN_INFO.red.price, src: CAN_IMAGES.red.up.src, w: 130, h: 118 };
@@ -152,7 +152,7 @@ export default function NurseryScreen({ navigation }) {
     if (seeds > free) { notify({ icon: UI_IMAGES.inventorybtn, title: 'Bag is full', subtitle: 'Plant some seeds to make room.' }); return; }
     if (basket.length >= MAX_BASKET) { notify({ title: 'Your cart is full', subtitle: 'Pay for these first.' }); return; }
     setBasket((b) => [...b, id]);
-    notify({ icon: d.src, title: `Added ${d.name}`, subtitle: `${d.price} coins. Tap the cart to pay.` });
+    notify({ icon: d.icon || d.src, title: `Added ${d.name}`, subtitle: `${d.price} coins. Tap the cart to pay.` });
   };
 
   const checkout = () => {
@@ -168,7 +168,7 @@ export default function NurseryScreen({ navigation }) {
     const lines = [];
     basket.forEach((id) => {
       const d = describe(id), at = lines.find((l) => l.id === id);
-      if (at) { at.qty += 1; } else lines.push({ id, src: d.src, name: d.name, price: d.price, qty: 1 });
+      if (at) { at.qty += 1; } else lines.push({ id, src: d.icon || d.src, name: d.name, price: d.price, qty: 1 });
     });
     setReceipt({ lines, total, left: coins - total });
     setCartOpen(false);
@@ -271,7 +271,7 @@ export default function NurseryScreen({ navigation }) {
 
       {(cartOpen || receipt) && (() => {
         const paid = !!receipt;
-        const lines = paid ? receipt.lines : basket.map((id) => { const d = describe(id); return { id, src: d.src, name: d.name, price: d.price, qty: 1 }; });
+        const lines = paid ? receipt.lines : basket.map((id) => { const d = describe(id); return { id, src: d.icon || d.src, name: d.name, price: d.price, qty: 1 }; });
         const sum = paid ? receipt.total : total;
         const close = () => { setCartOpen(false); setReceipt(null); };
         return (

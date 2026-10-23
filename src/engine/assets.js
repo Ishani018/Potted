@@ -65,6 +65,9 @@ export const SEED_IMAGES = {
   Bougainvillea:  require('../../assets/seeds2/bougenvillaseed.png'),
 };
 
+// The clean seed-bag pictures (used in the cart / order summary), kept before the painted cut-outs replace them below.
+export const SEED_ICONS = { ...SEED_IMAGES };
+
 // Painted seed bags (cut from the nursery counter); the other three keep the old bag art.
 Object.assign(SEED_IMAGES, {
   daisy: require('../../assets/seeds3/daisy.png'), marigold: require('../../assets/seeds3/marigold.png'), rose: require('../../assets/seeds3/rose.png'),
