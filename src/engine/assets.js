@@ -406,6 +406,7 @@ export const COUNTER_BG = require('../../assets/shop/counter.png');   // florist
 export const BOUQUET_BG = require('../../assets/shop/workspace_v3.png');   // the zoomed workspace with a box of bows
 export const PETROOM_BG = require('../../assets/petroom.png');       // pet lounge (beds)
 export const GALLERY_BGS = { a: require('../../assets/ui_comps/cafe.png'), b: require('../../assets/ui_comps/cafe2.png'), c: require('../../assets/ui_comps/cafe3.png'), d: require('../../assets/ui_comps/cafe4.png') };   // the gallery is now a café (two pictures to choose from)
+export const LOBBY_BG = require('../../assets/building/lobby.png');   // the apartment building's entrance hall
 export const BUILDING_BG = require('../../assets/building/building.png');   // the apartment building, three floors
 export const GALLERY_BG = GALLERY_BGS.a;
 export const LOADING_BG = require('../../assets/loadingshop.png');

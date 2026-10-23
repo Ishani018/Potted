@@ -15,7 +15,7 @@ const BUTTONS = [
   { label: 'NURSERY', dest: 'Nursery', x: 474,  y: 319 },
   { label: 'HOME',    dest: 'Home',    x: 111,  y: 516 },
   { label: 'ADOPT',   dest: 'PetShop', x: 855,  y: 200 },
-  { label: 'APARTMENTS', dest: 'Building', x: 761,  y: 587 },
+  { label: 'APARTMENTS', dest: 'Lobby', x: 761,  y: 587 },
   { label: 'FLORIST', dest: 'Counter', x: 1100, y: 214 },
 ];
 
