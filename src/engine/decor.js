@@ -9,8 +9,9 @@ const HANGERS = ['stringofpearls', 'Philodendron', 'jasmine', 'petunia', 'Bougai
 export const DECOR = {};
 // bf = where the pot's bottom edge sits inside the picture (0..1), so a stand can be slid right under it
 const POT_BOTTOM = { daisy: 0.864, snapdragon: 0.864, marigold: 0.864, rose: 0.864, poppy: 1, peony: 1, hydrenga: 1 };
-PLANTS.forEach((k) => { DECOR['p_' + k] = { key: 'p_' + k, kind: 'floor', img: POTTED_PLANT_IMAGES[k][2], size: 0.26, plant: true, bf: POT_BOTTOM[k] }; });
-HANGERS.forEach((k) => { DECOR['h_' + k] = { key: 'h_' + k, kind: 'hang', img: HANGING_PLANT_IMAGES[k][2], size: 0.26 }; });
+// Plants are drawn with the new art: a shelf pot + its bloom (PottedArt) or a hanging pot + its bloom (HangingArt).
+PLANTS.forEach((k) => { DECOR['p_' + k] = { key: 'p_' + k, kind: 'floor', img: POTTED_PLANT_IMAGES[k][2], size: 0.26, plant: true, bf: 1, newPlant: true, plantKey: k }; });
+HANGERS.forEach((k) => { DECOR['h_' + k] = { key: 'h_' + k, kind: 'hang', img: HANGING_PLANT_IMAGES[k][2], size: 0.26, newHang: true, plantKey: k }; });
 Object.keys(PAINTING_IMAGES).forEach((k) => { DECOR['w_' + k] = { key: 'w_' + k, kind: 'wall', img: PAINTING_IMAGES[k], size: 0.2, painting: k }; });
 
 // What a potted plant stands on. w = stand width as a fraction of the plant's box, ratio = its height / width.

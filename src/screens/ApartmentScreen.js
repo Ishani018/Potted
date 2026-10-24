@@ -3,6 +3,8 @@ import { View, Text, Image, ScrollView, PanResponder, TouchableOpacity, StyleShe
 import { useGame } from '../context/GameContext';
 import { APT_ART, UI_IMAGES } from '../engine/assets';
 import { APARTMENTS } from '../constants/gameData';
+import PottedArt, { pottedLayout } from '../components/PottedArt';
+import HangingArt, { hangingBox } from '../components/HangingArt';
 import { DECOR, ROT_VIEWS, DECOR_TABS, DECOR_START_Y, DECOR_Y_RANGE, STANDS, STAND_ORDER, standOf } from '../engine/decor';
 import ScreenHud from '../components/ScreenHud';
 import { pixelText } from '../components/Pixel';
@@ -21,9 +23,13 @@ function Placed({ item, W, H, edit, selected, onSelect, onMove, onDragState }) {
   live.current = item;
   const size = def.size * H * (item.scale || 1);   // the player can resize any piece
   const stand = def.plant ? STANDS[standOf(item)] : null;   // potted plants sit on a stool, stand or pedestal
-  const standH = stand ? stand.w * size * stand.ratio : 0;
-  const bw = def.furniture ? size * def.aspect : size;
-  const boxH = def.plant ? size * def.bf + standH * 0.9 : size;   // the stand tucks up under the pot
+  const potW = size * 0.55;
+  const L = def.newPlant ? pottedLayout(item.pot || 4, def.plantKey, 3, potW) : null;
+  const hb = def.newHang ? hangingBox(item.pot || 'macrame', size) : null;
+  const standBase = L ? potW * 1.5 : size;
+  const standH = stand ? stand.w * standBase * stand.ratio : 0;
+  const bw = L ? L.boxW : hb ? hb.w : def.furniture ? size * def.aspect : size;
+  const boxH = L ? L.boxH + standH * 0.9 : hb ? hb.h : def.plant ? size * def.bf + standH * 0.9 : size;   // the stand tucks up under the pot
   const x = (pos ?? item).x, y = (pos ?? item).y;
   const [lo, hi] = def.rug ? [0.62, 0.99] : DECOR_Y_RANGE[def.kind];
 
@@ -45,9 +51,11 @@ function Placed({ item, W, H, edit, selected, onSelect, onMove, onDragState }) {
   const top = def.rug ? y * H - boxH / 2 : def.kind === 'floor' ? y * H - boxH : y * H - size / 2;
   return (
     <View {...(edit ? pan.panHandlers : {})} pointerEvents={edit ? 'auto' : 'none'} style={{ position: 'absolute', left, top, width: bw, height: boxH, transform: item.flip ? [{ scaleX: -1 }] : undefined, zIndex: def.rug ? 1 : def.kind === 'floor' ? 10 + Math.round(y * 100) : 5 }}>
-      {stand && <Image source={stand.img} resizeMode="stretch" style={{ position: 'absolute', left: (size - stand.w * size) / 2, bottom: 0, width: stand.w * size, height: standH }} />}
-      <Image source={def.img} resizeMode={def.furniture ? 'stretch' : 'contain'} style={{ position: 'absolute', left: 0, top: 0, width: bw, height: def.furniture ? size : size,
-        ...(def.rug ? { transform: [{ perspective: 520 }, { rotateX: '58deg' }] } : null) }} />
+      {stand && <Image source={stand.img} resizeMode="stretch" style={{ position: 'absolute', left: (bw - stand.w * standBase) / 2, bottom: 0, width: stand.w * standBase, height: standH }} />}
+      {L && <View style={{ position: 'absolute', left: 0, top: 0 }}><PottedArt layout={L} potW={potW} /></View>}
+      {hb && <View style={{ position: 'absolute', left: 0, top: 0 }}><HangingArt pot={item.pot || 'macrame'} plantKey={def.plantKey} stage={3} h={size} /></View>}
+      {!L && !hb && <Image source={def.img} resizeMode={def.furniture ? 'stretch' : 'contain'} style={{ position: 'absolute', left: 0, top: 0, width: bw, height: def.furniture ? size : size,
+        ...(def.rug ? { transform: [{ perspective: 520 }, { rotateX: '58deg' }] } : null) }} />}
       {edit && selected && <View pointerEvents="none" style={[styles.ring, { borderRadius: size * 0.1 }]} />}
     </View>
   );
@@ -161,7 +169,7 @@ export default function ApartmentScreen({ navigation, route }) {
             {tabItems.length === 0 && <Text style={styles.empty}>Buy paintings in the gallery to hang them here.</Text>}
             {tabItems.map((d) => (
               <TouchableOpacity key={d.key} activeOpacity={0.8} onPress={() => add(d)} style={styles.tile}>
-                <Image source={d.img} resizeMode="contain" style={{ width: 48, height: 48 }} />
+                {d.newPlant ? <PottedArt pot={4} plantKey={d.plantKey} stage={3} potW={20} /> : d.newHang ? <HangingArt pot="macrame" plantKey={d.plantKey} stage={3} h={44} /> : <Image source={d.img} resizeMode="contain" style={{ width: 48, height: 48 }} />}
               </TouchableOpacity>
             ))}
           </ScrollView>
