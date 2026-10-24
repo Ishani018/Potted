@@ -614,7 +614,7 @@ export const INITIAL_PLAYER_STATE = {
   harvestCount: 0,
   // flowerKey → count, harvested flowers awaiting trade for coins.
   // TEMP: seeded with test flowers (10 of each) so orders and trading are testable — the owner wants these kept for now.
-  harvestedFlowers: { daisy: 10, snapdragon: 10, poppy: 10, marigold: 10, peony: 10, hydrenga: 10, rose: 10, stringofpearls: 10, Philodendron: 10, jasmine: 10, petunia: 10, Bougainvillea: 10 },   // KEEP for testing
+  harvestedFlowers: Object.fromEntries([...Object.keys(POTTED_FLOWERS), ...Object.keys(HANGING_PLANTS), ...Object.keys(RARE_PLANTS)].map((k) => [k, 10])),   // KEEP for testing: 10 of every flower, rare ones too
   ownedPaintings: [],
   apartmentItems: {},  // aptId → [{ id, key, kind, x, y }] decor placed in each flat (x,y are fractions of the room picture)
   favourites: [],            // nursery item ids you have hearted, e.g. 'p:12', 's:rose'

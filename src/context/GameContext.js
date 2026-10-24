@@ -2,7 +2,7 @@ import { createContext, useContext, useReducer, useEffect, useRef } from 'react'
 import { AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
-  INITIAL_PLAYER_STATE, ROOM_UNLOCK_COSTS, CATCH_UP, BOUQUET_SIZE,
+  INITIAL_PLAYER_STATE, RARE_PLANTS, ROOM_UNLOCK_COSTS, CATCH_UP, BOUQUET_SIZE,
   POTTED_FLOWERS, HANGING_PLANTS, PETS, ROOM_NAMES,
   seedType, evaluateBouquet, bouquetPaper,
   XP_CONFIG, SEED_LOCKS, LEVELS_ON, levelInfo, playerLevel, seedUnlockLevel, unlocksAtLevel, TRADE_FLOWERS, CUSTOMERS,
@@ -47,7 +47,8 @@ function makeRand(seed) {
 const initialState = {
   player: INITIAL_PLAYER_STATE,
   slots: {},
-  inventory: [],       // { id, flowerKey } seed bags owned (shared across rooms)
+  // TEMP for testing: one seed bag of every flower (rare ones too); the owner wants these kept for now
+  inventory: [...Object.keys(POTTED_FLOWERS), ...Object.keys(HANGING_PLANTS), ...Object.keys(RARE_PLANTS)].map((flowerKey) => ({ id: `start_${flowerKey}`, flowerKey })),       // { id, flowerKey } seed bags owned (shared across rooms)
   heldSeed: null,      // { invItemId, flowerKey } picked from inventory, awaiting a pot tap
   initialized: false,
   lastPassiveTick: Date.now(),
