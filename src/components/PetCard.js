@@ -185,7 +185,7 @@ const s = StyleSheet.create({
   petName: { fontFamily: HEAD, fontSize: 26, fontWeight: 'bold', color: '#4a2a10' },
   breed: { fontFamily: HEAD, fontSize: 14, color: '#7a5030' },
   body: { fontFamily: HEAD, fontSize: 15, color: '#6a4524' },
-  perkRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#ecd9a6', borderRadius: 10, borderWidth: 2, borderColor: '#d9bd86', padding: 6 },
+  perkRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },
   perkTitle: { fontFamily: HEAD, fontSize: 15, fontWeight: 'bold', color: GREEN },
   perkDesc: { fontFamily: HEAD, fontSize: 13, color: '#6a4524' },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
