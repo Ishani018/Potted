@@ -30,7 +30,7 @@ import InventoryOverlay from '../components/InventoryOverlay';
 const ROOM_TYPES = ['potted', 'hanging'];
 
 // Sunroom pots/can are drawn a bit smaller than the Greenhouse's (90 / 200).
-const SUN_POT_W = 67;
+const SUN_POT_W = 56;
 const SUN_CAN = 85;
 const SUN_HANG_W = 260;   // hanging plant/pot canvas width (image has lots of padding)
 
@@ -239,7 +239,7 @@ export default function Room3Screen({ navigation }) {
           // Hanging pots use the Balcony's sizing (stage 0 image is tall & narrow).
           const hangingSize = slot.type === 'hanging'
             ? { baseWidthOverride: slot.stage === 0 ? 100 : SUN_HANG_W, potHeightOverride: 205 }
-            : { baseWidthOverride: SUN_POT_W };
+            : { baseWidthOverride: SUN_POT_W, potWidthOverride: 64 };
           return <PlantSlot key={slot.slotId} slot={slot} position={pt} onPress={handleSlotPress} onPestPress={handlePestPress} {...hangingSize} />;
         })}
 

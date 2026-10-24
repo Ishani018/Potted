@@ -23,17 +23,17 @@ export function getSnapPoints(room, type, screenWidth, screenHeight) {
 // Raw snap coordinates — anchor: bottom-center for pots, top-center for hanging
 const RAW_SNAP_POINTS = {
   1: {
-    // the greenhouse: four pots on the window ledge, five on the long bench
+    // the greenhouse: four pots spread along the window ledge, five on the long bench (even spacing so plants never overlap)
     potted: [
-      { id: 'r1_p1', x: 222, y: 317 },
-      { id: 'r1_p2', x: 333, y: 317 },
-      { id: 'r1_p3', x: 444, y: 317 },
-      { id: 'r1_p4', x: 556, y: 317 },
-      { id: 'r1_p5', x: 148, y: 441 },
-      { id: 'r1_p6', x: 411, y: 441 },
+      { id: 'r1_p1', x: 250, y: 317 },
+      { id: 'r1_p2', x: 490, y: 317 },
+      { id: 'r1_p3', x: 730, y: 317 },
+      { id: 'r1_p4', x: 970, y: 317 },
+      { id: 'r1_p5', x: 205, y: 441 },
+      { id: 'r1_p6', x: 440, y: 441 },
       { id: 'r1_p7', x: 675, y: 441 },
-      { id: 'r1_p8', x: 938, y: 441 },
-      { id: 'r1_p9', x: 1202, y: 441 },
+      { id: 'r1_p8', x: 910, y: 441 },
+      { id: 'r1_p9', x: 1145, y: 441 },
     ],
     hanging: [],
   },
@@ -77,15 +77,15 @@ const RAW_SNAP_POINTS = {
     ],
     hanging: [
       // from the rings on the inner rod
-      { id: 'r3_h1', x: 630, y: 135 },
-      { id: 'r3_h2', x: 729, y: 135 },
-      { id: 'r3_h3', x: 823, y: 135 },
-      { id: 'r3_h4', x: 918, y: 135 },
+      { id: 'r3_h1', x: 575, y: 135 },
+      { id: 'r3_h2', x: 695, y: 135 },
+      { id: 'r3_h3', x: 815, y: 135 },
+      { id: 'r3_h4', x: 935, y: 135 },
       // straight from the back rod
-      { id: 'r3_h5', x: 480, y: 112, wire: 18 },
-      { id: 'r3_h6', x: 570, y: 112, wire: 18 },
-      { id: 'r3_h7', x: 1000, y: 112, wire: 18 },
-      { id: 'r3_h8', x: 1080, y: 112, wire: 18 },
+      { id: 'r3_h5', x: 420, y: 112, wire: 18 },
+      { id: 'r3_h6', x: 500, y: 112, wire: 18 },
+      { id: 'r3_h7', x: 1020, y: 112, wire: 18 },
+      { id: 'r3_h8', x: 1100, y: 112, wire: 18 },
     ],
   },
 };
