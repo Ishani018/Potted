@@ -83,7 +83,7 @@ export default function TradingScreen({ navigation }) {
                 <Text style={styles.sub}>Tap one on the left, or open My flowers.</Text>
               </View>
             ) : (
-              <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+              <View style={{ flexDirection: 'row', gap: 18, alignItems: 'flex-start' }}>
                 <View style={styles.pic}><Image source={TRADE_IMAGES[active.img]} style={{ width: 84, height: 80 }} resizeMode="contain" /></View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.name}>{active.name}</Text>
@@ -113,7 +113,7 @@ export default function TradingScreen({ navigation }) {
           </View>
         </View>
 
-        <View style={{ alignItems: 'center', marginTop: 8 }}>
+        <View style={{ alignItems: 'center', marginTop: 14 }}>
           <PlateBtn label="My flowers" onPress={() => setInvOpen(true)} w={140} h={40} />
         </View>
       </View>
@@ -154,10 +154,10 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#1a1208' },
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
   haze: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(30,18,6,0.45)' },
-  panel: { position: 'absolute', alignSelf: 'center', top: '12%', width: '78%', backgroundColor: '#f3e0b6', borderWidth: 4, borderColor: '#8a5a2a', borderRadius: 18, padding: 12 },
+  panel: { position: 'absolute', alignSelf: 'center', top: '9%', width: '80%', backgroundColor: '#f3e0b6', borderWidth: 4, borderColor: '#8a5a2a', borderRadius: 18, padding: 16 },
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center', zIndex: 200 },
   title: { fontFamily: SERIF, fontSize: 22, fontWeight: 'bold', color: '#4a2a10' },
-  sub: { fontFamily: SERIF, fontSize: 14, color: '#7a5030', marginBottom: 8 },
+  sub: { fontFamily: SERIF, fontSize: 14, color: '#7a5030', marginBottom: 12 },
   grid: { width: 226, flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignContent: 'flex-start' },
   tile: { width: 68, height: 84, borderRadius: 12, backgroundColor: '#e8cf9a', borderWidth: 2, borderColor: '#b98a4e', alignItems: 'center', justifyContent: 'center' },
   tileOn: { borderColor: '#2f5a22', backgroundColor: '#d6e2a8' },
@@ -165,17 +165,17 @@ const styles = StyleSheet.create({
   tilePrice: { fontFamily: SERIF, fontSize: 14, fontWeight: 'bold', color: '#4a2a10' },
   badge: { position: 'absolute', right: -4, top: -6, backgroundColor: '#8a5a2a', borderRadius: 9, minWidth: 18, height: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
   badgeTxt: { fontFamily: SERIF, fontSize: 12, color: '#fff3d0', fontWeight: 'bold' },
-  detail: { flex: 1, minHeight: 182, justifyContent: 'space-between' },
+  detail: { flex: 1, minHeight: 210, justifyContent: 'space-between', paddingLeft: 6 },
   pic: { width: 100, height: 100, borderRadius: 14, backgroundColor: '#e8cf9a', borderWidth: 2, borderColor: '#b98a4e', alignItems: 'center', justifyContent: 'center' },
   name: { fontFamily: SERIF, fontSize: 22, fontWeight: 'bold', color: '#4a2a10' },
-  rowLine: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#d9bd86', paddingVertical: 2 },
+  rowLine: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#d9bd86', paddingVertical: 5 },
   key: { fontFamily: SERIF, fontSize: 14, color: '#7a5030' },
   val: { fontFamily: SERIF, fontSize: 14, color: '#4a2a10', fontWeight: 'bold' },
-  qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
+  qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 16 },
   arrow: { width: 34, height: 31 },
   qtyBox: { minWidth: 52, paddingVertical: 4, alignItems: 'center', backgroundColor: '#fff6df', borderWidth: 2, borderColor: '#b98a4e', borderRadius: 10 },
   qtyNum: { fontFamily: SERIF, fontSize: 20, fontWeight: 'bold', color: '#4a2a10' },
-  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 },
+  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 18 },
   total: { fontFamily: SERIF, fontSize: 24, fontWeight: 'bold', color: '#4a2a10' },
   close: { position: 'absolute', right: 10, top: 8, zIndex: 5 },
   invGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'center', paddingTop: 6 },
