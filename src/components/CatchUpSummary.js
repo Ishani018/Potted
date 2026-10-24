@@ -1,8 +1,7 @@
 import React from 'react';
-import { View, Text, Image, Platform, StyleSheet } from 'react-native';
+import { View, Text, Image, Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { UI_IMAGES, BOOK_CARD } from '../engine/assets';
-import { PixelButton } from './Pixel';
+import { UI_IMAGES, SET_UI } from '../engine/assets';
 import { ROOM_NAMES } from '../constants/gameData';
 
 // "While you were away" card. Shown once after coming back to the game (the
@@ -40,37 +39,40 @@ export default function CatchUpSummary({ hidden }) {
     .map(([room, r]) => ({ room, line: roomLine(r) }))
     .filter((r) => r.line);
 
-  // The painted card is 330×430; the writing sits on the paper above the ribbon.
   return (
     <View style={styles.overlay}>
-      <View style={styles.card}>
-        <Image source={BOOK_CARD} style={styles.cardArt} resizeMode="stretch" />
-        <View style={styles.paper}>
-          <Text style={styles.title}>Welcome back!</Text>
-          <Text style={styles.sub}>You were away for {formatAway(summary.awayMs)}</Text>
+      <View style={styles.panel}>
+        <Text style={styles.title}>Welcome back!</Text>
+        <Text style={styles.sub}>You were away for {formatAway(summary.awayMs)}</Text>
 
-          {rooms.map(({ room, line }) => (
-            <View key={room} style={styles.row}>
-              <Text style={styles.room}>{ROOM_NAMES[room] ?? `Room ${room}`}</Text>
-              <Text style={styles.line}>{line}</Text>
-            </View>
-          ))}
+        {rooms.length === 0 && summary.coins <= 0 && !(summary.newPests > 0) ? (
+          <Text style={styles.note}>Everything is just as you left it.</Text>
+        ) : null}
 
-          {summary.newPests > 0 && (
-            <Text style={styles.note}>
-              {plural(summary.newPests, 'bug', 'bugs')} moved in while you were gone. Tap them to shoo them away!
-            </Text>
-          )}
+        {rooms.map(({ room, line }) => (
+          <View key={room} style={styles.row}>
+            <Text style={styles.room}>{ROOM_NAMES[room] ?? `Room ${room}`}</Text>
+            <Text style={styles.line}>{line}</Text>
+          </View>
+        ))}
 
-          {summary.coins > 0 && (
-            <View style={styles.coinRow}>
-              <Image source={UI_IMAGES.goldcoins} style={styles.coin} resizeMode="contain" />
-              <Text style={styles.coinTxt}>Your hanging plants earned {summary.coins} coins</Text>
-            </View>
-          )}
+        {summary.newPests > 0 && (
+          <Text style={styles.note}>
+            {plural(summary.newPests, 'bug', 'bugs')} moved in while you were gone. Tap them to shoo them away!
+          </Text>
+        )}
 
-          <PixelButton label="LET'S GO!" size={11} onPress={() => dispatch({ type: 'DISMISS_SUMMARY' })} style={{ marginTop: 8 }} />
-        </View>
+        {summary.coins > 0 && (
+          <View style={styles.coinRow}>
+            <Image source={UI_IMAGES.goldcoins} style={styles.coin} resizeMode="contain" />
+            <Text style={styles.coinTxt}>Your hanging plants earned {summary.coins} coins</Text>
+          </View>
+        )}
+
+        <TouchableOpacity activeOpacity={0.8} onPress={() => dispatch({ type: 'DISMISS_SUMMARY' })} style={styles.btn}>
+          <Image source={SET_UI.btnGreen.src} resizeMode="stretch" style={StyleSheet.absoluteFill} />
+          <Text style={styles.btnTxt}>Let's go!</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -85,19 +87,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
     alignItems: 'center', justifyContent: 'center', zIndex: 9500,
   },
-  card: { width: 366, height: 486 },
-  cardArt: { position: 'absolute', width: 366, height: 486 },
-  paper: { position: 'absolute', left: 62, right: 62, top: 78, height: 262, alignItems: 'center' },
-  title: { fontFamily: HEAD, fontSize: 28, color: '#4a2a10', lineHeight: 28 },
-  sub: { fontFamily: HEAD, color: '#8a6a40', fontSize: 15, marginBottom: 6 },
-  row: {
-    alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 8,
-    paddingVertical: 4,
-  },
-  room: { fontFamily: HEAD, color: '#4a2a10', fontSize: 15, width: 76 },
-  line: { flex: 1, fontFamily: HEAD, color: '#5a3a1a', fontSize: 13.5, lineHeight: 15 },
-  note: { fontFamily: HEAD, color: '#7a4a18', fontSize: 13.5, lineHeight: 15, marginTop: 4, textAlign: 'center' },
-  coinRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
-  coin: { width: 18, height: 18 },
-  coinTxt: { fontFamily: HEAD, color: '#7a5a10', fontSize: 13.5 },
+  panel: { width: 380, maxWidth: '86%', backgroundColor: '#f3e0b6', borderWidth: 4, borderColor: '#8a5a2a', borderRadius: 18, padding: 16, alignItems: 'center' },
+  title: { fontFamily: HEAD, fontSize: 26, fontWeight: 'bold', color: '#4a2a10' },
+  sub: { fontFamily: HEAD, color: '#7a5030', fontSize: 15, marginBottom: 10 },
+  row: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6, borderTopWidth: 1, borderTopColor: '#d9bd86' },
+  room: { fontFamily: HEAD, color: '#4a2a10', fontSize: 16, fontWeight: 'bold', width: 100 },
+  line: { flex: 1, fontFamily: HEAD, color: '#6a4524', fontSize: 15 },
+  note: { fontFamily: HEAD, color: '#6a4524', fontSize: 14.5, marginTop: 6, textAlign: 'center' },
+  coinRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
+  coin: { width: 22, height: 22 },
+  coinTxt: { fontFamily: HEAD, color: '#4a2a10', fontSize: 14.5 },
+  btn: { width: 150, height: 44, marginTop: 14, alignItems: 'center', justifyContent: 'center' },
+  btnTxt: { fontFamily: HEAD, fontSize: 17, fontWeight: 'bold', color: '#fff3d0' },
 });
