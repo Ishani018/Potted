@@ -639,6 +639,11 @@ function reducer(state, action) {
       return { ...state, player: { ...state.player, coins: state.player.coins - price, ownedCans: [...owned, can], can } };
     }
 
+    case 'TOGGLE_FAV': {   // heart / un-heart a nursery item
+      const favs = state.player.favourites ?? [];
+      return { ...state, player: { ...state.player, favourites: favs.includes(action.id) ? favs.filter((x) => x !== action.id) : [...favs, action.id] } };
+    }
+
     case 'USE_CAN': {
       if (!(state.player.ownedCans ?? ['blue']).includes(action.can)) return state;
       return { ...state, player: { ...state.player, can: action.can } };

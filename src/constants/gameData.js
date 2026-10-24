@@ -617,6 +617,7 @@ export const INITIAL_PLAYER_STATE = {
   harvestedFlowers: { daisy: 8, rose: 5, marigold: 6, jasmine: 4, peony: 3, poppy: 7, hydrenga: 5, snapdragon: 6 },
   ownedPaintings: [],
   apartmentItems: {},  // aptId → [{ id, key, kind, x, y }] decor placed in each flat (x,y are fractions of the room picture)
+  favourites: [],            // nursery item ids you have hearted, e.g. 'p:12', 's:rose'
   ownedCans: ['blue'],       // watering cans you own (the red premium can is bought at the nursery)
   can: 'blue',               // the can in use
   ownedPPots: [4],           // shelf pot styles you own

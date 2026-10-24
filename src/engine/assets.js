@@ -582,6 +582,8 @@ export const SET_UI = {
   sound: { src: require('../../assets/ui_sheet/ui_13.png'), w: 100, h: 88 },
   btnCream: { src: require('../../assets/ui_sheet/ui_38.png'), w: 176, h: 76 },
   btnRed: { src: require('../../assets/ui_sheet/ui_39.png'), w: 187, h: 78 },
+  heart: { src: require('../../assets/ui_sheet/ui_50.png'), w: 56, h: 49 },
+  heartOff: { src: require('../../assets/ui_sheet/ui_51.png'), w: 57, h: 50 },
   btnGreen: { src: require('../../assets/ui_sheet/ui_37.png'), w: 180, h: 70 },
 };
 // Furniture seen from four sides (front, left and right three-quarter, side) so it can be turned

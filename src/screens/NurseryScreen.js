@@ -7,6 +7,7 @@ import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
 import { useNotice } from '../components/PurchaseNotice';
 import PottedArt, { pottedLayout } from '../components/PottedArt';
+import { itemText } from '../constants/shopText';
 
 // The nursery: seeds on the big left shelves, pots on the right shelves and hooks, the red watering can on the floor.
 // Drag anything to the counter, then tap the register to pay for it all.
@@ -130,7 +131,7 @@ function PlateBtn({ tone = 'btnCream', label, onPress, w = 150, h = 40, style, c
 
 export default function NurseryScreen({ navigation }) {
   const { state, dispatch } = useGame();
-  const { coins, ownedPPots = [4], ownedHPots = ['macrame'], ownedCans = ['blue'] } = state.player;
+  const { coins, ownedPPots = [4], ownedHPots = ['macrame'], ownedCans = ['blue'], favourites = [] } = state.player;
 
   const [notice, notify] = useNotice();
   const [invOpen, setInvOpen] = useState(false);
@@ -279,16 +280,34 @@ export default function NurseryScreen({ navigation }) {
 
       {detail && (() => {
         const d = describe(detail);
-        const have = owns(detail), inCart = basket.includes(detail);
-        const note = have ? 'You already have this one.' : inCart ? 'Already in your cart.' : `${d.price === 0 ? 'Free' : d.price + ' coins'}`;
+        const have = owns(detail), inCart = basket.includes(detail), fav = favourites.includes(detail);
+        const { desc, lines } = itemText(detail);
         const AW = 150, AH = AW * 416 / 1042, CW = 130, CH = CW * 393 / 903;
         return (
           <TouchableOpacity activeOpacity={1} style={styles.panelWrap} onPress={() => setDetail(null)}>
-            <TouchableOpacity activeOpacity={1} style={[styles.panel, { width: '46%', alignItems: 'center' }]}>
-              <Image source={d.icon || d.src} resizeMode="contain" style={{ width: 120, height: 110 }} />
-              <Text style={styles.panelTitle}>{d.name}</Text>
-              <Text style={[styles.panelHint, { fontSize: 18, marginTop: 0 }]}>{note}</Text>
-              <View style={styles.cartBtns}>
+            <TouchableOpacity activeOpacity={1} style={[styles.panel, { width: '60%' }]}>
+              <TouchableOpacity activeOpacity={0.8} onPress={() => dispatch({ type: 'TOGGLE_FAV', id: detail })} style={styles.favBtn}>
+                <Image source={(fav ? SET_UI.heart : SET_UI.heartOff).src} resizeMode="contain" style={{ width: 34, height: 30 }} />
+              </TouchableOpacity>
+              <View style={{ flexDirection: 'row', gap: 14, alignItems: 'center' }}>
+                <View style={styles.detailPic}>
+                  <Image source={d.icon || d.src} resizeMode="contain" style={{ width: 120, height: 110 }} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.panelTitle, { textAlign: 'left', marginBottom: 2 }]}>{d.name}</Text>
+                  <View style={styles.priceRow}>
+                    <Image source={UI_IMAGES.goldcoins} resizeMode="contain" style={{ width: 26, height: 26 }} />
+                    <Text style={styles.priceTxt}>{d.price === 0 ? 'Free' : d.price}</Text>
+                    {have && <Text style={styles.statusTag}>Owned</Text>}
+                    {!have && inCart && <Text style={styles.statusTag}>In cart</Text>}
+                  </View>
+                  <Text style={styles.descTxt}>{desc}</Text>
+                  {lines.map(([k, v]) => (
+                    <View key={k} style={styles.detailRow}><Text style={styles.detailKey}>{k}</Text><Text style={styles.detailVal}>{v}</Text></View>
+                  ))}
+                </View>
+              </View>
+              <View style={[styles.cartBtns, { marginTop: 10 }]}>
                 <TouchableOpacity activeOpacity={0.8} disabled={have || inCart} onPress={() => { addToCart(detail); setDetail(null); }} style={{ opacity: have || inCart ? 0.45 : 1 }}>
                   <Image source={SHOP_BTN.add} resizeMode="contain" style={{ width: AW, height: AH }} />
                 </TouchableOpacity>
@@ -373,6 +392,15 @@ const styles = StyleSheet.create({
   tileTxt: { fontFamily: SERIF, fontSize: 12, color: '#4a2a10', fontWeight: 'bold' },
   cartCount: { fontFamily: SERIF, color: '#fff3d0', fontWeight: 'bold', textShadowColor: '#4a2a10', textShadowRadius: 3, textShadowOffset: { width: 0, height: 1 } },
   cartBtn: { position: 'absolute', right: 14, bottom: 10, zIndex: 60, backgroundColor: '#8a5a2a', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 5 },
+  favBtn: { position: 'absolute', right: 12, top: 10, zIndex: 5 },
+  detailPic: { width: 140, height: 130, borderRadius: 14, backgroundColor: '#e8cf9a', borderWidth: 2, borderColor: '#b98a4e', alignItems: 'center', justifyContent: 'center' },
+  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
+  priceTxt: { fontFamily: SERIF, fontSize: 24, color: '#4a2a10', fontWeight: 'bold' },
+  statusTag: { fontFamily: SERIF, fontSize: 13, color: '#fff3d0', backgroundColor: '#8a5a2a', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 1, overflow: 'hidden' },
+  descTxt: { fontFamily: SERIF, fontSize: 15, color: '#6a4524', marginBottom: 4 },
+  detailRow: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#d9bd86', paddingVertical: 2 },
+  detailKey: { fontFamily: SERIF, fontSize: 14, color: '#7a5030' },
+  detailVal: { fontFamily: SERIF, fontSize: 14, color: '#4a2a10', fontWeight: 'bold' },
   cartBtns: { flexDirection: 'row', gap: 10, marginTop: 8, justifyContent: 'center' },
   cartAct: { borderRadius: 12, paddingHorizontal: 14, paddingVertical: 6 },
   recX: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#b98a4e', alignItems: 'center', justifyContent: 'center' },
