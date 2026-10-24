@@ -74,7 +74,7 @@ export function AdoptModal({ petKey, onClose, finder }) {
   const showCoin = !greeting && !renaming;           // coin art only on price/refund views
 
   const W = Math.min(620, Math.max(320, (frameW || 800) * 0.72));
-  const picW = Math.min(W * 0.42, Math.max(150, (frameH || 480) * 0.5));
+  const picW = Math.min(W * 0.36, Math.max(130, (frameH || 480) * 0.4));
   const bannerText = greeting ? 'Welcome home!' : renaming ? 'Pick a new name' : owned ? 'Your pet' : 'Meet your new friend';
   const display = savedName ?? pet.name;
   const fav = (state.player.favourites ?? []).includes('pet:' + petKey);
@@ -116,10 +116,10 @@ export function AdoptModal({ petKey, onClose, finder }) {
         </View>
 
         <View style={{ flexDirection: 'row', gap: 14, alignItems: 'center' }}>
-          <View style={[s.picFrame, { width: picW, height: picW * 1.02 }]}>
+          <View style={[s.picFrame, { width: picW, height: picW * 0.95 }]}>
             {renaming || greeting
-              ? <PetSprite petKey={petKey} w={picW * 0.95} h={picW * 0.95} />
-              : <OnGrass petKey={petKey} winW={picW} w={picW * 0.82} h={picW * 0.86} />}
+              ? <PetSprite petKey={petKey} w={picW * 0.8} h={picW * 0.8} />
+              : <OnGrass petKey={petKey} winW={picW} w={picW * 0.66} h={picW * 0.7} />}
           </View>
           <View style={{ flex: 1 }}>
             <Text numberOfLines={1} style={s.petName}>{display}</Text>
