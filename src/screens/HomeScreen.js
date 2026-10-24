@@ -13,12 +13,12 @@ const PLOPPER_W = 1376;
 const PLOPPER_H = 768;
 // label = sign text; x/y = centre of the sign (text + arrow).
 const ENTRIES = [
-  { label: 'SUNROOM',    room: 3, x: 190,  y: 105 },   // the arched door on the left
-  { label: 'BALCONY',    room: 2, x: 880,  y: 140 },   // the open door in the middle
-  { label: 'GREENHOUSE', room: 1, x: 1160, y: 140 },   // the green door on the right
+  { label: 'SUNROOM',    room: 3, x: 195,  y: 150 },   // the arched door on the left
+  { label: 'BALCONY',    room: 2, x: 885,  y: 195 },   // the open door in the middle
+  { label: 'GREENHOUSE', room: 1, x: 1185, y: 225 },   // the green door on the right
 ];
 // The pet bowls by the stairs → the pet lounge.
-const PET_TAG = { label: 'PETS', x: 440, y: 532 };
+const PET_TAG = { label: 'PETS', x: 430, y: 462 };
 
 export default function HomeScreen({ navigation }) {
   const { dispatch } = useGame();
@@ -44,7 +44,7 @@ export default function HomeScreen({ navigation }) {
       <MapTagButton label={PET_TAG.label} x={PET_TAG.x} y={PET_TAG.y} box={box} z={14} delay={600} onPress={() => navigation.navigate('PetRoom')} />
 
       {/* the goose sleeps on the little ottoman (home picture is 1671×941) */}
-      {sw > 0 && <Goose k={sw / 1671} perch={{ x: 1150, y: 895, z: 12 }} base={0.78} />}
+      {sw > 0 && <Goose k={sw / 1671} perch={{ x: 1120, y: 862, z: 12 }} base={0.78} />}
 
 
       {/* Standard HUD — settings (TL) + map (TR) + inventory (BL) */}
