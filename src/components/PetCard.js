@@ -73,8 +73,8 @@ export function AdoptModal({ petKey, onClose, finder }) {
   const manage = owned && !greeting && !renaming;
   const showCoin = !greeting && !renaming;           // coin art only on price/refund views
 
-  const W = Math.min(620, Math.max(320, (frameW || 800) * 0.72));
-  const picW = Math.min(W * 0.36, Math.max(130, (frameH || 480) * 0.4));
+  const W = Math.max(320, (frameW || 854) * 0.6);
+  const picW = 140;
   const bannerText = greeting ? 'Welcome home!' : renaming ? 'Pick a new name' : owned ? 'Your pet' : 'Meet your new friend';
   const display = savedName ?? pet.name;
   const fav = (state.player.favourites ?? []).includes('pet:' + petKey);
@@ -116,10 +116,10 @@ export function AdoptModal({ petKey, onClose, finder }) {
         </View>
 
         <View style={{ flexDirection: 'row', gap: 14, alignItems: 'center' }}>
-          <View style={[s.picFrame, { width: picW, height: picW * 0.95 }]}>
+          <View style={[s.picFrame, { width: 140, height: 130 }]}>
             {renaming || greeting
-              ? <PetSprite petKey={petKey} w={picW * 0.8} h={picW * 0.8} />
-              : <OnGrass petKey={petKey} winW={picW} w={picW * 0.66} h={picW * 0.7} />}
+              ? <PetSprite petKey={petKey} w={110} h={110} />
+              : <OnGrass petKey={petKey} winW={picW} w={84} h={88} />}
           </View>
           <View style={{ flex: 1 }}>
             <Text numberOfLines={1} style={s.petName}>{display}</Text>
@@ -167,7 +167,7 @@ export function AdoptModal({ petKey, onClose, finder }) {
 
 const s = StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(20,12,0,0.55)', alignItems: 'center', justifyContent: 'center', zIndex: 200 },
-  panel: { backgroundColor: '#f3e0b6', borderWidth: 4, borderColor: '#8a5a2a', borderRadius: 18, padding: 14, gap: 10 },
+  panel: { backgroundColor: '#f3e0b6', borderWidth: 4, borderColor: '#8a5a2a', borderRadius: 18, padding: 12, gap: 10 },
   headRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   title: { fontFamily: HEAD, fontSize: 22, fontWeight: 'bold', color: '#4a2a10', flex: 1 },
   topRight: { position: 'absolute', right: 12, top: 10, zIndex: 5, flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -175,14 +175,14 @@ const s = StyleSheet.create({
   detailRow: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#d9bd86', paddingVertical: 2 },
   detailKey: { fontFamily: HEAD, fontSize: 14, color: '#7a5030' },
   detailVal: { fontFamily: HEAD, fontSize: 14, color: '#4a2a10', fontWeight: 'bold' },
-  picFrame: { alignItems: 'center', justifyContent: 'center' },
-  petName: { fontFamily: HEAD, fontSize: 28, fontWeight: 'bold', color: '#4a2a10' },
+  picFrame: { borderRadius: 14, backgroundColor: '#e8cf9a', borderWidth: 2, borderColor: '#b98a4e', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  petName: { fontFamily: HEAD, fontSize: 22, fontWeight: 'bold', color: '#4a2a10' },
   breed: { fontFamily: HEAD, fontSize: 14, color: '#7a5030' },
-  body: { fontFamily: HEAD, fontSize: 15, color: '#6a4524' },
+  body: { fontFamily: HEAD, fontSize: 15, color: '#6a4524', marginBottom: 4 },
   perkRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },
   perkTitle: { fontFamily: HEAD, fontSize: 15, fontWeight: 'bold', color: GREEN },
   perkDesc: { fontFamily: HEAD, fontSize: 13, color: '#6a4524' },
-  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
+  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
   price: { fontFamily: HEAD, fontSize: 24, fontWeight: 'bold', color: '#4a2a10' },
   footRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10 },
   choice: { borderRadius: 10, borderWidth: 2, borderColor: '#b98a4e', backgroundColor: '#ecd9a6', paddingHorizontal: 12, paddingVertical: 5 },
