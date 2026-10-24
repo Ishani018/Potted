@@ -93,7 +93,7 @@ export default function ApartmentScreen({ navigation, route }) {
     setSelected(item.id);
   };
 
-  const tabItems = Object.values(DECOR).filter((d) => DECOR_TABS.find((t) => t.id === tab).match(d) && (d.kind !== 'wall' || ownedArt.includes(d.painting)));
+  const tabItems = Object.values(DECOR).filter((d) => DECOR_TABS.find((t) => t.id === tab).match(d) && (d.kind !== 'wall' || d.furniture || ownedArt.includes(d.painting)));
 
   return (
     <View style={styles.root} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>

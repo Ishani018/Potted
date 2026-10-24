@@ -21,12 +21,18 @@ Object.keys(PAINTING_IMAGES).forEach((k) => { DECOR['w_' + k] = { key: 'w_' + k,
 const M = {
   sofa: 0.95, armchair: 1.05, coffeetable: 0.62, console: 0.85, lamp: 1.7, sidetable: 0.6, tvstand: 0.6, bookshelf: 2, cabinet: 1.9,
   wardrobe: 2.1, dresser: 1.25, desk: 0.9, chair: 1, roundtable: 0.75, bed: 1.25, nightstand: 0.65, vanity: 1.6, mirror: 1.8,
-  bigdresser: 1, coatrack: 1.8, sink: 1, stove: 1, potrack: 0.6, hutch: 1.9, diningtable: 0.8, fridge: 1.8, bench: 0.5, plant: 0.7,
+  bigdresser: 1, fireplace: 1.35, window: 1.35, ottoman: 0.55, coatrack: 1.8, sink: 1, stove: 1, potrack: 0.6, hutch: 1.9, diningtable: 0.8, fridge: 1.8, bench: 0.5, plant: 0.7,
 };
 const T = {
   g: ['sofa', 'armchair', 'armchair', 'coffeetable', 'console', 'lamp', 'sidetable', 'tvstand', 'bookshelf', 'cabinet', 'wardrobe', 'dresser', 'desk', 'chair', 'roundtable', 'chair', 'bed', 'bed', 'nightstand', 'nightstand', 'vanity', 'mirror', 'bigdresser', 'coatrack', 'sink', 'stove', 'potrack', 'console', 'hutch', 'diningtable', 'chair', 'chair', 'fridge'],
   pr: ['sofa', 'armchair', 'coffeetable', 'bookshelf', 'lamp', 'sidetable', 'tvstand', 'mirror', 'bed', 'wardrobe', 'vanity', 'desk', 'cabinet', 'dresser', 'rug', 'sink', 'stove', 'potrack', 'fridge', 'diningtable', 'chair', 'bench', 'console', 'coatrack', 'coatrack', 'plant',
        'sofa', 'armchair', 'coffeetable', 'bookshelf', 'lamp', 'sidetable', 'tvstand', 'mirror', 'bed', 'nightstand', 'wardrobe', 'vanity', 'rug', 'cabinet', 'bigdresser', 'rug', 'sink', 'stove', 'potrack', 'fridge', 'chair', 'bench', 'console', 'plant'],
+  // sharper sheets (gb/gl green, rl/rb red, pp pink); where one exists, the old piece of the same colour and type is hidden
+  gb: ['bed', 'dresser', 'armchair', 'sidetable', 'cabinet', 'lamp', 'ottoman', 'tvstand', 'rug'],
+  gl: ['sofa', 'armchair', 'coffeetable', 'bookshelf', 'lamp', 'sidetable', 'tvstand', 'rug'],
+  rl: ['fireplace', 'window', 'armchair', 'hutch', 'armchair', 'ottoman', 'coffeetable', 'plant', 'rug', 'tvstand'],
+  rb: ['bed', 'dresser', 'vanity', 'wardrobe', 'ottoman', 'lamp', 'nightstand', 'bench', 'rug'],
+  pp: ['sofa', 'armchair', 'coffeetable', 'bookshelf', 'lamp', 'sidetable', 'tvstand', 'rug'],
   pk: [null, null, null, null, null, null, null, null, 'sofa', 'armchair', 'coffeetable', 'bookshelf', 'lamp', 'sidetable', 'tvstand', 'rug'],
 };
 // pr numbering skips 39 and 42 (pieces that stuck together), so its list above runs 1-38 then 40-41 then 43-50
@@ -36,11 +42,20 @@ const typeOf = (key) => {
   if (pre === 'pr') return T.pr[PR_NUMS.indexOf(n)];
   return T[pre][n - 1];
 };
+const NEW_SETS = { gb: 'green', gl: 'green', rl: 'red', rb: 'red', pp: 'pink' };
+const setOf = (f) => (NEW_SETS[f.key.split('_')[0]] || (f.key.startsWith('g_') ? 'green' : f.key.startsWith('pk_') ? 'pink' : Number(f.key.split('_')[1]) <= 26 ? 'purple' : 'red'));
+const isNew = (f) => !!NEW_SETS[f.key.split('_')[0]];
+const covered = new Set();   // `${set}:${type}` that a sharper piece already provides
+FURNITURE_ITEMS.filter(isNew).forEach((f) => covered.add(`${setOf(f)}:${typeOf(f.key)}`));
 FURNITURE_ITEMS.forEach((f) => {
-  const n = Number(f.key.split('_')[1]);
-  const set = f.key.startsWith('g_') ? 'green' : f.key.startsWith('pk_') ? 'pink' : n <= 26 ? 'purple' : 'red';
+  const set = setOf(f);
   const type = typeOf(f.key);
-  DECOR[f.key] = { key: f.key, kind: type === 'potrack' ? 'wall' : 'floor', mount: type === 'potrack' ? 'wall' : undefined, img: f.img, furniture: true, set, rug: f.rug, aspect: f.w / f.h, size: f.rug ? f.h * 0.0011 * 1.9 : (M[type] ?? 0.9) * 0.25 };
+  const wallPiece = type === 'potrack' || type === 'window';
+  DECOR[f.key] = {
+    key: f.key, kind: wallPiece ? 'wall' : 'floor', mount: wallPiece ? 'wall' : undefined, img: f.img, furniture: true, set, rug: f.rug, aspect: f.w / f.h,
+    size: f.rug ? f.h * 0.0011 * 1.9 * (isNew(f) ? 0.58 : 1) : (M[type] ?? 0.9) * 0.25,
+    hidden: !isNew(f) && covered.has(`${set}:${type}`) ? true : undefined,
+  };
 });
 
 const VASE_IMG = {
@@ -88,10 +103,10 @@ export const standOf = (item) => (item.stand === 'none' ? 'none' : (STAND_ORDER.
 
 // tabs: each furniture colour set, then plants, hanging plants and art
 export const DECOR_TABS = [
-  { id: 'green',  label: 'GREEN',   match: (d) => d.furniture && d.set === 'green' },
-  { id: 'purple', label: 'PURPLE',  match: (d) => d.furniture && d.set === 'purple' },
-  { id: 'red',    label: 'RED',     match: (d) => d.furniture && d.set === 'red' },
-  { id: 'pink',   label: 'CREAM',   match: (d) => d.furniture && d.set === 'pink' },
+  { id: 'green',  label: 'GREEN',   match: (d) => d.furniture && d.set === 'green' && !d.hidden },
+  { id: 'purple', label: 'PURPLE',  match: (d) => d.furniture && d.set === 'purple' && !d.hidden },
+  { id: 'red',    label: 'RED',     match: (d) => d.furniture && d.set === 'red' && !d.hidden },
+  { id: 'pink',   label: 'CREAM',   match: (d) => d.furniture && d.set === 'pink' && !d.hidden },
   { id: 'turn',   label: 'TURN',    match: (d) => d.furniture && d.set === 'turn' && !d.hidden },
   { id: 'vase',   label: 'VASES',   match: (d) => d.furniture && d.set === 'vase' },
   { id: 'floor',  label: 'PLANTS',  match: (d) => d.kind === 'floor' && !d.furniture },
