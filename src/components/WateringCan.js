@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Image, StyleSheet } from 'react-native';
+import { Image, StyleSheet, View, Animated as RNAnimated, Easing } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated';
 import { CAN_IMAGES } from '../engine/assets';
@@ -12,9 +12,38 @@ import { projectSize } from '../engine/project';
 // BASE_CAN_SIZE: default size in base coords (1376×768). Used for all rooms
 // unless overridden by the baseCanSize prop.
 // Room 2 can override this by passing baseCanSize={150} (for example).
-const BASE_CAN_SIZE = 200;  // ← CHANGE THIS to resize can globally
+const BASE_CAN_SIZE = 135;  // ← CHANGE THIS to resize can globally
 // ────────────────────────────────────────────────────────────────────────────
 const WATER_RADIUS = 100;
+
+// Water falling from the spout while the can is tipped. (x, y) = the spout's centre inside the can's box.
+function Droplets({ x, y, fall, size }) {
+  const drops = useRef([0, 1, 2, 3, 4, 5].map(() => new RNAnimated.Value(0))).current;
+  React.useEffect(() => {
+    const loops = drops.map((v, i) => {
+      const l = RNAnimated.loop(RNAnimated.sequence([
+        RNAnimated.delay(i * 110),
+        RNAnimated.timing(v, { toValue: 1, duration: 650, easing: Easing.in(Easing.quad), useNativeDriver: false }),
+        RNAnimated.timing(v, { toValue: 0, duration: 0, useNativeDriver: false }),
+      ]));
+      l.start();
+      return l;
+    });
+    return () => loops.forEach((l) => l.stop());
+  }, [drops]);
+  return (
+    <View pointerEvents="none" style={{ position: 'absolute', left: x, top: y, width: 1, height: 1 }}>
+      {drops.map((v, i) => (
+        <RNAnimated.View key={i} style={{
+          position: 'absolute', left: -size * 0.5 + (i % 3 - 1) * size * 1.5, top: 0, width: size, height: size * 1.6, borderRadius: size,
+          backgroundColor: '#7cc4f2', borderWidth: 1, borderColor: '#3d8ac4',
+          opacity: v.interpolate({ inputRange: [0, 0.1, 0.85, 1], outputRange: [0, 1, 1, 0] }),
+          transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, fall + (i % 2) * fall * 0.15] }) }],
+        }} />
+      ))}
+    </View>
+  );
+}
 
 export default function WateringCan({ position, plantedSnapPoints = [], onWater, onDragStart, onDragEnd, baseCanSize }) {
   const { width: sw, height: sh } = useLayout();
@@ -116,6 +145,7 @@ export default function WateringCan({ position, plantedSnapPoints = [], onWater,
         ]}
       >
         <Image source={src} style={{ width: size, height: size }} resizeMode="contain" />
+        {isDragging && <Droplets x={size * 0.5 - size * 0.463 + size * 0.17} y={size * 0.5} fall={size * 0.85} size={Math.max(6, size * 0.075)} />}
       </Animated.View>
     </GestureDetector>
   );

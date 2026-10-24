@@ -222,7 +222,7 @@ export default function Room2Screen({ navigation }) {
           onWater={handleWater}
           onDragStart={() => { canDragging.current = true; }}
           onDragEnd={() => { canDragging.current = false; }}
-          baseCanSize={180}
+          baseCanSize={125}
         />
 
         <CoinHUD />

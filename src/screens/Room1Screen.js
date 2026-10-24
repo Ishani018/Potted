@@ -180,7 +180,7 @@ export default function Room1Screen({ navigation }) {
           onWater={handleWater}
           onDragStart={() => { canDragging.current = true; }}
           onDragEnd={() => { canDragging.current = false; }}
-          baseCanSize={200}
+          baseCanSize={140}
         />
 
         {/* Standard HUD — settings (TL) + map (TR) + inventory (BL) */}
