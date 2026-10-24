@@ -613,8 +613,8 @@ export const INITIAL_PLAYER_STATE = {
   achievements: [],
   harvestCount: 0,
   // flowerKey → count, harvested flowers awaiting trade for coins.
-  // TEMP: seeded with test flowers so trading is testable — clear to {} before release.
-  harvestedFlowers: { daisy: 8, rose: 5, marigold: 6, jasmine: 4, peony: 3, poppy: 7, hydrenga: 5, snapdragon: 6 },
+  // TEMP: seeded with test flowers (10 of each) so orders and trading are testable — the owner wants these kept for now.
+  harvestedFlowers: { daisy: 10, snapdragon: 10, poppy: 10, marigold: 10, peony: 10, hydrenga: 10, rose: 10, stringofpearls: 10, Philodendron: 10, jasmine: 10, petunia: 10, Bougainvillea: 10 },   // KEEP for testing
   ownedPaintings: [],
   apartmentItems: {},  // aptId → [{ id, key, kind, x, y }] decor placed in each flat (x,y are fractions of the room picture)
   favourites: [],            // nursery item ids you have hearted, e.g. 'p:12', 's:rose'
