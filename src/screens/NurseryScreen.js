@@ -68,7 +68,7 @@ const HANG_SLOTS = [
   { id: 'h:basket', box: [1080, 236, 1175, 352] },
   { id: 'h:chain', box: [1170, 236, 1268, 344] },
 ];
-const CAN_SPOT = [600, 735];
+const CAN_SPOT = [1318, 700];
 const BAG = { w: 88, h: 114 };
 const REGISTER = { x0: 1360, y0: 690, x1: 1610, y1: 890 };
 const LCD = { x: 1488, y: 755 };
@@ -80,7 +80,7 @@ function describe(id) {
   if (kind === 's') return { name: SEED_INFO[key].name, price: SEED_INFO[key].price, src: SEED_IMAGES[key], icon: SEED_ICONS[key], w: BAG.w, h: BAG.h };
   if (kind === 'p') { const m = PPOT_META[key]; return { name: PPOT_NAME[key], price: PPOT_PRICE[key], src: m.src, w: 80, h: 80 * m.h / m.w }; }
   if (kind === 'h') { const m = HPOT_META[key]; return { name: HPOT_INFO[key].name, price: HPOT_INFO[key].price, src: m.src, w: 60, h: 60 * m.h / m.w }; }
-  return { name: 'The red watering can', price: CAN_INFO.red.price, src: CAN_IMAGES.red.up.src, w: 130, h: 118 };
+  return { name: 'The red watering can', price: CAN_INFO.red.price, src: CAN_IMAGES.red.up.src, w: 105, h: 94 };
 }
 
 // One thing you can pick up and drag (on a shelf or on the counter). at = feet position; k = screen px per picture px.
