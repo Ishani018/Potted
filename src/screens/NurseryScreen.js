@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Image, ScrollView, Animated, PanResponder, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { SHOP_BTN, NURSERY_BG, SEED_ICONS, SEED_IMAGES, UI_IMAGES, PPOT_META, PPOT_IDS, PPLANT_IMAGES, HPOT_META, HPOT_ORDER, CAN_IMAGES, SET_UI } from '../engine/assets';
+import { playSfx } from '../engine/audio';
+import { SHOP_BTN, SFX, NURSERY_BG, SEED_ICONS, SEED_IMAGES, UI_IMAGES, PPOT_META, PPOT_IDS, PPLANT_IMAGES, HPOT_META, HPOT_ORDER, CAN_IMAGES, SET_UI } from '../engine/assets';
 import { POTTED_FLOWERS, HANGING_PLANTS, seedType, FLOWER_GROWTH, formatDuration, HPOT_INFO, PPOT_PRICE, PPOT_NAME, CAN_INFO } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
@@ -120,7 +121,7 @@ function DragItem({ it, at, k, onDrop, onTap, z, mul = 1, ghost = false }) {
 // A button drawn with the UI sheet's blank plate and a label on top.
 function PlateBtn({ tone = 'btnCream', label, onPress, w = 150, h = 40, style, color = '#4a2a10', fs = 15 }) {
   return (
-    <TouchableOpacity activeOpacity={0.8} onPress={onPress} style={[{ width: w, height: h }, style]}>
+    <TouchableOpacity activeOpacity={0.8} onPress={() => { playSfx(SFX.tap, 0.8); onPress && onPress(); }} style={[{ width: w, height: h }, style]}>
       <Image source={SET_UI[tone].src} resizeMode="stretch" style={{ position: 'absolute', left: 0, top: 0, width: w, height: h }} />
       <View style={{ width: w, height: h, alignItems: 'center', justifyContent: 'center' }}>
         <Text numberOfLines={1} style={{ fontFamily: SERIF, fontSize: fs, color, fontWeight: 'bold' }}>{label}</Text>
@@ -170,12 +171,13 @@ export default function NurseryScreen({ navigation }) {
     if (seeds > free) { notify({ icon: UI_IMAGES.inventorybtn, title: 'Bag is full', subtitle: 'Plant some seeds to make room.' }); return; }
     if (basket.length >= MAX_BASKET) { notify({ title: 'Your cart is full', subtitle: 'Pay for these first.' }); return; }
     setBasket((b) => [...b, id]);
+    playSfx(SFX.add, 0.9);
     notify({ icon: d.icon || d.src, title: `Added ${d.name}`, subtitle: `${d.price} coins. Tap the cart to pay.` });
   };
 
   const checkout = () => {
     if (basket.length === 0) { notify({ icon: UI_IMAGES.goldcoins, title: 'Your cart is empty', subtitle: 'Tap a bag or a pot to add it.' }); return; }
-    if (coins < total) { notify({ icon: UI_IMAGES.goldcoins, title: 'Not enough coins', subtitle: `You need ${total - coins} more for these.` }); return; }
+    if (coins < total) { playSfx(SFX.nope, 0.8); notify({ icon: UI_IMAGES.goldcoins, title: 'Not enough coins', subtitle: `You need ${total - coins} more for these.` }); return; }
     basket.forEach((id) => {
       const [kind, key] = id.split(':');
       if (kind === 's') dispatch({ type: 'BUY_SEED', flowerKey: key, price: SEED_INFO[key].price });
@@ -188,6 +190,7 @@ export default function NurseryScreen({ navigation }) {
       const d = describe(id), at = lines.find((l) => l.id === id);
       if (at) { at.qty += 1; } else lines.push({ id, src: d.icon || d.src, name: d.name, price: d.price, qty: 1 });
     });
+    playSfx(SFX.register, 0.9); setTimeout(() => playSfx(SFX.coin, 0.7), 350);
     setReceipt({ lines, total, left: coins - total });
     setCartOpen(false);
     setBasket([]);

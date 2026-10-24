@@ -514,6 +514,12 @@ export const GOOSE2 = {
   49: { src: require('../../assets/goose2/g2_49.png'), w: 105, h: 151 },
 };
 export const GOOSE_HONK = require('../../assets/sfx/goose.mp3');
+// Small UI / shop sounds, made by tools/make_sfx.py
+export const SFX = {
+  coin: require('../../assets/sfx/coin.mp3'), register: require('../../assets/sfx/register.mp3'), tap: require('../../assets/sfx/tap.mp3'),
+  add: require('../../assets/sfx/add.mp3'), pop: require('../../assets/sfx/pop.mp3'), water: require('../../assets/sfx/water.mp3'),
+  nope: require('../../assets/sfx/nope.mp3'), whoosh: require('../../assets/sfx/whoosh.mp3'),
+};
 export const GOOSE_PICKUP = require('../../assets/sfx/goose_pickup.mp3');   // the loud honk when you pick the goose up
 // Speech bubbles (picture + pixel size)
 export const BUBBLE_WIDE = { src: require('../../assets/ui_sheet/bb_08.png'), w: 401, h: 166 };

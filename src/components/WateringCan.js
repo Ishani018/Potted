@@ -2,7 +2,8 @@ import React, { useRef } from 'react';
 import { Image, StyleSheet } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated';
-import { CAN_IMAGES } from '../engine/assets';
+import { CAN_IMAGES, SFX } from '../engine/assets';
+import { playSfx } from '../engine/audio';
 import { CAN_INFO } from '../constants/gameData';
 import { useGame } from '../context/GameContext';
 import { useLayout } from '../context/LayoutContext';
@@ -90,8 +91,10 @@ export default function WateringCan({ position, plantedSnapPoints = [], onWater,
   const [isDragging, setIsDragging] = React.useState(false);
   React.useEffect(() => {
     if (!pouring) return undefined;
+    playSfx(SFX.water, 0.8);
     const t = setInterval(() => setBeat((b) => b + 1), 170);
-    return () => clearInterval(t);
+    const w = setInterval(() => playSfx(SFX.water, 0.8), 850);
+    return () => { clearInterval(t); clearInterval(w); };
   }, [pouring]);
   const set = CAN_IMAGES[canKey];
   const frame = !isDragging ? set.up : pouring ? set.pour[beat % set.pour.length] : set.mid;

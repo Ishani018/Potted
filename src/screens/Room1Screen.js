@@ -3,6 +3,8 @@ import { View, Image, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import { useLayout } from '../context/LayoutContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { playSfx } from '../engine/audio';
+import { SFX } from '../engine/assets';
 import { useGame } from '../context/GameContext';
 import { ROOM_BGS, UI_IMAGES, POTTED_PLANT_IMAGES, PPOT_META, SEED_IMAGES } from '../engine/assets';
 import { getSnapPoints, WATERING_CAN_POSITIONS, POT_SOURCE_POSITIONS, scalePoint } from '../engine/snapPoints';
@@ -71,7 +73,7 @@ export default function Room1Screen({ navigation }) {
         showToast(slotObj.type === 'hanging' ? 'Only hanging plants grow here' : 'Only shelf flowers grow here');
         return;
       }
-      dispatch({ type: 'PLANT_HELD', slotId });
+      dispatch({ type: 'PLANT_HELD', slotId }); playSfx(SFX.pop, 0.9);
     } else {
       setPopup({ slot: slotObj, position });
     }
