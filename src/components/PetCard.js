@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, TextInput, StyleSheet, Platform } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { useLayout } from '../context/LayoutContext';
-import { PETCARD_IMAGES, PETCARD_GRASS, PERK_ICONS } from '../engine/assets';
+import { PETCARD_GRASS, PERK_ICONS, SET_UI, UI_IMAGES } from '../engine/assets';
 import { PETS, ROOM_NAMES, CUSTOMERS } from '../constants/gameData';
 import Portrait from './Portrait';
 import PetSprite from './PetSprite';
@@ -47,7 +47,7 @@ function OnGrass({ petKey, w, h, winW }) {
 
 export function AdoptModal({ petKey, onClose, finder }) {
   const { state, dispatch } = useGame();
-  const { height: frameH } = useLayout();
+  const { height: frameH, width: frameW } = useLayout();
   const pet = PETS[petKey];
   const owned = (state.player.ownedPets ?? []).includes(petKey);
   const placedRoom = state.player.petPlacements?.[petKey] ?? null;   // 'all' | room number (older saves) | null
@@ -73,157 +73,125 @@ export function AdoptModal({ petKey, onClose, finder }) {
   const manage = owned && !greeting && !renaming;
   const showCoin = !greeting && !renaming;           // coin art only on price/refund views
 
-  const W = Math.min(430, Math.max(260, (frameH - 6) * (IMG_W / IMG_H)));
-  const H = W * (IMG_H / IMG_W);
-  const R = (r) => ({ position: 'absolute', left: W * r.l, top: H * r.t, width: W * r.w, height: H * r.h });
-  const fz = (n) => Math.max(7, Math.round(W * n));
-
-  const bannerText = greeting ? 'Welcome Home!' : renaming ? 'Pick a New Name' : owned ? 'Your Pet' : 'Meet Your New Friend';
-  const display = (savedName ?? pet.name).toUpperCase();
+  const W = Math.min(560, Math.max(300, (frameW || 800) * 0.66));
+  const picW = Math.min(W * 0.34, Math.max(110, (frameH || 480) * 0.36));
+  const bannerText = greeting ? 'Welcome home!' : renaming ? 'Pick a new name' : owned ? 'Your pet' : 'Meet your new friend';
+  const display = savedName ?? pet.name;
 
   // bottom row actions
   let left = null, right = null;
   if (greeting) {
-    left = { label: 'KEEP NAME', onPress: () => setStep(null), tone: 'tan' };
-    right = { label: 'RENAME', onPress: () => { setName(pet.name); setStep('rename'); } };
+    left = { label: 'Keep name', onPress: () => setStep(null) };
+    right = { label: 'Rename', onPress: () => { setName(pet.name); setStep('rename'); } };
   } else if (renaming) {
-    left = { label: 'CANCEL', onPress: () => setStep(null), tone: 'tan' };
-    right = { label: 'SAVE', onPress: saveName };
+    left = { label: 'Cancel', onPress: () => setStep(null) };
+    right = { label: 'Save', onPress: saveName };
   } else if (owned) {
-    left = { label: `+${refund}`, sub: 'REHOME', onPress: handleGiveUp, tone: 'coin' };
-    right = { label: 'RENAME', onPress: () => { setName(savedName ?? pet.name); setStep('rename'); } };
+    left = { label: `Rehome  +${refund}`, onPress: handleGiveUp };
+    right = { label: 'Rename', onPress: () => { setName(savedName ?? pet.name); setStep('rename'); } };
   } else {
-    left = { label: String(pet.price), tone: 'coin', static: true };
-    right = { label: canAfford ? (isPair ? 'ADOPT PAIR' : 'ADOPT') : `NEED ${pet.price - state.player.coins} MORE`, onPress: canAfford ? handleAdopt : undefined, disabled: !canAfford };
+    right = { label: canAfford ? (isPair ? 'Adopt the pair' : 'Adopt') : `Need ${pet.price - state.player.coins} more`, onPress: canAfford ? handleAdopt : undefined, disabled: !canAfford };
   }
 
-  const Slot = ({ r, onPress, children, style }) => (
-    <TouchableOpacity activeOpacity={onPress ? 0.8 : 1} onPress={onPress} disabled={!onPress} style={[R(r), { alignItems: 'center', justifyContent: 'center' }, style]}>
-      {children}
+  const Btn = ({ b, green }) => (
+    <TouchableOpacity activeOpacity={0.8} disabled={!b.onPress} onPress={b.onPress} style={{ width: Math.min(170, W * 0.36), height: 42, opacity: b.disabled ? 0.55 : 1 }}>
+      <Image source={SET_UI[green ? 'btnGreen' : 'btnCream'].src} resizeMode="stretch" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, width: '100%', height: '100%' }} />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <Text numberOfLines={1} style={{ fontFamily: HEAD, fontSize: 15, fontWeight: 'bold', color: green ? '#fff3d0' : INK }}>{b.label}</Text>
+      </View>
     </TouchableOpacity>
   );
 
-  const winW = W * F.window.w, winH = H * F.window.h;
-
   return (
     <TouchableOpacity style={s.overlay} activeOpacity={1} onPress={onClose}>
-      <TouchableOpacity activeOpacity={1} onPress={() => {}} style={{ width: W, height: H }}>
-        <Image source={showCoin ? PETCARD_IMAGES.coin : PETCARD_IMAGES.nocoin} style={{ position: 'absolute', left: 0, top: 0, width: W, height: H }} resizeMode="stretch" />
-
-        {/* banner title */}
-        <View pointerEvents="none" style={[R(F.banner), { alignItems: 'center', justifyContent: 'center' }]}>
-          <Text numberOfLines={1} style={[pixelText(fz(bannerText.length > 16 ? 0.034 : 0.038), '#4a2a10'), { fontWeight: 'bold' }]}>{bannerText}</Text>
+      <TouchableOpacity activeOpacity={1} onPress={() => {}} style={[s.panel, { width: W }]}>
+        <View style={s.headRow}>
+          <Text style={s.title} numberOfLines={1}>{bannerText}</Text>
+          <TouchableOpacity onPress={onClose} activeOpacity={0.8}>
+            <Image source={SET_UI.close.src} style={{ width: 32, height: 31 }} resizeMode="contain" />
+          </TouchableOpacity>
         </View>
 
-        {/* painted red X */}
-        <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={R(F.close)} />
-
-        {/* ── window ── */}
-        <View style={[R(F.window), { paddingHorizontal: winW * 0.03, paddingTop: winH * 0.03 }]} pointerEvents="box-none">
-          {renaming ? (
-            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: winH * 0.06 }}>
-              <View style={{ width: winW * 0.45, height: winH * 0.45 }}>
-                <PetSprite petKey={petKey} w={winW * 0.45} h={winH * 0.45} />
-              </View>
-              <TextInput
-                value={name}
-                onChangeText={(t) => setName(t.slice(0, 12))}
-                maxLength={12}
-                autoFocus
-                selectTextOnFocus
-                placeholder={pet.name}
-                placeholderTextColor="#b8793a"
-                onSubmitEditing={saveName}
-                style={[s.input, { fontSize: fz(0.034), width: winW * 0.75 }]}
-              />
-            </View>
-          ) : greeting ? (
-            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: winH * 0.05 }}>
-              <View style={{ width: winW * 0.5, height: winH * 0.5 }}>
-                <PetSprite petKey={petKey} w={winW * 0.5} h={winH * 0.5} />
-              </View>
-              <Text style={[s.body, { fontSize: fz(0.036), lineHeight: fz(0.05), textAlign: 'center' }]}>
-                You adopted {pet.name}! They already have a name, but you can give them a new one if you like.
-              </Text>
-            </View>
-          ) : manage ? (
-            <View style={{ flex: 1, alignItems: 'center' }}>
-              <OnGrass petKey={petKey} winW={winW} w={winW * 0.36} h={winH * 0.4} />
-              {/* two big choices, no cramped room picker */}
-              <View style={{ flexDirection: 'row', gap: winW * 0.04, marginTop: winH * 0.03, alignSelf: 'stretch', paddingHorizontal: winW * 0.04 }}>
-                {[['all', 'EVERY ROOM'], [null, 'TUCK AWAY']].map(([val, label]) => {
-                  const on = (placedRoom === 'all' || (typeof placedRoom === 'number')) ? val === 'all' : val === null;
-                  return (
-                    <TouchableOpacity key={label} activeOpacity={0.85} onPress={() => handlePlace(val)} style={[s.choice, { flex: 1, paddingVertical: winH * 0.03 }, on && s.choiceOn]}>
-                      <Text style={pixelText(fz(0.028), on ? '#fff' : INK)}>{label}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-          ) : (
-            <View style={{ flex: 1, alignItems: 'center' }}>
-              <OnGrass petKey={petKey} winW={winW} w={winW * 0.5} h={winH * 0.72} />
-            </View>
-          )}
-        </View>
-
-        {/* who found this stray: a small round portrait in the corner of the window, so the pet stays the focus */}
-        {finder && CUSTOMERS[finder] && (
-          <View pointerEvents="none" style={{ position: 'absolute', left: W * 0.085, top: H * 0.155, flexDirection: 'row', alignItems: 'center', gap: W * 0.012 }}>
-            <View style={{ width: W * 0.105, height: W * 0.105, borderRadius: W, overflow: 'hidden', borderWidth: 2, borderColor: '#b8793a', backgroundColor: '#f6e6c4' }}>
-              <Portrait customerKey={finder} size={Math.round(W * 0.105)} bare />
-            </View>
+        <View style={{ flexDirection: 'row', gap: 14, alignItems: 'center' }}>
+          <View style={[s.picFrame, { width: picW, height: picW * 0.95 }]}>
+            {renaming || greeting
+              ? <PetSprite petKey={petKey} w={picW * 0.7} h={picW * 0.7} />
+              : <OnGrass petKey={petKey} winW={picW} w={picW * 0.58} h={picW * 0.62} />}
           </View>
-        )}
-
-        {/* what the pet does, in the painted green strip */}
-        {pet.effect && !renaming && (
-          <View pointerEvents="none" style={[R(F.perk), { flexDirection: 'row', alignItems: 'center', paddingHorizontal: W * 0.025, gap: W * 0.02 }]}>
-            <Image source={PERK_ICONS[petKey]} style={{ width: W * 0.1, height: W * 0.095 }} resizeMode="contain" />
-            <View style={{ flex: 1 }}>
-              <Text style={[s.perkTitle, { fontSize: fz(0.034) }]} numberOfLines={1}>{pet.effect.title}</Text>
-              <Text style={[s.body, { fontSize: fz(0.027), lineHeight: fz(0.034) }]} numberOfLines={2}>{pet.effect.desc}</Text>
+          <View style={{ flex: 1 }}>
+            <Text numberOfLines={1} style={s.petName}>{display}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+              <Text style={s.breed}>{pet.breed}{savedName && savedName !== pet.name ? `  ·  ${pet.name}` : ''}</Text>
+              {finder && CUSTOMERS[finder] ? (
+                <View style={{ width: 24, height: 24, borderRadius: 12, overflow: 'hidden', borderWidth: 2, borderColor: '#b98a4e', backgroundColor: '#f6e6c4' }}>
+                  <Portrait customerKey={finder} size={24} bare />
+                </View>
+              ) : null}
             </View>
-          </View>
-        )}
 
-        {/* name plate */}
-        <View pointerEvents="none" style={[R(F.plate), { alignItems: 'center', justifyContent: 'center' }]}>
-          <Text numberOfLines={1} style={pixelText(fz(0.042), INK)}>{display}</Text>
-          <Text style={[pixelText(fz(0.02), SOFT), { marginTop: 3 }]}>
-            {'- '}{pet.breed.toUpperCase()}{savedName ? ` / ${pet.name.toUpperCase()}` : ''}{' -'}
-          </Text>
+            {renaming ? (
+              <TextInput value={name} onChangeText={(t) => setName(t.slice(0, 12))} maxLength={12} autoFocus selectTextOnFocus placeholder={pet.name}
+                placeholderTextColor="#b8793a" onSubmitEditing={saveName} style={s.input} />
+            ) : greeting ? (
+              <Text style={s.body}>You adopted {pet.name}! They already have a name, but you can give them a new one if you like.</Text>
+            ) : (
+              <>
+                {pet.effect ? (
+                  <View style={s.perkRow}>
+                    <Image source={PERK_ICONS[petKey]} style={{ width: 34, height: 32 }} resizeMode="contain" />
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.perkTitle} numberOfLines={1}>{pet.effect.title}</Text>
+                      <Text style={s.perkDesc} numberOfLines={2}>{pet.effect.desc}</Text>
+                    </View>
+                  </View>
+                ) : null}
+                {manage ? (
+                  <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
+                    {[['all', 'Every room'], [null, 'Tuck away']].map(([val, label]) => {
+                      const on = (placedRoom === 'all' || (typeof placedRoom === 'number')) ? val === 'all' : val === null;
+                      return (
+                        <TouchableOpacity key={label} activeOpacity={0.85} onPress={() => handlePlace(val)} style={[s.choice, on && s.choiceOn]}>
+                          <Text style={{ fontFamily: HEAD, fontSize: 14, fontWeight: 'bold', color: on ? '#fff3d0' : INK }}>{label}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                ) : (
+                  <View style={s.priceRow}>
+                    <Image source={UI_IMAGES.goldcoins} style={{ width: 26, height: 26 }} resizeMode="contain" />
+                    <Text style={s.price}>{pet.price}</Text>
+                  </View>
+                )}
+              </>
+            )}
+          </View>
         </View>
 
-        {/* bottom-left (coin box) */}
-        <Slot r={F.coinBox} onPress={left.onPress} style={showCoin ? { paddingLeft: W * 0.16 } : null}>
-          <Text style={[pixelText(fz(left.static ? 0.05 : left.sub ? 0.036 : 0.026), INK), { textShadowColor: 'transparent' }]} numberOfLines={1}>{left.label}</Text>
-          {left.sub && <Text style={[pixelText(fz(0.02), '#8a2a1a'), { textShadowColor: 'transparent', marginTop: 2 }]}>{left.sub}</Text>}
-        </Slot>
-
-        {/* bottom-right (green button) */}
-        <Slot r={F.button} onPress={right.onPress} style={[{ paddingLeft: W * 0.1 }, right.disabled ? { opacity: 0.6 } : null]}>
-          <Text style={pixelText(fz(0.034))} numberOfLines={1}>{right.label}</Text>
-        </Slot>
+        <View style={s.footRow}>
+          {left ? <Btn b={left} /> : null}
+          <Btn b={right} green />
+        </View>
       </TouchableOpacity>
     </TouchableOpacity>
   );
 }
 
 const s = StyleSheet.create({
-  overlay: {
-    ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(20,12,0,0.55)',
-    alignItems: 'center', justifyContent: 'center', zIndex: 200,
-  },
-  body: { color: INK },
-  perkTitle: { color: GREEN, fontWeight: 'bold', marginBottom: 2 },
-  thumb: { borderRadius: 4, borderWidth: 3, borderColor: 'transparent' },
-  thumbOn: { borderColor: '#3f8a35' },
-  choice: { alignItems: 'center', borderRadius: 8, borderWidth: 3, borderColor: '#c99555', backgroundColor: '#fde9b8' },
-  choiceOn: { borderColor: '#1d4a14', backgroundColor: '#3f8a35' },
-  input: {
-    textAlign: 'center', fontFamily: HEAD, color: INK, backgroundColor: '#fff6df',
-    borderWidth: 3, borderColor: '#c99555', borderRadius: 8, paddingVertical: 10, outlineStyle: 'none',
-  },
+  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(20,12,0,0.55)', alignItems: 'center', justifyContent: 'center', zIndex: 200 },
+  panel: { backgroundColor: '#f3e0b6', borderWidth: 4, borderColor: '#8a5a2a', borderRadius: 18, padding: 14, gap: 10 },
+  headRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  title: { fontFamily: HEAD, fontSize: 22, fontWeight: 'bold', color: '#4a2a10', flex: 1 },
+  picFrame: { borderRadius: 14, backgroundColor: '#e8cf9a', borderWidth: 2, borderColor: '#b98a4e', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  petName: { fontFamily: HEAD, fontSize: 26, fontWeight: 'bold', color: '#4a2a10' },
+  breed: { fontFamily: HEAD, fontSize: 14, color: '#7a5030' },
+  body: { fontFamily: HEAD, fontSize: 15, color: '#6a4524' },
+  perkRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#ecd9a6', borderRadius: 10, borderWidth: 2, borderColor: '#d9bd86', padding: 6 },
+  perkTitle: { fontFamily: HEAD, fontSize: 15, fontWeight: 'bold', color: GREEN },
+  perkDesc: { fontFamily: HEAD, fontSize: 13, color: '#6a4524' },
+  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
+  price: { fontFamily: HEAD, fontSize: 24, fontWeight: 'bold', color: '#4a2a10' },
+  footRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10 },
+  choice: { borderRadius: 10, borderWidth: 2, borderColor: '#b98a4e', backgroundColor: '#ecd9a6', paddingHorizontal: 12, paddingVertical: 5 },
+  choiceOn: { borderColor: '#2f5a22', backgroundColor: '#4f8a3a' },
+  input: { fontFamily: HEAD, fontSize: 18, color: INK, backgroundColor: '#fff6df', borderWidth: 2, borderColor: '#b98a4e', borderRadius: 10, paddingVertical: 8, paddingHorizontal: 10, outlineStyle: 'none' },
 });
