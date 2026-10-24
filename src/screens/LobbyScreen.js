@@ -16,7 +16,7 @@ const BUTLER_AT = { x: 985, feet: 640, h: 270, desk: 528 };   // a grown man beh
 const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 const LINES = [
   { pose: 'wave',    text: 'Welcome home! The flats are up the stairs.' },
-  { pose: 'pointR',  text: 'Mind the stairs, and do mind the cat.' },
+  { pose: 'pointR',  text: 'Mind the stairs, and do mind Gooseberry.' },
   { pose: 'clip',    text: 'No post for you today, I am afraid.' },
   { pose: 'offer',   text: 'Take your time. I am always here at the desk.' },
   { pose: 'tip',     text: 'Anything you need, just ask.' },

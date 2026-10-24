@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Image, Animated, Easing, PanResponder, Pressable, Platform, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { COUNTER_BG, CUSTOMER_IMAGES, CUSTOMER_POSES, TRADE_IMAGES, SEED_IMAGES, UI_IMAGES, BOOK_STAMP, MAKE_IMAGES, ORDER_ART, BOW_IMAGES, BOX_IMAGES } from '../engine/assets';
+import { SET_UI, SEED_ICONS, COUNTER_BG, CUSTOMER_IMAGES, CUSTOMER_POSES, TRADE_IMAGES, SEED_IMAGES, UI_IMAGES, BOOK_STAMP, MAKE_IMAGES, ORDER_ART, BOW_IMAGES, BOX_IMAGES } from '../engine/assets';
 import { CUSTOMERS, TRADE_FLOWERS, CUSTOMERS_PER_DAY, BOUQUET_PAPERS, RIBBON_NAMES } from '../constants/gameData';
 import { FlowerCluster, Celebration } from './BouquetScreen';
 import { bouquetPic } from '../engine/bouquetPics';
@@ -43,6 +43,32 @@ function OrderTile({ source, label, fx, bad, cluster }) {
       </View>
       <Text style={[styles.tileTxt, { marginBottom: '9%' }, bad && { color: '#b04a2a' }]} numberOfLines={1}>{label}</Text>
     </View>
+  );
+}
+
+// One line of the order: a picture in a little frame, what it is, and (for flowers) how many you have.
+function TkRow({ source, label, right, bad, cluster, fx }) {
+  return (
+    <View style={styles.tkRow}>
+      <View style={styles.tkIcon}>
+        {cluster ? <FlowerCluster keys={cluster} size={fx(30)} /> : source ? <Image source={source} style={{ width: '100%', height: '100%' }} resizeMode="contain" /> : null}
+      </View>
+      <Text style={styles.tkLabel} numberOfLines={1}>{label}</Text>
+      {right ? <Text style={[styles.tkRight2, bad && { color: '#b04a2a' }]}>{right}</Text> : null}
+    </View>
+  );
+}
+
+// A button drawn with the UI sheet's blank plates (green when you can press it, cream when not).
+function PlateBtn({ label, onPress, w, h, fs, disabled }) {
+  const tone = disabled ? 'btnCream' : 'btnGreen';
+  return (
+    <Pressable onPress={disabled ? undefined : onPress} style={{ width: w, height: h }}>
+      <Image source={SET_UI[tone].src} resizeMode="stretch" style={{ position: 'absolute', left: 0, top: 0, width: w, height: h }} />
+      <View style={{ width: w, height: h, alignItems: 'center', justifyContent: 'center' }}>
+        <Text numberOfLines={1} style={{ fontFamily: HEAD, fontSize: fs, fontWeight: 'bold', color: disabled ? '#8a7a60' : '#fff3d0' }}>{label}</Text>
+      </View>
+    </Pressable>
   );
 }
 
@@ -258,46 +284,46 @@ export default function CounterScreen({ navigation, route }) {
           <Image source={(CUSTOMER_POSES[order.customer] || {})[phase === 'happy' ? (upset ? 'angry' : 'hold') : 'think'] || CUSTOMER_IMAGES[order.customer]}
             style={{ position: 'absolute', left: 0, top: fx(20), width: fx(640), height: fx(960) }} resizeMode="contain" />
         </View>
-        <Animated.View style={[styles.bubbleWrap, { left: (sw - fx(780)) / 2, top: (sh - fx(780) * 593 / 900) / 2 - fy(8), width: fx(780), opacity: stub.interpolate({ inputRange: [0, 0.8, 1], outputRange: [1, 1, 0] }), transform: [{ translateY: stub.interpolate({ inputRange: [0, 1], outputRange: [0, sh * 0.55] }) }, { scale: stub.interpolate({ inputRange: [0, 1], outputRange: [1.28, 0.55] }) }, { rotate: stub.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-8deg'] }) }] }]}>
-          <View style={[styles.bubble, { width: fx(780), height: fx(780) * 593 / 900 }]}>
-            <Image source={ORDER_ART.card} style={styles.slip} resizeMode="stretch" />
+        <Animated.View style={[styles.bubbleWrap, { left: (sw - fx(860)) / 2, top: (sh - fx(860) * 593 / 900) / 2 - fy(8), width: fx(860), opacity: stub.interpolate({ inputRange: [0, 0.8, 1], outputRange: [1, 1, 0] }), transform: [{ translateY: stub.interpolate({ inputRange: [0, 1], outputRange: [0, sh * 0.55] }) }, { scale: stub.interpolate({ inputRange: [0, 1], outputRange: [1.28, 0.55] }) }, { rotate: stub.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-8deg'] }) }] }]}>
+          <View style={[styles.bubble, { width: fx(860), height: fx(860) * 593 / 900 }]}>
+            <View style={styles.plainCard} />
             {phase === 'happy' ? (
-              <View style={[slot(365, 120, 735, 260), styles.doneRow]}>
+              <View style={[slot(120, 120, 780, 330), styles.doneRow]}>
                 <Image source={BOOK_STAMP} style={styles.stamp} resizeMode="contain" />
                 <Text style={[styles.say, { flex: 1 }]}>{cur.line}</Text>
               </View>
             ) : (
               <>
-                <View style={[slot(192, 108, 340, 238), { alignItems: 'center', justifyContent: 'center' }]}>
-                  <Portrait customerKey={order.customer} size={Math.round(fx(96))} bare />
+                <View style={styles.ticket}>
+                  <View style={styles.tkLeft}>
+                    <View style={styles.tkPortrait}><Portrait customerKey={order.customer} size={Math.round(fx(100))} bare /></View>
+                    <Text style={[styles.name, { fontSize: 15 }]} numberOfLines={1}>{c.name}</Text>
+                    <Text style={[styles.tkCount, { fontSize: 11 }]}>Customer {Math.min(done + 1, CUSTOMERS_PER_DAY)} of {CUSTOMERS_PER_DAY}</Text>
+                  </View>
+                  <View style={styles.tkRight}>
+                    <View style={styles.tkSay}><Text style={styles.say} numberOfLines={3}>{customerLine(order, 'short')}</Text></View>
+                    <Text style={styles.tkHead}>{order.type === 'flowers' ? 'They would like' : 'Make them a bouquet'}</Text>
+                    {order.type === 'flowers' ? (
+                      <TkRow fx={fx} source={FLOWER_ART[order.flowerKey] || art} label={flowerName(order.flowerKey)} right={`${Math.min(have, order.qty)} / ${order.qty}`} bad={!canGive} />
+                    ) : (
+                      <>
+                        <TkRow fx={fx} source={FLOWER_ART[order.flowerKey] || art} cluster={order.combo} label={order.combo ? 'Flowers' : flowerName(order.flowerKey)} />
+                        <TkRow fx={fx} source={PAPER_ART[order.paper] || MAKE_IMAGES.paper} label={`${BOUQUET_PAPERS[order.paper]?.name} paper`} />
+                        <TkRow fx={fx} source={(BOW_IMAGES[BOW_COLOR[order.ribbon]] || [])[0] || MAKE_IMAGES[order.ribbon]} label={`${RIBBON_NAMES[order.ribbon]} ribbon`} />
+                      </>
+                    )}
+                  </View>
                 </View>
-                <View style={slot(362, 114, 735, 262)}>
-                  <Text style={styles.name}>{c.name}  <Text style={styles.count}>{Math.min(done + 1, CUSTOMERS_PER_DAY)}/{CUSTOMERS_PER_DAY}</Text></Text>
-                  <Text style={styles.say} numberOfLines={3}>{customerLine(order, 'short')}</Text>
-                </View>
-                {order.type === 'flowers' ? (
-                  <>
-                    <View style={slot(147, 280, 347, 442)}><OrderTile fx={fx} source={FLOWER_ART[order.flowerKey] || art} label={`${Math.min(have, order.qty)} / ${order.qty} ${flowerName(order.flowerKey)}`} bad={!canGive} /></View>
-                    <View style={slot(359, 280, 568, 442)}><OrderTile fx={fx} source={UI_IMAGES.goldcoins} label={`${order.coins} coins`} /></View>
-                    <View style={slot(577, 280, 783, 442)}><OrderTile fx={fx} source={order.seed && SEED_IMAGES[order.seed] ? SEED_IMAGES[order.seed] : null} label={`+${order.xp} xp`} /></View>
-                  </>
-                ) : (
-                  <>
-                    <View style={slot(147, 280, 347, 442)}><OrderTile fx={fx} source={FLOWER_ART[order.flowerKey] || art} cluster={order.combo} label={order.combo ? 'Flowers' : flowerName(order.flowerKey)} /></View>
-                    <View style={slot(359, 280, 568, 442)}><OrderTile fx={fx} source={PAPER_ART[order.paper] || MAKE_IMAGES.paper} label={BOUQUET_PAPERS[order.paper]?.name} /></View>
-                    <View style={slot(577, 280, 783, 442)}><OrderTile fx={fx} source={(BOW_IMAGES[BOW_COLOR[order.ribbon]] || [])[0] || MAKE_IMAGES[order.ribbon]} label={RIBBON_NAMES[order.ribbon]} /></View>
-                  </>
-                )}
-                <View style={[slot(190, 450, 760, 488), styles.reward]}>
-                  <Image source={ORDER_ART.bar_cream} style={styles.fillImg} resizeMode="stretch" />
-                  <Image source={UI_IMAGES.goldcoins} style={styles.coin} resizeMode="contain" />
-                  <Text style={styles.pay}>{order.type === 'flowers' ? `${order.coins} coins` : `price + up to ${Math.round(order.tip * 1.5)} tip`}</Text>
-                  <Text style={styles.xp}>+{order.xp} xp</Text>
-                </View>
-                <View style={[slot(210, 486, 740, 544), { alignItems: 'center', justifyContent: 'center' }]}>
-                  <PixelButton
-                    label={order.type === 'flowers' ? (canGive ? 'PACK THE FLOWERS' : 'NOT ENOUGH YET') : 'TO THE BOUQUET TABLE'}
-                    size={7} scale={0.62} disabled={order.type === 'flowers' && !canGive}
+                <View style={styles.tkFoot}>
+                  <View style={styles.tkReward}>
+                    <Image source={UI_IMAGES.goldcoins} style={styles.coin} resizeMode="contain" />
+                    <Text style={styles.pay}>{order.type === 'flowers' ? `${order.coins} coins` : `+ up to ${Math.round(order.tip * 1.5)} tip`}</Text>
+                    <Text style={styles.xp}>+{order.xp} xp</Text>
+                    {order.type === 'flowers' && order.seed && SEED_ICONS[order.seed] ? <Image source={SEED_ICONS[order.seed]} style={styles.seed} resizeMode="contain" /> : null}
+                  </View>
+                  <PlateBtn
+                    label={order.type === 'flowers' ? (canGive ? 'Pack the flowers' : 'Not enough yet') : 'To the bouquet table'}
+                    w={fx(215)} h={fx(46)} fs={Math.max(12, fx(16))} disabled={order.type === 'flowers' && !canGive}
                     onPress={() => takeDown(order.type === 'flowers')}
                   />
                 </View>
@@ -376,6 +402,22 @@ const styles = StyleSheet.create({
   callTxt: { fontFamily: HEAD, fontSize: 30, color: '#b04a2a', fontWeight: 'bold' },
   haze: { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, zIndex: 15, backgroundColor: 'rgba(48,30,14,0.5)', ...(Platform.OS === 'web' ? { backdropFilter: 'blur(5px)', WebkitBackdropFilter: 'blur(5px)' } : {}) },
   bubble: { alignItems: 'stretch' },
+  plainCard: { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: '#f3e0b6', borderWidth: 4, borderColor: '#8a5a2a', borderRadius: 20 },
+  ticket: { position: 'absolute', left: '5%', right: '5%', top: '7%', height: '60%', flexDirection: 'row', gap: 16 },
+  tkLeft: { width: '25%', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ecd9a6', borderRadius: 14, borderWidth: 2, borderColor: '#d9bd86', paddingVertical: 4 },
+  tkPortrait: { width: '70%', aspectRatio: 1, borderRadius: 14, backgroundColor: '#e8cf9a', borderWidth: 2, borderColor: '#b98a4e', alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+  tkCount: { fontFamily: BODY, fontSize: 12.5, color: '#8a6a40' },
+  tkRight: { flex: 1, justifyContent: 'flex-start' },
+  tkSay: { backgroundColor: '#fff6dc', borderRadius: 12, borderWidth: 2, borderColor: '#d9bd86', paddingHorizontal: 10, paddingVertical: 5, marginBottom: 6 },
+  tkHead: { fontFamily: HEAD, fontSize: 12, color: '#7a5030', marginBottom: 2 },
+  tkRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#ecd9a6', borderRadius: 10, borderWidth: 2, borderColor: '#d9bd86', paddingHorizontal: 6, paddingVertical: 2, marginBottom: 4 },
+  tkIcon: { width: 32, height: 32, borderRadius: 8, backgroundColor: '#e8cf9a', borderWidth: 2, borderColor: '#b98a4e', alignItems: 'center', justifyContent: 'center', padding: 2 },
+  tkLabel: { flex: 1, fontFamily: HEAD, fontSize: 14, color: '#4a2a10' },
+  tkRight2: { fontFamily: HEAD, fontSize: 14, color: '#3f7a2e', fontWeight: 'bold' },
+  tkFoot: { position: 'absolute', left: '31%', right: '5%', bottom: '7%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  tkReward: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#ecd9a6', borderRadius: 10, borderWidth: 2, borderColor: '#d9bd86', paddingHorizontal: 8, paddingVertical: 3 },
+  tileBox: { backgroundColor: '#e8cf9a', borderWidth: 2, borderColor: '#b98a4e', borderRadius: 14 },
+  rewardBar: { backgroundColor: '#ecd9a6', borderRadius: 12, borderWidth: 2, borderColor: '#d9bd86' },
   inner: { position: 'absolute', left: '14%', right: '15%', top: '17%', bottom: '13%', justifyContent: 'space-between' },
   fillImg: { position: 'absolute', left: 0, top: 0, width: '100%', height: '100%' },
   go: { justifyContent: 'center', alignItems: 'center', paddingTop: '2.5%' },
