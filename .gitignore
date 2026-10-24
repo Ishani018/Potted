@@ -88,6 +88,8 @@ assets/*
 !assets/ppots/*.png
 !assets/cans/
 !assets/cans/*.png
+!assets/cans2/
+!assets/cans2/*.png
 !assets/goose/
 !assets/goose2/
 !assets/goose2/*.png

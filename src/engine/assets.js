@@ -677,8 +677,8 @@ export const PPLANT_IMAGES = {
 
 // Watering cans: blue (everyone has it) and the red premium one (sold at the nursery, waters twice as fast). up = resting, tilt = while pouring.
 export const CAN_IMAGES = {
-  blue: { up: { src: require('../../assets/cans/blue.png') }, tilt: { src: require('../../assets/cans/blue_tilt.png') } },
-  red: { up: { src: require('../../assets/cans/red.png') }, tilt: { src: require('../../assets/cans/red_tilt.png') } },
+  blue: { up: { src: require('../../assets/cans2/blue_up.png'), w: 534, h: 416 }, tilt: { src: require('../../assets/cans2/blue_mid.png'), w: 497, h: 396 }, mid: { src: require('../../assets/cans2/blue_mid.png'), w: 497, h: 396 }, pour: [{ src: require('../../assets/cans2/blue_pour1.png'), w: 555, h: 583 }, { src: require('../../assets/cans2/blue_pour2.png'), w: 551, h: 638 }] },
+  red: { up: { src: require('../../assets/cans2/red_up.png'), w: 534, h: 416 }, tilt: { src: require('../../assets/cans2/red_mid.png'), w: 497, h: 396 }, mid: { src: require('../../assets/cans2/red_mid.png'), w: 497, h: 396 }, pour: [{ src: require('../../assets/cans2/red_pour1.png'), w: 555, h: 583 }, { src: require('../../assets/cans2/red_pour2.png'), w: 551, h: 638 }] },
 };
 export const LOBBY_BG = require('../../assets/building/lobby.png');   // the apartment building's entrance hall
 export const APT_ART = {   // the empty rooms: picture + its pixel size

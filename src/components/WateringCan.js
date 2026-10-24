@@ -1,8 +1,8 @@
 import React, { useRef } from 'react';
-import { Image, StyleSheet, View, Animated as RNAnimated, Easing } from 'react-native';
+import { Image, StyleSheet } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated';
-import { CAN_IMAGES, UI_IMAGES } from '../engine/assets';
+import { CAN_IMAGES } from '../engine/assets';
 import { CAN_INFO } from '../constants/gameData';
 import { useGame } from '../context/GameContext';
 import { useLayout } from '../context/LayoutContext';
@@ -15,34 +15,6 @@ import { projectSize } from '../engine/project';
 const BASE_CAN_SIZE = 135;  // ← CHANGE THIS to resize can globally
 // ────────────────────────────────────────────────────────────────────────────
 const WATER_RADIUS = 100;
-
-// Water falling from the spout while the can is tipped. (x, y) = the spout's centre inside the can's box.
-function Droplets({ x, y, fall, size }) {
-  const drops = useRef([0, 1, 2, 3, 4, 5].map(() => new RNAnimated.Value(0))).current;
-  React.useEffect(() => {
-    const loops = drops.map((v, i) => {
-      const l = RNAnimated.loop(RNAnimated.sequence([
-        RNAnimated.delay(i * 110),
-        RNAnimated.timing(v, { toValue: 1, duration: 650, easing: Easing.in(Easing.quad), useNativeDriver: false }),
-        RNAnimated.timing(v, { toValue: 0, duration: 0, useNativeDriver: false }),
-      ]));
-      l.start();
-      return l;
-    });
-    return () => loops.forEach((l) => l.stop());
-  }, [drops]);
-  return (
-    <View pointerEvents="none" style={{ position: 'absolute', left: x, top: y, width: 1, height: 1 }}>
-      {drops.map((v, i) => (
-        <RNAnimated.Image key={i} source={UI_IMAGES.waterdrop} resizeMode="contain" style={{
-          position: 'absolute', left: -size * 1.5 + (i % 3 - 1) * size * 3.2, top: 0, width: size * 3, height: size * 3.5,
-          opacity: v.interpolate({ inputRange: [0, 0.1, 0.85, 1], outputRange: [0, 1, 1, 0] }),
-          transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, fall + (i % 2) * fall * 0.15] }) }],
-        }} />
-      ))}
-    </View>
-  );
-}
 
 export default function WateringCan({ position, plantedSnapPoints = [], onWater, onDragStart, onDragEnd, baseCanSize }) {
   const { width: sw, height: sh } = useLayout();
@@ -60,6 +32,8 @@ export default function WateringCan({ position, plantedSnapPoints = [], onWater,
 
   const holdTimer = useRef(null);
   const currentSlotId = useRef(null);
+  const [pouring, setPouring] = React.useState(false);
+  const [beat, setBeat] = React.useState(0);
 
   const clearHold = () => {
     if (holdTimer.current) { clearTimeout(holdTimer.current); holdTimer.current = null; }
@@ -73,6 +47,7 @@ export default function WateringCan({ position, plantedSnapPoints = [], onWater,
       if (dist < WATER_RADIUS) { found = pt; break; }
     }
 
+    setPouring(!!found);
     if (found) {
       if (currentSlotId.current !== found.id) {
         clearHold();
@@ -88,6 +63,7 @@ export default function WateringCan({ position, plantedSnapPoints = [], onWater,
   };
 
   const handleEnd = () => {
+    setPouring(false);
     clearHold();
     currentSlotId.current = null;
     tx.value = withSpring(0);
@@ -112,7 +88,14 @@ export default function WateringCan({ position, plantedSnapPoints = [], onWater,
 
   // Show wateringcan2 while dragging (can tilted)
   const [isDragging, setIsDragging] = React.useState(false);
-  const src = isDragging ? CAN_IMAGES[canKey].tilt.src : CAN_IMAGES[canKey].up.src;
+  React.useEffect(() => {
+    if (!pouring) return undefined;
+    const t = setInterval(() => setBeat((b) => b + 1), 170);
+    return () => clearInterval(t);
+  }, [pouring]);
+  const set = CAN_IMAGES[canKey];
+  const frame = !isDragging ? set.up : pouring ? set.pour[beat % set.pour.length] : set.mid;
+  const k = size / 540;   // all frames are drawn at one scale
 
   const gestureWithState = Gesture.Pan()
     .onStart(() => {
@@ -143,8 +126,7 @@ export default function WateringCan({ position, plantedSnapPoints = [], onWater,
           animStyle,
         ]}
       >
-        <Image source={src} style={{ width: size, height: size }} resizeMode="contain" />
-        {isDragging && <Droplets x={size * 0.5 - size * 0.463 + size * 0.25} y={size * 0.5} fall={size * 0.85} size={Math.max(6, size * 0.075)} />}
+        <Image source={frame.src} style={{ position: 'absolute', left: (size - frame.w * k) / 2, top: (size - frame.h * k) / 2, width: frame.w * k, height: frame.h * k }} resizeMode="contain" />
       </Animated.View>
     </GestureDetector>
   );
