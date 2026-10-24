@@ -74,7 +74,7 @@ export function AdoptModal({ petKey, onClose, finder }) {
   const showCoin = !greeting && !renaming;           // coin art only on price/refund views
 
   const W = Math.min(620, Math.max(320, (frameW || 800) * 0.72));
-  const picW = Math.min(W * 0.34, Math.max(110, (frameH || 480) * 0.34));
+  const picW = Math.min(W * 0.42, Math.max(150, (frameH || 480) * 0.5));
   const bannerText = greeting ? 'Welcome home!' : renaming ? 'Pick a new name' : owned ? 'Your pet' : 'Meet your new friend';
   const display = savedName ?? pet.name;
   const fav = (state.player.favourites ?? []).includes('pet:' + petKey);
@@ -116,10 +116,10 @@ export function AdoptModal({ petKey, onClose, finder }) {
         </View>
 
         <View style={{ flexDirection: 'row', gap: 14, alignItems: 'center' }}>
-          <View style={[s.picFrame, { width: picW, height: picW * 0.95 }]}>
+          <View style={[s.picFrame, { width: picW, height: picW * 1.02 }]}>
             {renaming || greeting
-              ? <PetSprite petKey={petKey} w={picW * 0.7} h={picW * 0.7} />
-              : <OnGrass petKey={petKey} winW={picW} w={picW * 0.58} h={picW * 0.62} />}
+              ? <PetSprite petKey={petKey} w={picW * 0.95} h={picW * 0.95} />
+              : <OnGrass petKey={petKey} winW={picW} w={picW * 0.82} h={picW * 0.86} />}
           </View>
           <View style={{ flex: 1 }}>
             <Text numberOfLines={1} style={s.petName}>{display}</Text>
@@ -175,7 +175,7 @@ const s = StyleSheet.create({
   detailRow: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#d9bd86', paddingVertical: 2 },
   detailKey: { fontFamily: HEAD, fontSize: 14, color: '#7a5030' },
   detailVal: { fontFamily: HEAD, fontSize: 14, color: '#4a2a10', fontWeight: 'bold' },
-  picFrame: { borderRadius: 14, backgroundColor: '#e8cf9a', borderWidth: 2, borderColor: '#b98a4e', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  picFrame: { alignItems: 'center', justifyContent: 'center' },
   petName: { fontFamily: HEAD, fontSize: 28, fontWeight: 'bold', color: '#4a2a10' },
   breed: { fontFamily: HEAD, fontSize: 14, color: '#7a5030' },
   body: { fontFamily: HEAD, fontSize: 15, color: '#6a4524' },
