@@ -282,7 +282,7 @@ export default function NurseryScreen({ navigation }) {
         const d = describe(detail);
         const have = owns(detail), inCart = basket.includes(detail), fav = favourites.includes(detail);
         const { desc, lines } = itemText(detail);
-        const AW = 150, AH = AW * 416 / 1042, CW = 130, CH = CW * 393 / 903;
+        const AW = 170, AH = AW * 330 / 955, CW = 160, CH = CW * 345 / 927;
         return (
           <TouchableOpacity activeOpacity={1} style={styles.panelWrap} onPress={() => setDetail(null)}>
             <TouchableOpacity activeOpacity={1} style={[styles.panel, { width: '60%' }]}>
