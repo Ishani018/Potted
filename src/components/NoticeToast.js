@@ -22,10 +22,12 @@ export default function NoticeToast({ hidden, onVisit }) {
 
   if (!notice || hidden) return null;
   if (notice.kind === 'stray') {
-    const bh = 34, btn = (label, onPress, tone) => (
-      <TouchableOpacity activeOpacity={0.8} onPress={onPress} style={{ height: bh, minWidth: bh * SET_UI[tone].w / SET_UI[tone].h, paddingHorizontal: 30, alignItems: 'center', justifyContent: 'center' }}>
-        <Image source={SET_UI[tone].src} resizeMode="stretch" style={StyleSheet.absoluteFill} />
-        <Text style={styles.btnText}>{label}</Text>
+    const bh = 38, btn = (label, onPress, tone, w) => (
+      <TouchableOpacity activeOpacity={0.8} onPress={onPress} style={{ width: w, height: bh, overflow: 'hidden' }}>
+        <Image source={SET_UI[tone].src} resizeMode="stretch" style={{ position: 'absolute', left: 0, top: 0, width: w, height: bh }} />
+        <View style={{ width: w, height: bh, alignItems: 'center', justifyContent: 'center' }}>
+          <Text numberOfLines={1} style={styles.btnText}>{label}</Text>
+        </View>
       </TouchableOpacity>
     );
     return (
@@ -34,8 +36,8 @@ export default function NoticeToast({ hidden, onVisit }) {
           <Text style={styles.strayTitle}>{notice.icon}  {notice.title}</Text>
           <Text style={styles.strayText}>{notice.text}</Text>
           <View style={{ flexDirection: 'row', gap: 12, marginTop: 8 }}>
-            {btn('Dismiss', () => dispatch({ type: 'SHIFT_NOTICE' }), 'btnCream')}
-            {btn('Visit the pet store', () => { dispatch({ type: 'SHIFT_NOTICE' }); onVisit && onVisit(); }, 'btnCream')}
+            {btn('Dismiss', () => dispatch({ type: 'SHIFT_NOTICE' }), 'btnCream', 110)}
+            {btn('Visit the pet store', () => { dispatch({ type: 'SHIFT_NOTICE' }); onVisit && onVisit(); }, 'btnCream', 180)}
           </View>
         </View>
       </View>
