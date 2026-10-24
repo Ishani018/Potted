@@ -1,269 +1,182 @@
 import React, { useState, useMemo } from 'react';
-import { View, Image, TouchableOpacity, StyleSheet, Text } from 'react-native';
+import { View, Image, TouchableOpacity, StyleSheet, Text, Platform } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { TRADING_BG, TRADE_IMAGES, UI_IMAGES } from '../engine/assets';
-import { getDailyTrades, TRADE_FLOWERS } from '../constants/gameData';
+import { TRADE_BG, TRADE_IMAGES, UI_IMAGES, SET_UI } from '../engine/assets';
+import { getDailyTrades } from '../constants/gameData';
 import ScreenHud from '../components/ScreenHud';
-import { PixelText, PixelButton, PixelPanel, PixelToast, COLORS, PIXEL_FONT } from '../components/Pixel';
 import { useNotice } from '../components/PurchaseNotice';
 
-// Slot positions on tradingscreen.png — base 1376×768, CENTER anchor. The 6 daily
-// flowers fill these 6 boxes in order. (From Plopper; the two overlapping sets of
-// 6 collapse to these shared slots.)
-const PLOPPER_W = 1376;
-const PLOPPER_H = 768;
-const SLOTS = [
-  { x: 349,  y: 201, w: 86,  h: 83 },
-  { x: 484,  y: 203, w: 82,  h: 78 },
-  { x: 618,  y: 199, w: 78,  h: 86 },
-  { x: 756,  y: 203, w: 96,  h: 79 },
-  { x: 892,  y: 199, w: 77,  h: 77 },
-  { x: 1026, y: 201, w: 85,  h: 82 },
-];
+const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 
-// Cream trade panel on tradingscreen.png (base 1376x768) and the painted coin stack.
-const PANEL = { x: 270, y: 283, w: 840, h: 316 }; // x/y = left/top
-const COIN_STACK = { x: 996, y: 436, w: 150, h: 190 };
-// The background has the previous market's prices baked in above each tile. We
-// cover them with a plaque and print the live price on top, so they never overlap.
-const TAG = { dx: 12, dy: -58, w: 106, h: 34 };
+// A button drawn with the UI sheet's blank plates.
+function PlateBtn({ tone = 'btnCream', label, onPress, w = 120, h = 40, disabled, color = '#4a2a10' }) {
+  return (
+    <TouchableOpacity activeOpacity={0.8} onPress={disabled ? undefined : onPress} style={{ width: w, height: h, opacity: disabled ? 0.5 : 1 }}>
+      <Image source={SET_UI[tone].src} resizeMode="stretch" style={{ position: 'absolute', left: 0, top: 0, width: w, height: h }} />
+      <View style={{ width: w, height: h, alignItems: 'center', justifyContent: 'center' }}>
+        <Text numberOfLines={1} style={{ fontFamily: SERIF, fontSize: 15, fontWeight: 'bold', color }}>{label}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
 
+// The flower market: today's six wanted flowers on the left; pick one and sell it on the right.
 export default function TradingScreen({ navigation }) {
   const { state, dispatch } = useGame();
   const harvested = state.player.harvestedFlowers ?? {};
-  const [box, setBox] = useState({ w: 0, h: 0 });
-  const sw = box.w, sh = box.h;
-  const fx = (v) => (v / PLOPPER_W) * sw;
-  const fy = (v) => (v / PLOPPER_H) * sh;
-
-  // Today's 6 featured flowers + rates — stable within the day.
   const offers = useMemo(() => getDailyTrades(), []);
-  const offerByKey = useMemo(() => {
-    const m = {};
-    offers.forEach((o) => { m[o.key] = o; });
-    return m;
-  }, [offers]);
-
   const [invOpen, setInvOpen] = useState(false);
-  const [active, setActive] = useState(null); // offer being traded
+  const [activeKey, setActiveKey] = useState(null);
   const [qty, setQty] = useState(1);
   const [notice, notify] = useNotice();
-  const [toast, setToast] = useState(null);
-  const showToast = (m) => { setToast(m); setTimeout(() => setToast(null), 1500); };
+  const [box, setBox] = useState({ w: 0, h: 0 });
 
-  const select = (flowerKey) => {
-    const offer = offerByKey[flowerKey];
-    if (!offer) { showToast('NOT WANTED TODAY'); return; }
-    if ((harvested[flowerKey] ?? 0) <= 0) { showToast("YOU HAVE NONE"); return; }
-    setInvOpen(false);
-    setActive(offer);
-    setQty(1);
-  };
-
+  const active = offers.find((o) => o.key === activeKey) || null;
   const have = active ? (harvested[active.key] ?? 0) : 0;
   const total = active ? qty * active.price : 0;
 
-  const confirmTrade = () => {
-    if (!active || have <= 0) return;
-    dispatch({ type: 'TRADE_FLOWERS', flowerKey: active.key, qty, unitPrice: active.price });
-    notify({ icon: TRADE_IMAGES[active.img], title: `Sold ${qty} ${active.name}!`, subtitle: `You earned ${total} coins.` });
-    setActive(null);
+  const pick = (offer) => {
+    if ((harvested[offer.key] ?? 0) <= 0) { notify({ icon: TRADE_IMAGES[offer.img], title: offer.name, subtitle: 'You have none to sell yet.' }); return; }
+    setActiveKey(offer.key); setQty(1);
   };
 
-  const ownedFlowers = Object.entries(harvested).filter(([k, n]) => n > 0 && TRADE_FLOWERS[k]);
-
-  const panelL = fx(PANEL.x), panelT = fy(PANEL.y);
-  const panelW = fx(PANEL.w), panelH = fy(PANEL.h);
-  const coinW = fx(COIN_STACK.w), coinH = fy(COIN_STACK.h);
+  const sell = () => {
+    if (!active || have <= 0) return;
+    dispatch({ type: 'TRADE_FLOWERS', flowerKey: active.key, qty, unitPrice: active.price });
+    notify({ icon: TRADE_IMAGES[active.img], title: `Sold ${qty} ${active.name}`, subtitle: `You earned ${total} coins.` });
+    setActiveKey(null);
+  };
 
   return (
-    <View
-      style={styles.root}
-      onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
-    >
-      <Image source={TRADING_BG} style={styles.bg} resizeMode="stretch" />
+    <View style={styles.root} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
+      <Image source={TRADE_BG} style={styles.bg} resizeMode="stretch" />
+      <View style={styles.haze} />
 
-      {/* Daily board — flower in each tile, live price on a plaque over the old print */}
-      {offers.map((offer, i) => {
-        const s = SLOTS[i];
-        if (!s) return null;
-        const iw = fx(s.w), ih = fy(s.h);
-        const owned = harvested[offer.key] ?? 0;
-        return (
-          <React.Fragment key={offer.key}>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => select(offer.key)}
-              style={[{ position: 'absolute', left: fx(s.x) - fx(60), top: fy(s.y) - fy(52), width: fx(120), height: fy(104), alignItems: 'center', justifyContent: 'center', zIndex: 10 }, active?.key === offer.key && styles.tileOn]}
-            >
-              <Image source={TRADE_IMAGES[offer.img]} style={{ width: iw, height: ih }} resizeMode="contain" />
-              {owned > 0 && (
-                <View style={styles.ownedBadge}><PixelText size={Math.max(7, fx(9))}>{owned}</PixelText></View>
-              )}
-            </TouchableOpacity>
-            <View
-              pointerEvents="none"
-              style={[styles.tag, { left: fx(s.x + TAG.dx - TAG.w / 2), top: fy(s.y + TAG.dy - TAG.h / 2), width: fx(TAG.w), height: fy(TAG.h) }]}
-            >
-              <Image source={UI_IMAGES.goldcoins} style={{ width: fy(22), height: fy(22) }} resizeMode="contain" />
-              <PixelText size={Math.max(8, fx(12))} style={{ marginLeft: 4 }}>{offer.price}</PixelText>
-            </View>
-          </React.Fragment>
-        );
-      })}
+      <View style={styles.panel}>
+        <Text style={styles.title}>Flower market</Text>
+        <Text style={styles.sub}>Today the market wants these. Prices change every day.</Text>
 
-      {/* Trade controls live in the big cream panel, beside the coin stack */}
-      <View style={{ position: 'absolute', left: panelL, top: panelT, width: panelW, height: panelH, zIndex: 12, flexDirection: 'row' }} pointerEvents="box-none">
-        <View style={{ flex: 1, paddingRight: coinW + fx(24), paddingLeft: fx(18), justifyContent: 'center' }}>
-          {!active ? (
-            <View style={{ alignItems: 'center' }}>
-              <PixelText size={Math.max(9, fx(14))} color="#5a3410" style={styles.dark}>PICK A FLOWER TO SELL</PixelText>
-              <PixelText size={Math.max(7, fx(10))} color="#8a5a24" style={[styles.dark, { marginTop: fy(14) }]}>TAP ONE ABOVE OR OPEN MY FLOWERS</PixelText>
-            </View>
-          ) : (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              {/* 1. What you're selling */}
-              <View style={{ alignItems: 'center', width: fx(170) }}>
-                <Image source={TRADE_IMAGES[active.img]} style={{ width: fx(110), height: fy(110) }} resizeMode="contain" />
-                <PixelText size={Math.max(8, fx(12))} color="#5a3410" style={styles.dark}>{active.name.toUpperCase()}</PixelText>
-                <PixelText size={Math.max(7, fx(9))} color="#8a5a24" style={[styles.dark, { marginTop: fy(6) }]}>YOU HAVE {have}</PixelText>
-              </View>
-
-              {/* 2. How many + confirm */}
-              <View style={{ flex: 1, alignItems: 'center' }}>
-                <PixelText size={Math.max(7, fx(10))} color="#8a5a24" style={[styles.dark, { marginBottom: fy(8) }]}>HOW MANY?</PixelText>
-                <View style={styles.qtyRow}>
-                  <PixelButton label="-" tone="wood" onPress={() => setQty((q) => Math.max(1, q - 1))} style={styles.qtyBtn} size={14} />
-                  <View style={styles.qtyBox}>
-                    <PixelText size={Math.max(14, fx(22))} color="#5a3410" style={styles.qtyNum}>{qty}</PixelText>
+        <View style={{ flexDirection: 'row', gap: 14 }}>
+          {/* today's six */}
+          <View style={styles.grid}>
+            {offers.map((o) => {
+              const n = harvested[o.key] ?? 0;
+              return (
+                <TouchableOpacity key={o.key} activeOpacity={0.85} onPress={() => pick(o)} style={[styles.tile, active?.key === o.key && styles.tileOn, n <= 0 && { opacity: 0.55 }]}>
+                  <Image source={TRADE_IMAGES[o.img]} style={{ width: 54, height: 50 }} resizeMode="contain" />
+                  <View style={styles.priceRow}>
+                    <Image source={UI_IMAGES.goldcoins} style={{ width: 16, height: 16 }} resizeMode="contain" />
+                    <Text style={styles.tilePrice}>{o.price}</Text>
                   </View>
-                  <PixelButton label="+" tone="wood" onPress={() => setQty((q) => Math.min(have, q + 1))} style={styles.qtyBtn} size={14} />
-                  <PixelButton label="ALL" tone="wood" onPress={() => setQty(have)} size={9} />
-                </View>
-                <View style={styles.actionRow}>
-                  <TouchableOpacity onPress={confirmTrade} activeOpacity={0.8}>
-                    <Image source={UI_IMAGES.tradebtn} style={{ width: fx(150), height: fy(92) }} resizeMode="contain" />
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => setActive(null)} activeOpacity={0.8}>
-                    <Image source={UI_IMAGES.cancelbutton} style={{ width: fx(52), height: fy(52) }} resizeMode="contain" />
-                  </TouchableOpacity>
+                  {n > 0 ? <View style={styles.badge}><Text style={styles.badgeTxt}>{n}</Text></View> : null}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {/* what you are selling */}
+          <View style={styles.detail}>
+            {!active ? (
+              <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                <Image source={UI_IMAGES.goldcoins} style={{ width: 60, height: 60, marginBottom: 6 }} resizeMode="contain" />
+                <Text style={styles.name}>Pick a flower to sell</Text>
+                <Text style={styles.sub}>Tap one on the left, or open My flowers.</Text>
+              </View>
+            ) : (
+              <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+                <View style={styles.pic}><Image source={TRADE_IMAGES[active.img]} style={{ width: 84, height: 80 }} resizeMode="contain" /></View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.name}>{active.name}</Text>
+                  <View style={styles.rowLine}><Text style={styles.key}>Price each</Text><Text style={styles.val}>{active.price} coins</Text></View>
+                  <View style={styles.rowLine}><Text style={styles.key}>You have</Text><Text style={styles.val}>{have}</Text></View>
+                  <View style={styles.qtyRow}>
+                    <TouchableOpacity onPress={() => setQty((q) => Math.max(1, q - 1))} activeOpacity={0.8}><Image source={SET_UI.left.src} style={styles.arrow} resizeMode="contain" /></TouchableOpacity>
+                    <View style={styles.qtyBox}><Text style={styles.qtyNum}>{qty}</Text></View>
+                    <TouchableOpacity onPress={() => setQty((q) => Math.min(have, q + 1))} activeOpacity={0.8}><Image source={SET_UI.right.src} style={styles.arrow} resizeMode="contain" /></TouchableOpacity>
+                    <PlateBtn label="All" onPress={() => setQty(have)} w={64} h={34} />
+                  </View>
                 </View>
               </View>
-            </View>
-          )}
+            )}
+            {active ? (
+              <View style={styles.footer}>
+                <View style={styles.priceRow}>
+                  <Image source={UI_IMAGES.goldcoins} style={{ width: 24, height: 24 }} resizeMode="contain" />
+                  <Text style={styles.total}>{total}</Text>
+                </View>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <PlateBtn label="Cancel" onPress={() => setActiveKey(null)} w={92} h={38} />
+                  <PlateBtn tone="btnGreen" label={`Sell ${qty}`} onPress={sell} w={112} h={38} color="#fff3d0" />
+                </View>
+              </View>
+            ) : null}
+          </View>
+        </View>
+
+        <View style={{ alignItems: 'center', marginTop: 8 }}>
+          <PlateBtn label="My flowers" onPress={() => setInvOpen(true)} w={140} h={40} />
         </View>
       </View>
 
-      {/* 3. What you get — printed around the coin stack */}
-      {active && (
-        <>
-          <View pointerEvents="none" style={{ position: 'absolute', left: fx(COIN_STACK.x) - coinW / 2, top: fy(COIN_STACK.y) - coinH / 2 - fy(26), width: coinW, alignItems: 'center', zIndex: 13 }}>
-            <PixelText size={Math.max(7, fx(10))} color="#5a3410" style={styles.dark}>YOU GET</PixelText>
-          </View>
-          <View pointerEvents="none" style={[styles.totalPlate, { left: fx(COIN_STACK.x) - fx(52), top: fy(COIN_STACK.y) + coinH / 2 - fy(2), width: fx(104) }]}>
-            <PixelText size={Math.max(10, fx(16))} color={COLORS.gold}>{total}</PixelText>
-          </View>
-        </>
-      )}
-
-      <View style={styles.btnRow}>
-        <PixelButton label="MY FLOWERS" onPress={() => setInvOpen(true)} />
-      </View>
-
-      <ScreenHud
-        sw={sw} sh={sh}
-        onSettings={() => navigation.navigate('Settings')}
-        onMap={() => navigation.navigate('Map')}
-      />
+      <ScreenHud sw={box.w} sh={box.h} onSettings={() => navigation.navigate('Settings')} onMap={() => navigation.navigate('Map')} />
 
       {invOpen && (
-        <View style={styles.modalOverlay}>
-          <PixelPanel style={styles.invPanel}>
-            <View style={styles.invHeader}>
-              <PixelText size={14}>MY FLOWERS</PixelText>
-              <TouchableOpacity onPress={() => setInvOpen(false)} activeOpacity={0.8}>
-                <Image source={UI_IMAGES.cancelbutton} style={styles.invClose} resizeMode="contain" />
-              </TouchableOpacity>
-            </View>
-            <PixelText size={8} color="#e8c890" style={{ marginBottom: 12 }}>TAP A FLOWER THE MARKET WANTS TODAY</PixelText>
-            {ownedFlowers.length === 0 ? (
-              <PixelText size={9} color="#e8c890" style={{ textAlign: 'center', paddingVertical: 24 }}>NO HARVESTED FLOWERS YET</PixelText>
+        <TouchableOpacity activeOpacity={1} style={styles.overlay} onPress={() => setInvOpen(false)}>
+          <TouchableOpacity activeOpacity={1} style={[styles.panel, { width: '60%' }]}>
+            <TouchableOpacity onPress={() => setInvOpen(false)} style={styles.close}><Image source={SET_UI.close.src} style={{ width: 32, height: 31 }} resizeMode="contain" /></TouchableOpacity>
+            <Text style={styles.title}>My flowers</Text>
+            <Text style={styles.sub}>Tap one the market wants today to sell it.</Text>
+            {Object.entries(harvested).filter(([, n]) => n > 0).length === 0 ? (
+              <Text style={[styles.sub, { textAlign: 'center', paddingVertical: 20 }]}>No harvested flowers yet.</Text>
             ) : (
               <View style={styles.invGrid}>
-                {ownedFlowers.map(([key, n]) => {
-                  const tf = TRADE_FLOWERS[key];
-                  const featured = !!offerByKey[key];
+                {offers.concat([]).length >= 0 && Object.entries(harvested).filter(([, n]) => n > 0).map(([key, n]) => {
+                  const o = offers.find((x) => x.key === key);
+                  const img = o ? TRADE_IMAGES[o.img] : null;
                   return (
-                    <TouchableOpacity key={key} style={[styles.invCell, !featured && styles.invCellDim]} activeOpacity={0.8} onPress={() => select(key)}>
-                      <Image source={TRADE_IMAGES[tf.img]} style={styles.invCellImg} resizeMode="contain" />
-                      <PixelText size={10} style={styles.invCellCount}>{n}</PixelText>
-                      {featured && (
-                        <View style={styles.invCellRate}><PixelText size={8}>{offerByKey[key].price}</PixelText></View>
-                      )}
+                    <TouchableOpacity key={key} disabled={!o} activeOpacity={0.85} onPress={() => { setInvOpen(false); pick(o); }} style={[styles.tile, !o && { opacity: 0.4 }]}>
+                      {img ? <Image source={img} style={{ width: 54, height: 50 }} resizeMode="contain" /> : <Text style={styles.sub}>{key}</Text>}
+                      <View style={styles.badge}><Text style={styles.badgeTxt}>{n}</Text></View>
                     </TouchableOpacity>
                   );
                 })}
               </View>
             )}
-          </PixelPanel>
-        </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       )}
-
-      <PixelToast message={toast} />
       {notice}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0a0800' },
+  root: { flex: 1, backgroundColor: '#1a1208' },
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
-
-  // Plaque that hides the baked-in price and carries the live one
-  tag: {
-    position: 'absolute', zIndex: 11, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#a36122', borderWidth: 3, borderColor: '#5a3410', borderRadius: 4,
-  },
-  ownedBadge: {
-    position: 'absolute', right: 0, bottom: 0,
-    backgroundColor: COLORS.woodDark, borderWidth: 2, borderColor: COLORS.woodEdge, borderRadius: 3,
-    paddingHorizontal: 4, paddingVertical: 2,
-  },
-
-  dark: { textShadowColor: 'rgba(255,240,200,0.7)', textShadowRadius: 0, textShadowOffset: { width: 1, height: 1 } },
-  tileOn: { borderWidth: 3, borderColor: '#3d7a2a', borderRadius: 4, backgroundColor: 'rgba(61,122,42,0.18)' },
-  qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
-  qtyBox: {
-    minWidth: 64, paddingVertical: 6, alignItems: 'center',
-    backgroundColor: '#fff3d6', borderWidth: 3, borderColor: '#b8793a', borderRadius: 4,
-  },
-  qtyNum: { textShadowColor: 'transparent', textShadowRadius: 0 },
-  totalPlate: {
-    position: 'absolute', zIndex: 13, alignItems: 'center', paddingVertical: 4,
-    backgroundColor: COLORS.woodDark, borderWidth: 3, borderColor: COLORS.woodEdge, borderRadius: 4,
-  },
-  qtyBtn: {},
-  actionRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-
-  btnRow: { position: 'absolute', bottom: 16, alignSelf: 'center', flexDirection: 'row', gap: 12, zIndex: 25 },
-
-  modalOverlay: {
-    ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)',
-    alignItems: 'center', justifyContent: 'center', zIndex: 200,
-  },
-  invPanel: { width: '80%', maxWidth: 560, maxHeight: '86%' },
-  invHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
-  invClose: { width: 36, height: 36 },
-  invGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'center' },
-  invCell: {
-    width: 76, height: 76, borderRadius: 4, backgroundColor: COLORS.cream,
-    borderWidth: 3, borderColor: COLORS.creamEdge, alignItems: 'center', justifyContent: 'center',
-  },
-  invCellDim: { opacity: 0.4 },
-  invCellImg: { width: 54, height: 54 },
-  invCellCount: { position: 'absolute', right: 3, bottom: 2 },
-  invCellRate: {
-    position: 'absolute', top: -8, left: -6, backgroundColor: COLORS.green,
-    borderWidth: 2, borderColor: COLORS.greenEdge, borderRadius: 3, paddingHorizontal: 4, paddingVertical: 2,
-  },
+  haze: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(30,18,6,0.45)' },
+  panel: { position: 'absolute', alignSelf: 'center', top: '12%', width: '78%', backgroundColor: '#f3e0b6', borderWidth: 4, borderColor: '#8a5a2a', borderRadius: 18, padding: 12 },
+  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center', zIndex: 200 },
+  title: { fontFamily: SERIF, fontSize: 22, fontWeight: 'bold', color: '#4a2a10' },
+  sub: { fontFamily: SERIF, fontSize: 14, color: '#7a5030', marginBottom: 8 },
+  grid: { width: 226, flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignContent: 'flex-start' },
+  tile: { width: 68, height: 84, borderRadius: 12, backgroundColor: '#e8cf9a', borderWidth: 2, borderColor: '#b98a4e', alignItems: 'center', justifyContent: 'center' },
+  tileOn: { borderColor: '#2f5a22', backgroundColor: '#d6e2a8' },
+  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  tilePrice: { fontFamily: SERIF, fontSize: 14, fontWeight: 'bold', color: '#4a2a10' },
+  badge: { position: 'absolute', right: -4, top: -6, backgroundColor: '#8a5a2a', borderRadius: 9, minWidth: 18, height: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
+  badgeTxt: { fontFamily: SERIF, fontSize: 12, color: '#fff3d0', fontWeight: 'bold' },
+  detail: { flex: 1, minHeight: 182, justifyContent: 'space-between' },
+  pic: { width: 100, height: 100, borderRadius: 14, backgroundColor: '#e8cf9a', borderWidth: 2, borderColor: '#b98a4e', alignItems: 'center', justifyContent: 'center' },
+  name: { fontFamily: SERIF, fontSize: 22, fontWeight: 'bold', color: '#4a2a10' },
+  rowLine: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#d9bd86', paddingVertical: 2 },
+  key: { fontFamily: SERIF, fontSize: 14, color: '#7a5030' },
+  val: { fontFamily: SERIF, fontSize: 14, color: '#4a2a10', fontWeight: 'bold' },
+  qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
+  arrow: { width: 34, height: 31 },
+  qtyBox: { minWidth: 52, paddingVertical: 4, alignItems: 'center', backgroundColor: '#fff6df', borderWidth: 2, borderColor: '#b98a4e', borderRadius: 10 },
+  qtyNum: { fontFamily: SERIF, fontSize: 20, fontWeight: 'bold', color: '#4a2a10' },
+  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 },
+  total: { fontFamily: SERIF, fontSize: 24, fontWeight: 'bold', color: '#4a2a10' },
+  close: { position: 'absolute', right: 10, top: 8, zIndex: 5 },
+  invGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'center', paddingTop: 6 },
 });
