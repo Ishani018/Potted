@@ -100,4 +100,4 @@ export const DECOR_TABS = [
 
 // where a new item first appears and how far it may be dragged (fractions of the room picture)
 export const DECOR_START_Y = { floor: 0.86, hang: 0.2, wall: 0.3 };
-export const DECOR_Y_RANGE = { floor: [0.68, 0.99], hang: [0.12, 0.45], wall: [0.18, 0.55] };
+export const DECOR_Y_RANGE = { floor: [0.1, 0.99], hang: [0.05, 0.7], wall: [0.05, 0.85] };   // wide, so wall pieces (racks, mirrors) can be hung high

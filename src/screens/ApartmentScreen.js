@@ -25,7 +25,7 @@ function Placed({ item, W, H, edit, selected, onSelect, onMove, onDragState }) {
   const bw = def.furniture ? size * def.aspect : size;
   const boxH = def.plant ? size * def.bf + standH * 0.9 : size;   // the stand tucks up under the pot
   const x = (pos ?? item).x, y = (pos ?? item).y;
-  const [lo, hi] = DECOR_Y_RANGE[def.kind];
+  const [lo, hi] = def.rug ? [0.62, 0.99] : DECOR_Y_RANGE[def.kind];
 
   const pan = useRef(PanResponder.create({
     onStartShouldSetPanResponder: () => true,
