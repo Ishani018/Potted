@@ -5,6 +5,7 @@ import { APT_ART, UI_IMAGES } from '../engine/assets';
 import { APARTMENTS } from '../constants/gameData';
 import PottedArt, { pottedLayout } from '../components/PottedArt';
 import HangingArt, { hangingBox } from '../components/HangingArt';
+import { depthScale, clampToFloor, clampToWall } from '../engine/aptGeometry';
 import { DECOR, ROT_VIEWS, DECOR_TABS, DECOR_START_Y, DECOR_Y_RANGE, STANDS, STAND_ORDER, standOf } from '../engine/decor';
 import ScreenHud from '../components/ScreenHud';
 import { pixelText } from '../components/Pixel';
@@ -15,13 +16,15 @@ const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Alm
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 // One placed item. In decorate mode you can drag it; a tap selects it (and shows a remove button).
-function Placed({ item, W, H, edit, selected, onSelect, onMove, onDragState }) {
+function Placed({ aptId, item, W, H, edit, selected, onSelect, onMove, onDragState }) {
   const def = DECOR[item.key];
   const [pos, setPos] = useState(null);
   const start = useRef({ x: 0, y: 0 });
   const live = useRef(item);
   live.current = item;
-  const size = def.size * H * (item.scale || 1);   // the player can resize any piece
+  const floorLike = def.kind === 'floor';
+  const dScale = floorLike ? depthScale(aptId, (pos ?? item).y) : 1;   // smaller toward the back wall
+  const size = def.size * H * (item.scale || 1) * dScale;   // the player can resize any piece
   const stand = def.plant ? STANDS[standOf(item)] : null;   // potted plants sit on a stool, stand or pedestal
   const potW = size * 0.55;
   const L = def.newPlant ? pottedLayout(item.pot || 4, def.plantKey, 3, potW) : null;
@@ -31,17 +34,18 @@ function Placed({ item, W, H, edit, selected, onSelect, onMove, onDragState }) {
   const bw = L ? L.boxW : hb ? hb.w : def.furniture ? size * def.aspect : size;
   const boxH = L ? L.boxH + standH * 0.9 : hb ? hb.h : def.plant ? size * def.bf + standH * 0.9 : size;   // the stand tucks up under the pot
   const x = (pos ?? item).x, y = (pos ?? item).y;
-  const [lo, hi] = def.rug ? [0.62, 0.99] : DECOR_Y_RANGE[def.kind];
+  const [lo, hi] = DECOR_Y_RANGE[def.kind];
+  const fit = (nx, ny) => (floorLike ? clampToFloor(aptId, nx, ny) : def.kind === 'wall' ? clampToWall(aptId, nx, ny, 0.06) : { x: clamp(nx, 0.03, 0.97), y: clamp(ny, lo, hi) });
 
   const pan = useRef(PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onMoveShouldSetPanResponder: () => true,
     onPanResponderTerminationRequest: () => false,
     onPanResponderGrant: () => { start.current = { x: live.current.x, y: live.current.y }; onDragState(true); },
-    onPanResponderMove: (_, g) => setPos({ x: clamp(start.current.x + g.dx / W, 0.03, 0.97), y: clamp(start.current.y + g.dy / H, lo, hi) }),
+    onPanResponderMove: (_, g) => setPos(fit(start.current.x + g.dx / W, start.current.y + g.dy / H)),
     onPanResponderRelease: (_, g) => {
       onDragState(false);
-      if (Math.abs(g.dx) + Math.abs(g.dy) < 5) onSelect(); else onMove(clamp(start.current.x + g.dx / W, 0.03, 0.97), clamp(start.current.y + g.dy / H, lo, hi));
+      if (Math.abs(g.dx) + Math.abs(g.dy) < 5) onSelect(); else { const f = fit(start.current.x + g.dx / W, start.current.y + g.dy / H); onMove(f.x, f.y); }
       setPos(null);
     },
     onPanResponderTerminate: () => { onDragState(false); setPos(null); },
@@ -103,7 +107,7 @@ export default function ApartmentScreen({ navigation, route }) {
             </TouchableOpacity>
             <View style={{ position: 'absolute', left: 0, top: sh - H - lift, width: W, height: H }}>
               {items.map((it) => (
-                <Placed key={it.id} item={it} W={W} H={H} edit={edit} selected={selected === it.id}
+                <Placed key={it.id} aptId={aptId} item={it} W={W} H={H} edit={edit} selected={selected === it.id}
                   onSelect={() => setSelected(selected === it.id ? null : it.id)}
                   onMove={(x, y) => dispatch({ type: 'MOVE_APT_ITEM', aptId, id: it.id, x, y })}
                   onDragState={(d) => { setDragging(d); if (d) setSelected(it.id); }} />

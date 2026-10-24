@@ -40,7 +40,7 @@ FURNITURE_ITEMS.forEach((f) => {
   const n = Number(f.key.split('_')[1]);
   const set = f.key.startsWith('g_') ? 'green' : f.key.startsWith('pk_') ? 'pink' : n <= 26 ? 'purple' : 'red';
   const type = typeOf(f.key);
-  DECOR[f.key] = { key: f.key, kind: 'floor', img: f.img, furniture: true, set, rug: f.rug, aspect: f.w / f.h, size: f.rug ? f.h * 0.0011 * 1.9 : (M[type] ?? 0.9) * 0.25 };
+  DECOR[f.key] = { key: f.key, kind: type === 'potrack' ? 'wall' : 'floor', mount: type === 'potrack' ? 'wall' : undefined, img: f.img, furniture: true, set, rug: f.rug, aspect: f.w / f.h, size: f.rug ? f.h * 0.0011 * 1.9 : (M[type] ?? 0.9) * 0.25 };
 });
 
 const VASE_IMG = {
@@ -101,4 +101,4 @@ export const DECOR_TABS = [
 
 // where a new item first appears and how far it may be dragged (fractions of the room picture)
 export const DECOR_START_Y = { floor: 0.86, hang: 0.2, wall: 0.3 };
-export const DECOR_Y_RANGE = { floor: [0.1, 0.99], hang: [0.05, 0.7], wall: [0.05, 0.85] };   // wide, so wall pieces (racks, mirrors) can be hung high
+export const DECOR_Y_RANGE = { floor: [0.1, 0.99], hang: [0.08, 0.5], wall: [0.14, 0.66] };   // see aptGeometry.js for the per-flat floor and wall
