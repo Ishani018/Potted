@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { Image, StyleSheet, View, Animated as RNAnimated, Easing } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated';
-import { CAN_IMAGES } from '../engine/assets';
+import { CAN_IMAGES, UI_IMAGES } from '../engine/assets';
 import { CAN_INFO } from '../constants/gameData';
 import { useGame } from '../context/GameContext';
 import { useLayout } from '../context/LayoutContext';
@@ -34,9 +34,8 @@ function Droplets({ x, y, fall, size }) {
   return (
     <View pointerEvents="none" style={{ position: 'absolute', left: x, top: y, width: 1, height: 1 }}>
       {drops.map((v, i) => (
-        <RNAnimated.View key={i} style={{
-          position: 'absolute', left: -size * 0.5 + (i % 3 - 1) * size * 1.5, top: 0, width: size, height: size * 1.6, borderRadius: size,
-          backgroundColor: '#7cc4f2', borderWidth: 1, borderColor: '#3d8ac4',
+        <RNAnimated.Image key={i} source={UI_IMAGES.waterdrop} resizeMode="contain" style={{
+          position: 'absolute', left: -size * 1.5 + (i % 3 - 1) * size * 3.2, top: 0, width: size * 3, height: size * 3.5,
           opacity: v.interpolate({ inputRange: [0, 0.1, 0.85, 1], outputRange: [0, 1, 1, 0] }),
           transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, fall + (i % 2) * fall * 0.15] }) }],
         }} />
@@ -145,7 +144,7 @@ export default function WateringCan({ position, plantedSnapPoints = [], onWater,
         ]}
       >
         <Image source={src} style={{ width: size, height: size }} resizeMode="contain" />
-        {isDragging && <Droplets x={size * 0.5 - size * 0.463 + size * 0.17} y={size * 0.5} fall={size * 0.85} size={Math.max(6, size * 0.075)} />}
+        {isDragging && <Droplets x={size * 0.5 - size * 0.463 + size * 0.25} y={size * 0.5} fall={size * 0.85} size={Math.max(6, size * 0.075)} />}
       </Animated.View>
     </GestureDetector>
   );
