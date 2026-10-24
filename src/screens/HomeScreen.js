@@ -13,9 +13,9 @@ const PLOPPER_W = 1376;
 const PLOPPER_H = 768;
 // label = sign text; x/y = centre of the sign (text + arrow).
 const ENTRIES = [
-  { label: 'SUNROOM',    room: 3, x: 195,  y: 150 },   // the arched door on the left
-  { label: 'BALCONY',    room: 2, x: 885,  y: 195 },   // the open door in the middle
-  { label: 'GREENHOUSE', room: 1, x: 1185, y: 225 },   // the green door on the right
+  { label: 'GREENHOUSE', room: 1, x: 195, y: 150 },   // the arched door on the left
+  { label: 'BALCONY',    room: 2, x: 885, y: 195 },   // the open door in the middle
+  { label: 'SUNROOM',    room: 3, x: 640, y: 240 },   // up the stairs
 ];
 // The pet bowls by the stairs → the pet lounge.
 const PET_TAG = { label: 'PETS', x: 430, y: 462 };
