@@ -236,10 +236,10 @@ export const UI_IMAGES = {
   // Navigation / hub buttons
   homebutton:   require('../../assets/ui_comps/homebutton.png'),
   mainPlay:     require('../../assets/ui_sheet2/pl_01.png'),
-  mainGear:     require('../../assets/ui_sheet2/pl_20.png'),
+  mainGear:     require('../../assets/ui_sheet/ui_01.png'),
   mainInfo:     require('../../assets/ui_sheet/ui_07.png'),
-  mainSound:    require('../../assets/ui_sheet2/pl_31.png'),
-  mainMuted:    require('../../assets/ui_sheet2/pl_32.png'),
+  mainSound:    require('../../assets/ui_sheet/ui_13.png'),
+  mainMuted:    require('../../assets/ui_sheet/ui_14.png'),
   mapicon:      require('../../assets/ui_sheet/hud_map.png'),
   greenhousebtn: require('../../assets/ui_comps/greenhousebutton.png'),
   balconybtn:   require('../../assets/ui_comps/balconybutton.png'),
@@ -582,6 +582,7 @@ export const SET_UI = {
   sound: { src: require('../../assets/ui_sheet/ui_13.png'), w: 100, h: 88 },
   btnCream: { src: require('../../assets/ui_sheet/ui_38.png'), w: 176, h: 76 },
   btnRed: { src: require('../../assets/ui_sheet/ui_39.png'), w: 187, h: 78 },
+  btnGreen: { src: require('../../assets/ui_sheet/ui_37.png'), w: 180, h: 70 },
 };
 // Furniture seen from four sides (front, left and right three-quarter, side) so it can be turned
 export const ROT_IMAGES = {

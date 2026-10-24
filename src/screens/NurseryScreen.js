@@ -116,6 +116,18 @@ function DragItem({ it, at, k, onDrop, onTap, z, mul = 1, ghost = false }) {
   );
 }
 
+// A button drawn with the UI sheet's blank plate and a label on top.
+function PlateBtn({ tone = 'btnCream', label, onPress, w = 150, h = 40, style, color = '#4a2a10', fs = 15 }) {
+  return (
+    <TouchableOpacity activeOpacity={0.8} onPress={onPress} style={[{ width: w, height: h }, style]}>
+      <Image source={SET_UI[tone].src} resizeMode="stretch" style={{ position: 'absolute', left: 0, top: 0, width: w, height: h }} />
+      <View style={{ width: w, height: h, alignItems: 'center', justifyContent: 'center' }}>
+        <Text numberOfLines={1} style={{ fontFamily: SERIF, fontSize: fs, color, fontWeight: 'bold' }}>{label}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 export default function NurseryScreen({ navigation }) {
   const { state, dispatch } = useGame();
   const { coins, ownedPPots = [4], ownedHPots = ['macrame'], ownedCans = ['blue'] } = state.player;
@@ -241,7 +253,7 @@ export default function NurseryScreen({ navigation }) {
       />
 
       {/* LAYOUT mode (for arranging the shop): drag items anywhere, + / - resize the selected one, COPY shows the numbers */}
-      <TouchableOpacity activeOpacity={0.8} onPress={() => { setEdit(!edit); setSel(null); }} style={styles.layoutBtn}><Text style={styles.layoutTxt}>{edit ? 'DONE' : 'LAYOUT'}</Text></TouchableOpacity>
+      <PlateBtn label={edit ? 'Done' : 'Layout'} onPress={() => { setEdit(!edit); setSel(null); }} w={96} h={34} fs={13} style={{ position: 'absolute', left: 12, top: 76, zIndex: 60 }} />
       {edit && (
         <View style={styles.layoutBar}>
           <TouchableOpacity style={styles.layoutBtn2} onPress={() => sel && setLay((l) => ({ ...l, [sel]: { ...(l[sel] || { x: (onShelf.find((o) => o.id === sel) || { at: [0, 0] }).at[0], y: (onShelf.find((o) => o.id === sel) || { at: [0, 0] }).at[1] }), s: Math.max(0.3, (l[sel]?.s ?? 1) / 1.1) } }))}><Text style={styles.layoutTxt}>–</Text></TouchableOpacity>
@@ -252,7 +264,7 @@ export default function NurseryScreen({ navigation }) {
       )}
       {edit && dump !== '' && <View style={styles.dumpBox}><Text selectable style={styles.dumpTxt}>{dump}</Text></View>}
 
-      <TouchableOpacity activeOpacity={0.8} onPress={() => setPanel(true)} style={styles.potsBtn}><Text style={styles.layoutTxt}>POTS & CANS</Text></TouchableOpacity>
+      <PlateBtn label="Pots & Cans" onPress={() => setPanel(true)} w={124} h={38} fs={14} style={{ position: 'absolute', left: 12, bottom: 94, zIndex: 60 }} />
       {panel && (
         <TouchableOpacity activeOpacity={1} style={styles.panelWrap} onPress={() => setPanel(false)}>
           <TouchableOpacity activeOpacity={1} style={styles.panel}>
@@ -313,8 +325,8 @@ export default function NurseryScreen({ navigation }) {
                 <Text style={styles.panelHint}>Tap anywhere to close.</Text>
               ) : (
                 <View style={styles.cartBtns}>
-                  <TouchableOpacity activeOpacity={0.8} onPress={close} style={[styles.cartAct, { backgroundColor: '#b98a4e' }]}><Text style={styles.layoutTxt}>KEEP SHOPPING</Text></TouchableOpacity>
-                  <TouchableOpacity activeOpacity={0.8} onPress={checkout} style={[styles.cartAct, { backgroundColor: lines.length ? '#4f8a3a' : '#9a8a70' }]}><Text style={styles.layoutTxt}>PAY {sum}</Text></TouchableOpacity>
+                  <PlateBtn label="Keep shopping" onPress={close} w={160} h={42} />
+                  <PlateBtn tone={lines.length ? 'btnGreen' : 'btnCream'} label={`Pay ${sum}`} onPress={checkout} w={140} h={42} color={lines.length ? '#fff3d0' : '#8a7a60'} />
                 </View>
               )}
             </TouchableOpacity>
