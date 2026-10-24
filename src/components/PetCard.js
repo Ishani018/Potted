@@ -73,10 +73,11 @@ export function AdoptModal({ petKey, onClose, finder }) {
   const manage = owned && !greeting && !renaming;
   const showCoin = !greeting && !renaming;           // coin art only on price/refund views
 
-  const W = Math.min(560, Math.max(300, (frameW || 800) * 0.66));
-  const picW = Math.min(W * 0.34, Math.max(110, (frameH || 480) * 0.36));
+  const W = Math.min(620, Math.max(320, (frameW || 800) * 0.72));
+  const picW = Math.min(W * 0.34, Math.max(110, (frameH || 480) * 0.34));
   const bannerText = greeting ? 'Welcome home!' : renaming ? 'Pick a new name' : owned ? 'Your pet' : 'Meet your new friend';
   const display = savedName ?? pet.name;
+  const fav = (state.player.favourites ?? []).includes('pet:' + petKey);
 
   // bottom row actions
   let left = null, right = null;
@@ -105,8 +106,10 @@ export function AdoptModal({ petKey, onClose, finder }) {
   return (
     <TouchableOpacity style={s.overlay} activeOpacity={1} onPress={onClose}>
       <TouchableOpacity activeOpacity={1} onPress={() => {}} style={[s.panel, { width: W }]}>
-        <View style={s.headRow}>
-          <Text style={s.title} numberOfLines={1}>{bannerText}</Text>
+        <View style={s.topRight}>
+          <TouchableOpacity onPress={() => dispatch({ type: 'TOGGLE_FAV', id: 'pet:' + petKey })} activeOpacity={0.8}>
+            <Image source={(fav ? SET_UI.heart : SET_UI.heartOff).src} style={{ width: 34, height: 30 }} resizeMode="contain" />
+          </TouchableOpacity>
           <TouchableOpacity onPress={onClose} activeOpacity={0.8}>
             <Image source={SET_UI.close.src} style={{ width: 32, height: 31 }} resizeMode="contain" />
           </TouchableOpacity>
@@ -120,15 +123,6 @@ export function AdoptModal({ petKey, onClose, finder }) {
           </View>
           <View style={{ flex: 1 }}>
             <Text numberOfLines={1} style={s.petName}>{display}</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-              <Text style={s.breed}>{pet.breed}{savedName && savedName !== pet.name ? `  ·  ${pet.name}` : ''}</Text>
-              {finder && CUSTOMERS[finder] ? (
-                <View style={{ width: 24, height: 24, borderRadius: 12, overflow: 'hidden', borderWidth: 2, borderColor: '#b98a4e', backgroundColor: '#f6e6c4' }}>
-                  <Portrait customerKey={finder} size={24} bare />
-                </View>
-              ) : null}
-            </View>
-
             {renaming ? (
               <TextInput value={name} onChangeText={(t) => setName(t.slice(0, 12))} maxLength={12} autoFocus selectTextOnFocus placeholder={pet.name}
                 placeholderTextColor="#b8793a" onSubmitEditing={saveName} style={s.input} />
@@ -136,15 +130,15 @@ export function AdoptModal({ petKey, onClose, finder }) {
               <Text style={s.body}>You adopted {pet.name}! They already have a name, but you can give them a new one if you like.</Text>
             ) : (
               <>
-                {pet.effect ? (
-                  <View style={s.perkRow}>
-                    <Image source={PERK_ICONS[petKey]} style={{ width: 34, height: 32 }} resizeMode="contain" />
-                    <View style={{ flex: 1 }}>
-                      <Text style={s.perkTitle} numberOfLines={1}>{pet.effect.title}</Text>
-                      <Text style={s.perkDesc} numberOfLines={2}>{pet.effect.desc}</Text>
-                    </View>
-                  </View>
-                ) : null}
+                <View style={s.priceRow}>
+                  <Image source={UI_IMAGES.goldcoins} style={{ width: 26, height: 26 }} resizeMode="contain" />
+                  <Text style={s.price}>{owned ? `${refund} back if rehomed` : pet.price}</Text>
+                  {owned ? <Text style={s.tag}>Yours</Text> : null}
+                </View>
+                {pet.effect ? <Text style={s.body}>{pet.effect.desc}</Text> : null}
+                <View style={s.detailRow}><Text style={s.detailKey}>Breed</Text><Text style={s.detailVal}>{pet.breed}</Text></View>
+                {pet.effect ? <View style={s.detailRow}><Text style={s.detailKey}>Perk</Text><Text style={s.detailVal}>{pet.effect.title}</Text></View> : null}
+                {finder && CUSTOMERS[finder] ? <View style={s.detailRow}><Text style={s.detailKey}>Found by</Text><Text style={s.detailVal}>{CUSTOMERS[finder].name}</Text></View> : null}
                 {manage ? (
                   <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
                     {[['all', 'Every room'], [null, 'Tuck away']].map(([val, label]) => {
@@ -156,12 +150,7 @@ export function AdoptModal({ petKey, onClose, finder }) {
                       );
                     })}
                   </View>
-                ) : (
-                  <View style={s.priceRow}>
-                    <Image source={UI_IMAGES.goldcoins} style={{ width: 26, height: 26 }} resizeMode="contain" />
-                    <Text style={s.price}>{pet.price}</Text>
-                  </View>
-                )}
+                ) : null}
               </>
             )}
           </View>
@@ -181,8 +170,13 @@ const s = StyleSheet.create({
   panel: { backgroundColor: '#f3e0b6', borderWidth: 4, borderColor: '#8a5a2a', borderRadius: 18, padding: 14, gap: 10 },
   headRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   title: { fontFamily: HEAD, fontSize: 22, fontWeight: 'bold', color: '#4a2a10', flex: 1 },
+  topRight: { position: 'absolute', right: 12, top: 10, zIndex: 5, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  tag: { fontFamily: HEAD, fontSize: 13, color: '#fff3d0', backgroundColor: '#8a5a2a', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 1, overflow: 'hidden' },
+  detailRow: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#d9bd86', paddingVertical: 2 },
+  detailKey: { fontFamily: HEAD, fontSize: 14, color: '#7a5030' },
+  detailVal: { fontFamily: HEAD, fontSize: 14, color: '#4a2a10', fontWeight: 'bold' },
   picFrame: { borderRadius: 14, backgroundColor: '#e8cf9a', borderWidth: 2, borderColor: '#b98a4e', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  petName: { fontFamily: HEAD, fontSize: 26, fontWeight: 'bold', color: '#4a2a10' },
+  petName: { fontFamily: HEAD, fontSize: 28, fontWeight: 'bold', color: '#4a2a10' },
   breed: { fontFamily: HEAD, fontSize: 14, color: '#7a5030' },
   body: { fontFamily: HEAD, fontSize: 15, color: '#6a4524' },
   perkRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },
