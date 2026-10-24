@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Image, ScrollView, Animated, PanResponder, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { NURSERY_BG, SEED_ICONS, SEED_IMAGES, UI_IMAGES, PPOT_META, PPOT_IDS, PPLANT_IMAGES, HPOT_META, HPOT_ORDER, CAN_IMAGES, SET_UI } from '../engine/assets';
+import { SHOP_BTN, NURSERY_BG, SEED_ICONS, SEED_IMAGES, UI_IMAGES, PPOT_META, PPOT_IDS, PPLANT_IMAGES, HPOT_META, HPOT_ORDER, CAN_IMAGES, SET_UI } from '../engine/assets';
 import { POTTED_FLOWERS, HANGING_PLANTS, seedType, FLOWER_GROWTH, formatDuration, HPOT_INFO, PPOT_PRICE, PPOT_NAME, CAN_INFO } from '../constants/gameData';
 import InventoryOverlay from '../components/InventoryOverlay';
 import ScreenHud from '../components/ScreenHud';
@@ -138,11 +138,7 @@ export default function NurseryScreen({ navigation }) {
   const [basket, setBasket] = useState([]);                 // item ids in the cart
   const [potPage, setPotPage] = useState(0);
   const [hookPage, setHookPage] = useState(0);
-  // LAYOUT mode: arrange the shop by hand. lay[id] = { x, y, s } overrides an item's spot and size.
-  const [edit, setEdit] = useState(false);
-  const [lay, setLay] = useState({});
-  const [sel, setSel] = useState(null);
-  const [dump, setDump] = useState('');
+  const [detail, setDetail] = useState(null);   // the item whose card is open
   const [receipt, setReceipt] = useState(null);   // the order summary shown after paying
   const bounce = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -201,10 +197,10 @@ export default function NurseryScreen({ navigation }) {
     ...COUNTER_SEEDS.map((kk, n) => boxItem('s:' + kk, SEED_BOX(n))),
     ...POT_SLOTS.map((sl) => boxItem(sl.id, sl.box)),
     ...HANG_SLOTS.map((sl) => boxItem(sl.id, sl.box)),
-  ].map((e) => (lay[e.id] ? { ...e, at: [lay[e.id].x, lay[e.id].y] } : e));
+  ];
   const showCan = !(ownedCans.includes('red') || basket.includes('c:red'));
   // the POTS panel also sells everything (and the seeds that are not on the counter)
-  const addToCounter = (id) => { addToCart(id); setPanel(false); };
+  const addToCounter = (id) => { setPanel(false); setDetail(id); };
 
   const arrow = (key, x, y, on, label) => (
     <TouchableOpacity activeOpacity={0.8} onPress={on} style={{ position: 'absolute', left: (x - 22) * k, top: (y - 22) * k, zIndex: 12 }}>
@@ -222,17 +218,14 @@ export default function NurseryScreen({ navigation }) {
             const d = { ...describe(id), w: bx1 - bx0, h: by1 - by0 };
             return (
               <React.Fragment key={id}>
-                <DragItem it={d} ghost at={at} k={k} z={6}
-                  onDrop={(p) => (edit ? (setSel(id), setLay((l) => ({ ...l, [id]: { x: Math.round(p[0]), y: Math.round(p[1]), s: 1 } }))) : addToCart(id))}
-                  onTap={() => (edit ? setSel(id) : addToCart(id))} />
-                {edit && sel === id && <View pointerEvents="none" style={{ position: 'absolute', left: (at[0] - d.w / 2 - 3) * k, top: (at[1] - d.h) * k - 3, width: (d.w + 6) * k, height: (d.h + 6) * k, borderWidth: 2, borderColor: '#ffe29a', borderStyle: 'dashed', zIndex: 20 }} />}
+                <DragItem it={d} ghost at={at} k={k} z={6} onDrop={() => setDetail(id)} onTap={() => setDetail(id)} />
               </React.Fragment>
             );
           })}
 
           {showCan && (
             <DragItem it={describe('c:red')} at={CAN_SPOT} k={k} z={6}
-              onDrop={() => addToCart('c:red')} onTap={() => addToCart('c:red')} />
+              onDrop={() => setDetail('c:red')} onTap={() => setDetail('c:red')} />
           )}
 
           {/* the register: its screen shows the total; tap it to check out */}
@@ -251,18 +244,6 @@ export default function NurseryScreen({ navigation }) {
         onInventory={() => setInvOpen(true)}
         onBook={() => navigation.navigate('FlowerBook')}
       />
-
-      {/* LAYOUT mode (for arranging the shop): drag items anywhere, + / - resize the selected one, COPY shows the numbers */}
-      <PlateBtn label={edit ? 'Done' : 'Layout'} onPress={() => { setEdit(!edit); setSel(null); }} w={96} h={34} fs={13} style={{ position: 'absolute', left: 12, top: 76, zIndex: 60 }} />
-      {edit && (
-        <View style={styles.layoutBar}>
-          <TouchableOpacity style={styles.layoutBtn2} onPress={() => sel && setLay((l) => ({ ...l, [sel]: { ...(l[sel] || { x: (onShelf.find((o) => o.id === sel) || { at: [0, 0] }).at[0], y: (onShelf.find((o) => o.id === sel) || { at: [0, 0] }).at[1] }), s: Math.max(0.3, (l[sel]?.s ?? 1) / 1.1) } }))}><Text style={styles.layoutTxt}>–</Text></TouchableOpacity>
-          <TouchableOpacity style={styles.layoutBtn2} onPress={() => sel && setLay((l) => ({ ...l, [sel]: { ...(l[sel] || { x: (onShelf.find((o) => o.id === sel) || { at: [0, 0] }).at[0], y: (onShelf.find((o) => o.id === sel) || { at: [0, 0] }).at[1] }), s: Math.min(4, (l[sel]?.s ?? 1) * 1.1) } }))}><Text style={styles.layoutTxt}>+</Text></TouchableOpacity>
-          <TouchableOpacity style={styles.layoutBtn2} onPress={() => { const t = JSON.stringify(onShelf.reduce((o, e) => ({ ...o, [e.id]: { x: Math.round(e.at[0]), y: Math.round(e.at[1]), s: Math.round((lay[e.id]?.s ?? 1) * 100) / 100 } }), {})); setDump(t); try { navigator.clipboard && navigator.clipboard.writeText(t); } catch (e) { /* the text is shown below anyway */ } }}><Text style={styles.layoutTxt}>COPY</Text></TouchableOpacity>
-          <TouchableOpacity style={styles.layoutBtn2} onPress={() => { setLay({}); setSel(null); setDump(''); }}><Text style={styles.layoutTxt}>RESET</Text></TouchableOpacity>
-        </View>
-      )}
-      {edit && dump !== '' && <View style={styles.dumpBox}><Text selectable style={styles.dumpTxt}>{dump}</Text></View>}
 
       <PlateBtn label="Pots & Cans" onPress={() => setPanel(true)} w={124} h={38} fs={14} style={{ position: 'absolute', left: 12, bottom: 94, zIndex: 60 }} />
       {panel && (
@@ -295,6 +276,30 @@ export default function NurseryScreen({ navigation }) {
           <Text style={[styles.cartCount, { fontSize: 16 * k }]}>{basket.length} in cart</Text>
         </TouchableOpacity>
       )}
+
+      {detail && (() => {
+        const d = describe(detail);
+        const have = owns(detail), inCart = basket.includes(detail);
+        const note = have ? 'You already have this one.' : inCart ? 'Already in your cart.' : `${d.price === 0 ? 'Free' : d.price + ' coins'}`;
+        const AW = 150, AH = AW * 416 / 1042, CW = 130, CH = CW * 393 / 903;
+        return (
+          <TouchableOpacity activeOpacity={1} style={styles.panelWrap} onPress={() => setDetail(null)}>
+            <TouchableOpacity activeOpacity={1} style={[styles.panel, { width: '46%', alignItems: 'center' }]}>
+              <Image source={d.icon || d.src} resizeMode="contain" style={{ width: 120, height: 110 }} />
+              <Text style={styles.panelTitle}>{d.name}</Text>
+              <Text style={[styles.panelHint, { fontSize: 18, marginTop: 0 }]}>{note}</Text>
+              <View style={styles.cartBtns}>
+                <TouchableOpacity activeOpacity={0.8} disabled={have || inCart} onPress={() => { addToCart(detail); setDetail(null); }} style={{ opacity: have || inCart ? 0.45 : 1 }}>
+                  <Image source={SHOP_BTN.add} resizeMode="contain" style={{ width: AW, height: AH }} />
+                </TouchableOpacity>
+                <TouchableOpacity activeOpacity={0.8} onPress={() => { setDetail(null); setCartOpen(true); }}>
+                  <Image source={SHOP_BTN.cashier} resizeMode="contain" style={{ width: CW, height: CH }} />
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        );
+      })()}
 
       {(cartOpen || receipt) && (() => {
         const paid = !!receipt;
@@ -358,12 +363,7 @@ const styles = StyleSheet.create({
   priceChip: { backgroundColor: 'rgba(243,224,182,0.95)', borderWidth: 1.5, borderColor: '#8a5a2a', borderRadius: 8, paddingHorizontal: 4, paddingVertical: 0 },
   priceText: { userSelect: 'none', fontFamily: SERIF, fontSize: 10, color: '#4a2a10', fontWeight: 'bold' },
   pageChip: { position: 'absolute', alignItems: 'center', backgroundColor: 'rgba(243,224,182,0.95)', borderWidth: 2, borderColor: '#8a5a2a', borderRadius: 9, zIndex: 12 },
-  layoutBtn: { position: 'absolute', left: 14, top: 74, zIndex: 60, backgroundColor: '#8a5a2a', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3 },
-  layoutBar: { position: 'absolute', left: 14, top: 104, zIndex: 60, flexDirection: 'row', gap: 6 },
-  layoutBtn2: { backgroundColor: '#3a6a8a', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 3 },
   layoutTxt: { fontFamily: SERIF, fontSize: 14, color: '#fff3d0', fontWeight: 'bold' },
-  dumpBox: { position: 'absolute', left: 14, right: 14, bottom: 8, zIndex: 70, backgroundColor: 'rgba(30,16,6,0.92)', borderRadius: 8, padding: 6, maxHeight: 90, overflow: 'hidden' },
-  dumpTxt: { fontSize: 8, color: '#ffe9b8' },
   potsBtn: { position: 'absolute', left: 14, bottom: 64, zIndex: 60, backgroundColor: '#8a5a2a', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 4 },
   panelWrap: { ...StyleSheet.absoluteFillObject, zIndex: 300, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' },
   panel: { width: '78%', maxHeight: '82%', backgroundColor: '#f3e0b6', borderWidth: 4, borderColor: '#8a5a2a', borderRadius: 18, padding: 12 },

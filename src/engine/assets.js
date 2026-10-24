@@ -758,3 +758,6 @@ export const BOOK_XP = { frame: require('../../assets/book/xp_frame.png'), fill:
 export const BOOK_BOARD = require('../../assets/book/board.png');
 export const BOOK_BANNER = require('../../assets/book/banner.png');
 export const BOOK_DIVIDER = require('../../assets/book/divider.png');
+
+// The shop's two picture buttons (Add to Cart, Cashier).
+export const SHOP_BTN = { add: require('../../assets/ui_shop/add_to_cart.png'), cashier: require('../../assets/ui_shop/cashier.png') };

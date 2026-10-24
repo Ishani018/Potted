@@ -93,6 +93,8 @@ assets/*
 !assets/goose2/*.png
 !assets/ui_sheet2/
 !assets/ui_sheet2/*.png
+!assets/ui_shop/
+!assets/ui_shop/*.png
 !assets/goose/*.png
 !assets/sfx/
 !assets/sfx/*.mp3
