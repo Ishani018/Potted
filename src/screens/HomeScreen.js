@@ -15,7 +15,7 @@ const PLOPPER_H = 768;
 const ENTRIES = [
   { label: 'GREENHOUSE', room: 1, x: 195, y: 150 },   // the arched door on the left
   { label: 'BALCONY',    room: 2, x: 885, y: 195 },   // the open door in the middle
-  { label: 'SUNROOM',    room: 3, x: 640, y: 240 },   // up the stairs
+  { label: 'SUNROOM',    room: 3, x: 499, y: 130 },   // up the stairs
 ];
 // The pet bowls by the stairs → the pet lounge.
 const PET_TAG = { label: 'PETS', x: 430, y: 462 };
