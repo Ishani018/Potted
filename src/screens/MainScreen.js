@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Image, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import { MAIN_BG, UI_IMAGES, SET_UI } from '../engine/assets';
+import { MAIN_BG, UI_IMAGES, PLAY_BTN } from '../engine/assets';
 import { ensureMusic, setMusicOn, getAudioPrefs, subscribeAudio, loadAudioPrefs } from '../engine/audio';
 
 export default function MainScreen({ navigation }) {
@@ -11,12 +11,12 @@ export default function MainScreen({ navigation }) {
   useEffect(() => subscribeAudio(setAudio), []);
 
   // ── PLAY button — EDIT THESE TWO to resize/move ──────────────────────────────
-  const PLAY_SCALE = 0.24; // fraction of screen width (bigger number = bigger button)
+  const PLAY_SCALE = 0.26; // fraction of screen width (bigger number = bigger button)
   const PLAY_LEFT = '78%'; // horizontal center of the button
   const PLAY_TOP = '63%'; // vertical position (smaller % = higher up)
   // play.png aspect ≈ 2.2 : 1 (width : height)
   const playW = Math.round(sw * PLAY_SCALE);
-  const playH = Math.round(playW * 76 / 176);   // the cream/green plates are about 2.3 : 1
+  const playH = Math.round(playW * PLAY_BTN.h / PLAY_BTN.w);
 
   // Load the saved volume / on-off, then best-effort autoplay (works on native;
   // may be blocked on web until PLAY).
@@ -55,8 +55,7 @@ export default function MainScreen({ navigation }) {
         activeOpacity={0.85}
         onPress={handlePlay}
       >
-        <Image source={SET_UI.btnGreen.src} style={styles.playImg} resizeMode="stretch" />
-        <View style={styles.playLabelWrap} pointerEvents="none"><Text style={[styles.playLabel, { fontSize: Math.round(playH * 0.46) }]}>Play</Text></View>
+        <Image source={PLAY_BTN.src} style={styles.playImg} resizeMode="contain" />
       </TouchableOpacity>
     </View>
   );

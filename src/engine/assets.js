@@ -768,4 +768,5 @@ export const BOOK_BANNER = require('../../assets/book/banner.png');
 export const BOOK_DIVIDER = require('../../assets/book/divider.png');
 
 // The shop's two picture buttons (Add to Cart, Cashier).
+export const PLAY_BTN = { src: require('../../assets/ui_shop/play.png'), w: 800, h: 326 };   // the first screen's Play button
 export const SHOP_BTN = { add: require('../../assets/ui_shop/add_to_cart.png'), cashier: require('../../assets/ui_shop/cashier.png') };
