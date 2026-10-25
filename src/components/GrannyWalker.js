@@ -9,18 +9,15 @@ import Bubble from './Bubble';
 // Granny picks a road at each junction, so she can head up to the florist, down the left turn before the nursery,
 // or across to the market.
 const NODES = {
-  L:  [150, 735],   // end of the left turn (down-left) 
-  J1: [260, 650],   // junction by the lamp, before the nursery
-  J2: [520, 610],   // in front of the nursery
-  J3: [690, 552],   // the big junction: up the street, or across to the market
-  P:  [880, 388], // outside the pet shop, on the sidewalk edge above the stalls
-  F:  [1035, 318], // along the cobbles above the blue stall
-  FL: [1215, 262], // the florist end of the street
-  M1: [840, 598], // heading to the market, between the roof and the stall crates
-  M2: [980, 642], // the market square, in front of the stalls
-  M3: [1040, 695], // at the bottom of the square
+  A: [272, 571],   // bottom-left end of the street
+  B: [461, 481],   // in front of the nursery
+  C: [625, 408],   // the junction by the grate: up the street, or down to the market square
+  D: [774, 306],   // outside the pet shop
+  E: [831, 269],   // the florist end of the street
+  G: [741, 571],   // heading down towards the apartments
+  H: [823, 702],   // the bottom of the square
 };
-const EDGES = [['L', 'J1'], ['J1', 'J2'], ['J2', 'J3'], ['J3', 'P'], ['P', 'F'], ['F', 'FL'], ['J3', 'M1'], ['M1', 'M2'], ['M2', 'M3']];
+const EDGES = [['A', 'B'], ['B', 'C'], ['C', 'D'], ['D', 'E'], ['C', 'G'], ['G', 'H']];
 const nbrs = (n) => EDGES.filter((e) => e.includes(n)).map((e) => (e[0] === n ? e[1] : e[0]));
 const SPEED = 1.15;       // base px per update
 const TICK = 36;          // about 28 updates a second: she glides
@@ -41,7 +38,7 @@ const FrameImg = React.memo(function FrameImg({ src, w, h, show, flip }) {
 });
 
 export default function GrannyWalker({ k, z = 8, onOpen, flag }) {
-  const s = useRef({ x: NODES.J2[0], y: NODES.J2[1], from: 'J2', to: 'J3', prev: 'J2', dx: 1, dy: -0.3, frame: 0, talk: -1, until: 0, sub: 0 }).current;
+  const s = useRef({ x: NODES.B[0], y: NODES.B[1], from: 'B', to: 'C', prev: 'B', dx: 1, dy: -0.3, frame: 0, talk: -1, until: 0, sub: 0 }).current;
   const [, tick] = useState(0);
 
   useEffect(() => {

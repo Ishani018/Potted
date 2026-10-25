@@ -360,7 +360,7 @@ export const NURSERY_BG = require('../../assets/shop/nursery_v11.png');
 // ─── Inventory grid background (7 cols × 5 rows, 1226×912) ────────────────────
 
 // ─── New screen backgrounds ───────────────────────────────────────────────────
-export const MAP_BG = require('../../assets/ui_comps/mapoftown_v2.png');
+export const MAP_BG = require('../../assets/ui_comps/mapoftown_v3.jpeg');
 export const HOME_BG = require('../../assets/homeinsidescreen.png');
 // The pet shop in three states: both doors shut, the Pet Food door open, both doors open.
 export const PETSHOP_STATES = {

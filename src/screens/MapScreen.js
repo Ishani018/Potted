@@ -13,12 +13,12 @@ const PLOPPER_W = 1376;
 const PLOPPER_H = 768;
 // label = sign text; x/y = centre of the sign (text + arrow); dest = nav target.
 const BUTTONS = [
-  { label: 'MARKET',  dest: 'Trade',   x: 1059, y: 392 },
-  { label: 'NURSERY', dest: 'Nursery', x: 474,  y: 319 },
-  { label: 'HOME',    dest: 'Home',    x: 111,  y: 516 },
-  { label: 'ADOPT',   dest: 'PetShop', x: 855,  y: 200 },
-  { label: 'APARTMENTS', dest: 'Lobby', x: 761,  y: 587 },
-  { label: 'FLORIST', dest: 'Counter', x: 1100, y: 214 },
+  { label: 'MARKET',  dest: 'Trade',   x: 700,  y: 440 },
+  { label: 'NURSERY', dest: 'Nursery', x: 354,  y: 330 },
+  { label: 'HOME',    dest: 'Home',    x: 70,   y: 500 },
+  { label: 'ADOPT',   dest: 'PetShop', x: 543,  y: 262 },
+  { label: 'APARTMENTS', dest: 'Lobby', x: 1169, y: 600 },
+  { label: 'FLORIST', dest: 'Counter', x: 741,  y: 255 },
 ];
 
 export default function MapScreen({ navigation }) {
