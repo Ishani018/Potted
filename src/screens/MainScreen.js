@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { MAIN_BG, UI_IMAGES } from '../engine/assets';
+import { View, Image, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { MAIN_BG, UI_IMAGES, SET_UI } from '../engine/assets';
 import { ensureMusic, setMusicOn, getAudioPrefs, subscribeAudio, loadAudioPrefs } from '../engine/audio';
 
 export default function MainScreen({ navigation }) {
@@ -11,12 +11,12 @@ export default function MainScreen({ navigation }) {
   useEffect(() => subscribeAudio(setAudio), []);
 
   // ── PLAY button — EDIT THESE TWO to resize/move ──────────────────────────────
-  const PLAY_SCALE = 0.31; // fraction of screen width (bigger number = bigger button)
+  const PLAY_SCALE = 0.24; // fraction of screen width (bigger number = bigger button)
   const PLAY_LEFT = '78%'; // horizontal center of the button
   const PLAY_TOP = '63%'; // vertical position (smaller % = higher up)
   // play.png aspect ≈ 2.2 : 1 (width : height)
   const playW = Math.round(sw * PLAY_SCALE);
-  const playH = Math.round(playW * 185 / 374);   // the new PLAY picture is 374x185
+  const playH = Math.round(playW * 76 / 176);   // the cream/green plates are about 2.3 : 1
 
   // Load the saved volume / on-off, then best-effort autoplay (works on native;
   // may be blocked on web until PLAY).
@@ -55,7 +55,8 @@ export default function MainScreen({ navigation }) {
         activeOpacity={0.85}
         onPress={handlePlay}
       >
-        <Image source={UI_IMAGES.mainPlay} style={styles.playImg} resizeMode="contain" />
+        <Image source={SET_UI.btnGreen.src} style={styles.playImg} resizeMode="stretch" />
+        <View style={styles.playLabelWrap} pointerEvents="none"><Text style={[styles.playLabel, { fontSize: Math.round(playH * 0.46) }]}>Play</Text></View>
       </TouchableOpacity>
     </View>
   );
@@ -87,4 +88,6 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   playImg: { width: '100%', height: '100%' },
+  playLabelWrap: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
+  playLabel: { fontFamily: Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' }), fontWeight: 'bold', color: '#fff3d0' },
 });
