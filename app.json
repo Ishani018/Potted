@@ -4,17 +4,20 @@
     "slug": "potted",
     "version": "1.0.0",
     "orientation": "landscape",
-    "icon": "./assets/ui_comps/nurseryshop.png",
+    "icon": "./assets/icon/icon.png",
     "splash": {
       "resizeMode": "contain",
       "backgroundColor": "#1a0f00"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/ui_comps/nurseryshop.png",
-        "backgroundColor": "#1a0f00"
+        "foregroundImage": "./assets/icon/adaptive.png",
+        "backgroundColor": "#f3e0b6"
       },
       "package": "com.ishani.potted"
+    },
+    "web": {
+      "favicon": "./assets/icon/favicon.png"
     }
   }
 }

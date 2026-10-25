@@ -147,3 +147,5 @@ assets/fonts/*
 !assets/Sunlight_on_the_Sprouts.mp3
 !assets/ui_btn/
 !assets/ui_btn/*.png
+!assets/icon/
+!assets/icon/*.png
