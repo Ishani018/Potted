@@ -6,7 +6,6 @@ import { PETS } from '../constants/gameData';
 import PetSprite from '../components/PetSprite';
 import ScreenHud from '../components/ScreenHud';
 import { PixelText } from '../components/Pixel';
-import { useNotice } from '../components/PurchaseNotice';
 import { AdoptModal } from '../components/PetCard';
 import { SHOP_PETS } from './PetShopScreen';
 
@@ -36,15 +35,6 @@ export default function PetRoomScreen({ navigation }) {
   const { state } = useGame();
   const [box, setBox] = useState({ w: 0, h: 0 });
   const [selected, setSelected] = useState(null);
-  const [notice, notify] = useNotice(2600);
-  const lastTap = React.useRef({ key: null, t: 0 });
-  // first tap: a small popup with the pet's name; a second tap on the same pet opens its card
-  const tapPet = (key) => {
-    const now = Date.now();
-    if (lastTap.current.key === key && now - lastTap.current.t < 2600) { lastTap.current = { key: null, t: 0 }; setSelected(key); return; }
-    lastTap.current = { key, t: now };
-    notify({ iconNode: <PetSprite petKey={key} w={60} h={60} />, title: names[key] ?? PETS[key].name, subtitle: `${PETS[key].breed}. Tap again for its card.` });
-  };
   const sw = box.w, sh = box.h;
   const owned = state.player.ownedPets ?? [];
   const names = state.player.petNames ?? {};
@@ -74,7 +64,7 @@ export default function PetRoomScreen({ navigation }) {
               <React.Fragment key={key}>
                 <TouchableOpacity
                   activeOpacity={0.85}
-                  onPress={() => tapPet(key)}
+                  onPress={() => setSelected(key)}
                   style={{ position: 'absolute', left: fx(spot.x) - w / 2, top: fy(spot.y) - h, width: w, height: h, zIndex: z }}
                 >
                   <PetSprite petKey={key} w={w} h={h} flip={shop.flip} />
@@ -97,7 +87,6 @@ export default function PetRoomScreen({ navigation }) {
         onMap={() => navigation.navigate('Map')}
       />
 
-      {notice}
       {selected && <AdoptModal petKey={selected} onClose={() => setSelected(null)} />}
     </View>
   );
