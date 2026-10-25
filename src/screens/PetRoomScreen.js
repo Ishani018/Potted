@@ -69,9 +69,6 @@ export default function PetRoomScreen({ navigation }) {
                 >
                   <PetSprite petKey={key} w={w} h={h} flip={shop.flip} />
                 </TouchableOpacity>
-                <View pointerEvents="none" style={[styles.nameWrap, { left: fx(spot.x) - fx(110), width: fx(220), top: fy(spot.y + 6), zIndex: 90 }]}>
-                  <View style={styles.tag}><PixelText size={Math.max(8, fx(11))}>{names[key] ?? PETS[key].name}</PixelText></View>
-                </View>
               </React.Fragment>
             );
           })}
@@ -97,7 +94,6 @@ export default function PetRoomScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   pill: { alignItems: 'center', backgroundColor: '#f3e0b6', borderWidth: 3, borderColor: '#8a5a2a', borderRadius: 16, paddingHorizontal: 18, paddingVertical: 6 },
-  tag: { backgroundColor: '#f3e0b6', borderWidth: 2, borderColor: '#8a5a2a', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 1 },
   root: { flex: 1, backgroundColor: '#2a1608' },
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
   title: { position: 'absolute', left: 0, right: 0, textAlign: 'center' },
