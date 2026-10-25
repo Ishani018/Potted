@@ -12,8 +12,8 @@ export default function MainScreen({ navigation }) {
 
   // ── PLAY button — EDIT THESE TWO to resize/move ──────────────────────────────
   const PLAY_SCALE = 0.26; // fraction of screen width (bigger number = bigger button)
-  const PLAY_LEFT = '78%'; // horizontal center of the button
-  const PLAY_TOP = '63%'; // vertical position (smaller % = higher up)
+  const PLAY_LEFT = '74%'; // horizontal center of the button
+  const PLAY_TOP = '66%'; // vertical position (smaller % = higher up)
   // play.png aspect ≈ 2.2 : 1 (width : height)
   const playW = Math.round(sw * PLAY_SCALE);
   const playH = Math.round(playW * PLAY_BTN.h / PLAY_BTN.w);
