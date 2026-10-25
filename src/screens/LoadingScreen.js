@@ -46,7 +46,7 @@ export default function LoadingScreen({ navigation }) {
           {/* the bottom of the picture fades to dark so the words read */}
           <View pointerEvents="none" style={[styles.fade, { height: box.h * 0.4 }]}>
             {Array.from({ length: BANDS }, (_, i) => (
-              <View key={i} style={{ flex: 1, backgroundColor: `rgba(30,16,6,${(0.92 * Math.pow(i / (BANDS - 1), 1.3)).toFixed(3)})` }} />
+              <View key={i} style={{ flex: 1, backgroundColor: `rgba(243,224,182,${(0.95 * Math.pow(i / (BANDS - 1), 1.2)).toFixed(3)})` }} />
             ))}
           </View>
 
@@ -68,12 +68,12 @@ export default function LoadingScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#1e1006' },
-  bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
+  root: { flex: 1, backgroundColor: '#f3e0b6' },
+  bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%', opacity: 0.42 },
   fade: { position: 'absolute', left: 0, right: 0, bottom: 0 },
-  tip: { position: 'absolute', left: 0, right: 0, textAlign: 'center', fontFamily: SERIF, color: '#fff3d0', textShadowColor: 'rgba(0,0,0,0.6)', textShadowRadius: 4, textShadowOffset: { width: 0, height: 1 }, paddingHorizontal: 90 },
+  tip: { position: 'absolute', left: 0, right: 0, textAlign: 'center', fontFamily: SERIF, color: '#4a2a10', fontWeight: 'bold', paddingHorizontal: 90 },
   corner: { position: 'absolute', flexDirection: 'row', alignItems: 'center', gap: 8 },
-  loading: { fontFamily: SERIF, color: '#fff3d0', textShadowColor: 'rgba(0,0,0,0.6)', textShadowRadius: 3 },
-  track: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,243,208,0.22)' },
-  fill: { height: '100%', backgroundColor: '#ffe29a' },
+  loading: { fontFamily: SERIF, fontWeight: 'bold', color: '#4a2a10' },
+  track: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(138,90,42,0.25)' },
+  fill: { height: '100%', backgroundColor: '#6a9a3a' },
 });
