@@ -151,3 +151,7 @@ assets/fonts/*
 !assets/icon/*.png
 !assets/seeds4/
 !assets/seeds4/*.png
+!marketing/
+!marketing/instagram/
+!marketing/instagram/potted/
+!marketing/instagram/potted/*.png
