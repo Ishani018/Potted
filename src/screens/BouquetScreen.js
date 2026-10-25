@@ -330,10 +330,9 @@ export default function BouquetScreen({ navigation, route }) {
             {((packOrder && boxOut) || (!packOrder && step === 1)) && (
               <PixelButton onPress={undo} disabled={picks.length === 0 || boxLid !== 'open'} tone="wood" size={fs(7, 6)} scale={0.7} label="UNDO" style={{ alignSelf: 'stretch' }} />
             )}
-            {!packOrder && step > 0 && step < 5 && (
-              <PixelButton onPress={resetAll} tone="wood" size={fs(7, 6)} scale={0.7} label="START OVER" style={{ alignSelf: 'stretch' }} />
-            )}
           </View>
+          {/* the bin: tap it to throw the bouquet away and start again */}
+          {!packOrder && step > 0 && step < 5 && <TrashBin onPress={resetAll} w={fx(70)} style={{ position: 'absolute', left: fx(1195), top: fy(656), zIndex: 30 }} />}
         </>
       )}
 
@@ -559,6 +558,15 @@ function Wrapped({ art, reveal, picks, left, top, w, h, ribbon, bow, fx }) {
       {ribbon && <TiedRibbon x={left + (w - rw) / 2} y={wy} w={rw} h={rh} source={ribbon} />}
       {bow && <Image source={bow} resizeMode="contain" style={[{ position: 'absolute', left: left + w * 0.5 - fx(58), top: wy - fx(42), width: fx(116), height: fx(88), zIndex: 9 }, SOFT]} />}
     </Animated.View>
+  );
+}
+
+function TrashBin({ onPress, w, style }) {
+  const [hot, setHot] = useState(false);
+  return (
+    <TouchableOpacity activeOpacity={1} onPress={onPress} onPressIn={() => setHot(true)} onPressOut={() => setHot(false)} style={[{ width: w, height: w * 1.1, alignItems: 'center', justifyContent: 'flex-end' }, style]}>
+      <Image source={hot ? UI_IMAGES.trashopen : UI_IMAGES.trashclosed} resizeMode="contain" style={{ width: w, height: w * 1.1 }} />
+    </TouchableOpacity>
   );
 }
 
