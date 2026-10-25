@@ -49,30 +49,16 @@ export const HANGING_PLANT_IMAGES = {
 };
 
 // ─── Seeds ───────────────────────────────────────────────────────────────────
-export const SEED_IMAGES = {
-  daisy:          require('../../assets/seeds2/daisyseed.png'),
-  snapdragon:     require('../../assets/seeds2/snapdragonseed.png'),
-  poppy:          require('../../assets/seeds2/poppyseed.png'),
-  marigold:       require('../../assets/seeds2/marigoldseed.png'),
-  peony:          require('../../assets/seeds2/peonyseed.png'),
-  hydrenga:       require('../../assets/seeds2/hydrengaseed.png'),
-  rose:           require('../../assets/seeds2/roseseed.png'),
-  stringofpearls: require('../../assets/seeds2/stringofpearlseed.png'),
-  Philodendron:   require('../../assets/seeds2/philodendronseed.png'),
-  jasmine:        require('../../assets/seeds2/jasmineseed.png'),
-  petunia:        require('../../assets/seeds2/petuniaseed.png'),
-  Bougainvillea:  require('../../assets/seeds2/bougenvillaseed.png'),
-};
+export const SEED_IMAGES = {};
 
-// The clean seed-bag pictures (used in the cart / order summary), kept before the painted cut-outs replace them below.
-export const SEED_ICONS = { ...SEED_IMAGES };
-
-// Painted seed bags (cut from the nursery counter); the other three keep the old bag art.
+// One seed bag everywhere: the round embroidered bag with the flower on its patch.
 Object.assign(SEED_IMAGES, {
-  daisy: require('../../assets/seeds3/daisy.png'), marigold: require('../../assets/seeds3/marigold.png'), rose: require('../../assets/seeds3/rose.png'),
-  hydrenga: require('../../assets/seeds3/hydrenga.png'), jasmine: require('../../assets/seeds3/jasmine.png'), peony: require('../../assets/seeds3/peony.png'),
-  poppy: require('../../assets/seeds3/poppy.png'), petunia: require('../../assets/seeds3/petunia.png'), snapdragon: require('../../assets/seeds3/snapdragon.png'),
+  daisy: require('../../assets/seeds4/daisy.png'), snapdragon: require('../../assets/seeds4/snapdragon.png'), poppy: require('../../assets/seeds4/poppy.png'),
+  marigold: require('../../assets/seeds4/marigold.png'), peony: require('../../assets/seeds4/peony.png'), hydrenga: require('../../assets/seeds4/hydrenga.png'),
+  rose: require('../../assets/seeds4/rose.png'), stringofpearls: require('../../assets/seeds4/stringofpearls.png'), Philodendron: require('../../assets/seeds4/Philodendron.png'),
+  jasmine: require('../../assets/seeds4/jasmine.png'), petunia: require('../../assets/seeds4/petunia.png'), Bougainvillea: require('../../assets/seeds4/Bougainvillea.png'),
 });
+export const SEED_ICONS = { ...SEED_IMAGES };
 
 Object.assign(SEED_IMAGES, {
   goldenrose: require('../../assets/rare/goldenrose_seed.png'),

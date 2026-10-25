@@ -72,7 +72,7 @@ const HANG_SLOTS = [
   { id: 'h:chain', box: [1170, 236, 1268, 344] },
 ];
 const CAN_SPOT = [1318, 700];
-const BAG = { w: 88, h: 114 };
+const BAG = { w: 106, h: 97 };
 const REGISTER = { x0: 1360, y0: 690, x1: 1610, y1: 890 };
 const LCD = { x: 1488, y: 755 };
 const MAX_BASKET = 12;

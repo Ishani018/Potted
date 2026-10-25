@@ -149,3 +149,5 @@ assets/fonts/*
 !assets/ui_btn/*.png
 !assets/icon/
 !assets/icon/*.png
+!assets/seeds4/
+!assets/seeds4/*.png
