@@ -11,10 +11,10 @@ const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Alm
 const INK = '#5a3410';
 const INK_SOFT = '#8a6a40';
 
-export function NoticeCard({ icon, title, subtitle }) {
+export function NoticeCard({ icon, iconNode, title, subtitle }) {
   return (
     <View style={s.card}>
-      {icon ? (
+      {iconNode ? <View style={{ width: 64, height: 64, alignItems: 'center', justifyContent: 'center' }}>{iconNode}</View> : icon ? (
         <View style={s.iconPlate}>
           <Image source={icon} style={s.icon} resizeMode="contain" />
         </View>
