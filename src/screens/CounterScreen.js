@@ -235,7 +235,8 @@ export default function CounterScreen({ navigation, route }) {
   const c = order ? CUSTOMERS[order.customer] : null;
   const harvested = state.player.harvestedFlowers ?? {};
   const have = order ? (harvested[order.flowerKey] ?? 0) : 0;
-  const canGive = order?.type === 'flowers' && have >= order.qty;
+  const anyHave = Object.values(harvested).reduce((n, v) => n + v, 0);
+  const canGive = order?.type === 'flowers' && anyHave >= order.qty;   // any flowers can go in the box, even the wrong ones
   const done = list.filter((o) => o.done).length;
   const art = order ? TRADE_IMAGES[TRADE_FLOWERS[order.flowerKey]?.img] : null;
 
@@ -304,7 +305,7 @@ export default function CounterScreen({ navigation, route }) {
                     <View style={styles.tkSay}><Text style={styles.say} numberOfLines={3}>{customerLine(order, 'short')}</Text></View>
                     <Text style={styles.tkHead}>{order.type === 'flowers' ? 'They would like' : 'Make them a bouquet'}</Text>
                     {order.type === 'flowers' ? (
-                      <TkRow fx={fx} source={FLOWER_ART[order.flowerKey] || art} label={flowerName(order.flowerKey)} right={`${Math.min(have, order.qty)} / ${order.qty}`} bad={!canGive} />
+                      <TkRow fx={fx} source={FLOWER_ART[order.flowerKey] || art} label={flowerName(order.flowerKey)} right={`${Math.min(have, order.qty)} / ${order.qty}`} bad={have < order.qty} />
                     ) : (
                       <>
                         <TkRow fx={fx} source={FLOWER_ART[order.flowerKey] || art} cluster={order.combo} label={order.combo ? 'Flowers' : flowerName(order.flowerKey)} />

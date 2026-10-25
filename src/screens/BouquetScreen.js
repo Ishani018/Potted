@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, Animated, Easing, PanResponder, Platform, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { SET_UI, BOUQUET_BG, TRADE_IMAGES, UI_IMAGES, MAKE_IMAGES, BOW_IMAGES, ORDER_ART, BOX_IMAGES, BOOK_STAMP, CUSTOMER_IMAGES, CUSTOMER_POSES } from '../engine/assets';
@@ -81,6 +81,9 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const HEAD = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 const BODY = Platform.select({ web: "'PatrickHand', Georgia, serif", default: 'PatrickHand' });
 
+// What you were in the middle of making survives a trip to the counter: one bouquet in progress, and one box per flower order.
+const SAVED = {};
+
 export default function BouquetScreen({ navigation, route }) {
   const { state, dispatch } = useGame();
   const harvested = state.player.harvestedFlowers ?? {};
@@ -89,22 +92,25 @@ export default function BouquetScreen({ navigation, route }) {
   // Packing a flower order: no paper, no ribbon. Flowers go into an open box on the mat, the box closes,
   // and it goes back to the counter (route.params.pack = the order's id).
   const packId = route?.params?.pack ?? null;
-  const [taken, setTaken] = useState(route?.params?.takeOrder ?? null);   // the order you took: the bouquet goes to them
+  const saveKey = packId ? 'p' + packId : 'b';
+  const sv = useRef(SAVED[saveKey] || {}).current;
+  const [boxOut, setBoxOut] = useState(sv.boxOut ?? false);       // a flower order's box has been dragged onto the mat
+  const [taken, setTaken] = useState(route?.params?.takeOrder ?? sv.taken ?? null);   // the order you took: the bouquet goes to them
   const [cardOpen, setCardOpen] = useState(null);      // the index card that is opened out
   const [paperTip, setPaperTip] = useState(false);     // the paper's name, shown for a moment after you change it
   const [boxLid, setBoxLid] = useState('open');          // 'open' | 'closing' | 'closed'
-  const [step, setStep] = useState(packId ? 1 : 0);     // 0 paper .. 3 tie, 4 bow, 5 give
-  const [bow, setBow] = useState(null);            // the bow on the ribbon: { color, i } into BOW_IMAGES
-  const [picks, setPicks] = useState([]);
-  const [chosenPaper, setPaper] = useState('plain');
+  const [step, setStep] = useState(sv.step ?? (packId ? 1 : 0));     // 0 paper .. 3 tie, 4 bow, 5 give
+  const [bow, setBow] = useState(sv.bow ?? null);            // the bow on the ribbon: { color, i } into BOW_IMAGES
+  const [picks, setPicks] = useState(sv.picks ?? []);
+  const [chosenPaper, setPaper] = useState(sv.paper ?? 'plain');
   const [folded, setFolded] = useState({ left: false, right: false });
-  const [tied, setTied] = useState(false);
-  const [made, setMade] = useState(false);              // the paper, flowers and ribbon have been turned into the bouquet
+  const [tied, setTied] = useState(sv.tied ?? false);
+  const [made, setMade] = useState(sv.made ?? false);              // the paper, flowers and ribbon have been turned into the bouquet
   const firstFold = useRef(null);               // which flap went over first (it ends up underneath)
   const [celebrate, setCelebrate] = useState(0);   // the perfect-order burst
-  const [neat, setNeat] = useState(true);           // stays true while every swipe is steady
+  const [neat, setNeat] = useState(sv.neat ?? true);           // stays true while every swipe is steady
   const [binPage, setBinPage] = useState(0);
-  const [ribbonKey, setRibbonKey] = useState('ribbonRed');
+  const [ribbonKey, setRibbonKey] = useState(sv.ribbonKey ?? 'ribbonRed');
   const [notice, notify] = useNotice(3000);
   const coins = state.player.coins;
   const level = playerLevel(state.player);
@@ -146,9 +152,9 @@ export default function BouquetScreen({ navigation, route }) {
   const payout = result ? result.net + neatBonus + (order ? Math.round(order.tip * grade.mult) : 0) : 0;
 
   // ── step helpers ──
-  const resetAll = () => { firstFold.current = null; setStep(0); setPicks([]); setFolded({ left: false, right: false }); setTied(false); setMade(false); setNeat(true); setRibbonKey('ribbonRed'); setBow(null); };
+  const resetAll = () => { firstFold.current = null; setStep(0); setPicks([]); setFolded({ left: false, right: false }); setTied(false); setMade(false); setNeat(true); setRibbonKey('ribbonRed'); setBow(null); setBoxOut(false); };
   const choosePaper = (id) => { setPaper(id); setStep(1); };
-  const addFlower = (key) => { if (!full && left(key) > 0 && needs(key) > 0 && step === 1) setPicks((p) => [...p, key]); };
+  const addFlower = (key) => { if (!full && left(key) > 0 && needs(key) > 0 && step === 1 && (!packOrder || boxOut)) setPicks((p) => [...p, key]); };
   const undo = () => setPicks((p) => p.slice(0, -1));
   const goFold = () => { if (full) setStep(3); };      // no folding any more: flowers, then a ribbon, then one tap makes the bouquet
   const makeBouquet = () => { if (!tied || made) return; setMade(true); setTimeout(() => setStep(4), 450); };
@@ -159,7 +165,7 @@ export default function BouquetScreen({ navigation, route }) {
     setTimeout(() => setBoxLid('closed'), 380);
     setTimeout(() => {
       const given = picks;
-      setPicks([]); setBoxLid('open');
+      setPicks([]); setBoxLid('open'); setBoxOut(false);
       navigation.navigate('Counter', { deliverBox: { orderId: packOrder.id, given } });
     }, 1000);
   };
@@ -172,6 +178,11 @@ export default function BouquetScreen({ navigation, route }) {
   };
   const onTied = (wasNeat, key) => { if (!wasNeat) setNeat(false); setRibbonKey(key); setTied(true); };
   const onBow = (pick) => setBow(pick);
+  // no buttons to press: each step moves on by itself once its part is done
+  useEffect(() => { if (!packOrder && step === 1 && full) { const t = setTimeout(() => setStep(3), 450); return () => clearTimeout(t); } }, [step, full, packOrder]);
+  useEffect(() => { if (!packOrder && step === 3 && tied && !made) { const t = setTimeout(makeBouquet, 500); return () => clearTimeout(t); } }, [step, tied, made]);
+  useEffect(() => { if (step === 4 && bow != null) { const t = setTimeout(() => setStep(5), 700); return () => clearTimeout(t); } }, [step, bow]);
+  useEffect(() => { if (packOrder && boxOut && full && boxLid === 'open') { const t = setTimeout(closeBox, 450); return () => clearTimeout(t); } }, [full, boxOut]);
   const giveOver = () => {
     if (!result) return;
     dispatch({ type: 'SELL_BOUQUET', flowers: picks, paper, ribbon: ribbonKey, customerId: order ? order.id : null, neat });
@@ -191,6 +202,8 @@ export default function BouquetScreen({ navigation, route }) {
     if (perfect) { setCelebrate(payout);  setTimeout(() => setCelebrate(0), 1900); }
     if (toCounter) setTimeout(() => navigation.navigate('Counter'), perfect ? 1900 : 900);
   };
+
+  useEffect(() => { SAVED[saveKey] = { taken, step, picks, paper: chosenPaper, tied, made, bow, ribbonKey, neat, boxOut }; });
 
   const foundCount = BOUQUET_RECIPES.filter((r) => found[r.id]).length;
   const pw = fx(PAPER_BOX.w), ph = fy(PAPER_BOX.h), pLeft = fx(CX) - pw / 2, pTop = fy(PAPER_BOX.top);
@@ -212,17 +225,17 @@ export default function BouquetScreen({ navigation, route }) {
           )}
 
           {/* ── the sheet on the mat: flowers, flaps, ribbon ── */}
-          {(packOrder || (step <= 3 && !made)) && (
+          {packOrder && boxOut && (
             <View pointerEvents="none" style={{ position: 'absolute', left: pLeft - pw * 0.04, top: pTop + ph * 0.08, width: pw * 1.08, height: pw * 1.08 * 0.75, zIndex: 6 }}>
               <Image source={boxLid === 'open' ? BOX_IMAGES.open : boxLid === 'closing' ? BOX_IMAGES.closing : BOX_IMAGES.top} style={{ position: 'absolute', width: '100%', height: '100%' }} resizeMode="contain" />
-              {!packOrder && step >= 1 && (
-                <Image source={{ plain: MAKE_IMAGES.paperStack, fancy: MAKE_IMAGES.paperFancyStack, layered: MAKE_IMAGES.wrapLayered }[paper] || MAKE_IMAGES.paperStack} resizeMode="contain" style={{ position: 'absolute', left: '15%', top: '44%', width: '26%', height: '30%', transform: [{ rotate: '-8deg' }], ...SOFT }} />
-              )}
-              {!packOrder && tied && <RibbonCoil source={MAKE_IMAGES[ribbonKey]} style={{ position: 'absolute', left: '63%', top: '48%', width: '28%', height: '36%', zIndex: 5 }} />}
               {boxLid === 'open' && picks.map((k, i) => (
                 <Image key={i} source={TRADE_IMAGES[TRADE_FLOWERS[k].img]} resizeMode="contain" style={{ position: 'absolute', left: `${14 + i * 17}%`, top: '18%', width: '32%', height: '42%', ...SOFT }} />
               ))}
             </View>
+          )}
+          {/* a flower order: the closed box waits below the mat; drag it onto the mat and it opens */}
+          {packOrder && !boxOut && (
+            <ClosedBox rest={{ x: fx(750), y: fy(672) }} w={fx(250)} mat={{ l: fx(MAT.x0), t: fy(MAT.y0), r: fx(MAT.x1), b: fy(MAT.y1) }} onOut={() => { setBoxLid('open'); setBoxOut(true); }} />
           )}
           {!packOrder && step >= 1 && step <= 5 && (
             <HandOver
@@ -230,7 +243,7 @@ export default function BouquetScreen({ navigation, route }) {
               tray={{ x: fx(TRAY.cx), y: fy(TRAY.cy), w: fx(TRAY.w), h: fy(TRAY.h) }} onDrop={giveOver}
             >
               {/* the flat sheet with its flowers and flaps; it fades out once both flaps are over */}
-              <FadeOut hide={true}>
+              <FadeOut hide={made}>
                 <View style={{ width: pw, height: ph }} pointerEvents="none">
                   <SheetLayers paper={paper} w={pw} h={ph} shadow />
                 </View>
@@ -294,7 +307,7 @@ export default function BouquetScreen({ navigation, route }) {
           )}
           {shown.map((key, i) => (
             <Bunch
-              key={key + i} flowerKey={key} count={left(key)} size={fx(BIN_D) * 0.72} disabled={step !== 1 || full || left(key) <= 0 || needs(key) <= 0} dim={step === 1}
+              key={key + i} flowerKey={key} count={left(key)} size={fx(BIN_D) * 0.72} disabled={step !== 1 || full || left(key) <= 0 || needs(key) <= 0 || (!!packOrder && !boxOut)} dim={step === 1}
               x={fx(BINS[i].x) - fx(BIN_D) * 0.36} y={fy(BINS[i].y) - fx(BIN_D) * 0.36}
               dropRight={fx(MAT.x0)} onAdd={() => addFlower(key)} fs={fs} plate={{ x: fx(PLATES[i].x), y: fy(PLATES[i].y) }} fxs={fx(1)}
             />
@@ -314,26 +327,8 @@ export default function BouquetScreen({ navigation, route }) {
 
           {/* buttons, right column (beside the scissors) */}
           <View style={{ position: 'absolute', left: fx(1070), top: fy(604), width: fx(250), alignItems: 'center', gap: fy(4), zIndex: 30 }}>
-            {packOrder && (
-              <>
-                <PixelButton onPress={closeBox} disabled={!full || boxLid !== 'open'} size={fs(8, 6)} label="CLOSE THE BOX" style={{ alignSelf: 'stretch' }} />
-                <PixelButton onPress={undo} disabled={picks.length === 0 || boxLid !== 'open'} tone="wood" size={fs(7, 6)} scale={0.7} label="UNDO" style={{ alignSelf: 'stretch' }} />
-              </>
-            )}
-            {!packOrder && step === 1 && (
-              <>
-                <PixelButton onPress={goFold} disabled={!full} size={fs(9, 7)} label="ADD RIBBON" style={{ alignSelf: 'stretch' }} />
-                <PixelButton onPress={undo} disabled={picks.length === 0} tone="wood" size={fs(7, 6)} scale={0.7} label="UNDO" style={{ alignSelf: 'stretch' }} />
-              </>
-            )}
-            {!packOrder && step === 3 && tied && !made && (
-              <PixelButton onPress={makeBouquet} size={fs(8, 6)} label="MAKE BOUQUET" style={{ alignSelf: 'stretch' }} />
-            )}
-            {step === 4 && (
-              <PixelButton onPress={() => setStep(5)} disabled={bow == null} size={fs(9, 7)} label="FINISH" style={{ alignSelf: 'stretch' }} />
-            )}
-            {step === 5 && result && (
-              <PixelButton onPress={giveOver} size={fs(8, 6)} label={order ? 'GIVE IT' : 'SELL IT'} style={{ alignSelf: 'stretch' }} />
+            {((packOrder && boxOut) || (!packOrder && step === 1)) && (
+              <PixelButton onPress={undo} disabled={picks.length === 0 || boxLid !== 'open'} tone="wood" size={fs(7, 6)} scale={0.7} label="UNDO" style={{ alignSelf: 'stretch' }} />
             )}
             {!packOrder && step > 0 && step < 5 && (
               <PixelButton onPress={resetAll} tone="wood" size={fs(7, 6)} scale={0.7} label="START OVER" style={{ alignSelf: 'stretch' }} />
@@ -571,6 +566,31 @@ function Wrapped({ art, reveal, picks, left, top, w, h, ribbon, bow, fx }) {
       )}
       {ribbon && <TiedRibbon x={left + (w - rw) / 2} y={wy} w={rw} h={rh} source={ribbon} />}
       {bow && <Image source={bow} resizeMode="contain" style={[{ position: 'absolute', left: left + w * 0.5 - fx(58), top: wy - fx(42), width: fx(116), height: fx(88), zIndex: 9 }, SOFT]} />}
+    </Animated.View>
+  );
+}
+
+// The closed box for a flower order, resting below the mat: drag it onto the mat to open it.
+function ClosedBox({ rest, w, mat, onOut }) {
+  const drag = useRef(new Animated.ValueXY()).current;
+  const cfg = useRef({});
+  cfg.current = { rest, mat, onOut };
+  const pan = useRef(PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderMove: (_, g) => drag.setValue({ x: g.dx, y: g.dy }),
+    onPanResponderRelease: (_, g) => {
+      const { rest: r, mat: m, onOut: out } = cfg.current;
+      const x = r.x + g.dx, y = r.y + g.dy;
+      if (Math.hypot(g.dx, g.dy) < 8 || (x > m.l && x < m.r && y > m.t && y < m.b)) out();
+      else Animated.spring(drag, { toValue: { x: 0, y: 0 }, friction: 7, useNativeDriver: false }).start();
+    },
+    onPanResponderTerminate: () => Animated.spring(drag, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start(),
+  })).current;
+  const h = w * 235 / 383;
+  return (
+    <Animated.View {...pan.panHandlers} style={{ position: 'absolute', left: rest.x - w / 2, top: rest.y - h / 2, width: w, height: h, zIndex: 40, transform: drag.getTranslateTransform() }}>
+      <Image source={BOX_IMAGES.top} resizeMode="contain" style={[{ width: w, height: h }, SOFT]} />
     </Animated.View>
   );
 }
