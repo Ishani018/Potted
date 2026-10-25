@@ -756,3 +756,6 @@ export const BTN_PLATES = [
   { src: require('../../assets/ui_btn/b2.png'), ratio: 652 / 246 }, { src: require('../../assets/ui_btn/b3.png'), ratio: 497 / 211 },
   { src: require('../../assets/ui_btn/b4.png'), ratio: 362 / 182 }, { src: require('../../assets/ui_btn/b5.png'), ratio: 248 / 242 },
 ];
+
+// The game's title sign (transparent), shown in the middle of the loading screen
+export const GAME_LOGO = { src: require('../../assets/ui_comps/potted_logo.png'), w: 1000, h: 545 };

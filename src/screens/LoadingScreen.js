@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, Image, StyleSheet, Animated, Easing, Platform } from 'react-native';
-import { ROOM_BGS, HOME_BG, MAP_BG, TRADE_IMAGES } from '../engine/assets';
+import { ROOM_BGS, HOME_BG, MAP_BG, TRADE_IMAGES, GAME_LOGO } from '../engine/assets';
 
 // Shown after PLAY, in the style of a big-game loading screen: a full-bleed painting of the game, a thin bar along the
 // very bottom, a tip above it, and a small spinning flower with "Loading" in the corner. Then on to the town map.
@@ -20,6 +20,7 @@ const BANDS = 14;   // stacked dark bands that fade the bottom of the picture (n
 export default function LoadingScreen({ navigation }) {
   const progress = useRef(new Animated.Value(0)).current;
   const spin = useRef(new Animated.Value(0)).current;
+  const pop = useRef(new Animated.Value(0)).current;
   const [box, setBox] = useState({ w: 0, h: 0 });
   const art = useMemo(() => ART[Math.floor(Math.random() * ART.length)], []);
   const tip = useMemo(() => TIPS[Math.floor(Math.random() * TIPS.length)], []);
@@ -28,6 +29,7 @@ export default function LoadingScreen({ navigation }) {
     Animated.timing(progress, { toValue: 1, duration: DURATION, easing: Easing.inOut(Easing.quad), useNativeDriver: false }).start(({ finished }) => {
       if (finished) setTimeout(() => navigation.replace('Map'), 300);
     });
+    Animated.timing(pop, { toValue: 1, duration: 900, easing: Easing.out(Easing.back(1.4)), useNativeDriver: false }).start();
     const loop = Animated.loop(Animated.timing(spin, { toValue: 1, duration: 1800, easing: Easing.linear, useNativeDriver: false }));
     loop.start();
     return () => loop.stop();
@@ -49,6 +51,12 @@ export default function LoadingScreen({ navigation }) {
               <View key={i} style={{ flex: 1, backgroundColor: `rgba(243,224,182,${(0.95 * Math.pow(i / (BANDS - 1), 1.2)).toFixed(3)})` }} />
             ))}
           </View>
+
+          {/* the title sign, in the middle */}
+          <Animated.Image source={GAME_LOGO.src} resizeMode="contain" pointerEvents="none" style={{
+            position: 'absolute', left: box.w / 2 - 190 * k, top: box.h * 0.46 - (190 * k * GAME_LOGO.h / GAME_LOGO.w), width: 380 * k, height: 380 * k * GAME_LOGO.h / GAME_LOGO.w,
+            opacity: pop, transform: [{ scale: pop.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] }) }],
+          }} />
 
           <Text style={[styles.tip, { fontSize: 19 * k, bottom: 34 * k }]}>Tip: {tip}</Text>
 
