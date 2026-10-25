@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import PlateImage from './PlateImage';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { SET_UI } from '../engine/assets';
 
@@ -24,7 +25,7 @@ export default function NoticeToast({ hidden, onVisit }) {
   if (notice.kind === 'stray') {
     const bh = 38, btn = (label, onPress, tone, w) => (
       <TouchableOpacity activeOpacity={0.8} onPress={onPress} style={{ width: w, height: bh, overflow: 'hidden' }}>
-        <Image source={SET_UI[tone].src} resizeMode="stretch" style={{ position: 'absolute', left: 0, top: 0, width: w, height: bh }} />
+        <PlateImage w={w} h={bh} />
         <View style={{ width: w, height: bh, alignItems: 'center', justifyContent: 'center' }}>
           <Text numberOfLines={1} style={styles.btnText}>{label}</Text>
         </View>

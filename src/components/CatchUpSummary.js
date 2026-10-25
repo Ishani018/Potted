@@ -1,4 +1,5 @@
 import React from 'react';
+import PlateImage from './PlateImage';
 import { View, Text, Image, Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { UI_IMAGES, SET_UI } from '../engine/assets';
@@ -70,7 +71,7 @@ export default function CatchUpSummary({ hidden }) {
         )}
 
         <TouchableOpacity activeOpacity={0.8} onPress={() => dispatch({ type: 'DISMISS_SUMMARY' })} style={styles.btn}>
-          <Image source={SET_UI.btnGreen.src} resizeMode="stretch" style={{ position: 'absolute', left: 0, top: 0, width: 150, height: 44 }} />
+          <PlateImage w={150} h={44} />
           <Text style={styles.btnTxt}>Let's go!</Text>
         </TouchableOpacity>
       </View>
@@ -98,5 +99,5 @@ const styles = StyleSheet.create({
   coin: { width: 22, height: 22 },
   coinTxt: { fontFamily: HEAD, color: '#4a2a10', fontSize: 14.5 },
   btn: { width: 150, height: 44, marginTop: 16, marginBottom: 2, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  btnTxt: { fontFamily: HEAD, fontSize: 17, fontWeight: 'bold', color: '#fff3d0' },
+  btnTxt: { fontFamily: HEAD, fontSize: 17, fontWeight: 'bold', color: '#4a2a10' },
 });

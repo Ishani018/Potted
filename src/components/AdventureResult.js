@@ -1,4 +1,5 @@
 import React from 'react';
+import PlateImage from './PlateImage';
 import { View, Text, Image, Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { SET_UI, SHOP_IMAGES, UI_IMAGES, TRADE_IMAGES } from '../engine/assets';
@@ -33,7 +34,7 @@ export default function AdventureResult() {
           ))}
           {res.full && <Text style={styles.note}>Your bag was full, so a seed stayed behind.</Text>}
           <TouchableOpacity activeOpacity={0.8} onPress={() => dispatch({ type: 'CLOSE_ADVENTURE' })} style={styles.btn}>
-            <Image source={SET_UI.btnGreen.src} resizeMode="stretch" style={{ position: 'absolute', left: 0, top: 0, width: 150, height: 44 }} />
+            <PlateImage w={150} h={44} />
             <Text style={styles.btnTxt}>Nice!</Text>
           </TouchableOpacity>
         </View>
@@ -47,7 +48,7 @@ const styles = StyleSheet.create({
   card: { width: 380, maxWidth: '86%', backgroundColor: '#f3e0b6', borderWidth: 4, borderColor: '#8a5a2a', borderRadius: 18, padding: 16 },
   paper: { alignItems: 'center' },
   btn: { width: 150, height: 44, marginTop: 16, marginBottom: 2, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  btnTxt: { fontFamily: HEAD, fontSize: 17, fontWeight: 'bold', color: '#fff3d0' },
+  btnTxt: { fontFamily: HEAD, fontSize: 17, fontWeight: 'bold', color: '#4a2a10' },
   title: { fontFamily: HEAD, fontSize: 26, fontWeight: 'bold', color: '#4a2a10', lineHeight: 30 },
   box: { width: 84, height: 74, marginTop: 4 },
   sub: { fontFamily: BODY, color: '#8a6a40', fontSize: 16, marginTop: 2 },

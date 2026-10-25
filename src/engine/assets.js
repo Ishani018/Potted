@@ -1,5 +1,4 @@
 export const MAIN_BG = require('../../assets/ui_comps/mainscreen.jpeg');
-export const GAME_MUSIC = require('../../assets/Sunlight_on_the_Sprouts.mp3');
 
 // ─── Backgrounds ────────────────────────────────────────────────────────────
 export const ROOM_BGS = {   // one picture per room: no seasons, no wall colours
@@ -174,14 +173,12 @@ export const ORDER_ART = {
 };
 
 // The painted pet card frame (blank: all text is live). 'nocoin' has the coin icon wiped too.
-export const PETCARD_IMAGES = { coin: require('../../assets/petcard/card_coin.png'), nocoin: require('../../assets/petcard/card_nocoin.png') };
 export const PETCARD_GRASS = require('../../assets/petcard/grass.png');   // the grass patch a pet sits on in the card
 // The cardboard delivery box: open with tissue, half-closed, closed from above and closed at an angle.
 export const BOX_IMAGES = {
   open: require('../../assets/boxes/open1.png'), closing: require('../../assets/boxes/closing.png'),
   top: require('../../assets/boxes/closed_top.png'), iso: require('../../assets/boxes/closed_iso.png'),
 };
-export const ORDER_SLIP = require('../../assets/shop/order_slip.png');
 export const SHOP_IMAGES = {
   box: require('../../assets/shop/box.png'), backpack: require('../../assets/shop/backpack.png'),
   bell: require('../../assets/shop/bell.png'), spool: require('../../assets/shop/spool.png'),
@@ -361,15 +358,13 @@ Object.assign(TRADE_IMAGES, {
 export const NURSERY_BG = require('../../assets/shop/nursery_v11.png');
 
 // ─── Inventory grid background (7 cols × 5 rows, 1226×912) ────────────────────
-export const INVENTORY_BG = require('../../assets/ui_comps/inventory.png');
 
 // ─── New screen backgrounds ───────────────────────────────────────────────────
 export const MAP_BG = require('../../assets/ui_comps/mapoftown_v2.png');
 export const HOME_BG = require('../../assets/homeinsidescreen.png');
 // The pet shop in three states: both doors shut, the Pet Food door open, both doors open.
-export const PETSHOP_BG = require('../../assets/petshop/shop_closed.png');
 export const PETSHOP_STATES = {
-  closed: PETSHOP_BG,
+  closed: require('../../assets/petshop/shop_closed.png'),
   food: require('../../assets/petshop/shop_food_open.png'),
   foster: require('../../assets/petshop/shop_foster_open.png'),
   both: require('../../assets/petshop/shop_both_open.png'),
@@ -397,7 +392,6 @@ export const PETFOOD_IMAGES = {
 };
 
 export const TRADE_BG = require('../../assets/flowertradeshop.png');   // market exterior (scales)
-export const TRADING_BG = require('../../assets/tradingscreen.png');    // the 6-slot trade page
 export const COUNTER_BG = require('../../assets/shop/counter.png');   // florist counter seen from behind the till (1678×937)
 // The bouquet workspace seen from above (1536×1024, zoomed-in version). workspace_wide.png is the
 // same scene pulled back a little; swap the line to try it.
@@ -588,11 +582,11 @@ export const SET_UI = {
   close: { src: require('../../assets/ui_sheet/ui_10.png'), w: 110, h: 106 },
   music: { src: require('../../assets/ui_sheet/ui_15.png'), w: 94, h: 86 },
   sound: { src: require('../../assets/ui_sheet/ui_13.png'), w: 100, h: 88 },
-  btnCream: { src: require('../../assets/ui_sheet/ui_38.png'), w: 176, h: 76 },
-  btnRed: { src: require('../../assets/ui_sheet/ui_39.png'), w: 187, h: 78 },
+  btnCream: { src: require('../../assets/ui_btn/b2.png'), w: 652, h: 246 },
+  btnRed: { src: require('../../assets/ui_btn/b2.png'), w: 652, h: 246 },
   heart: { src: require('../../assets/ui_sheet/ui_50.png'), w: 56, h: 49 },
   heartOff: { src: require('../../assets/ui_sheet/ui_51.png'), w: 57, h: 50 },
-  btnGreen: { src: require('../../assets/ui_sheet/ui_37.png'), w: 180, h: 70 },
+  btnGreen: { src: require('../../assets/ui_btn/b2.png'), w: 652, h: 246 },
 };
 // Furniture seen from four sides (front, left and right three-quarter, side) so it can be turned
 export const ROT_IMAGES = {
@@ -695,8 +689,6 @@ export const APT_ART = {   // the empty rooms: picture + its pixel size
   3: { src: require('../../assets/building/apt3.png'), w: 2000, h: 667 },
 };
 export const BUILDING_BG = require('../../assets/building/building.png');   // the apartment building, three floors
-export const GALLERY_BG = GALLERY_BGS.a;
-export const LOADING_BG = require('../../assets/loadingshop.png');
 
 // ─── Florist customers ────────────────────────────────────────────────────────
 // Full-body sprites (400×600, transparent, feet at the bottom), one per customer
@@ -744,31 +736,23 @@ export const HERBALIST_IMAGES = {
 // the page areas defined in components/BookFrame.js. Ships with the repo.
 export const BOOK_IMG = require('../../assets/book/flowerbook.png');
 // Painted page cards for the book's tiles, the title ribbon and a vine divider.
-export const BOOK_TILES = {
-  empty:    require('../../assets/book/tile_empty.png'),
-  found:    require('../../assets/book/tile_found.png'),
-  selected: require('../../assets/book/tile_selected.png'),
-  locked:   require('../../assets/book/tile_locked.png'),
-};
 // Painted buttons, cut in three (left cap | stretchy middle | right cap) so the
 // flowers on the corners keep their shape at any width. cap = cap width / height.
-export const BOOK_BUTTONS = {
-  green: { l: require('../../assets/book/btn_green_l.png'), m: require('../../assets/book/btn_green_m.png'), r: require('../../assets/book/btn_green_r.png'), cap: 237 / 200, tall: 1.9 },
-  wood:  { l: require('../../assets/book/btn_wood_l.png'),  m: require('../../assets/book/btn_wood_m.png'),  r: require('../../assets/book/btn_wood_r.png'),  cap: 82 / 170 },
-  red:   { l: require('../../assets/book/btn_red_l.png'),   m: require('../../assets/book/btn_red_m.png'),   r: require('../../assets/book/btn_red_r.png'),   cap: 80 / 170 },
-};
-export const BOOK_ARROWS = { left: require('../../assets/book/arrow_left.png'), right: require('../../assets/book/arrow_right.png') };
 export const BOOK_MEDAL = require('../../assets/book/medal.png');
 // Torn-paper card with a ribbon seal (pop-up summaries), hanging tag (hover labels),
 // wax tick stamp (done), XP bar frame + fill, notice board (daily goals, later).
-export const BOOK_CARD = require('../../assets/book/card_big.png');
 export const BOOK_TAG = require('../../assets/book/tag.png');
 export const BOOK_STAMP = require('../../assets/book/stamp.png');
 export const BOOK_XP = { frame: require('../../assets/book/xp_frame.png'), fill: require('../../assets/book/xp_fill.png') };
-export const BOOK_BOARD = require('../../assets/book/board.png');
-export const BOOK_BANNER = require('../../assets/book/banner.png');
 export const BOOK_DIVIDER = require('../../assets/book/divider.png');
 
 // The shop's two picture buttons (Add to Cart, Cashier).
 export const PLAY_BTN = { src: require('../../assets/ui_shop/play.png'), w: 800, h: 326 };   // the first screen's Play button
 export const SHOP_BTN = { add: require('../../assets/ui_shop/add_to_cart.png'), cashier: require('../../assets/ui_shop/cashier.png') };
+
+// The cream plate buttons, widest to squarest; PlateImage picks the one whose shape is nearest the button's size.
+export const BTN_PLATES = [
+  { src: require('../../assets/ui_btn/b0.png'), ratio: 1084 / 334 }, { src: require('../../assets/ui_btn/b1.png'), ratio: 762 / 287 },
+  { src: require('../../assets/ui_btn/b2.png'), ratio: 652 / 246 }, { src: require('../../assets/ui_btn/b3.png'), ratio: 497 / 211 },
+  { src: require('../../assets/ui_btn/b4.png'), ratio: 362 / 182 }, { src: require('../../assets/ui_btn/b5.png'), ratio: 248 / 242 },
+];

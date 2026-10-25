@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PlateImage from './PlateImage';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { SET_UI } from '../engine/assets';
 
@@ -43,7 +44,7 @@ export function PixelButton({ label, onPress, tone = 'green', disabled, style, s
   const art = SET_UI[plate];
   const H = Math.round(Math.max(34, size * 3.1) * scale);
   const [bw, setBw] = useState(0);
-  const dark = plate === 'btnCream';
+  const dark = true;
   return (
     <TouchableOpacity
       onLayout={(e) => setBw(Math.round(e.nativeEvent.layout.width))}
@@ -52,7 +53,7 @@ export function PixelButton({ label, onPress, tone = 'green', disabled, style, s
       disabled={disabled}
       style={[{ height: H, minWidth: Math.round(H * 2.2), alignItems: 'center', justifyContent: 'center', flexShrink: 0 }, disabled && { opacity: 0.55 }, style]}
     >
-      <Image source={art.src} style={{ position: 'absolute', left: 0, top: 0, width: bw || '100%', height: H }} resizeMode="stretch" pointerEvents="none" />
+      <PlateImage w={bw || H * 2.65} h={H} />
       <View style={{ paddingHorizontal: 22 }}>
         <Text style={[styles.label, { fontSize: Math.round(Math.max(13, size * 1.45 * Math.max(0.85, scale))), color: dark ? '#4a2a10' : '#fff3d0' }]} numberOfLines={1}>{label}</Text>
       </View>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, TextInput, StyleSheet, Platform } from 'react-native';
+import PlateImage from './PlateImage';
 import { useGame } from '../context/GameContext';
 import { useLayout } from '../context/LayoutContext';
 import { PETCARD_GRASS, PERK_ICONS, SET_UI, UI_IMAGES } from '../engine/assets';
@@ -94,11 +95,11 @@ export function AdoptModal({ petKey, onClose, finder }) {
     right = { label: canAfford ? (isPair ? 'Adopt the pair' : 'Adopt') : `Need ${pet.price - state.player.coins} more`, onPress: canAfford ? handleAdopt : undefined, disabled: !canAfford };
   }
 
-  const Btn = ({ b, green }) => (
+  const Btn = ({ b }) => (
     <TouchableOpacity activeOpacity={0.8} disabled={!b.onPress} onPress={b.onPress} style={{ width: Math.min(170, W * 0.36), height: 42, opacity: b.disabled ? 0.55 : 1 }}>
-      <Image source={SET_UI[green ? 'btnGreen' : 'btnCream'].src} resizeMode="stretch" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, width: '100%', height: '100%' }} />
+      <PlateImage w={Math.min(170, W * 0.36)} h={42} />
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Text numberOfLines={1} style={{ fontFamily: HEAD, fontSize: 15, fontWeight: 'bold', color: green ? '#fff3d0' : INK }}>{b.label}</Text>
+        <Text numberOfLines={1} style={{ fontFamily: HEAD, fontSize: 15, fontWeight: 'bold', color: INK }}>{b.label}</Text>
       </View>
     </TouchableOpacity>
   );

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import PlateImage from '../components/PlateImage';
 import { View, Image, TouchableOpacity, StyleSheet, Text, Platform } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { TRADE_BG, TRADE_IMAGES, UI_IMAGES, SET_UI } from '../engine/assets';
@@ -12,7 +13,7 @@ const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Alm
 function PlateBtn({ tone = 'btnCream', label, onPress, w = 120, h = 40, disabled, color = '#4a2a10' }) {
   return (
     <TouchableOpacity activeOpacity={0.8} onPress={disabled ? undefined : onPress} style={{ width: w, height: h, opacity: disabled ? 0.5 : 1 }}>
-      <Image source={SET_UI[tone].src} resizeMode="stretch" style={{ position: 'absolute', left: 0, top: 0, width: w, height: h }} />
+      <PlateImage w={w} h={h} />
       <View style={{ width: w, height: h, alignItems: 'center', justifyContent: 'center' }}>
         <Text numberOfLines={1} style={{ fontFamily: SERIF, fontSize: 15, fontWeight: 'bold', color }}>{label}</Text>
       </View>
@@ -106,7 +107,7 @@ export default function TradingScreen({ navigation }) {
                 </View>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
                   <PlateBtn label="Cancel" onPress={() => setActiveKey(null)} w={92} h={38} />
-                  <PlateBtn tone="btnGreen" label={`Sell ${qty}`} onPress={sell} w={112} h={38} color="#fff3d0" />
+                  <PlateBtn tone="btnGreen" label={`Sell ${qty}`} onPress={sell} w={112} h={38} color="#4a2a10" />
                 </View>
               </View>
             ) : null}

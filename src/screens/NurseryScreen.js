@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import PlateImage from '../components/PlateImage';
 import { View, Text, Image, ScrollView, Animated, PanResponder, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { playSfx } from '../engine/audio';
@@ -122,7 +123,7 @@ function DragItem({ it, at, k, onDrop, onTap, z, mul = 1, ghost = false }) {
 function PlateBtn({ tone = 'btnCream', label, onPress, w = 150, h = 40, style, color = '#4a2a10', fs = 15 }) {
   return (
     <TouchableOpacity activeOpacity={0.8} onPress={() => { playSfx(SFX.tap, 0.8); onPress && onPress(); }} style={[{ width: w, height: h }, style]}>
-      <Image source={SET_UI[tone].src} resizeMode="stretch" style={{ position: 'absolute', left: 0, top: 0, width: w, height: h }} />
+      <PlateImage w={w} h={h} />
       <View style={{ width: w, height: h, alignItems: 'center', justifyContent: 'center' }}>
         <Text numberOfLines={1} style={{ fontFamily: SERIF, fontSize: fs, color, fontWeight: 'bold' }}>{label}</Text>
       </View>
@@ -353,7 +354,7 @@ export default function NurseryScreen({ navigation }) {
               ) : (
                 <View style={styles.cartBtns}>
                   <PlateBtn label="Keep shopping" onPress={close} w={160} h={42} />
-                  <PlateBtn tone={lines.length ? 'btnGreen' : 'btnCream'} label={`Pay ${sum}`} onPress={checkout} w={140} h={42} color={lines.length ? '#fff3d0' : '#8a7a60'} />
+                  <PlateBtn tone={lines.length ? 'btnGreen' : 'btnCream'} label={`Pay ${sum}`} onPress={checkout} w={140} h={42} color={lines.length ? '#4a2a10' : '#8a7a60'} />
                 </View>
               )}
             </TouchableOpacity>

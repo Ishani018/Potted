@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import PlateImage from '../components/PlateImage';
 import { View, Text, Image, Animated, Easing, PanResponder, Pressable, Platform, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { SET_UI, SEED_ICONS, COUNTER_BG, CUSTOMER_IMAGES, CUSTOMER_POSES, TRADE_IMAGES, SEED_IMAGES, UI_IMAGES, BOOK_STAMP, MAKE_IMAGES, ORDER_ART, BOW_IMAGES, BOX_IMAGES } from '../engine/assets';
@@ -64,9 +65,9 @@ function PlateBtn({ label, onPress, w, h, fs, disabled }) {
   const tone = disabled ? 'btnCream' : 'btnGreen';
   return (
     <Pressable onPress={disabled ? undefined : onPress} style={{ width: w, height: h }}>
-      <Image source={SET_UI[tone].src} resizeMode="stretch" style={{ position: 'absolute', left: 0, top: 0, width: w, height: h }} />
+      <PlateImage w={w} h={h} />
       <View style={{ width: w, height: h, alignItems: 'center', justifyContent: 'center' }}>
-        <Text numberOfLines={1} style={{ fontFamily: HEAD, fontSize: fs, fontWeight: 'bold', color: disabled ? '#8a7a60' : '#fff3d0' }}>{label}</Text>
+        <Text numberOfLines={1} style={{ fontFamily: HEAD, fontSize: fs, fontWeight: 'bold', color: disabled ? '#8a7a60' : '#4a2a10' }}>{label}</Text>
       </View>
     </Pressable>
   );

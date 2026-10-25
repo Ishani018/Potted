@@ -338,20 +338,12 @@ export default function BouquetScreen({ navigation, route }) {
       )}
 
       {/* Recipes: the garden journal's bouquet pages */}
-      <TouchableOpacity
-        style={[styles.recipeBtn, { left: fx(18), top: fy(706), paddingHorizontal: fx(10), paddingVertical: fy(6) }]}
-        onPress={() => navigation.navigate('FlowerBook', { tab: 'bouquets' })}
-        activeOpacity={0.85}
-      >
-        <PixelText size={fs(7, 6)}>RECIPES {foundCount}/{BOUQUET_RECIPES.length}</PixelText>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.recipeBtn, { left: fx(18), top: fy(660), paddingHorizontal: fx(10), paddingVertical: fy(6) }]}
-        onPress={() => navigation.navigate('Counter')}
-        activeOpacity={0.85}
-      >
-        <PixelText size={fs(7, 6)}>{'< COUNTER'}</PixelText>
-      </TouchableOpacity>
+      <View style={{ position: 'absolute', left: fx(18), top: fy(706), zIndex: 30 }}>
+        <PixelButton tone="wood" size={fs(6, 5)} scale={0.8} label={`RECIPES ${foundCount}/${BOUQUET_RECIPES.length}`} onPress={() => navigation.navigate('FlowerBook', { tab: 'bouquets' })} />
+      </View>
+      <View style={{ position: 'absolute', left: fx(18), top: fy(660), zIndex: 30 }}>
+        <PixelButton tone="wood" size={fs(6, 5)} scale={0.8} label="< COUNTER" onPress={() => navigation.navigate('Counter')} />
+      </View>
 
       {/* no settings button or level badge here: they would sit on top of the flower bins */}
       {celebrate > 0 && <Celebration fx={fx} fy={fy} coins={celebrate} />}

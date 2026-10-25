@@ -145,3 +145,5 @@ assets/fonts/*
 !assets/wateringcan1.png
 !assets/wateringcan2.png
 !assets/Sunlight_on_the_Sprouts.mp3
+!assets/ui_btn/
+!assets/ui_btn/*.png
