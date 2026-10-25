@@ -70,7 +70,7 @@ export default function CatchUpSummary({ hidden }) {
         )}
 
         <TouchableOpacity activeOpacity={0.8} onPress={() => dispatch({ type: 'DISMISS_SUMMARY' })} style={styles.btn}>
-          <Image source={SET_UI.btnGreen.src} resizeMode="stretch" style={StyleSheet.absoluteFill} />
+          <Image source={SET_UI.btnGreen.src} resizeMode="stretch" style={{ position: 'absolute', left: 0, top: 0, width: 150, height: 44 }} />
           <Text style={styles.btnTxt}>Let's go!</Text>
         </TouchableOpacity>
       </View>
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
     alignItems: 'center', justifyContent: 'center', zIndex: 9500,
   },
-  panel: { width: 380, maxWidth: '86%', backgroundColor: '#f3e0b6', borderWidth: 4, borderColor: '#8a5a2a', borderRadius: 18, padding: 16, alignItems: 'center' },
+  panel: { width: 380, maxWidth: '86%', backgroundColor: '#f3e0b6', borderWidth: 4, borderColor: '#8a5a2a', borderRadius: 18, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 18, alignItems: 'center' },
   title: { fontFamily: HEAD, fontSize: 26, fontWeight: 'bold', color: '#4a2a10' },
   sub: { fontFamily: HEAD, color: '#7a5030', fontSize: 15, marginBottom: 10 },
   row: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6, borderTopWidth: 1, borderTopColor: '#d9bd86' },
@@ -97,6 +97,6 @@ const styles = StyleSheet.create({
   coinRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
   coin: { width: 22, height: 22 },
   coinTxt: { fontFamily: HEAD, color: '#4a2a10', fontSize: 14.5 },
-  btn: { width: 150, height: 44, marginTop: 14, alignItems: 'center', justifyContent: 'center' },
+  btn: { width: 150, height: 44, marginTop: 16, marginBottom: 2, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   btnTxt: { fontFamily: HEAD, fontSize: 17, fontWeight: 'bold', color: '#fff3d0' },
 });

@@ -47,10 +47,12 @@ export default function PetRoomScreen({ navigation }) {
 
       {sw > 0 && (
         <>
-          <PixelText size={Math.max(12, fx(24))} style={[styles.title, { top: fy(36) }]}>PET LOUNGE</PixelText>
-          <PixelText size={Math.max(8, fx(11))} color="#f6e2b8" style={[styles.title, { top: fy(36) + fx(34) }]}>
-            {owned.length}/{ORDER.length} PETS HOME
-          </PixelText>
+          <View pointerEvents="none" style={[styles.title, { top: fy(30) }]}>
+            <View style={styles.pill}>
+              <PixelText size={Math.max(12, fx(20))}>Pet lounge</PixelText>
+              <PixelText size={Math.max(8, fx(11))} color="#7a5030">{owned.length} of {ORDER.length} pets home</PixelText>
+            </View>
+          </View>
 
           {ORDER.map((key) => {
             const spot = SPOTS[key];
@@ -68,16 +70,16 @@ export default function PetRoomScreen({ navigation }) {
                   <PetSprite petKey={key} w={w} h={h} flip={shop.flip} />
                 </TouchableOpacity>
                 <View pointerEvents="none" style={[styles.nameWrap, { left: fx(spot.x) - fx(110), width: fx(220), top: fy(spot.y + 6), zIndex: 90 }]}>
-                  <PixelText size={Math.max(8, fx(12))}>{(names[key] ?? PETS[key].name).toUpperCase()}</PixelText>
+                  <View style={styles.tag}><PixelText size={Math.max(8, fx(11))}>{names[key] ?? PETS[key].name}</PixelText></View>
                 </View>
               </React.Fragment>
             );
           })}
 
           {owned.length === 0 && (
-            <PixelText size={Math.max(9, fx(14))} color="#f6e2b8" style={[styles.title, { top: fy(300) }]}>
-              NO PETS YET - ADOPT ONE AT THE PET SHOP!
-            </PixelText>
+            <View pointerEvents="none" style={[styles.title, { top: fy(300) }]}>
+              <View style={styles.pill}><PixelText size={Math.max(9, fx(13))}>No pets yet. Adopt one at the pet shop!</PixelText></View>
+            </View>
           )}
         </>
       )}
@@ -94,6 +96,8 @@ export default function PetRoomScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  pill: { alignItems: 'center', backgroundColor: '#f3e0b6', borderWidth: 3, borderColor: '#8a5a2a', borderRadius: 16, paddingHorizontal: 18, paddingVertical: 6 },
+  tag: { backgroundColor: '#f3e0b6', borderWidth: 2, borderColor: '#8a5a2a', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 1 },
   root: { flex: 1, backgroundColor: '#2a1608' },
   bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
   title: { position: 'absolute', left: 0, right: 0, textAlign: 'center' },

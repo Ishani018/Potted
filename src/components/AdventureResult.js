@@ -1,9 +1,8 @@
 import React from 'react';
-import { View, Text, Image, Platform, StyleSheet } from 'react-native';
+import { View, Text, Image, Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { BOOK_CARD, SHOP_IMAGES, UI_IMAGES, TRADE_IMAGES } from '../engine/assets';
+import { SET_UI, SHOP_IMAGES, UI_IMAGES, TRADE_IMAGES } from '../engine/assets';
 import { PETS, POTTED_FLOWERS, HANGING_PLANTS, TRADE_FLOWERS } from '../constants/gameData';
-import { PixelButton } from './Pixel';
 
 const HEAD = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 const BODY = Platform.select({ web: "'PatrickHand', Georgia, serif", default: 'PatrickHand' });
@@ -18,7 +17,6 @@ export default function AdventureResult() {
   return (
     <View style={styles.overlay}>
       <View style={styles.card}>
-        <Image source={BOOK_CARD} style={styles.art} resizeMode="stretch" />
         <View style={styles.paper}>
           <Text style={styles.title}>{name} is back!</Text>
           <Image source={SHOP_IMAGES.box} style={styles.box} resizeMode="contain" />
@@ -34,7 +32,10 @@ export default function AdventureResult() {
             </View>
           ))}
           {res.full && <Text style={styles.note}>Your bag was full, so a seed stayed behind.</Text>}
-          <PixelButton label="NICE!" size={11} onPress={() => dispatch({ type: 'CLOSE_ADVENTURE' })} style={{ marginTop: 10 }} />
+          <TouchableOpacity activeOpacity={0.8} onPress={() => dispatch({ type: 'CLOSE_ADVENTURE' })} style={styles.btn}>
+            <Image source={SET_UI.btnGreen.src} resizeMode="stretch" style={{ position: 'absolute', left: 0, top: 0, width: 150, height: 44 }} />
+            <Text style={styles.btnTxt}>Nice!</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -43,11 +44,11 @@ export default function AdventureResult() {
 
 const styles = StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center', zIndex: 9500 },
-  // the painted card is 573×760; the writing sits on its inner paper, clear of the corner flowers and ribbon
-  card: { width: 366, height: 486 },
-  art: { position: 'absolute', width: 366, height: 486 },
-  paper: { position: 'absolute', left: 62, right: 62, top: 78, height: 262, alignItems: 'center' },
-  title: { fontFamily: HEAD, fontSize: 26, color: '#4a2a10', lineHeight: 30 },
+  card: { width: 380, maxWidth: '86%', backgroundColor: '#f3e0b6', borderWidth: 4, borderColor: '#8a5a2a', borderRadius: 18, padding: 16 },
+  paper: { alignItems: 'center' },
+  btn: { width: 150, height: 44, marginTop: 16, marginBottom: 2, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  btnTxt: { fontFamily: HEAD, fontSize: 17, fontWeight: 'bold', color: '#fff3d0' },
+  title: { fontFamily: HEAD, fontSize: 26, fontWeight: 'bold', color: '#4a2a10', lineHeight: 30 },
   box: { width: 84, height: 74, marginTop: 4 },
   sub: { fontFamily: BODY, color: '#8a6a40', fontSize: 16, marginTop: 2 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },

@@ -114,7 +114,7 @@ export default function CustomerCorner({ sw, sh }) {
       >
         <TouchableOpacity activeOpacity={0.85} disabled={!arrived} onPress={() => setOpen(true)} style={{ width: w, height: h }}>
           <CustomerSprite customerKey={order.customer} height={h} bob={arrived} />
-          {arrived && <View style={styles.bubble}><PixelText size={Math.max(8, Math.round(h * 0.07))} color={COLORS.gold}>!</PixelText></View>}
+          {arrived && <View style={styles.bubble}><PixelText size={Math.max(10, Math.round(h * 0.08))} color="#b04a2a">!</PixelText></View>}
         </TouchableOpacity>
       </Animated.View>
 
