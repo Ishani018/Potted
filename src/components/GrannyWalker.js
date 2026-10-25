@@ -9,15 +9,15 @@ import Bubble from './Bubble';
 // Granny picks a road at each junction, so she can head up to the florist, down the left turn before the nursery,
 // or across to the market.
 const NODES = {
-  A: [272, 571],   // bottom-left end of the street
-  B: [461, 481],   // in front of the nursery
-  C: [625, 408],   // the junction by the grate: up the street, or down to the market square
-  D: [774, 306],   // outside the pet shop
-  E: [831, 269],   // the florist end of the street
-  G: [741, 571],   // heading down towards the apartments
-  H: [823, 702],   // the bottom of the square
+  A: [296, 566],   // bottom-left end of the shop pavement
+  B: [454, 507],   // in front of the nursery
+  C: [605, 439],   // outside the pet shop
+  D: [743, 375],   // outside the florist
+  E: [853, 331],   // the corner where the pavement bends
+  F: [963, 218],   // round the bend, onto the cobbles
+  G: [1025, 130],  // up the street towards the top-right market
 };
-const EDGES = [['A', 'B'], ['B', 'C'], ['C', 'D'], ['D', 'E'], ['C', 'G'], ['G', 'H']];
+const EDGES = [['A', 'B'], ['B', 'C'], ['C', 'D'], ['D', 'E'], ['E', 'F'], ['F', 'G']];
 const nbrs = (n) => EDGES.filter((e) => e.includes(n)).map((e) => (e[0] === n ? e[1] : e[0]));
 const SPEED = 1.15;       // base px per update
 const TICK = 36;          // about 28 updates a second: she glides

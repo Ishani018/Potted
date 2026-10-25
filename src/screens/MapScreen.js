@@ -15,7 +15,7 @@ const PLOPPER_H = 768;
 const BUTTONS = [
   { label: 'MARKET',  dest: 'Trade',   x: 700,  y: 440 },
   { label: 'NURSERY', dest: 'Nursery', x: 354,  y: 330 },
-  { label: 'HOME',    dest: 'Home',    x: 70,   y: 500 },
+  { label: 'HOME',    dest: 'Home',    x: 66,   y: 540 },
   { label: 'ADOPT',   dest: 'PetShop', x: 543,  y: 262 },
   { label: 'APARTMENTS', dest: 'Lobby', x: 1173, y: 625 },
   { label: 'FLORIST', dest: 'Counter', x: 741,  y: 255 },

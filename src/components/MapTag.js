@@ -1,17 +1,16 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, Animated, Easing, TouchableOpacity } from 'react-native';
-import { PIXEL_FONT } from './Pixel';
+import { Platform } from 'react-native';
+const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 
 // Map location sign: chunky pixel lettering (cream fill, dark outline, bottom
 // shade) with a white pointer arrow under it that bobs gently. Drawn in code so
 // it stays crisp at any size. `u` = one base-pixel in screen px (sw / 1376).
-const OUT = '#14100a';
-const FILL = '#f4ecd8';
-const SHADE = '#a99d82';
-const OFFS = [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]];
+const OUT = '#8a5a2a';
+const FILL = '#f3e0b6';
+const SHADE = '#c9a468';
 
 export default function MapTag({ label, u, delay = 0 }) {
-  const size = Math.max(9, Math.round(28 * u));
   const o = Math.max(1.5, 3 * u);        // outline thickness
   const bob = useRef(new Animated.Value(0)).current;
 
@@ -28,15 +27,6 @@ export default function MapTag({ label, u, delay = 0 }) {
   }, []);
   const y = bob.interpolate({ inputRange: [0, 1], outputRange: [0, -4 * u] });
 
-  const text = (color, dx, dy, key) => (
-    <Text
-      key={key}
-      style={{ position: 'absolute', left: dx, top: dy, fontFamily: PIXEL_FONT, fontSize: size, color, letterSpacing: 0 }}
-    >
-      {label}
-    </Text>
-  );
-
   // Arrow: outline triangle, cream triangle inside, lighter highlight on top.
   const aw = 22 * u, ah = 22 * u;
   const tri = (w, h, color, extra) => ({
@@ -46,12 +36,11 @@ export default function MapTag({ label, u, delay = 0 }) {
 
   return (
     <View style={{ alignItems: 'center' }}>
-      {/* Text block: invisible sizer + layers */}
-      <View>
-        <Text style={{ fontFamily: PIXEL_FONT, fontSize: size, opacity: 0 }}>{label}</Text>
-        {OFFS.map(([ox, oy], i) => text(OUT, ox * o, oy * o, `o${i}`))}
-        {text(SHADE, 0, Math.max(1, 2 * u), 'sh')}
-        {text(FILL, 0, 0, 'fill')}
+      <View style={{
+        backgroundColor: '#f3e0b6', borderColor: '#8a5a2a', borderWidth: Math.max(2, 3 * u), borderRadius: 12 * u,
+        paddingHorizontal: 14 * u, paddingVertical: 4 * u, shadowColor: '#000', shadowOpacity: 0.45, shadowRadius: 6 * u, shadowOffset: { width: 0, height: 3 * u },
+      }}>
+        <Text style={{ fontFamily: SERIF, fontWeight: 'bold', fontSize: Math.max(10, Math.round(26 * u)), color: '#4a2a10', letterSpacing: 0.5 }}>{label}</Text>
       </View>
       <Animated.View style={{ marginTop: 4 * u, alignItems: 'center', transform: [{ translateY: y }] }}>
         <View style={tri(aw, ah, OUT)} />
