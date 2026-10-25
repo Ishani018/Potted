@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Image, Text, StyleSheet, Animated, Easing, Platform } from 'react-native';
-import { LOADING_BG } from '../engine/assets';
+import { LOADING_BG, TRADE_IMAGES } from '../engine/assets';
 
 // Shown after PLAY: the florist-stall scene (loadingshop.png, 1480×798) with its
 // painted progress bar. The green fill, the % and the logo
@@ -12,12 +12,14 @@ const IMG_H = 798;
 const TRACK = { x0: 706, x1: 1328, y0: 540, y1: 570 };
 const PCT_Y = 614, PCT_X = 1007;
 const INK = '#4a2a10';
+const TIPS = ['Tap a thirsty plant with the watering can.', 'Hearts keep your favourites at the top of the journal.', 'Pets bring home surprises from their adventures.', 'Customers love a bouquet tied with their favourite ribbon.', 'Shelf pots and hanging pots are sold at the nursery.'];
 const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 
 export default function LoadingScreen({ navigation }) {
   const progress = useRef(new Animated.Value(0)).current;
   const [box, setBox] = useState({ w: 0, h: 0 });
   const [pct, setPct] = useState(0);
+  const tip = useMemo(() => TIPS[Math.floor(Math.random() * TIPS.length)], []);
 
   useEffect(() => {
     const id = progress.addListener(({ value }) => setPct(Math.round(value * 100)));
@@ -49,6 +51,20 @@ export default function LoadingScreen({ navigation }) {
             position: 'absolute', left: X(TRACK.x0), top: Y(TRACK.y0), width: fillW, height: trackH,
             backgroundColor: '#7aa83a', borderRadius: 3 * sc, borderTopWidth: 3 * sc, borderTopColor: '#a6cd5e', borderBottomWidth: 3 * sc, borderBottomColor: '#5d8a28',
           }} />
+
+          {/* a title plaque above the bar */}
+          <View style={{ position: 'absolute', left: X(TRACK.x0), width: (TRACK.x1 - TRACK.x0) * sc, top: Y(TRACK.y0) - 112 * sc, alignItems: 'center' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 * sc, backgroundColor: '#f3e0b6', borderWidth: Math.max(3, 5 * sc), borderColor: '#8a5a2a', borderRadius: 26 * sc, paddingHorizontal: 30 * sc, paddingVertical: 12 * sc }}>
+              <Image source={TRADE_IMAGES.daisytrade} style={{ width: 54 * sc, height: 54 * sc }} resizeMode="contain" />
+              <Text style={{ fontFamily: SERIF, fontWeight: 'bold', fontSize: Math.max(16, 52 * sc), color: INK }}>Opening the shop</Text>
+              <Image source={TRADE_IMAGES.rosetrade} style={{ width: 54 * sc, height: 54 * sc }} resizeMode="contain" />
+            </View>
+          </View>
+
+          {/* a tip under the bar */}
+          <View style={{ position: 'absolute', left: X(TRACK.x0), width: (TRACK.x1 - TRACK.x0) * sc, top: Y(PCT_Y) + 38 * sc, alignItems: 'center' }}>
+            <Text style={{ fontFamily: SERIF, fontSize: Math.max(11, 28 * sc), color: '#6a4524', textAlign: 'center' }}>{tip}</Text>
+          </View>
 
           {/* the percentage, on a small cream plaque under the bar */}
           <View style={{ position: 'absolute', left: X(PCT_X) - 52 * sc, width: 104 * sc, top: Y(PCT_Y) - 20 * sc, alignItems: 'center', backgroundColor: '#f3e0b6', borderWidth: Math.max(2, 3 * sc), borderColor: '#8a5a2a', borderRadius: 16 * sc, paddingVertical: 3 * sc }}>
