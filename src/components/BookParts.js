@@ -10,10 +10,10 @@ import { useBook } from './BookNav';
 export const INK = '#4a2a10';
 export const SOFT = '#8a6a40';
 export const PAPER = '#f3e3c0';
-export const PIXEL_FONT = 'PressStart2P';
+export const PIXEL_FONT = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
 // headings: Almendra, a calligraphic face with a storybook, spell-book feel
 export const HEAD = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
-export const BODY = Platform.select({ web: "'PatrickHand', Georgia, serif", default: 'PatrickHand' });
+export const BODY = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });   // one serif across the whole book
 
 // A page title: serif lettering between two little rules (the old parchment ribbon is gone).
 export function RibbonTitle({ children, width = 196, size = 19 }) {

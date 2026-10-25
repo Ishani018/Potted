@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES, UI_IMAGES, TRADE_IMAGES, PET_IMAGES, PAINTING_IMAGES, BOOK_DIVIDER } from '../engine/assets';
+import { SET_UI, POTTED_PLANT_IMAGES, HANGING_PLANT_IMAGES, UI_IMAGES, TRADE_IMAGES, PET_IMAGES, PAINTING_IMAGES, BOOK_DIVIDER } from '../engine/assets';
 import {
   SEED_LOCKS,
   FLOWER_BOOK, RARE_BOOK, POTTED_FLOWERS, HANGING_PLANTS, BOUQUET_RECIPES, TRADE_FLOWERS, seedType,
@@ -14,7 +14,7 @@ import BookFrame from '../components/BookFrame';
 import BookCustomers from '../components/BookCustomers';
 import BookPets from '../components/BookPets';
 import BookPaintings from '../components/BookPaintings';
-import { BookTabs, RibbonTitle, BODY, HEAD, SOFT } from '../components/BookParts';
+import { RibbonTitle, BODY, HEAD, SOFT } from '../components/BookParts';
 import Portrait from '../components/Portrait';
 import TileFrame from '../components/TileFrame';
 import AdventureResult from '../components/AdventureResult';
@@ -31,7 +31,7 @@ import { BookProvider, useBook, CHAPTERS } from '../components/BookNav';
 // pets (choose where they live, rename them) and the gallery's paintings (hang
 // one in the Balcony frame). These used to live in settings.
 
-const PIXEL_FONT = 'PressStart2P';
+const PIXEL_FONT = HEAD;
 
 
 function flowerName(key) {
@@ -147,25 +147,72 @@ function ContentsPages({ found, bouquetsFound }) {
   );
 }
 
+// Tiles that always fit the page: measures the space, then sizes every tile so all rows are on the page.
+function FitGrid({ items, cols, gap = 8, aspect = 0.94, render }) {
+  const [box, setBox] = useState({ w: 0, h: 0 });
+  const rows = Math.max(1, Math.ceil(items.length / cols));
+  const tw = box.w ? Math.max(20, Math.min((box.w - gap * (cols - 1)) / cols, ((box.h - gap * (rows - 1)) / rows) / aspect)) : 0;
+  return (
+    <View style={{ flex: 1 }} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
+      {tw > 0 && (
+        <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap, justifyContent: 'center', alignContent: 'center' }}>
+          {items.map((it, i) => <View key={i} style={{ width: tw, height: tw * aspect }}>{render(it, tw)}</View>)}
+        </View>
+      )}
+    </View>
+  );
+}
+
+// A small heart that favourites a book entry (saved in the player's favourites).
+function Heart({ id, size = 22, style }) {
+  const { state, dispatch } = useGame();
+  const on = (state.player.favourites ?? []).includes(id);
+  return (
+    <TouchableOpacity activeOpacity={0.8} onPress={() => dispatch({ type: 'TOGGLE_FAV', id })} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }} style={style}>
+      <Image source={(on ? SET_UI.heart : SET_UI.heartOff).src} style={{ width: size, height: size * 0.88 }} resizeMode="contain" />
+    </TouchableOpacity>
+  );
+}
+
+// The page heading: the chapter name, then how much you have found as a slim bar.
+function PageHead({ title, have, total, what }) {
+  return (
+    <View style={styles.head}>
+      <Text style={styles.headTitle}>{title}</Text>
+      <View style={styles.headBarRow}>
+        <View style={styles.headBar}><View style={[styles.headFill, { width: `${total ? (have / total) * 100 : 0}%` }]} /></View>
+        <Text style={styles.headCount}>{have} / {total} {what}</Text>
+      </View>
+    </View>
+  );
+}
+
+const Row = ({ k, v }) => (
+  <View style={styles.statRow}><Text style={styles.statKey}>{k}</Text><Text style={styles.statVal}>{v}</Text></View>
+);
+
 function FlowerBookPages({ navigation }) {
   const { state } = useGame();
   const { info } = useBook();
   const tab = info.key;
   const book = state.player.flowerBook ?? {};
+  const favs = state.player.favourites ?? [];
   const bouquetBook = state.player.bouquetBook ?? {};
   const [pickedFlower, setSelected] = useState(FLOWER_BOOK[0].key);
   const [selectedRecipe, setSelectedRecipe] = useState(BOUQUET_RECIPES[0].id);
 
   const level = playerLevel(state.player);
-  // the Flowers page and the Rare Plants page share this layout, with their own lists
+  // the Flowers page and the Rare Plants page share this layout, with their own lists (favourites first)
   const isRare = tab === 'rare';
-  const list = isRare ? RARE_BOOK : FLOWER_BOOK;
-  const selected = list.some((f) => f.key === pickedFlower) ? pickedFlower : list[0].key;
-  const found = list.filter((f) => book[f.key]).length;
-  const entry = list.find((f) => f.key === selected);
+  const base = isRare ? RARE_BOOK : FLOWER_BOOK;
+  const list = [...base].sort((x, y) => (favs.includes('book:' + y.key) ? 1 : 0) - (favs.includes('book:' + x.key) ? 1 : 0));
+  const selected = base.some((f) => f.key === pickedFlower) ? pickedFlower : base[0].key;
+  const found = base.filter((f) => book[f.key]).length;
+  const entry = base.find((f) => f.key === selected);
   const record = book[selected];
   const unlocked = !!record;
   const type = seedType(selected);
+  const hours = (FLOWER_GROWTH[selected]?.hours ?? 3) * 3600000;
 
   return (
     <View style={styles.root}>
@@ -183,96 +230,63 @@ function FlowerBookPages({ navigation }) {
       ) : tab === 'care' ? (
         <CareGuide spread={info.spread} tabs={<BookTabs />} />
       ) : tab === 'bouquets' ? (
-        <BouquetPages
-          found={bouquetBook}
-          selected={selectedRecipe}
-          onSelect={setSelectedRecipe}
-          tabs={<BookTabs />}
-        />
+        <BouquetPages found={bouquetBook} selected={selectedRecipe} onSelect={setSelectedRecipe} />
       ) : (
       <BookFrame
         left={(
         <View style={styles.pageInner}>
-          <BookTabs />
-          <Text style={styles.progress}>{found} / {list.length} {isRare ? 'found' : 'discovered'}</Text>
-          <View style={styles.grid}>
-            {list.map((f) => {
-              const isFound = !!book[f.key];
-              const isSel = f.key === selected;
-              const seedLocked = SEED_LOCKS && !isRare && !isFound && level < seedUnlockLevel(f.key);
-              return (
-                <TouchableOpacity
-                  key={f.key}
-                  style={[styles.tile, isFound && styles.tileFound, isSel && styles.tileSel]}
-                  onPress={() => setSelected(f.key)}
-                  activeOpacity={0.75}
-                >
-                  <TileFrame state={isSel ? 'selected' : isFound ? 'found' : seedLocked ? 'locked' : 'empty'} />
-                  {/* a wax-sealed (level-locked) card shows no picture; the seal is the picture */}
-                  {!seedLocked && (
-                    <View style={styles.tileArt}>
-                      <Image
-                        source={flowerArt(f.key)}
-                        style={[styles.tileImg, !isFound && styles.silhouette]}
-                        resizeMode="contain"
-                      />
-                      {!isFound && <Text style={styles.tileQ}>?</Text>}
-                      {isFound && <Text style={styles.tileStar}>✦</Text>}
-                    </View>
-                  )}
-                  {seedLocked && <Text style={styles.tileLevel}>Lv {seedUnlockLevel(f.key)}</Text>}
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          <PageHead title={info.title} have={found} total={base.length} what={isRare ? 'found' : 'discovered'} />
+          <FitGrid items={list} cols={4} render={(f, tw) => {
+            const isFound = !!book[f.key];
+            const isSel = f.key === selected;
+            const seedLocked = SEED_LOCKS && !isRare && !isFound && level < seedUnlockLevel(f.key);
+            return (
+              <TouchableOpacity style={styles.tile} onPress={() => setSelected(f.key)} activeOpacity={0.75}>
+                <TileFrame state={isSel ? 'selected' : isFound ? 'found' : seedLocked ? 'locked' : 'empty'} />
+                {!seedLocked && (
+                  <Image source={flowerArt(f.key)} style={[{ width: tw * 0.72, height: tw * 0.72 }, !isFound && styles.silhouette]} resizeMode="contain" />
+                )}
+                {seedLocked && <Text style={styles.tileLevel}>Lv {seedUnlockLevel(f.key)}</Text>}
+                {isFound && <Heart id={'book:' + f.key} size={Math.max(14, tw * 0.26)} style={styles.tileHeart} />}
+              </TouchableOpacity>
+            );
+          }} />
         </View>
         )}
         right={(
           <ScrollView style={styles.pageInner} contentContainerStyle={styles.detail} showsVerticalScrollIndicator={false}>
-            {/* Big close-up of the bloom on a soft glow */}
+            <View style={styles.nameRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.name}>{unlocked ? flowerName(selected) : 'Not found yet'}</Text>
+                <Text style={styles.tagline}>{type === 'hanging' ? 'Hanging pot' : 'Shelf pot'}{isRare ? ' · Rare' : ''}</Text>
+              </View>
+              {unlocked && <Heart id={'book:' + selected} size={26} />}
+            </View>
             <View style={styles.hero}>
               <View style={[styles.heroGlow, !unlocked && styles.heroGlowLocked]} />
-              <Image
-                source={flowerArt(selected)}
-                style={[styles.heroImg, !unlocked && styles.silhouette]}
-                resizeMode="contain"
-              />
-              {unlocked ? (
-                <>
-                  <Text style={[styles.heroSpark, { left: '8%', top: '12%' }]}>✦</Text>
-                  <Text style={[styles.heroSpark, { right: '10%', top: '4%', fontSize: 11 }]}>✦</Text>
-                  <Text style={[styles.heroSpark, { right: '6%', bottom: '14%', fontSize: 9 }]}>✦</Text>
-                </>
-              ) : (
-                <Text style={styles.heroQ}>?</Text>
-              )}
+              <Image source={flowerArt(selected)} style={[styles.heroImg, !unlocked && styles.silhouette]} resizeMode="contain" />
             </View>
-            <Text style={styles.name}>{unlocked ? flowerName(selected) : '???'}</Text>
-
-            {/* Pot type is always shown so you know where a new seed goes */}
-            <Text style={styles.tagline}>
-              {type === 'hanging' ? 'Hanging pot' : 'Shelf pot'}{isRare ? '  ·  Rare' : ''}
-            </Text>
 
             {unlocked ? (
               <>
                 <View style={styles.stageRow}>
-                  {stageImages(selected).map((s) => (
-                    <View key={s.label} style={styles.stage}>
-                      <Image source={s.img} style={styles.stageImg} resizeMode="contain" />
-                      <Text style={styles.stageLabel}>{s.label}</Text>
-                    </View>
+                  {stageImages(selected).map((st, i) => (
+                    <React.Fragment key={st.label}>
+                      {i > 0 && <Text style={styles.stageArrow}>›</Text>}
+                      <View style={styles.stage}>
+                        <Image source={st.img} style={styles.stageImg} resizeMode="contain" />
+                        <Text style={styles.stageLabel}>{st.label}</Text>
+                      </View>
+                    </React.Fragment>
                   ))}
                 </View>
                 <Text style={styles.blurb}>{entry.blurb}</Text>
-                <Text style={styles.tip}>Tip: {entry.tip}</Text>
+                <Text style={styles.tip}><Text style={styles.tipKey}>Tip  </Text>{entry.tip}</Text>
                 <View style={styles.stats}>
-                  <Text style={styles.stat}>
-                    Water every {formatDuration((FLOWER_GROWTH[selected]?.hours ?? 3) * 3600000)} · bloom in {formatDuration((FLOWER_GROWTH[selected]?.hours ?? 3) * 3600000 * (type === 'hanging' || isRare ? 1 : 2))}
-                  </Text>
-                  <Text style={styles.stat}>
-                    {isRare ? 'Rare' : 'Common'} · grown {record.grown}× · first {new Date(record.firstAt).toLocaleDateString()}
-                  </Text>
+                  <Row k="Water every" v={formatDuration(hours)} />
+                  <Row k="Blooms in" v={formatDuration(hours * (type === 'hanging' || isRare ? 1 : 2))} />
+                  <Row k="Grown" v={`${record.grown} time${record.grown === 1 ? '' : 's'}`} />
+                  <Row k="First bloom" v={new Date(record.firstAt).toLocaleDateString()} />
                 </View>
               </>
             ) : (
@@ -295,60 +309,68 @@ function FlowerBookPages({ navigation }) {
   );
 }
 
-// Bouquet tab: left page lists the recipes, right page shows the selected one.
-function BouquetPages({ found, selected, onSelect, tabs }) {
+// Bouquet chapter: left page lists the recipes, right page shows the selected one.
+function BouquetPages({ found, selected, onSelect }) {
+  const { state } = useGame();
+  const favs = state.player.favourites ?? [];
   const recipe = BOUQUET_RECIPES.find((r) => r.id === selected);
   const record = found[selected];
   const count = BOUQUET_RECIPES.filter((r) => found[r.id]).length;
+  const list = [...BOUQUET_RECIPES].sort((x, y) => (favs.includes('book:' + y.id) ? 1 : 0) - (favs.includes('book:' + x.id) ? 1 : 0));
   return (
     <BookFrame
       left={(
       <View style={styles.pageInner}>
-        {tabs}
-        <Text style={styles.progress}>{count} / {BOUQUET_RECIPES.length} recipes found</Text>
-        <View style={styles.grid}>
-          {BOUQUET_RECIPES.map((r) => {
-            const got = !!found[r.id];
-            return (
-              <TouchableOpacity
-                key={r.id}
-                style={[styles.tile, styles.recipeTile, r.id === selected && styles.tileSel]}
-                onPress={() => onSelect(r.id)}
-                activeOpacity={0.75}
-              >
-                <TileFrame state={r.id === selected ? 'selected' : got ? 'found' : 'empty'} />
-                {got ? <BouquetArt flowers={r.flowers} size={50} fancy /> : <Text style={styles.recipeQ}>?</Text>}
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+        <PageHead title="Bouquets" have={count} total={BOUQUET_RECIPES.length} what="found" />
+        <FitGrid items={list} cols={3} aspect={0.9} render={(r, tw) => {
+          const got = !!found[r.id];
+          return (
+            <TouchableOpacity style={styles.tile} onPress={() => onSelect(r.id)} activeOpacity={0.75}>
+              <TileFrame state={r.id === selected ? 'selected' : got ? 'found' : 'empty'} />
+              {got ? <BouquetArt flowers={r.flowers} size={tw * 0.66} fancy /> : <Text style={styles.recipeQ}>?</Text>}
+              {got && <Heart id={'book:' + r.id} size={Math.max(14, tw * 0.24)} style={styles.tileHeart} />}
+            </TouchableOpacity>
+          );
+        }} />
       </View>
       )}
       right={(
         <ScrollView style={styles.pageInner} contentContainerStyle={styles.detail} showsVerticalScrollIndicator={false}>
-          <Text style={styles.name}>{record ? recipe.name : '???'}</Text>
+          <View style={styles.nameRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.name}>{record ? recipe.name : 'Secret recipe'}</Text>
+              <Text style={styles.tagline}>{record ? 'Bouquet recipe' : 'Not found yet'}</Text>
+            </View>
+            {record && <Heart id={'book:' + selected} size={26} />}
+          </View>
           {record ? (
             <>
-              <BouquetArt flowers={recipe.flowers} size={96} fancy />
+              <View style={[styles.hero, { height: 104 }]}>
+                <View style={[styles.heroGlow, { width: 96, height: 96, borderRadius: 48 }]} />
+                <BouquetArt flowers={recipe.flowers} size={92} fancy />
+              </View>
               <View style={styles.stageRow}>
                 {recipe.flowers.map((k, i) => (
-                  <View key={i} style={styles.stage}>
-                    <Image source={TRADE_IMAGES[TRADE_FLOWERS[k].img]} style={styles.recipeImg} resizeMode="contain" />
-                    <Text style={styles.stageLabel}>{TRADE_FLOWERS[k].name}</Text>
-                  </View>
+                  <React.Fragment key={i}>
+                    {i > 0 && <Text style={styles.stageArrow}>+</Text>}
+                    <View style={styles.stage}>
+                      <Image source={TRADE_IMAGES[TRADE_FLOWERS[k].img]} style={styles.recipeImg} resizeMode="contain" />
+                      <Text style={styles.stageLabel}>{TRADE_FLOWERS[k].name}</Text>
+                    </View>
+                  </React.Fragment>
                 ))}
               </View>
-              <Text style={styles.tip}>Sells for ×{recipe.multiplier} the flowers' value</Text>
               <View style={styles.stats}>
-                <Text style={styles.stat}>Bouquets made: {record.made}</Text>
-                <Text style={styles.stat}>First made: {new Date(record.firstAt).toLocaleDateString()}</Text>
+                <Row k="Sells for" v={`x${recipe.multiplier} the flowers' value`} />
+                <Row k="Made" v={`${record.made} time${record.made === 1 ? '' : 's'}`} />
+                <Row k="First made" v={new Date(record.firstAt).toLocaleDateString()} />
               </View>
             </>
           ) : (
             <>
-              <Text style={styles.recipeBigQ}>?</Text>
-              <Text style={styles.blurb}>Hint: {recipe.hint}</Text>
-              <Text style={styles.lockedHint}>Tie the right 3 flowers at the market's bouquet table to find this recipe.</Text>
+              <View style={styles.hero}><View style={[styles.heroGlow, styles.heroGlowLocked]} /><Text style={styles.heroQ}>?</Text></View>
+              <Text style={styles.blurb}>{recipe.hint}</Text>
+              <Text style={styles.lockedHint}>Tie the right 3 flowers at the bouquet table to find it.</Text>
             </>
           )}
         </ScrollView>
@@ -363,8 +385,7 @@ const PAPER = '#f3e3c0';
 const styles = StyleSheet.create({
   coverPage: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   coverSmall: { fontFamily: HEAD, fontSize: 18, color: SOFT, marginBottom: 0 },
-  coverTitle: { fontFamily: HEAD, fontSize: 36, color: '#7a3e1a', lineHeight: 38 },
-  coverRule: { flexDirection: 'row', alignItems: 'center', gap: 6, marginVertical: 4 },
+  coverTitle: { fontFamily: HEAD, fontSize: 36, fontWeight: 'bold', color: '#7a3e1a', lineHeight: 38 },
   coverDivider: { width: 200, height: 20, marginTop: 4 },
   coverSub: { fontFamily: BODY, fontSize: 16, color: INK, marginBottom: 8 },
   coverArtRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 2, marginVertical: 8 },
@@ -372,60 +393,53 @@ const styles = StyleSheet.create({
   coverBouquet: { width: 78, height: 84 },
   coverBloom: { width: 62, height: 70 },
   coverHint: { fontFamily: BODY, fontSize: 12.5, color: SOFT },
-  contentsHead: { fontFamily: HEAD, fontSize: 26, color: '#7a3e1a', textAlign: 'center', marginTop: 0, marginBottom: 8 },
-  contentsRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 1 },
+  contentsRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 2 },
   contentsIcon: { width: 34, alignItems: 'center', marginRight: 6 },
   contentsName: { fontFamily: HEAD, fontSize: 21, color: INK },
   contentsCount: { fontFamily: BODY, fontSize: 13, color: SOFT, marginRight: 8, marginBottom: 1 },
   contentsPage: { fontFamily: HEAD, fontSize: 18, color: '#7a3e1a', width: 20, textAlign: 'right' },
   root: { flex: 1, backgroundColor: '#2a1608', alignItems: 'center', justifyContent: 'center' },
-  backImg: { width: '100%', height: '100%' },
 
-  // The page is painted (BookFrame); this just sits inside its content area.
   pageInner: { flex: 1 },
 
-  recipeTile: { width: '29%' },
-  recipeQ: { fontFamily: PIXEL_FONT, fontSize: 16, color: '#b89a6a' },
-  recipeBigQ: { fontFamily: PIXEL_FONT, fontSize: 40, color: '#c9a86a', marginVertical: 14 },
-  recipeImg: { width: 34, height: 34 },
-  progress: { fontFamily: BODY, color: '#8a6a40', fontSize: 13, textAlign: 'center', marginBottom: 3 },
-  grid: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignContent: 'center', gap: 5 },
-  tile: {
-    width: '23%', aspectRatio: 0.88, paddingTop: 10, paddingBottom: 10, paddingHorizontal: 9,
-    alignItems: 'center', justifyContent: 'space-between',
-  },
-  tileFound: {},
-  tileSel: {},
-  tileArt: { flex: 1, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center' },
-  tileImg: { width: '92%', height: '92%' },
-  tileQ: { position: 'absolute', fontFamily: PIXEL_FONT, fontSize: 14, color: '#fbf0cf', textShadowColor: '#5a4630', textShadowRadius: 2 },
-  tileStar: { position: 'absolute', right: 5, top: 0, fontSize: 9, color: '#e0a830' },
-  // names live on the right-hand page; a tile only carries the picture (and a seed level when locked)
-  tileLevel: { position: 'absolute', bottom: 9, alignSelf: 'center', fontFamily: BODY, color: '#5a3410', fontSize: 12 },
-  silhouette: { tintColor: '#4a3a28', opacity: 0.4 },
+  // page heading
+  head: { alignItems: 'center', marginBottom: 8 },
+  headTitle: { fontFamily: HEAD, fontSize: 26, fontWeight: 'bold', color: '#7a3e1a', lineHeight: 28 },
+  headBarRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 3, alignSelf: 'stretch', paddingHorizontal: 6 },
+  headBar: { flex: 1, height: 8, borderRadius: 4, backgroundColor: '#e3cf9c', borderWidth: 1, borderColor: '#cdae78', overflow: 'hidden' },
+  headFill: { height: '100%', backgroundColor: '#6a9a3a' },
+  headCount: { fontFamily: HEAD, fontSize: 13, color: SOFT },
 
-  detail: { alignItems: 'center', paddingBottom: 8 },
-  hero: { width: 110, height: 68, alignItems: 'center', justifyContent: 'center', marginBottom: 1 },
-  heroGlow: {
-    position: 'absolute', width: 64, height: 64, borderRadius: 32,
-    backgroundColor: '#fbeab0', borderWidth: 3, borderColor: '#ecd48a',
-  },
+  // tiles
+  tile: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  tileHeart: { position: 'absolute', right: 4, top: 4 },
+  tileLevel: { position: 'absolute', bottom: 8, alignSelf: 'center', fontFamily: HEAD, color: '#5a3410', fontSize: 13 },
+  recipeQ: { fontFamily: HEAD, fontSize: 26, fontWeight: 'bold', color: '#c4a56e' },
+  silhouette: { tintColor: '#4a3a28', opacity: 0.35 },
+
+  // detail page
+  detail: { alignItems: 'stretch', paddingBottom: 8 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
+  name: { fontFamily: HEAD, fontSize: 25, fontWeight: 'bold', color: INK },
+  tagline: { fontFamily: HEAD, color: SOFT, fontSize: 14 },
+  hero: { height: 92, alignItems: 'center', justifyContent: 'center', marginVertical: 2 },
+  heroGlow: { position: 'absolute', width: 84, height: 84, borderRadius: 42, backgroundColor: '#fbeab0', borderWidth: 3, borderColor: '#ecd48a' },
   heroGlowLocked: { backgroundColor: '#e6d6b0', borderColor: '#d2bd90' },
-  heroImg: { width: 60, height: 60 },
-  heroSpark: { position: 'absolute', fontSize: 14, color: '#e0a830' },
-  heroQ: { position: 'absolute', fontFamily: PIXEL_FONT, fontSize: 26, color: '#fbf0cf', textShadowColor: '#5a4630', textShadowRadius: 3 },
-  name: { fontFamily: HEAD, fontSize: 21, color: INK, marginBottom: 1, textAlign: 'center' },
-  tagline: { fontFamily: BODY, color: '#8a6a40', fontSize: 13, textAlign: 'center', marginBottom: 4 },
-
-  stageRow: { flexDirection: 'row', justifyContent: 'center', gap: 5, marginBottom: 5 },
+  heroImg: { width: 76, height: 76 },
+  heroQ: { position: 'absolute', fontFamily: HEAD, fontSize: 40, fontWeight: 'bold', color: '#c4a56e' },
+  stageRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 4, marginVertical: 4 },
   stage: { alignItems: 'center' },
-  stageImg: { width: 34, height: 40 },
-  stageLabel: { fontFamily: BODY, color: '#8a6a40', fontSize: 12, marginTop: 1 },
-  blurb: { fontFamily: BODY, color: INK, fontSize: 13.5, textAlign: 'center', marginBottom: 2, lineHeight: 14.5 },
-  tip: { fontFamily: BODY, color: '#5a7a2a', fontSize: 12.5, textAlign: 'center', marginBottom: 2, lineHeight: 14 },
-  stats: { paddingTop: 4, alignSelf: 'stretch', alignItems: 'center' },
-  stat: { fontFamily: BODY, color: '#8a6a40', fontSize: 13 },
-
-  lockedHint: { fontFamily: BODY, color: '#8a6a40', fontSize: 14, textAlign: 'center' },
-  lockedLevel: { fontFamily: BODY, color: '#a08860', fontSize: 13, textAlign: 'center', marginTop: 4 },
+  stageImg: { width: 36, height: 42 },
+  stageArrow: { fontFamily: HEAD, fontSize: 20, color: '#b98a4e', marginTop: -10 },
+  stageLabel: { fontFamily: HEAD, color: SOFT, fontSize: 13, marginTop: 1 },
+  recipeImg: { width: 38, height: 38 },
+  blurb: { fontFamily: HEAD, color: INK, fontSize: 15, lineHeight: 18, marginTop: 2 },
+  tip: { fontFamily: HEAD, color: '#4a6a22', fontSize: 14, lineHeight: 17, marginTop: 4 },
+  tipKey: { fontWeight: 'bold', color: '#2f5a22' },
+  stats: { marginTop: 6 },
+  statRow: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#d9bd86', paddingVertical: 3 },
+  statKey: { fontFamily: HEAD, color: SOFT, fontSize: 14 },
+  statVal: { fontFamily: HEAD, color: INK, fontSize: 14, fontWeight: 'bold' },
+  lockedHint: { fontFamily: HEAD, color: SOFT, fontSize: 15, textAlign: 'center', marginTop: 4 },
+  lockedLevel: { fontFamily: HEAD, color: '#a08860', fontSize: 14, textAlign: 'center', marginTop: 4 },
 });
