@@ -52,7 +52,7 @@ const RAW_SNAP_POINTS = {
     ],
   },
   3: {
-    // the sunroom: eight pots along the sill, twelve on the stone floor, four hooks on the rod
+    // the sunroom: eight pots along the sill, twelve on the stone floor (against the walls), four hooks on the rod
     potted: [
       { id: 'r3_p1', x: 346, y: 467 },
       { id: 'r3_p2', x: 449, y: 467 },
@@ -62,18 +62,19 @@ const RAW_SNAP_POINTS = {
       { id: 'r3_p6', x: 860, y: 467 },
       { id: 'r3_p7', x: 963, y: 467 },
       { id: 'r3_p8', x: 1066, y: 467 },
-      { id: 'r3_p9', x: 395, y: 645 },
-      { id: 'r3_p10', x: 518, y: 645 },
-      { id: 'r3_p11', x: 642, y: 645 },
-      { id: 'r3_p12', x: 765, y: 645 },
-      { id: 'r3_p13', x: 889, y: 645 },
-      { id: 'r3_p14', x: 1012, y: 645 },
-      { id: 'r3_p15', x: 461, y: 726 },
-      { id: 'r3_p16', x: 584, y: 726 },
-      { id: 'r3_p17', x: 708, y: 726 },
-      { id: 'r3_p18', x: 831, y: 726 },
-      { id: 'r3_p19', x: 955, y: 726 },
-      { id: 'r3_p20', x: 1078, y: 726 },
+      // the floor pots stand against the walls: eight along the foot of the back wall, two beside the door, two by the right windows
+      { id: 'r3_p9', x: 330, y: 612 },
+      { id: 'r3_p10', x: 433, y: 612 },
+      { id: 'r3_p11', x: 536, y: 612 },
+      { id: 'r3_p12', x: 639, y: 612 },
+      { id: 'r3_p13', x: 742, y: 612 },
+      { id: 'r3_p14', x: 845, y: 612 },
+      { id: 'r3_p15', x: 948, y: 612 },
+      { id: 'r3_p16', x: 1051, y: 612 },
+      { id: 'r3_p17', x: 262, y: 676 },
+      { id: 'r3_p18', x: 238, y: 748 },
+      { id: 'r3_p19', x: 1148, y: 680 },
+      { id: 'r3_p20', x: 1192, y: 750 },
     ],
     hanging: [
       // from the rings on the inner rod
