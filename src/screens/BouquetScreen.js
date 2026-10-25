@@ -238,7 +238,7 @@ export default function BouquetScreen({ navigation, route }) {
           )}
           {!packOrder && step >= 1 && step <= 5 && (
             <HandOver
-              enabled={step === 5} home={{ x: pLeft + pw / 2, y: pTop + ph / 2 }} style={{ position: 'absolute', left: pLeft, top: pTop, width: pw, height: ph }}
+              enabled={step >= 4 && made} home={{ x: pLeft + pw / 2, y: pTop + ph / 2 }} style={{ position: 'absolute', left: pLeft, top: pTop, width: pw, height: ph }}
               tray={{ x: fx(TRAY.cx), y: fy(TRAY.cy), w: fx(TRAY.w), h: fy(TRAY.h) }} onDrop={giveOver}
             >
               {/* the flat sheet with its flowers and flaps; it fades out once both flaps are over */}
@@ -331,7 +331,7 @@ export default function BouquetScreen({ navigation, route }) {
             )}
           </View>
           {/* the bin: tap it to throw the bouquet away and start again */}
-          {!packOrder && step > 0 && step < 5 && <TrashBin onPress={resetAll} w={fx(70)} style={{ position: 'absolute', left: fx(1195), top: fy(656), zIndex: 30 }} />}
+          {!packOrder && step > 0 && !(made && step >= 4) && <TrashBin onPress={resetAll} w={fx(70)} style={{ position: 'absolute', left: fx(1195), top: fy(656), zIndex: 30 }} />}
         </>
       )}
 
