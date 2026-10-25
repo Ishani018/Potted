@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Image, StyleSheet, Animated, Easing } from 'react-native';
-import { LOADING_BG, UI_IMAGES } from '../engine/assets';
-import { PixelText } from '../components/Pixel';
+import { View, Image, Text, StyleSheet, Animated, Easing, Platform } from 'react-native';
+import { LOADING_BG, TRADE_IMAGES } from '../engine/assets';
 
 // Shown after PLAY: the florist-stall scene (loadingshop.png, 1480×798) with its
 // painted progress bar. The green fill, the % and the logo
@@ -13,7 +12,26 @@ const IMG_H = 798;
 const TRACK = { x0: 706, x1: 1328, y0: 540, y1: 570 };
 const PCT_Y = 614, PCT_X = 1007;
 const INK = '#4a2a10';
-const LOGO_W = 1068, LOGO_H = 350;   // logo.png size
+const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
+const OUTLINE = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]];
+
+// The game's name, drawn in the same soft serif as every card: cream letters with a brown edge and a daisy either side.
+function Logo({ sc }) {
+  const fs = 138 * sc, t = Math.max(2, 5 * sc);
+  const word = (extra) => ({ fontFamily: SERIF, fontWeight: 'bold', fontSize: fs, letterSpacing: 2 * sc, ...extra });
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 * sc }}>
+      <Image source={TRADE_IMAGES.daisytrade} style={{ width: 96 * sc, height: 96 * sc }} resizeMode="contain" />
+      <View>
+        {OUTLINE.map(([dx, dy], i) => (
+          <Text key={i} style={word({ position: 'absolute', left: dx * t, top: dy * t, color: '#6a3f16' })}>Potted</Text>
+        ))}
+        <Text style={word({ color: '#fff3d0', textShadowColor: 'rgba(60,30,8,0.35)', textShadowOffset: { width: 0, height: 4 * sc }, textShadowRadius: 0 })}>Potted</Text>
+      </View>
+      <Image source={TRADE_IMAGES.daisytrade} style={{ width: 96 * sc, height: 96 * sc }} resizeMode="contain" />
+    </View>
+  );
+}
 
 export default function LoadingScreen({ navigation }) {
   const progress = useRef(new Animated.Value(0)).current;
@@ -39,9 +57,6 @@ export default function LoadingScreen({ navigation }) {
   const trackH = (TRACK.y1 - TRACK.y0) * sc;
   const fillW = progress.interpolate({ inputRange: [0, 1], outputRange: [0, trackW] });
 
-  // the game logo, centred above the bar
-  const lw = 700 * sc, lh = lw * (LOGO_H / LOGO_W);
-
   return (
     <View style={styles.root} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
       <Image source={LOADING_BG} style={styles.bg} resizeMode="cover" />
@@ -54,15 +69,14 @@ export default function LoadingScreen({ navigation }) {
             backgroundColor: '#7aa83a', borderRadius: 3 * sc, borderTopWidth: 3 * sc, borderTopColor: '#a6cd5e', borderBottomWidth: 3 * sc, borderBottomColor: '#5d8a28',
           }} />
 
-          {/* game logo above the bar */}
-          <Image
-            source={UI_IMAGES.logo}
-            style={{ position: 'absolute', left: X((TRACK.x0 + TRACK.x1) / 2) - lw / 2, top: Y(TRACK.y0) - lh - 36 * sc, width: lw, height: lh }}
-            resizeMode="contain"
-          />
+          {/* the game's name above the bar */}
+          <View style={{ position: 'absolute', left: X(TRACK.x0), width: (TRACK.x1 - TRACK.x0) * sc, top: Y(TRACK.y0) - 215 * sc, alignItems: 'center' }}>
+            <Logo sc={sc} />
+          </View>
 
-          <View style={{ position: 'absolute', left: X(PCT_X) - 60 * sc, width: 120 * sc, top: Y(PCT_Y) - 14 * sc, alignItems: 'center' }}>
-            <PixelText size={Math.max(10, Math.round(26 * sc))} color={INK} style={{ textShadowColor: 'rgba(255,240,200,0.8)', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 0 }}>{pct}%</PixelText>
+          {/* the percentage, on a small cream plaque under the bar */}
+          <View style={{ position: 'absolute', left: X(PCT_X) - 52 * sc, width: 104 * sc, top: Y(PCT_Y) - 20 * sc, alignItems: 'center', backgroundColor: '#f3e0b6', borderWidth: Math.max(2, 3 * sc), borderColor: '#8a5a2a', borderRadius: 16 * sc, paddingVertical: 3 * sc }}>
+            <Text style={{ fontFamily: SERIF, fontWeight: 'bold', fontSize: Math.max(12, 24 * sc), color: INK }}>{pct}%</Text>
           </View>
         </>
       )}
