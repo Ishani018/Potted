@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import { BOOK_BUTTONS } from '../engine/assets';
+import { SET_UI } from '../engine/assets';
 
 // Shared pixel-art look, matching the trading board / map signs:
 // Press Start 2P text (white fill, black outline) on warm wood + cream panels.
-export const PIXEL_FONT = 'PressStart2P';
+export const PIXEL_FONT = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });   // the game's one soft serif (the old pixel font is retired)
 
 export const COLORS = {
   wood: '#a46122',
@@ -17,52 +17,44 @@ export const COLORS = {
   gold: '#ffd060',
 };
 
-export const pixelText = (size = 12, color = '#fff') => ({
+export const pixelText = (size = 12, color = '#4a2a10') => ({
   fontFamily: PIXEL_FONT,
-  fontSize: size,
+  fontSize: Math.round(size * 1.5),
   color,
-  textShadowColor: '#000',
-  textShadowOffset: { width: 0, height: 0 },
-  textShadowRadius: 1.6,
+  fontWeight: 'bold',
 });
 
 export function PixelText({ size = 12, color, style, children, ...rest }) {
   return <Text {...rest} style={[pixelText(size, color), style]}>{children}</Text>;
 }
 
-// Wooden board with a dark border and an inner highlight — the "sign" look.
-export function PixelPanel({ style, children, cream }) {
+// A cream card with one brown border: the same look as the nursery and order cards.
+export function PixelPanel({ style, children }) {
   return (
-    <View style={[styles.panel, cream && styles.panelCream, style]}>
-      <View style={[styles.panelInner, cream && styles.panelInnerCream]}>{children}</View>
+    <View style={[styles.panel, style]}>
+      <View style={styles.panelInner}>{children}</View>
     </View>
   );
 }
 
-// Painted button (text label on a flowered frame). tone: 'green' | 'wood' | 'red'.
-// The frame is three pictures: left cap, stretchy middle, right cap.
+// A button drawn on the UI sheet's blank plates. tone: 'green' (main action) | 'wood' (cream, secondary) | 'red' (careful).
 export function PixelButton({ label, onPress, tone = 'green', disabled, style, size = 11, scale = 1 }) {
-  const art = BOOK_BUTTONS[tone] ?? BOOK_BUTTONS.green;
-  const H = Math.round(Math.max(30, size * 2.8) * (art.tall ?? 1) * scale);
-  const capW = Math.round(H * art.cap);
-  const [bw, setBw] = useState(0);        // measured width: the stretchy middle gets an exact width
+  const plate = tone === 'red' ? 'btnRed' : tone === 'wood' ? 'btnCream' : 'btnGreen';
+  const art = SET_UI[plate];
+  const H = Math.round(Math.max(34, size * 3.1) * scale);
+  const [bw, setBw] = useState(0);
+  const dark = plate === 'btnCream';
   return (
     <TouchableOpacity
       onLayout={(e) => setBw(Math.round(e.nativeEvent.layout.width))}
       activeOpacity={0.8}
       onPress={onPress}
       disabled={disabled}
-      style={[
-        { height: H, minWidth: capW * 2 + 24, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 },
-        disabled && { opacity: 0.6 },
-        style,
-      ]}
+      style={[{ height: H, minWidth: Math.round(H * 2.2), alignItems: 'center', justifyContent: 'center', flexShrink: 0 }, disabled && { opacity: 0.55 }, style]}
     >
-      <Image source={art.l} style={{ position: 'absolute', left: 0, top: 0, width: capW, height: H }} resizeMode="stretch" pointerEvents="none" />
-      <Image source={art.m} style={{ position: 'absolute', left: capW, top: 0, width: Math.max(0, bw - capW * 2), height: H }} resizeMode="stretch" pointerEvents="none" />
-      <Image source={art.r} style={{ position: 'absolute', right: 0, top: 0, width: capW, height: H }} resizeMode="stretch" pointerEvents="none" />
-      <View style={{ paddingHorizontal: Math.round(capW * 1.05) + 2, paddingTop: tone === 'green' ? Math.round(H * 0.15) : 0 }}>
-        <Text style={[styles.label, { fontSize: Math.round(size * 1.9 * Math.max(0.8, scale)) }]} numberOfLines={1}>{label}</Text>
+      <Image source={art.src} style={{ position: 'absolute', left: 0, top: 0, width: bw || '100%', height: H }} resizeMode="stretch" pointerEvents="none" />
+      <View style={{ paddingHorizontal: 22 }}>
+        <Text style={[styles.label, { fontSize: Math.round(Math.max(13, size * 1.45 * Math.max(0.85, scale))), color: dark ? '#4a2a10' : '#fff3d0' }]} numberOfLines={1}>{label}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -79,27 +71,12 @@ export function PixelToast({ message }) {
 }
 
 const styles = StyleSheet.create({
-  // Button labels use the same soft serif as the painted pop-ups (not the pixel font).
-  label: {
-    fontFamily: Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' }),
-    color: '#fbf3da', textAlign: 'center',
-    textShadowColor: 'rgba(40,24,6,0.85)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
-  },
-  // One border per box: a single dark edge, flat fill. Nested cream panels get a
-  // soft edge only (no second dark frame) so boxes inside boxes don't stack borders.
-  panel: {
-    backgroundColor: COLORS.wood, borderWidth: 3, borderColor: COLORS.woodEdge, borderRadius: 4, padding: 2,
-  },
-  panelCream: { backgroundColor: COLORS.cream, borderWidth: 2, borderColor: COLORS.creamEdge },
-  panelInner: { padding: 12 },
-  panelInnerCream: {},
-  btn: {
-    borderWidth: 3, borderRadius: 4, paddingHorizontal: 14, paddingVertical: 10,
-    alignItems: 'center', justifyContent: 'center',
-  },
+  label: { fontFamily: PIXEL_FONT, fontWeight: 'bold', textAlign: 'center' },
+  panel: { backgroundColor: '#f3e0b6', borderWidth: 4, borderColor: '#8a5a2a', borderRadius: 18 },
+  panelInner: { padding: 14 },
   toast: {
     position: 'absolute', bottom: 64, alignSelf: 'center', zIndex: 300,
-    backgroundColor: COLORS.woodDark, borderWidth: 3, borderColor: COLORS.woodEdge, borderRadius: 4,
-    paddingHorizontal: 16, paddingVertical: 10,
+    backgroundColor: '#f3e0b6', borderWidth: 3, borderColor: '#8a5a2a', borderRadius: 14,
+    paddingHorizontal: 16, paddingVertical: 8,
   },
 });

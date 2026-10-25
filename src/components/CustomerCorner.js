@@ -120,57 +120,50 @@ export default function CustomerCorner({ sw, sh }) {
 
       {open && (
         <TouchableOpacity activeOpacity={1} style={styles.overlay} onPress={() => setOpen(false)}>
-          <TouchableOpacity activeOpacity={1} onPress={() => {}} style={{ width: Math.min(sw - 24, 360) }}>
+          <TouchableOpacity activeOpacity={1} onPress={() => {}} style={{ width: Math.min(sw - 24, 420) }}>
             <PixelPanel>
               <View style={{ gap: 10 }}>
                 <View style={styles.head}>
-                  <Portrait customerKey={order.customer} size={72} />
-                  <View style={{ flex: 1, gap: 4 }}>
-                    <PixelText size={11} color={COLORS.gold}>{c.name.toUpperCase()}</PixelText>
-                    <PixelText size={7}>CUSTOMER {Math.min(done + 1, CUSTOMERS_PER_DAY)} OF {CUSTOMERS_PER_DAY} TODAY</PixelText>
+                  <Portrait customerKey={order.customer} size={64} />
+                  <View style={{ flex: 1 }}>
+                    <PixelText size={13}>{c.name}</PixelText>
+                    <PixelText size={8} color="#8a6a40">Customer {Math.min(done + 1, CUSTOMERS_PER_DAY)} of {CUSTOMERS_PER_DAY}</PixelText>
                   </View>
                 </View>
 
-                {/* what they say */}
-                <View style={styles.speech}>
-                  <PixelText size={8} color="#5a3410" style={{ lineHeight: 14 }}>{customerLine(order)}</PixelText>
-                </View>
+                <View style={styles.rule} />
+                <PixelText size={9} color="#6a4524" style={{ lineHeight: 18 }}>{customerLine(order)}</PixelText>
+                <View style={styles.rule} />
 
-                {/* the order */}
                 <View style={styles.row}>
                   {art && <Image source={art} style={styles.icon} resizeMode="contain" />}
                   {order.type === 'flowers' ? (
-                    <PixelText size={9} color={canGive ? '#cfe8a0' : '#ff9a7a'}>
-                      {flowerName(order.flowerKey).toUpperCase()}  {Math.min(have, order.qty)}/{order.qty}
-                    </PixelText>
+                    <PixelText size={10} color={canGive ? '#3f7a2e' : '#b04a2a'}>{flowerName(order.flowerKey)}  {Math.min(have, order.qty)} / {order.qty}</PixelText>
                   ) : (
-                    <PixelText size={8}>BOUQUET WITH {flowerName(order.flowerKey).toUpperCase()}</PixelText>
+                    <PixelText size={10}>A bouquet with {flowerName(order.flowerKey)}</PixelText>
                   )}
                 </View>
 
-                {/* the reward */}
                 <View style={styles.row}>
                   <Image source={UI_IMAGES.goldcoins} style={styles.coin} resizeMode="contain" />
-                  <PixelText size={9} color={COLORS.gold}>
-                    {order.type === 'flowers' ? order.coins : `PRICE + ${order.tip} TIP`}
-                  </PixelText>
-                  <PixelText size={7} style={{ marginLeft: 6 }}>+{order.xp} XP</PixelText>
+                  <PixelText size={10} color="#a8700a">{order.type === 'flowers' ? `${order.coins} coins` : `price + ${order.tip} tip`}</PixelText>
+                  <PixelText size={8} color="#8a6a40" style={{ marginLeft: 6 }}>+{order.xp} xp</PixelText>
                   {order.seed && SEED_IMAGES[order.seed] && (
                     <>
                       <Image source={SEED_IMAGES[order.seed]} style={styles.seed} resizeMode="contain" />
-                      <PixelText size={7}>BONUS SEED</PixelText>
+                      <PixelText size={8} color="#8a6a40">bonus seed</PixelText>
                     </>
                   )}
                 </View>
 
                 {order.type === 'flowers' ? (
-                  <PixelButton label={canGive ? 'GIVE FLOWERS' : 'NOT ENOUGH YET'} onPress={canGive ? give : undefined} disabled={!canGive} />
+                  <PixelButton label={canGive ? 'Give flowers' : 'Not enough yet'} onPress={canGive ? give : undefined} disabled={!canGive} />
                 ) : (
-                  <PixelText size={7} color="#cfe8a0" style={{ textAlign: 'center' }}>
-                    TIE A BOUQUET WITH {flowerName(order.flowerKey).toUpperCase()} AT THIS TABLE AND IT GOES TO {c.name.split(' ').pop().toUpperCase()}
+                  <PixelText size={8} color="#6a4524" style={{ textAlign: 'center' }}>
+                    Tie a bouquet with {flowerName(order.flowerKey)} at this table and it goes to {c.name.split(' ').pop()}.
                   </PixelText>
                 )}
-                <PixelButton label="CLOSE" tone="wood" size={9} onPress={() => setOpen(false)} />
+                <PixelButton label="Close" tone="wood" size={9} onPress={() => setOpen(false)} />
               </View>
             </PixelPanel>
           </TouchableOpacity>
@@ -182,20 +175,20 @@ export default function CustomerCorner({ sw, sh }) {
 
 const styles = StyleSheet.create({
   thanks: {
-    position: 'absolute', backgroundColor: '#fbf0cf', borderRadius: 4, borderWidth: 3, borderColor: COLORS.woodEdge,
+    position: 'absolute', backgroundColor: '#f3e0b6', borderRadius: 14, borderWidth: 3, borderColor: '#8a5a2a',
     paddingHorizontal: 8, paddingVertical: 6,
   },
   bubble: {
     position: 'absolute', top: -6, right: -4,
-    backgroundColor: COLORS.woodDark, borderWidth: 3, borderColor: COLORS.woodEdge, borderRadius: 4,
-    paddingHorizontal: 6, paddingVertical: 2,
+    backgroundColor: '#f3e0b6', borderWidth: 3, borderColor: '#8a5a2a', borderRadius: 12,
+    paddingHorizontal: 8, paddingVertical: 2,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.55)',
     alignItems: 'center', justifyContent: 'center', zIndex: 250,
   },
   head: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  speech: { backgroundColor: '#fbf0cf', borderRadius: 4, borderWidth: 2, borderColor: COLORS.creamEdge, padding: 8 },
+  rule: { height: 1, backgroundColor: '#d9bd86' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   icon: { width: 34, height: 34 },
   coin: { width: 20, height: 20 },

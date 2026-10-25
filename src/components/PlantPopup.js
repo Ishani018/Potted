@@ -25,17 +25,17 @@ function plantStatus(slot, now) {
   const max = maxStageFor(slot.type, slot.flowerKey);
   if (slot.pest) {
     const p = pestInfo(slot.pest);
-    return { text: `${p.name.toUpperCase()} ON IT!`, color: '#ff9a7a' };
+    return { text: `${p.name} on it!`, color: '#b04a2a' };
   }
   if (slot.stage >= max) {
     return slot.type === 'potted'
-      ? { text: 'FULL BLOOM - READY!', color: COLORS.gold }
-      : { text: 'FULL BLOOM - EARNS COINS', color: COLORS.gold };
+      ? { text: 'Full bloom: ready to harvest', color: '#3f7a2e' }
+      : { text: 'Full bloom: earning coins', color: '#3f7a2e' };
   }
-  if (slot.wilting) return { text: 'WILTING - WATER ME!', color: '#ff9a7a' };
+  if (slot.wilting) return { text: 'Wilting. Water me!', color: '#b04a2a' };
   const wait = msUntilThirsty(slot, now);
-  if (wait === 0) return { text: 'THIRSTY - WATER ME!', color: '#7ad0ff' };
-  return { text: `THIRSTY IN ${formatDuration(wait).toUpperCase()}`, color: '#fff' };
+  if (wait === 0) return { text: 'Thirsty. Water me!', color: '#2a6a9a' };
+  return { text: `Thirsty in ${formatDuration(wait)}`, color: '#6a4524' };
 }
 
 export default function PlantPopup({ slot, position, onHarvest, onRemove, onClose }) {
@@ -74,10 +74,10 @@ export default function PlantPopup({ slot, position, onHarvest, onRemove, onClos
           <View style={{ gap: 8 }}>
             {hasPlant && (
               <View style={styles.info}>
-                <PixelText size={9} color={COLORS.gold}>{(name ?? '').toUpperCase()}</PixelText>
-                <PixelText size={7} color={status.color} style={{ textAlign: 'center' }}>{status.text}</PixelText>
+                <PixelText size={13}>{name ?? ''}</PixelText>
+                <PixelText size={9} color={status.color} style={{ textAlign: 'center' }}>{status.text}</PixelText>
                 {shielded && (
-                  <PixelText size={6} color="#cfe8a0" style={{ textAlign: 'center' }}>SACHET: BUG-FREE FOR {formatDuration(slot.shieldUntil - now).toUpperCase()}</PixelText>
+                  <PixelText size={8} color="#3f7a2e" style={{ textAlign: 'center' }}>Sachet: bug-free for {formatDuration(slot.shieldUntil - now)}</PixelText>
                 )}
               </View>
             )}
@@ -119,8 +119,8 @@ export default function PlantPopup({ slot, position, onHarvest, onRemove, onClos
                 </ScrollView>
               </View>
             )}
-            {canHarvest && <PixelButton label="HARVEST" onPress={onHarvest} />}
-            <PixelButton label="REMOVE" tone="wood" onPress={onRemove} />
+            {canHarvest && <PixelButton label="Harvest" onPress={onHarvest} />}
+            <PixelButton label="Remove" tone="wood" onPress={onRemove} />
           </View>
         </PixelPanel>
       </View>
@@ -131,10 +131,10 @@ export default function PlantPopup({ slot, position, onHarvest, onRemove, onClos
 const styles = StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFillObject, zIndex: 200 },
   popup: { position: 'absolute' },
-  potsTitle: { fontFamily: SERIF, fontSize: 14, color: '#fff3d0', textAlign: 'center', marginBottom: 2 },
+  potsTitle: { fontFamily: SERIF, fontSize: 15, fontWeight: 'bold', color: '#4a2a10', textAlign: 'center', marginBottom: 4 },
   potRow: { flexDirection: 'row', gap: 3, justifyContent: 'center' },
-  potTile: { width: 29, height: 52, borderRadius: 6, backgroundColor: 'rgba(255,240,200,0.18)', borderWidth: 2, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
-  potOn: { borderColor: '#ffe29a', backgroundColor: 'rgba(255,240,200,0.35)' },
-  potPrice: { fontFamily: SERIF, fontSize: 11, color: '#ffe29a' },
+  potTile: { width: 29, height: 52, borderRadius: 6, backgroundColor: '#ecd9a6', borderWidth: 2, borderColor: '#d9bd86', alignItems: 'center', justifyContent: 'center' },
+  potOn: { borderColor: '#2f5a22', backgroundColor: '#d6e2a8' },
+  potPrice: { fontFamily: SERIF, fontSize: 11, color: '#7a5030' },
   info: { alignItems: 'center', gap: 5, paddingBottom: 2 },
 });

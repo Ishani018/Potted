@@ -17,7 +17,7 @@ export default function CoinHUD() {
 const styles = StyleSheet.create({
   container: {
     position: 'absolute', top: 12, left: 84, flexDirection: 'row', alignItems: 'center', gap: 6, zIndex: 20,
-    backgroundColor: COLORS.woodDark, borderWidth: 3, borderColor: COLORS.woodEdge, borderRadius: 4,
+    backgroundColor: '#f3e0b6', borderWidth: 3, borderColor: '#8a5a2a', borderRadius: 14,
     paddingHorizontal: 8, paddingVertical: 4,
   },
   icon: { width: 22, height: 22 },

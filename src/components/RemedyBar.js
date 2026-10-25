@@ -82,11 +82,11 @@ export function useRemedyUse(showToast) {
 const styles = StyleSheet.create({
   slot: {
     position: 'absolute', zIndex: 30, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: COLORS.woodDark, borderWidth: 3, borderColor: COLORS.woodEdge, borderRadius: 6,
+    backgroundColor: '#f3e0b6', borderWidth: 3, borderColor: '#8a5a2a', borderRadius: 12,
   },
-  slotOn: { borderColor: COLORS.gold, backgroundColor: '#7a5a1c' },
+  slotOn: { borderColor: '#2f5a22', backgroundColor: '#d6e2a8' },
   badge: {
-    position: 'absolute', right: -6, bottom: -6, backgroundColor: COLORS.woodDark,
-    borderWidth: 2, borderColor: COLORS.woodEdge, borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1,
+    position: 'absolute', right: -6, bottom: -6, backgroundColor: '#8a5a2a',
+    borderWidth: 0, borderRadius: 9, paddingHorizontal: 4, paddingVertical: 1,
   },
 });

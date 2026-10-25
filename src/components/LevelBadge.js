@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
   barInner: { position: 'absolute', left: 7, right: 7, top: 4, bottom: 4, overflow: 'hidden' },
   barFill: { width: 70, height: 6 },
   tip: {
-    marginTop: 4, backgroundColor: COLORS.woodDark, borderWidth: 3, borderColor: COLORS.woodEdge,
-    borderRadius: 4, padding: 6, maxWidth: 190,
+    marginTop: 4, backgroundColor: '#f3e0b6', borderWidth: 3, borderColor: '#8a5a2a',
+    borderRadius: 12, padding: 6, maxWidth: 190,
   },
 });
