@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, Animated, Easing, PanResponder, Platform, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { BOUQUET_BG, TRADE_IMAGES, UI_IMAGES, MAKE_IMAGES, BOW_IMAGES, ORDER_ART, BOX_IMAGES, BOOK_STAMP, CUSTOMER_IMAGES, CUSTOMER_POSES } from '../engine/assets';
+import { SET_UI, BOUQUET_BG, TRADE_IMAGES, UI_IMAGES, MAKE_IMAGES, BOW_IMAGES, ORDER_ART, BOX_IMAGES, BOOK_STAMP, CUSTOMER_IMAGES, CUSTOMER_POSES } from '../engine/assets';
 import {
   TRADE_FLOWERS, BOUQUET_FLOWERS, BOUQUET_SIZE, BOUQUET_RECIPES, BOUQUET_PAPERS, bouquetPaper, evaluateBouquet, playerLevel, CUSTOMERS,
   RIBBON_NAMES, orderGrade,
@@ -9,7 +9,7 @@ import {
 import { globalPetEffects } from '../engine/petEffects';
 import ScreenHud from '../components/ScreenHud';
 import { bouquetPic } from '../engine/bouquetPics';
-import { openOrders, bouquetFillsOrder, flowerName, comboText } from '../engine/customers';
+import { openOrders, bouquetFillsOrder, flowerName, comboText, customerLine } from '../engine/customers';
 import { PixelText, PixelButton } from '../components/Pixel';
 import { useNotice } from '../components/PurchaseNotice';
 
@@ -89,6 +89,9 @@ export default function BouquetScreen({ navigation, route }) {
   // Packing a flower order: no paper, no ribbon. Flowers go into an open box on the mat, the box closes,
   // and it goes back to the counter (route.params.pack = the order's id).
   const packId = route?.params?.pack ?? null;
+  const [taken, setTaken] = useState(route?.params?.takeOrder ?? null);   // the order you took: the bouquet goes to them
+  const [cardOpen, setCardOpen] = useState(null);      // the index card that is opened out
+  const [paperTip, setPaperTip] = useState(false);     // the paper's name, shown for a moment after you change it
   const [boxLid, setBoxLid] = useState('open');          // 'open' | 'closing' | 'closed'
   const [step, setStep] = useState(packId ? 1 : 0);     // 0 paper .. 3 tie, 4 bow, 5 give
   const [bow, setBow] = useState(null);            // the bow on the ribbon: { color, i } into BOW_IMAGES
@@ -116,7 +119,9 @@ export default function BouquetScreen({ navigation, route }) {
   const left = (key) => (harvested[key] ?? 0) - picks.filter((k) => k === key).length;
   // an order that names its flowers: only those can go in, and no more than it asks for
   const packOrder = packId ? (state.player.customers?.list ?? []).find((o) => o.id === packId && o.type === 'flowers') ?? null : null;
-  const wantCombo = packOrder ? null : ((openOrders(state.player).find((o) => o.type === 'bouquet') ?? {}).combo ?? null);
+  const waiting = packOrder ? [packOrder] : openOrders(state.player).filter((o) => o.type === 'bouquet');
+  const takenOrder = packOrder ? null : (waiting.find((o) => o.id === taken) ?? null);
+  const wantCombo = packOrder ? null : (takenOrder?.combo ?? null);
   const remainingCombo = wantCombo ? (() => { const pool = [...picks]; return wantCombo.filter((k) => { const i = pool.indexOf(k); if (i >= 0) { pool.splice(i, 1); return false; } return true; }); })() : null;
   const needs = () => 1;                                 // any flower may go in; the order only hints at which ones
   const owned = BOUQUET_FLOWERS.filter((k) => (harvested[k] ?? 0) > 0 && TRADE_FLOWERS[k]);
@@ -131,8 +136,7 @@ export default function BouquetScreen({ navigation, route }) {
 
   // The waiting customer (if they want a bouquet) is shown as a ticket; the bouquet is
   // delivered to them when it has the flower they asked for.
-  const want = openOrders(state.player).find((o) => o.type === 'bouquet') ?? null;
-  const strip = packOrder || want;
+  const want = takenOrder;
   // you can hand over any bouquet: the waiting customer gets it even if it is wrong (and is angry)
   const order = full ? want : null;
   const flowersOk = !order || bouquetFillsOrder(order, picks);
@@ -171,6 +175,7 @@ export default function BouquetScreen({ navigation, route }) {
   const giveOver = () => {
     if (!result) return;
     dispatch({ type: 'SELL_BOUQUET', flowers: picks, paper, ribbon: ribbonKey, customerId: order ? order.id : null, neat });
+    setTaken(null);
     const perfect = !!(order && grade && grade.perfect);
     const earned = order ? `${customerName} paid ${payout} coins.${grade.label && !perfect ? ` ${grade.label}` : ''}` : `You earned ${result.net + neatBonus} coins.`;
     // a perfect order gets its own banner (with the coins), so no second pop-up unless it is a new recipe
@@ -191,14 +196,6 @@ export default function BouquetScreen({ navigation, route }) {
   const pw = fx(PAPER_BOX.w), ph = fy(PAPER_BOX.h), pLeft = fx(CX) - pw / 2, pTop = fy(PAPER_BOX.top);
   // the wrapped bouquet sits in the middle of that same box
   const ww = fx(WRAP_W), wh = ww * WRAP_ASPECT, wx = (pw - ww) / 2, wy = (ph - wh) / 2;
-  const flowerWord = packOrder ? flowerName(packOrder.flowerKey) : '';
-  const prompt = packOrder ? (full ? (boxLid === 'open' ? 'Close the box and take it to the counter.' : '') : `Put ${packOrder.qty - picks.length} ${(packOrder.qty - picks.length) === 1 ? flowerWord : (/[^aeiou]y$/i.test(flowerWord) ? flowerWord.slice(0, -1) + 'ies' : flowerWord + 's')} in the box.`) : step === 0 ? 'Drag a sheet off the stack into the box.'
-    : step === 1 ? (full ? 'Lovely! Now choose a ribbon.' : (wantCombo ? `Add ${comboText({ combo: remainingCombo })} into the box.` : `Drag ${BOUQUET_SIZE - picks.length} more flower${BOUQUET_SIZE - picks.length === 1 ? '' : 's'} into the box.`))
-    : step === 2 ? 'Swipe each side over to wrap the stems.'
-    : step === 3 ? (tied ? 'Ribbon cut! Now tap Make bouquet.' : 'Pull a ribbon from a spool into the box.')
-    : step === 4 ? (bow == null ? 'Drag a bow from the box onto the ribbon.' : 'Pretty! Drag another to swap, or tap Finish.')
-    : (result ? `${isNewRecipe ? 'Something special...' : result.name}. Drag it onto the tray!` : '');
-
   return (
     <View style={styles.root} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
       <Image source={BOUQUET_BG} style={styles.bg} resizeMode="stretch" />
@@ -209,7 +206,7 @@ export default function BouquetScreen({ navigation, route }) {
           {!packOrder && step === 0 && (
             <PaperStack
               paper={paper} chosen={chosenPaper} level={level} coins={coins}
-              onCycle={(id) => setPaper(id)} onChoose={() => setStep(1)}
+              showTip={paperTip} onCycle={(id) => { setPaper(id); setPaperTip(true); setTimeout(() => setPaperTip(false), 1400); }} onChoose={() => setStep(1)}
               box={{ x: fx(517), y: fy(40), w: fx(442), h: fy(200) }} matTop={fy(MAT.y0)} fx={fx} fy={fy}
             />
           )}
@@ -308,46 +305,12 @@ export default function BouquetScreen({ navigation, route }) {
             </View>
           )}
 
-          {/* the order strip along the bottom of the table: a cream board with a round frame for the customer */}
-          <View pointerEvents="none" style={[styles.stripBoard, { left: fx(222), top: fy(606), width: fx(840), height: fy(142) }]}>
-            <View style={[styles.stripRing, { left: fx(16), top: fy(14), width: fx(112), height: fx(112) }]} />
-          </View>
-
-          {/* the order slip and the prompt along the bottom of the table */}
-          {(packOrder || want) && (
-            <>
-              {/* the customer, in the round frame at the left of the painted strip */}
-              <View pointerEvents="none" style={{ position: 'absolute', left: fx(243), top: fy(623), width: fx(100), height: fx(100), borderRadius: fx(50), overflow: 'hidden', zIndex: 10 }}>
-                <Image source={(CUSTOMER_POSES[strip.customer] || {}).think || CUSTOMER_IMAGES[strip.customer]} style={{ position: 'absolute', width: fx(190), height: fx(285), left: -fx(45), top: -fx(55) }} resizeMode="contain" />
-              </View>
-              <Text pointerEvents="none" style={[styles.stripName, { left: fx(392), top: fy(642), width: fx(190) }]} numberOfLines={1}>{CUSTOMERS[strip.customer].name}</Text>
-              <Text pointerEvents="none" style={[styles.stripSub, { left: fx(392), top: fy(678), width: fx(190) }]} numberOfLines={2}>{packOrder ? comboText({ combo: Array(packOrder.qty).fill(packOrder.flowerKey) }) : step === 5 && result ? `${payout} coins${grade && grade.perfect ? ' · Perfect' : neat ? ' · Neat' : ''}` : (strip.combo ? comboText(strip) : `${flowerName(strip.flowerKey)} bouquet`)}</Text>
-              {(packOrder ? [
-                { cluster: Array(packOrder.qty).fill(packOrder.flowerKey), ok: full && picks.every((k) => k === packOrder.flowerKey) },
-                { src: UI_IMAGES.goldcoins, label: `+${packOrder.coins}` },
-              ] : [
-                { cluster: strip.combo, src: TRADE_IMAGES[TRADE_FLOWERS[strip.flowerKey]?.img], ok: strip.combo ? remainingCombo.length === 0 : picks.includes(strip.flowerKey) },
-                strip.paper && { src: { plain: MAKE_IMAGES.paper, layered: MAKE_IMAGES.wrapLayered }[strip.paper] || MAKE_IMAGES.paper, ok: step >= 1 && paper === strip.paper },
-                strip.ribbon && { src: MAKE_IMAGES[strip.ribbon.replace('ribbon', 'spool')], ok: tied && ribbonKey === strip.ribbon },
-                strip.ribbon && { src: (BOW_IMAGES[BOW_COLOR[strip.ribbon]] || [])[0], ok: bow != null && bow.color === BOW_COLOR[strip.ribbon] },
-                { src: UI_IMAGES.goldcoins, label: `+${strip.tip}` },
-              ]).map((it, i) => it && (
-                <View key={i} pointerEvents="none" style={{ position: 'absolute', left: fx(STRIP_SLOTS[i]), top: fy(633), width: fx(76), height: fx(76), alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
-                  <Image source={ORDER_ART.tile_cream} style={styles.ticketBg} resizeMode="stretch" />
-                  {it.cluster
-                    ? <FlowerCluster keys={it.cluster} size={fx(60)} />
-                    : it.strip
-                    ? <Image source={it.src} style={{ width: fx(52), height: fx(52) / RIBBON_ASPECT * 1.8 }} resizeMode="stretch" />
-                    : <Image source={it.src} style={{ width: fx(48), height: fx(48), marginBottom: it.label ? fx(8) : 0 }} resizeMode="contain" />}
-                  {it.label ? <Text style={styles.stripTip}>{it.label}</Text> : null}
-                  {it.ok && <Image source={BOOK_STAMP} style={{ position: 'absolute', right: -fx(8), top: -fx(8), width: fx(26), height: fx(26) }} resizeMode="contain" />}
-                </View>
-              ))}
-            </>
-          )}
-          <View style={[styles.prompt, { left: fx(509), width: fx(483), top: fy(step >= 3 ? 596 : step === 0 ? 246 : 232) }]} pointerEvents="none">
-            <Text style={styles.promptTxt} numberOfLines={1}>{prompt}</Text>
-          </View>
+          {/* the orders waiting, as index cards along the bottom; tap one to open it out and take it */}
+          <OrderCards
+            fx={fx} fy={fy} fs={fs} orders={waiting} takenId={packOrder ? packOrder.id : taken} openId={cardOpen}
+            packOrder={packOrder} onOpen={setCardOpen} onTake={(id) => { setTaken(id); setCardOpen(null); }} onDrop={() => { setTaken(null); setCardOpen(null); }}
+            progress={{ picks, paper, step, tied, ribbonKey, bow, remainingCombo, full }}
+          />
 
           {/* buttons, right column (beside the scissors) */}
           <View style={{ position: 'absolute', left: fx(1070), top: fy(604), width: fx(250), alignItems: 'center', gap: fy(4), zIndex: 30 }}>
@@ -400,6 +363,108 @@ export default function BouquetScreen({ navigation, route }) {
       <ScreenHud sw={sw} sh={sh} onMap={() => navigation.navigate('Map')} />
       {notice}
     </View>
+  );
+}
+
+// The orders waiting, as index cards along the bottom of the table. Tap a card to open it out; "Take order" makes the
+// bouquet you are making go to that customer. A taken order's list ticks off as you get each part right.
+function orderItems(o, pr, active) {
+  const ok = (v) => active && v;
+  if (o.type === 'flowers') {
+    return [{ cluster: Array(o.qty).fill(o.flowerKey), label: comboText({ combo: Array(o.qty).fill(o.flowerKey) }), ok: ok(pr.full && pr.picks.every((k) => k === o.flowerKey)) }];
+  }
+  return [
+    { cluster: o.combo, src: TRADE_IMAGES[TRADE_FLOWERS[o.flowerKey]?.img], label: o.combo ? comboText(o) : `${flowerName(o.flowerKey)} bouquet`, ok: ok(o.combo ? !!pr.remainingCombo && pr.remainingCombo.length === 0 : pr.picks.includes(o.flowerKey)) },
+    o.paper && { src: { plain: MAKE_IMAGES.paper, layered: MAKE_IMAGES.wrapLayered }[o.paper] || MAKE_IMAGES.paper, label: `${BOUQUET_PAPERS[o.paper]?.name ?? 'Plain'} paper`, ok: ok(pr.step >= 1 && pr.paper === o.paper) },
+    o.ribbon && { src: MAKE_IMAGES[o.ribbon.replace('ribbon', 'spool')], label: `${RIBBON_NAMES[o.ribbon] ?? 'A'} ribbon`, ok: ok(pr.tied && pr.ribbonKey === o.ribbon) },
+    o.ribbon && { src: (BOW_IMAGES[BOW_COLOR[o.ribbon]] || [])[0], label: 'A bow on it', ok: ok(pr.bow != null && pr.bow.color === BOW_COLOR[o.ribbon]) },
+  ].filter(Boolean);
+}
+
+function OrderCards({ fx, fy, fs, orders, takenId, openId, packOrder, onOpen, onTake, onDrop, progress }) {
+  const open = orders.find((o) => o.id === openId) || null;
+  const face = (c) => ((CUSTOMER_POSES[c] || {}).think || CUSTOMER_IMAGES[c]);
+  const portrait = (c, d) => (
+    <View style={{ width: d, height: d, borderRadius: d / 2, overflow: 'hidden', backgroundColor: '#e8cf9a', borderWidth: 2, borderColor: '#b98a4e' }}>
+      <Image source={face(c)} style={{ position: 'absolute', width: d * 1.9, height: d * 2.85, left: -d * 0.45, top: -d * 0.55 }} resizeMode="contain" />
+    </View>
+  );
+  return (
+    <>
+      {orders.map((o, i) => {
+        const active = o.id === takenId;
+        const items = orderItems(o, progress, active);
+        return (
+          <TouchableOpacity key={o.id} activeOpacity={0.9} onPress={() => onOpen(o.id)}
+            style={[styles.card, active && styles.cardOn, { left: fx(236 + i * 196), top: fy(618 + (i % 2) * 4), width: fx(184), height: fy(124), transform: [{ rotate: `${(i % 2 ? 1.4 : -1.4)}deg` }] }]}>
+            <View style={styles.cardRed} />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: fx(8), marginTop: fy(8) }}>
+              {portrait(o.customer, fx(50))}
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.cardName, { fontSize: fs(16, 11) }]} numberOfLines={1}>{CUSTOMERS[o.customer].name.replace('Gardener ', '')}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                  <Image source={UI_IMAGES.goldcoins} style={{ width: fx(16), height: fx(16) }} resizeMode="contain" />
+                  <Text style={[styles.cardSub, { fontSize: fs(14, 10) }]}>{o.type === 'flowers' ? o.coins : `+${o.tip}`}</Text>
+                </View>
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', gap: fx(4), marginTop: fy(8), alignItems: 'center' }}>
+              {items.slice(0, 4).map((it, k) => (
+                <View key={k} style={{ width: fx(30), height: fx(30), alignItems: 'center', justifyContent: 'center' }}>
+                  {it.cluster ? <FlowerCluster keys={it.cluster} size={fx(30)} /> : <Image source={it.src} style={{ width: fx(28), height: fx(28) }} resizeMode="contain" />}
+                  {it.ok && <Image source={BOOK_STAMP} style={{ position: 'absolute', right: -fx(5), top: -fx(5), width: fx(16), height: fx(16) }} resizeMode="contain" />}
+                </View>
+              ))}
+            </View>
+            {active && <Image source={BOOK_STAMP} style={{ position: 'absolute', right: fx(6), top: fy(10), width: fx(30), height: fx(30) }} resizeMode="contain" />}
+          </TouchableOpacity>
+        );
+      })}
+      {orders.length === 0 && (
+        <View pointerEvents="none" style={[styles.card, { left: fx(236), top: fy(618), width: fx(184), height: fy(124), opacity: 0.45, borderStyle: 'dashed' }]}>
+          <View style={styles.cardRed} />
+        </View>
+      )}
+
+      {open && (
+        <TouchableOpacity activeOpacity={1} onPress={() => onOpen(null)} style={styles.cardDim}>
+          <TouchableOpacity activeOpacity={1} onPress={() => {}} style={[styles.cardBig, { width: fx(640), transform: [{ rotate: '-0.8deg' }] }]}>
+            <View style={styles.cardRed} />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: fx(14), marginTop: fy(10) }}>
+              {portrait(open.customer, fx(84))}
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.cardName, { fontSize: fs(28, 16) }]}>{CUSTOMERS[open.customer].name}</Text>
+                <Text style={[styles.cardSub, { fontSize: fs(17, 12) }]} numberOfLines={2}>{customerLine(open, 'short')}</Text>
+              </View>
+              <TouchableOpacity onPress={() => onOpen(null)} activeOpacity={0.8}><Image source={SET_UI.close.src} style={{ width: 32, height: 31 }} resizeMode="contain" /></TouchableOpacity>
+            </View>
+            <View style={{ marginTop: fy(12) }}>
+              {orderItems(open, progress, open.id === takenId).map((it, k) => (
+                <View key={k} style={styles.cardRow}>
+                  <View style={{ width: fx(46), height: fx(46), alignItems: 'center', justifyContent: 'center' }}>
+                    {it.cluster ? <FlowerCluster keys={it.cluster} size={fx(46)} /> : <Image source={it.src} style={{ width: fx(44), height: fx(44) }} resizeMode="contain" />}
+                  </View>
+                  <Text style={[styles.cardRowTxt, { fontSize: fs(19, 12) }]} numberOfLines={1}>{it.label}</Text>
+                  {it.ok && <Image source={BOOK_STAMP} style={{ width: fx(28), height: fx(28) }} resizeMode="contain" />}
+                </View>
+              ))}
+              <View style={styles.cardRow}>
+                <Image source={UI_IMAGES.goldcoins} style={{ width: fx(30), height: fx(30), marginHorizontal: fx(8) }} resizeMode="contain" />
+                <Text style={[styles.cardRowTxt, { fontSize: fs(19, 12), color: '#a8700a' }]}>{open.type === 'flowers' ? `${open.coins} coins` : `a tip of up to ${Math.round(open.tip * 1.5)}`}</Text>
+                <Text style={[styles.cardSub, { fontSize: fs(16, 11) }]}>+{open.xp} xp</Text>
+              </View>
+            </View>
+            {!packOrder && (
+              <View style={{ alignItems: 'flex-end', marginTop: fy(10) }}>
+                {open.id === takenId
+                  ? <PixelButton label="Put it back" tone="wood" size={fs(8, 7)} onPress={onDrop} />
+                  : <PixelButton label="Take this order" size={fs(8, 7)} onPress={() => onTake(open.id)} />}
+              </View>
+            )}
+          </TouchableOpacity>
+        </TouchableOpacity>
+      )}
+    </>
   );
 }
 
@@ -828,7 +893,7 @@ function SpoolPull({ spools, target, onTie, fy }) {
 
 // The stack of paper at the top. Tap it to change the kind of paper, drag a sheet off the top
 // of the stack down onto the work mat to start.
-function PaperStack({ paper, chosen, level, coins, onCycle, onChoose, box, matTop, fx, fy }) {
+function PaperStack({ paper, chosen, level, coins, onCycle, onChoose, box, matTop, fx, fy, showTip }) {
   const ids = Object.keys(BOUQUET_PAPERS);
   const drag = useRef(new Animated.ValueXY()).current;
   const [lifted, setLifted] = useState(false);
@@ -866,7 +931,7 @@ function PaperStack({ paper, chosen, level, coins, onCycle, onChoose, box, matTo
         </Animated.View>
       )}
       <View pointerEvents="none" style={{ position: 'absolute', left: box.x, top: box.h - fy(6), width: box.w, alignItems: 'center', zIndex: 31 }}>
-        <Text style={styles.stackLabel}>{info.name} paper · {info.cost > 0 ? `${info.cost} coins` : 'free'}  (tap to change)</Text>
+        {showTip ? <Text style={styles.stackLabel}>{info.name}{info.cost > 0 ? ` · ${info.cost}` : ''}</Text> : null}
       </View>
     </>
   );
@@ -883,6 +948,15 @@ const styles = StyleSheet.create({
   dotNow: { backgroundColor: '#fbf0cf', borderColor: '#c9780a' },
   stepTxt: { fontFamily: HEAD, fontSize: 14, color: '#d9c39a', textShadowColor: '#2a1608', textShadowRadius: 3 },
   stepTxtNow: { color: '#fff3d6' },
+  card: { position: 'absolute', zIndex: 12, backgroundColor: '#fdf3d6', borderWidth: 2, borderColor: '#b98a4e', borderRadius: 6, paddingHorizontal: 10, overflow: 'hidden' },
+  cardOn: { borderColor: '#2f5a22', borderWidth: 3 },
+  cardRed: { position: 'absolute', left: 0, right: 0, top: 0, height: 5, backgroundColor: '#c0553a' },
+  cardName: { fontFamily: HEAD, fontWeight: 'bold', color: '#4a2a10' },
+  cardSub: { fontFamily: HEAD, color: '#7a5030' },
+  cardDim: { position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, zIndex: 70, backgroundColor: 'rgba(30,18,6,0.55)', alignItems: 'center', justifyContent: 'center' },
+  cardBig: { backgroundColor: '#fdf3d6', borderWidth: 3, borderColor: '#b98a4e', borderRadius: 10, padding: 18, paddingTop: 22, overflow: 'hidden' },
+  cardRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: '#e2cb98' },
+  cardRowTxt: { flex: 1, fontFamily: HEAD, color: '#4a2a10' },
   stripBoard: { position: 'absolute', backgroundColor: '#f3e0b6', borderWidth: 4, borderColor: '#8a5a2a', borderRadius: 16, zIndex: 8 },
   stripRing: { position: 'absolute', borderRadius: 100, backgroundColor: '#e8cf9a', borderWidth: 3, borderColor: '#b98a4e' },
   stripName: { position: 'absolute', fontFamily: HEAD, fontSize: 17, color: '#4a2a10', zIndex: 10 },

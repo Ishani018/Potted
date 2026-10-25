@@ -142,7 +142,7 @@ export default function CounterScreen({ navigation, route }) {
     if (taking) return;
     setTaking(true);
     Animated.timing(stub, { toValue: 1, duration: 520, easing: Easing.in(Easing.cubic), useNativeDriver: false }).start(() => {
-      navigation.navigate('Bouquet', toBox ? { pack: order.id } : undefined);
+      navigation.navigate('Bouquet', toBox ? { pack: order.id } : { takeOrder: order.id });
       later(() => { setTaking(false); stub.setValue(0); }, 400);
     });
   };
