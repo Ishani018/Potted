@@ -201,6 +201,8 @@ export const BOW_IMAGES = {
 export const MAKE_IMAGES = {
   paper: require('../../assets/make2/pap_05.png'),        // kraft sheet
   paperFancy: require('../../assets/make2/pap_01.png'),   // flowered sheet
+  paperStack: require('../../assets/make2/pap_07.png'),   // folded kraft, lying flat
+  paperFancyStack: require('../../assets/make2/pap_03.png'), // folded flowered sheet, lying flat
   // the ribbon spools (picture + tail), same order as the rack
   spoolRed: require('../../assets/make2/spl_01.png'), spoolPink: require('../../assets/make2/spl_02.png'), spoolCream: require('../../assets/make2/spl_03.png'),
   spoolPinkFloral: require('../../assets/make2/spl_04.png'), spoolCreamFloral: require('../../assets/make2/spl_05.png'), spoolGreen: require('../../assets/make2/spl_06.png'),

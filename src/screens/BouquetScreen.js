@@ -216,7 +216,7 @@ export default function BouquetScreen({ navigation, route }) {
             <View pointerEvents="none" style={{ position: 'absolute', left: pLeft - pw * 0.04, top: pTop + ph * 0.08, width: pw * 1.08, height: pw * 1.08 * 0.75, zIndex: 6 }}>
               <Image source={boxLid === 'open' ? BOX_IMAGES.open : boxLid === 'closing' ? BOX_IMAGES.closing : BOX_IMAGES.top} style={{ position: 'absolute', width: '100%', height: '100%' }} resizeMode="contain" />
               {!packOrder && step >= 1 && (
-                <Image source={paper === 'layered' ? MAKE_IMAGES.wrapLayered : MAKE_IMAGES.paper} resizeMode="contain" style={{ position: 'absolute', left: '15%', top: '44%', width: '26%', height: '30%', transform: [{ rotate: '-8deg' }], ...SOFT }} />
+                <Image source={{ plain: MAKE_IMAGES.paperStack, fancy: MAKE_IMAGES.paperFancyStack, layered: MAKE_IMAGES.wrapLayered }[paper] || MAKE_IMAGES.paperStack} resizeMode="contain" style={{ position: 'absolute', left: '15%', top: '44%', width: '26%', height: '30%', transform: [{ rotate: '-8deg' }], ...SOFT }} />
               )}
               {!packOrder && tied && <RibbonCoil source={MAKE_IMAGES[ribbonKey]} style={{ position: 'absolute', left: '63%', top: '48%', width: '28%', height: '36%', zIndex: 5 }} />}
               {boxLid === 'open' && picks.map((k, i) => (
