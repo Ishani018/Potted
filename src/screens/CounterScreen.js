@@ -51,7 +51,7 @@ function TkRow({ source, label, right, bad, cluster, fx }) {
   return (
     <View style={styles.tkRow}>
       <View style={styles.tkIcon}>
-        {cluster ? <FlowerCluster keys={cluster} size={fx(30)} /> : source ? <Image source={source} style={{ width: '100%', height: '100%' }} resizeMode="contain" /> : null}
+        {cluster ? <FlowerCluster keys={cluster} size={fx(48)} /> : source ? <Image source={source} style={{ width: '100%', height: '100%' }} resizeMode="contain" /> : null}
       </View>
       <Text style={styles.tkLabel} numberOfLines={1}>{label}</Text>
       {right ? <Text style={[styles.tkRight2, bad && { color: '#b04a2a' }]}>{right}</Text> : null}
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
   tkSay: { backgroundColor: '#fff6dc', borderRadius: 12, borderWidth: 2, borderColor: '#d9bd86', paddingHorizontal: 10, paddingVertical: 5, marginBottom: 6 },
   tkHead: { fontFamily: HEAD, fontSize: 12, color: '#7a5030', marginBottom: 2 },
   tkRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#ecd9a6', borderRadius: 10, borderWidth: 2, borderColor: '#d9bd86', paddingHorizontal: 6, paddingVertical: 2, marginBottom: 4 },
-  tkIcon: { width: 32, height: 32, borderRadius: 8, backgroundColor: '#e8cf9a', borderWidth: 2, borderColor: '#b98a4e', alignItems: 'center', justifyContent: 'center', padding: 2 },
+  tkIcon: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
   tkLabel: { flex: 1, fontFamily: HEAD, fontSize: 14, color: '#4a2a10' },
   tkRight2: { fontFamily: HEAD, fontSize: 14, color: '#3f7a2e', fontWeight: 'bold' },
   tkFoot: { position: 'absolute', left: '31%', right: '5%', bottom: '7%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
