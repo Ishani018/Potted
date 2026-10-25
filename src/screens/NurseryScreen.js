@@ -30,7 +30,7 @@ const SEED_ORDER = ['daisy', 'snapdragon', 'poppy', 'marigold', 'peony', 'hydren
 // Nine bags are painted on the counter (their flowers are our seeds'); the other three seeds are sold from the POTS panel.
 const COUNTER_SEEDS = ['daisy', 'marigold', 'rose', 'hydrenga', 'jasmine', 'peony', 'poppy', 'petunia', 'snapdragon'];
 const EXTRA_SEEDS = SEED_ORDER.filter((kk) => !COUNTER_SEEDS.includes(kk));
-const SEED_BOX = (n) => { const cx = 263 + [0, 126, 248, 374, 500, 623, 748, 874, 1000][n]; return [cx - 50, 750, cx + 50, 862]; };
+const SEED_BOX = (n) => { const cx = 263 + [0, 126, 248, 374, 500, 623, 748, 874, 1000][n]; return [cx - 62, 752, cx + 62, 868]; };   // the seed bags are drawn here (the picture's own bags were painted out)
 const POT_SLOTS = [
   { id: 'p:2', box: [325, 200, 405, 266] },
   { id: 'p:6', box: [420, 205, 512, 267] },
@@ -223,7 +223,7 @@ export default function NurseryScreen({ navigation }) {
             const d = { ...describe(id), w: bx1 - bx0, h: by1 - by0 };
             return (
               <React.Fragment key={id}>
-                <DragItem it={d} ghost at={at} k={k} z={6} onDrop={() => setDetail(id)} onTap={() => setDetail(id)} />
+                <DragItem it={d} ghost={!id.startsWith('s:')} at={at} k={k} z={6} onDrop={() => setDetail(id)} onTap={() => setDetail(id)} />
               </React.Fragment>
             );
           })}
