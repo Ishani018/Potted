@@ -1,72 +1,79 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Animated, Easing, Platform } from 'react-native';
-import PottedArt from '../components/PottedArt';
+import { View, Text, Image, StyleSheet, Animated, Easing, Platform } from 'react-native';
+import { ROOM_BGS, HOME_BG, MAP_BG, TRADE_IMAGES } from '../engine/assets';
 
-// Shown after PLAY: a calm cream screen where a little daisy grows as the bar fills, then on to the town map.
-const DURATION = 3200;
+// Shown after PLAY, in the style of a big-game loading screen: a full-bleed painting of the game, a thin bar along the
+// very bottom, a tip above it, and a small spinning flower with "Loading" in the corner. Then on to the town map.
+const DURATION = 3400;
 const SERIF = Platform.select({ web: "'Almendra', Georgia, serif", default: 'Almendra' });
-const INK = '#4a2a10';
+const ART = [HOME_BG, ROOM_BGS.room2, ROOM_BGS.room3, ROOM_BGS.room1, MAP_BG];
 const TIPS = [
   'Tap a thirsty plant with the watering can.',
   'Hearts keep your favourites at the top of the journal.',
   'Pets bring home surprises from their adventures.',
   'Customers love a bouquet tied with their favourite ribbon.',
   'Shelf pots and hanging pots are sold at the nursery.',
+  'A bouquet tied with the right ribbon earns a bigger tip.',
 ];
+const BANDS = 14;   // stacked dark bands that fade the bottom of the picture (no gradient needed)
 
 export default function LoadingScreen({ navigation }) {
   const progress = useRef(new Animated.Value(0)).current;
-  const pop = useRef(new Animated.Value(1)).current;
-  const [pct, setPct] = useState(0);
+  const spin = useRef(new Animated.Value(0)).current;
   const [box, setBox] = useState({ w: 0, h: 0 });
+  const art = useMemo(() => ART[Math.floor(Math.random() * ART.length)], []);
   const tip = useMemo(() => TIPS[Math.floor(Math.random() * TIPS.length)], []);
-  const stage = pct < 22 ? 0 : pct < 52 ? 1 : pct < 84 ? 2 : 3;
-  const lastStage = useRef(0);
 
   useEffect(() => {
-    const id = progress.addListener(({ value }) => setPct(Math.round(value * 100)));
     Animated.timing(progress, { toValue: 1, duration: DURATION, easing: Easing.inOut(Easing.quad), useNativeDriver: false }).start(({ finished }) => {
-      if (finished) setTimeout(() => navigation.replace('Map'), 350);
+      if (finished) setTimeout(() => navigation.replace('Map'), 300);
     });
-    return () => progress.removeListener(id);
+    const loop = Animated.loop(Animated.timing(spin, { toValue: 1, duration: 1800, easing: Easing.linear, useNativeDriver: false }));
+    loop.start();
+    return () => loop.stop();
   }, []);
 
-  // a little hop each time the plant grows a stage
-  useEffect(() => {
-    if (stage === lastStage.current) return;
-    lastStage.current = stage;
-    pop.setValue(0.86);
-    Animated.spring(pop, { toValue: 1, friction: 4, tension: 120, useNativeDriver: false }).start();
-  }, [stage]);
-
   const k = box.h ? Math.min(box.h / 480, box.w / 854) : 1;
-  const barW = 360 * k;
-  const fillW = progress.interpolate({ inputRange: [0, 1], outputRange: [0, barW - 8 * k] });
+  const fillW = progress.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
+  const rot = spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
   return (
     <View style={styles.root} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
+      <Image source={art} style={styles.bg} resizeMode="cover" />
+
       {box.w > 0 && (
-        <View style={styles.center}>
-          <Text style={[styles.title, { fontSize: 34 * k }]}>Opening the shop</Text>
-          <Animated.View style={{ height: 190 * k, justifyContent: 'flex-end', alignItems: 'center', transform: [{ scale: pop }] }}>
-            <PottedArt pot={4} plantKey="daisy" stage={stage} potW={Math.round(130 * k)} />
-          </Animated.View>
-          <View style={[styles.track, { width: barW, height: 22 * k, borderRadius: 11 * k, borderWidth: Math.max(2, 3 * k) }]}>
-            <Animated.View style={{ width: fillW, height: '100%', borderRadius: 8 * k, backgroundColor: '#6a9a3a' }} />
+        <>
+          {/* the bottom of the picture fades to dark so the words read */}
+          <View pointerEvents="none" style={[styles.fade, { height: box.h * 0.4 }]}>
+            {Array.from({ length: BANDS }, (_, i) => (
+              <View key={i} style={{ flex: 1, backgroundColor: `rgba(30,16,6,${(0.92 * Math.pow(i / (BANDS - 1), 1.3)).toFixed(3)})` }} />
+            ))}
           </View>
-          <Text style={[styles.pct, { fontSize: 20 * k }]}>{pct}%</Text>
-          <Text style={[styles.tip, { fontSize: 17 * k }]}>{tip}</Text>
-        </View>
+
+          <Text style={[styles.tip, { fontSize: 19 * k, bottom: 34 * k }]}>Tip: {tip}</Text>
+
+          <View style={[styles.corner, { right: 22 * k, bottom: 44 * k }]}>
+            <Text style={[styles.loading, { fontSize: 16 * k }]}>Loading</Text>
+            <Animated.Image source={TRADE_IMAGES.daisytrade} style={{ width: 30 * k, height: 30 * k, transform: [{ rotate: rot }] }} resizeMode="contain" />
+          </View>
+
+          {/* the thin bar along the very bottom edge */}
+          <View style={[styles.track, { height: Math.max(4, 5 * k) }]}>
+            <Animated.View style={[styles.fill, { width: fillW }]} />
+          </View>
+        </>
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#f3e0b6' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  title: { fontFamily: SERIF, fontWeight: 'bold', color: INK, marginBottom: 6 },
-  track: { backgroundColor: '#e3cf9c', borderColor: '#8a5a2a', padding: 2, marginTop: 14, justifyContent: 'center' },
-  pct: { fontFamily: SERIF, fontWeight: 'bold', color: INK, marginTop: 8 },
-  tip: { fontFamily: SERIF, color: '#7a5030', marginTop: 10, textAlign: 'center', paddingHorizontal: 24 },
+  root: { flex: 1, backgroundColor: '#1e1006' },
+  bg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' },
+  fade: { position: 'absolute', left: 0, right: 0, bottom: 0 },
+  tip: { position: 'absolute', left: 0, right: 0, textAlign: 'center', fontFamily: SERIF, color: '#fff3d0', textShadowColor: 'rgba(0,0,0,0.6)', textShadowRadius: 4, textShadowOffset: { width: 0, height: 1 }, paddingHorizontal: 90 },
+  corner: { position: 'absolute', flexDirection: 'row', alignItems: 'center', gap: 8 },
+  loading: { fontFamily: SERIF, color: '#fff3d0', textShadowColor: 'rgba(0,0,0,0.6)', textShadowRadius: 3 },
+  track: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,243,208,0.22)' },
+  fill: { height: '100%', backgroundColor: '#ffe29a' },
 });
