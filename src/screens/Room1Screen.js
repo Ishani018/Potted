@@ -17,6 +17,7 @@ import PlantSlot from '../components/PlantSlot';
 import HeldSeedBanner from '../components/HeldSeedBanner';
 import RemedyBar, { useRemedyUse } from '../components/RemedyBar';
 import DraggablePot from '../components/DraggablePot';
+import SupplyTile, { supplySlot } from '../components/SupplyTile';
 import RoomPets from '../components/RoomPets';
 import ScreenHud from '../components/ScreenHud';
 import WateringCan from '../components/WateringCan';
@@ -117,7 +118,8 @@ export default function Room1Screen({ navigation }) {
   const potW = Math.round(projectSize(90, sw, sh));
   const potHSrc = Math.round(potW * (344 / 347));
   const rawPos1 = POT_SOURCE_POSITIONS[1];
-  const potSrcPos = projectPoint(rawPos1.x, rawPos1.y, sw, sh);
+  const potTile = supplySlot(1, sw, sh);
+  const potSrcPos = { x: potTile.cx, y: potTile.cy + potHSrc / 2 };
 
   return (
     <GestureHandlerRootView style={styles.root}>
@@ -131,12 +133,8 @@ export default function Room1Screen({ navigation }) {
         {/* Placed pets */}
         <RoomPets room={1} sw={sw} sh={sh} onPetPress={handlePetPress} />
 
-        {/* Pot source on window sill */}
-        <Image
-          source={PPOT_META[player.pottedPot || 4].src}
-          style={{ position: 'absolute', left: potSrcPos.x - potW / 2, top: potSrcPos.y - potHSrc, width: potW, height: potHSrc, zIndex: 598 }}
-          resizeMode="contain"
-        />
+        {/* The pot you can drag out sits in the bottom row, next to the bag */}
+        <SupplyTile slot={1} sw={sw} sh={sh} source={PPOT_META[player.pottedPot || 4].src} aspect={344 / 347} />
         <DraggablePot
           startX={potSrcPos.x}
           startY={potSrcPos.y}
@@ -193,7 +191,7 @@ export default function Room1Screen({ navigation }) {
           onInventory={() => setInvOpen(true)}
           onBook={() => navigation.navigate('FlowerBook')}
         />
-        <RemedyBar sw={sw} sh={sh} />
+        <RemedyBar sw={sw} sh={sh} slot0={2} />
 
 
 

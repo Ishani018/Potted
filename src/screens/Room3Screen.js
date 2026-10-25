@@ -25,6 +25,7 @@ import ScreenHud from '../components/ScreenHud';
 import WateringCan from '../components/WateringCan';
 import PlantPopup from '../components/PlantPopup';
 import InventoryOverlay from '../components/InventoryOverlay';
+import SupplyTile, { supplySlot } from '../components/SupplyTile';
 
 // Pot types in this room — seeds of any other type can't be planted here.
 const ROOM_TYPES = ['potted', 'hanging'];
@@ -107,7 +108,8 @@ export default function Room3Screen({ navigation }) {
   const hookPotH = Math.round(hookPotW * 0.93);
   const hookDragW = Math.round(projectSize(205, sw, sh));
   const rawHookSrc = HANGING_POT_SOURCE_POSITIONS[3];
-  const hookSrcPos = projectPoint(rawHookSrc.x, rawHookSrc.y, sw, sh);
+  const hookTile = supplySlot(2, sw, sh);
+  const hookSrcPos = { x: hookTile.cx, y: hookTile.cy + hookPotH / 2 };
 
   const handlePickSeed = useCallback((item) => {
     dispatch({ type: 'HOLD_SEED', invItemId: item.id, flowerKey: item.flowerKey });
@@ -140,7 +142,8 @@ export default function Room3Screen({ navigation }) {
   const potW = Math.round(projectSize(SUN_POT_W, sw, sh));
   const potHSrc = Math.round(potW * (344 / 347));
   const rawPotSrc = POT_SOURCE_POSITIONS[3];
-  const potSrcPos = projectPoint(rawPotSrc.x, rawPotSrc.y, sw, sh);
+  const potTile = supplySlot(1, sw, sh);
+  const potSrcPos = { x: potTile.cx, y: potTile.cy + potHSrc / 2 };
 
   const handlePopupHarvest = () => { if (popup) dispatch({ type: 'HARVEST_PLANT', slotId: popup.slot.slotId }); setPopup(null); };
   const handlePopupRemove = () => { if (popup) dispatch({ type: 'REMOVE_PLANT', slotId: popup.slot.slotId, deletePot: true }); setPopup(null); };
@@ -157,12 +160,9 @@ export default function Room3Screen({ navigation }) {
         {/* Placed pets */}
         <RoomPets room={3} sw={sw} sh={sh} onPetPress={handlePetPress} />
 
-        {/* Pot source on the floor + drag handle (drag onto a shelf spot) */}
-        <Image
-          source={PPOT_META[player.pottedPot || 4].src}
-          style={{ position: 'absolute', left: potSrcPos.x - potW / 2, top: potSrcPos.y - potHSrc, width: potW, height: potHSrc, zIndex: 598 }}
-          resizeMode="contain"
-        />
+        {/* The pots you can drag out sit in the bottom row, next to the bag */}
+        <SupplyTile slot={1} sw={sw} sh={sh} source={PPOT_META[player.pottedPot || 4].src} aspect={344 / 347} />
+        <SupplyTile slot={2} sw={sw} sh={sh} source={HPOT_META[player.hangingPot || 'macrame'].src} />
         <DraggablePot
           startX={potSrcPos.x}
           startY={potSrcPos.y}
@@ -193,12 +193,6 @@ export default function Room3Screen({ navigation }) {
           );
         })}
 
-        {/* Hook-pot source on a stool + drag handle (drag onto a free hook) */}
-        <Image
-          source={HPOT_META[player.hangingPot || 'macrame'].src}
-          style={{ position: 'absolute', left: hookSrcPos.x - hookPotW / 2, top: hookSrcPos.y - hookPotW * 1.5, width: hookPotW, height: hookPotW * 1.5, zIndex: 2 }}
-          resizeMode="contain"
-        />
         <DraggableHangingPot
           startX={hookSrcPos.x}
           startY={hookSrcPos.y - hookPotH}
@@ -262,7 +256,7 @@ export default function Room3Screen({ navigation }) {
           onInventory={() => setInvOpen(true)}
           onBook={() => navigation.navigate('FlowerBook')}
         />
-        <RemedyBar sw={sw} sh={sh} />
+        <RemedyBar sw={sw} sh={sh} slot0={3} />
 
 
         {popup && (

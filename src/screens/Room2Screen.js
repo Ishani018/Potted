@@ -19,6 +19,7 @@ import PlantSlot from '../components/PlantSlot';
 import HeldSeedBanner from '../components/HeldSeedBanner';
 import RemedyBar, { useRemedyUse } from '../components/RemedyBar';
 import DraggableHangingPot from '../components/DraggableHangingPot';
+import SupplyTile, { supplySlot } from '../components/SupplyTile';
 import RoomPets from '../components/RoomPets';
 import ScreenHud from '../components/ScreenHud';
 import WateringCan from '../components/WateringCan';
@@ -135,7 +136,8 @@ export default function Room2Screen({ navigation }) {
   const ghostW = dragW;
   const ghostH = dragH;
   const rawPos2 = POT_SOURCE_POSITIONS[2];
-  const potSrcPos = projectPoint(rawPos2.x, rawPos2.y, sw, sh);
+  const potTile = supplySlot(1, sw, sh);
+  const potSrcPos = { x: potTile.cx, y: potTile.cy + potH / 2 };
 
   return (
     <GestureHandlerRootView style={styles.root}>
@@ -158,12 +160,8 @@ export default function Room2Screen({ navigation }) {
           />
         )}
 
-        {/* Pot source on stool — static image at rest, gesture layer on top */}
-        <Image
-          source={HPOT_META[player.hangingPot || 'macrame'].src}
-          style={{ position: 'absolute', left: potSrcPos.x - potW / 2, top: potSrcPos.y - potW * 1.5, width: potW, height: potW * 1.5, zIndex: 2 }}
-          resizeMode="contain"
-        />
+        {/* The pot you can drag out sits in the bottom row, next to the bag */}
+        <SupplyTile slot={1} sw={sw} sh={sh} source={HPOT_META[player.hangingPot || 'macrame'].src} />
         <DraggableHangingPot
           startX={potSrcPos.x}
           startY={potSrcPos.y - potH}
@@ -237,7 +235,7 @@ export default function Room2Screen({ navigation }) {
           onInventory={() => setInvOpen(true)}
           onBook={() => navigation.navigate('FlowerBook')}
         />
-        <RemedyBar sw={sw} sh={sh} />
+        <RemedyBar sw={sw} sh={sh} slot0={2} />
 
 
 

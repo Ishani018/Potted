@@ -97,7 +97,6 @@ export default function BouquetScreen({ navigation, route }) {
   const [boxOut, setBoxOut] = useState(sv.boxOut ?? false);       // a flower order's box has been dragged onto the mat
   const [taken, setTaken] = useState(route?.params?.takeOrder ?? sv.taken ?? null);   // the order you took: the bouquet goes to them
   const [cardOpen, setCardOpen] = useState(null);      // the index card that is opened out
-  const [paperTip, setPaperTip] = useState(false);     // the paper's name, shown for a moment after you change it
   const [boxLid, setBoxLid] = useState('open');          // 'open' | 'closing' | 'closed'
   const [step, setStep] = useState(sv.step ?? (packId ? 1 : 0));     // 0 paper .. 3 tie, 4 bow, 5 give
   const [bow, setBow] = useState(sv.bow ?? null);            // the bow on the ribbon: { color, i } into BOW_IMAGES
@@ -142,7 +141,8 @@ export default function BouquetScreen({ navigation, route }) {
 
   // The waiting customer (if they want a bouquet) is shown as a ticket; the bouquet is
   // delivered to them when it has the flower they asked for.
-  const want = takenOrder;
+  // with no order taken, it goes to whoever has waited longest: any bouquet can be handed over, right or wrong
+  const want = takenOrder ?? (packOrder ? null : (waiting[0] ?? null));
   // you can hand over any bouquet: the waiting customer gets it even if it is wrong (and is angry)
   const order = full ? want : null;
   const flowersOk = !order || bouquetFillsOrder(order, picks);
@@ -217,9 +217,8 @@ export default function BouquetScreen({ navigation, route }) {
         <>
           {/* ── 0: the paper stack at the top: tap it to change paper, drag a sheet onto the mat ── */}
           {!packOrder && step === 0 && (
-            <PaperStack
-              paper={paper} chosen={chosenPaper} level={level} coins={coins}
-              showTip={paperTip} onCycle={(id) => { setPaper(id); setPaperTip(true); setTimeout(() => setPaperTip(false), 1400); }} onChoose={() => setStep(1)}
+            <PaperPiles
+              level={level} coins={coins} onPick={(id) => { setPaper(id); setStep(1); }}
               box={{ x: fx(517), y: fy(40), w: fx(442), h: fy(200) }} matTop={fy(MAT.y0)} fx={fx} fy={fy}
             />
           )}
@@ -233,9 +232,9 @@ export default function BouquetScreen({ navigation, route }) {
               ))}
             </View>
           )}
-          {/* a flower order: the closed box waits below the mat; drag it onto the mat and it opens */}
-          {packOrder && !boxOut && (
-            <ClosedBox rest={{ x: fx(750), y: fy(672) }} w={fx(250)} mat={{ l: fx(MAT.x0), t: fy(MAT.y0), r: fx(MAT.x1), b: fy(MAT.y1) }} onOut={() => { setBoxLid('open'); setBoxOut(true); }} />
+          {/* the closed box is always there, off to the side; for a flower order, drag it onto the mat and it opens */}
+          {!(packOrder && boxOut) && (
+            <ClosedBox enabled={!!packOrder} rest={{ x: fx(940), y: fy(668) }} w={fx(200)} mat={{ l: fx(MAT.x0), t: fy(MAT.y0), r: fx(MAT.x1), b: fy(MAT.y1) }} onOut={() => { setBoxLid('open'); setBoxOut(true); }} />
           )}
           {!packOrder && step >= 1 && step <= 5 && (
             <HandOver
@@ -571,13 +570,13 @@ function TrashBin({ onPress, w, style }) {
 }
 
 // The closed box for a flower order, resting below the mat: drag it onto the mat to open it.
-function ClosedBox({ rest, w, mat, onOut }) {
+function ClosedBox({ rest, w, mat, onOut, enabled }) {
   const drag = useRef(new Animated.ValueXY()).current;
   const cfg = useRef({});
-  cfg.current = { rest, mat, onOut };
+  cfg.current = { rest, mat, onOut, enabled };
   const pan = useRef(PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: () => true,
+    onStartShouldSetPanResponder: () => cfg.current.enabled,
+    onMoveShouldSetPanResponder: () => cfg.current.enabled,
     onPanResponderMove: (_, g) => drag.setValue({ x: g.dx, y: g.dy }),
     onPanResponderRelease: (_, g) => {
       const { rest: r, mat: m, onOut: out } = cfg.current;
@@ -589,7 +588,7 @@ function ClosedBox({ rest, w, mat, onOut }) {
   })).current;
   const h = w * 235 / 383;
   return (
-    <Animated.View {...pan.panHandlers} style={{ position: 'absolute', left: rest.x - w / 2, top: rest.y - h / 2, width: w, height: h, zIndex: 40, transform: drag.getTranslateTransform() }}>
+    <Animated.View {...pan.panHandlers} pointerEvents={enabled ? 'auto' : 'none'} style={{ position: 'absolute', left: rest.x - w / 2, top: rest.y - h / 2, width: w, height: h, zIndex: 40, transform: drag.getTranslateTransform() }}>
       <Image source={BOX_IMAGES.top} resizeMode="contain" style={[{ width: w, height: h }, SOFT]} />
     </Animated.View>
   );
@@ -911,50 +910,62 @@ function SpoolPull({ spools, target, onTie, fy }) {
   );
 }
 
-// The stack of paper at the top. Tap it to change the kind of paper, drag a sheet off the top
-// of the stack down onto the work mat to start.
-function PaperStack({ paper, chosen, level, coins, onCycle, onChoose, box, matTop, fx, fy, showTip }) {
-  const ids = Object.keys(BOUQUET_PAPERS);
+// The papers lie in piles at the top, one pile per kind (kraft; kraft with the flowered sheet on top). Drag a sheet off
+// whichever pile you like onto the work mat: it is up to you whether it is the one the order asked for.
+const PILES = [
+  { id: 'plain', sheets: [{ k: 'paper', dx: -7, dy: 7, r: -5 }, { k: 'paper', dx: 5, dy: 4, r: 3 }, { k: 'paper', dx: 0, dy: 0, r: -1 }] },
+  { id: 'layered', sheets: [{ k: 'paper', dx: -6, dy: 7, r: 4 }, { k: 'paperFancy', dx: 5, dy: 3, r: -3 }, { k: 'paperFancy', dx: 0, dy: 0, r: 1 }] },
+];
+function PaperPile({ pile, cx, cy, w, h, ok, matTop, onPick, fx, fy }) {
+  const info = bouquetPaper(pile.id);
   const drag = useRef(new Animated.ValueXY()).current;
   const [lifted, setLifted] = useState(false);
+  const [tip, setTip] = useState(false);
   const cfg = useRef({});
-  cfg.current = { chosen, level, coins, onCycle, onChoose, matTop, box };
+  cfg.current = { ok, matTop, cy, onPick };
   const pan = useRef(PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onMoveShouldSetPanResponder: () => true,
-    onPanResponderGrant: () => setLifted(true),
-    onPanResponderMove: (_, g) => drag.setValue({ x: g.dx, y: g.dy }),
+    onPanResponderGrant: () => { if (cfg.current.ok) setLifted(true); },
+    onPanResponderMove: (_, g) => { if (cfg.current.ok) drag.setValue({ x: g.dx, y: g.dy }); },
     onPanResponderRelease: (_, g) => {
       setLifted(false);
       const c = cfg.current;
-      const moved = Math.hypot(g.dx, g.dy);
-      if (moved < 8) {
-        // tap: the next paper you can use
-        const usableId = (id) => coins >= BOUQUET_PAPERS[id].cost && level >= BOUQUET_PAPERS[id].level;
-        let i = ids.indexOf(c.chosen);
-        for (let n = 0; n < ids.length; n++) { i = (i + 1) % ids.length; if (usableId(ids[i])) { c.onCycle(ids[i]); break; } }
-      } else if (c.box.y + c.box.h / 2 + g.dy > c.matTop) {
-        c.onChoose();
-      }
+      if (!c.ok || Math.hypot(g.dx, g.dy) < 8) { setTip(true); setTimeout(() => setTip(false), 1400); }
+      else if (c.cy + g.dy > c.matTop) c.onPick(pile.id);
       Animated.spring(drag, { toValue: { x: 0, y: 0 }, friction: 7, useNativeDriver: false }).start();
     },
     onPanResponderTerminate: () => { setLifted(false); Animated.spring(drag, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start(); },
   })).current;
-  const info = bouquetPaper(paper);
-  const gw = fx(190), gh = gw / PAPER_ASPECT;
+  const L = cx - w / 2, T = cy - h / 2;
   return (
     <>
-      <View {...pan.panHandlers} style={{ position: 'absolute', left: box.x, top: box.y, width: box.w, height: box.h, zIndex: 30 }} />
+      <View {...pan.panHandlers} style={{ position: 'absolute', left: L, top: T, width: w, height: h + fy(18), zIndex: 30, opacity: ok ? 1 : 0.55 }}>
+        {pile.sheets.map((sh, i) => (
+          <Image key={i} source={MAKE_IMAGES[sh.k]} resizeMode="stretch" pointerEvents="none"
+            style={[{ position: 'absolute', left: sh.dx, top: sh.dy, width: w, height: h, transform: [{ rotate: `${sh.r}deg` }] }, SOFT]} />
+        ))}
+        <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: h - fy(2), alignItems: 'center' }}>
+          <Text style={styles.stackLabel}>{info.name}{!ok ? `  (level ${info.level})` : info.cost > 0 ? `  ·  ${info.cost}` : ''}</Text>
+        </View>
+      </View>
       {lifted && (
-        <Animated.View pointerEvents="none" style={{ position: 'absolute', left: box.x + box.w / 2 - gw / 2, top: box.y + box.h / 2 - gh / 2, width: gw, zIndex: 60, transform: drag.getTranslateTransform() }}>
-          <SheetLayers paper={paper} w={gw} h={gh} shadow />
+        <Animated.View pointerEvents="none" style={{ position: 'absolute', left: cx - w * 0.5, top: cy - h * 0.5, width: w, zIndex: 60, transform: drag.getTranslateTransform() }}>
+          <SheetLayers paper={pile.id} w={w * 1.1} h={h * 1.1} shadow />
         </Animated.View>
       )}
-      <View pointerEvents="none" style={{ position: 'absolute', left: box.x, top: box.h - fy(6), width: box.w, alignItems: 'center', zIndex: 31 }}>
-        {showTip ? <Text style={styles.stackLabel}>{info.name}{info.cost > 0 ? ` · ${info.cost}` : ''}</Text> : null}
-      </View>
     </>
   );
+}
+function PaperPiles({ level, coins, onPick, box, matTop, fx, fy }) {
+  const w = fx(168), h = w / PAPER_ASPECT;
+  return PILES.map((pile, i) => {
+    const info = bouquetPaper(pile.id);
+    return (
+      <PaperPile key={pile.id} pile={pile} cx={box.x + box.w * (i === 0 ? 0.26 : 0.74)} cy={box.y + box.h * 0.46} w={w} h={h}
+        ok={coins >= info.cost && level >= info.level} matTop={matTop} onPick={onPick} fx={fx} fy={fy} />
+    );
+  });
 }
 
 const styles = StyleSheet.create({

@@ -6,30 +6,28 @@ import { maxStageFor } from '../engine/gameEngine';
 import { PixelText, COLORS } from './Pixel';
 import HeldSeedBanner from './HeldSeedBanner';
 import RemedyIcon from './RemedyIcon';
+import { supplySlot } from './SupplyTile';
 
 // The bag of herbalist remedies, shown in the garden rooms. Tap a remedy to pick
 // it up (tap again to put it back), then tap a plant to use it. Hidden while the
 // bag is empty. Position is in the 1376×768 base space, next to the inventory button.
 const PLOPPER_W = 1376;
 const PLOPPER_H = 768;
-const TRAY = { x: 140, y: 717, item: 66, gap: 10 };
+const SLOT0 = 1;   // the tiles before it in the bottom row (the bag, the pots)
 
 const HINTS = {
   balm: 'TAP A PLANT WITH A BUG TO USE BUG BALM',
   sachet: 'TAP A GROWING PLANT TO HANG A SCENT SACHET ON IT',
 };
 
-export default function RemedyBar({ sw, sh }) {
+export default function RemedyBar({ sw, sh, slot0 = SLOT0 }) {
   const { state, dispatch } = useGame();
   if (!sw || !sh) return null;
   const rem = state.player.remedies ?? {};
   const held = state.heldRemedy;
   const kinds = ['balm', 'sachet'].filter((k) => (rem[k] ?? 0) > 0);
 
-  const item = (TRAY.item / PLOPPER_W) * sw;
-  const gap = (TRAY.gap / PLOPPER_W) * sw;
-  const cy = (TRAY.y / PLOPPER_H) * sh;
-  const left0 = (TRAY.x / PLOPPER_W) * sw;
+  const item = supplySlot(0, sw, sh).size;
 
   return (
     <>
@@ -40,7 +38,7 @@ export default function RemedyBar({ sw, sh }) {
             key={k}
             activeOpacity={0.8}
             onPress={() => dispatch({ type: 'HOLD_REMEDY', kind: k })}
-            style={[styles.slot, on && styles.slotOn, { left: left0 + i * (item + gap), top: cy - item / 2, width: item, height: item }]}
+            style={[styles.slot, on && styles.slotOn, { left: supplySlot(slot0 + i, sw, sh).cx - item / 2, top: supplySlot(0, sw, sh).cy - item / 2, width: item, height: item }]}
           >
             <RemedyIcon kind={k} size={item * 0.72} />
             <View style={styles.badge}><PixelText size={Math.max(7, Math.round(item * 0.2))}>{rem[k]}</PixelText></View>
@@ -82,7 +80,7 @@ export function useRemedyUse(showToast) {
 const styles = StyleSheet.create({
   slot: {
     position: 'absolute', zIndex: 30, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#f3e0b6', borderWidth: 3, borderColor: '#8a5a2a', borderRadius: 12,
+    backgroundColor: '#f3e0b6', borderWidth: 3, borderColor: '#8a5a2a', borderRadius: 14,
   },
   slotOn: { borderColor: '#2f5a22', backgroundColor: '#d6e2a8' },
   badge: {
