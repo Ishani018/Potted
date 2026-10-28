@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Potted — Apartment Studio</title>
+<style>
+:root{--cream:#f7f0df;--paper:#fffaf0;--ink:#4e4439;--sage:#a7b99a;--moss:#60785d;--pink:#e9bdb4;--line:#dfd2bc}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:ui-rounded,"Trebuchet MS",system-ui,sans-serif}
+header{height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid var(--line);background:#fbf6e9}
+.brand{font-weight:900;letter-spacing:.12em;font-size:22px}.brand span{color:#879b78}.sub{font-size:12px;opacity:.7;letter-spacing:.05em}
+main{display:grid;grid-template-columns:250px minmax(0,1fr) 230px;gap:14px;padding:14px;height:calc(100vh - 68px);min-height:560px}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:14px;overflow:auto;box-shadow:0 5px 18px #6c594010}
+h2{font-size:14px;text-transform:uppercase;letter-spacing:.12em;margin:2px 0 12px}p{font-size:12px;line-height:1.5;color:#827568}
+.items{display:grid;grid-template-columns:1fr 1fr;gap:8px}.item{background:#f6efdf;border:1px solid #e7dac5;border-radius:12px;padding:10px 6px;text-align:center;cursor:grab;transition:.15s;user-select:none}.item:hover,.item.active{border-color:#8b9d7b;background:#edf0e4;transform:translateY(-1px)}.emoji{font-size:28px;display:block;margin-bottom:4px}.label{font-size:11px;font-weight:700}
+#stage{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:radial-gradient(ellipse at 50% 45%,#f7e9cc,#e6dcc4);min-width:0;min-height:0}
+canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}
+.hint{position:absolute;left:14px;bottom:12px;background:#fffaf0dd;border:1px solid #e4d7c2;border-radius:10px;padding:8px 11px;font-size:11px;pointer-events:none}
+.stage-title{position:absolute;left:16px;top:14px;background:#fffaf0e8;border:1px solid #e4d7c2;border-radius:10px;padding:8px 11px;font-size:12px;font-weight:800;pointer-events:none}
+button{border:1px solid #d8cbb6;background:#f6efdf;color:var(--ink);border-radius:9px;padding:9px 10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}button:hover{background:#e9efdf}button.primary{background:#718768;color:white;border-color:#718768}button.danger{color:#a14f48}.actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}.wide{width:100%;margin-top:7px}.stat{display:flex;justify-content:space-between;font-size:12px;padding:8px 0;border-bottom:1px solid #eee3d1}.muted{color:#928575}.pill{display:inline-block;background:#e8eddf;color:#64775c;border-radius:20px;padding:4px 8px;font-size:10px;font-weight:800;letter-spacing:.07em}.divider{height:1px;background:#e9decd;margin:15px 0}
+@media(max-width:900px){main{grid-template-columns:190px minmax(0,1fr);height:auto;min-height:calc(100vh - 68px)}#stage{height:68vh;grid-column:2;grid-row:1/3}.right{grid-column:1;grid-row:2}.panel{padding:11px}.items{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){header{padding:0 14px}.sub{display:none}main{display:flex;flex-direction:column;height:auto;padding:8px}.panel{overflow:visible}#stage{order:0;height:56vh;min-height:360px}.left{order:1}.right{order:2}.items{grid-template-columns:repeat(4,minmax(0,1fr))}.emoji{font-size:23px}.label{font-size:10px}}
+</style>
+</head>
+<body>
+<header><div><div class="brand">P<span>O</span>TTED <span style="font-size:10px;letter-spacing:.16em;font-weight:700;color:#9b8b72">/ STUDIO</span></div></div><div class="sub">A LITTLE SPACE TO MAKE YOUR OWN</div><span class="pill">BROWSER EXPERIMENT</span></header>
+<main>
+<aside class="panel left"><h2>Furniture & plants</h2><p>Choose something to add, then click an open spot on the floor. Or drag an item card into the room.</p><div id="items" class="items"></div><div class="divider"></div><button class="wide" id="reset">↺ Reset room</button><button class="wide" id="save" >Save this room</button><button class="wide" id="load">Load saved room</button><p id="status" class="muted">Nothing here is connected to your live Potted save.</p></aside>
+<section id="stage"><div class="stage-title">Apartment 01 <span style="font-weight:400;color:#9a8a73">· sunny afternoon</span></div><div class="hint">Drag items to move · scroll to zoom · drag empty space to orbit</div></section>
+<aside class="panel right"><h2>Selected item</h2><div id="selectedName" style="font-size:16px;font-weight:900;margin:8px 0">Nothing selected</div><p id="selectedDesc">Pick a piece of furniture in the room or from the catalog.</p><div class="actions"><button id="rotate">↻ Rotate</button><button id="duplicate">＋ Duplicate</button><button id="raise">＋ Lift</button><button id="lower">－ Lower</button></div><button class="wide danger" id="remove">Remove item</button><div class="divider"></div><h2>Room notes</h2><div class="stat"><span>Room style</span><b>Cozy 3D</b></div><div class="stat"><span>Camera</span><b>Three-quarter</b></div><div class="stat"><span>Placement</span><b id="count">0 items</b></div><p>Prototype goal: test the feeling of a 3D Potted apartment before choosing any production technology or changing the existing game.</p></aside>
+</main>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/controls/OrbitControls.js';
+const stage=document.querySelector('#stage');
+const scene=new THREE.Scene();scene.background=new THREE.Color('#e8ddc7');
+const camera=new THREE.PerspectiveCamera(34,1,.1,100);camera.position.set(8,7.3,10);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;stage.prepend(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,1.1,0);controls.enableDamping=true;controls.maxPolarAngle=Math.PI*.49;controls.minDistance=7;controls.maxDistance=18;
+scene.add(new THREE.HemisphereLight(0xfff4df,0x77816a,2.1));
+const sun=new THREE.DirectionalLight(0xffdfad,3.2);sun.position.set(-4,9,6);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
+const mats={cream:mat('#f4e8ce'),wall:mat('#e9d8b7'),sage:mat('#8da184'),darkSage:mat('#657e61'),wood:mat('#a9744f'),woodLight:mat('#c79567'),pink:mat('#dba69b'),linen:mat('#eee2cc'),brown:mat('#665044'),white:mat('#fff8e9'),leaf:mat('#52734e'),soil:mat('#6b4b36'),blue:mat('#91b4bc'),gold:mat('#d5ad63')};
+function mat(c){return new THREE.MeshStandardMaterial({color:c,roughness:.88})}
+const room=new THREE.Group();scene.add(room);
+function box(parent,name,size,pos,material,opts={}){const mesh=new THREE.Mesh(new THREE.BoxGeometry(...size),material);mesh.name=name;mesh.position.set(...pos);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh}
+box(room,'Floor',(8,.22,7),(0,-.11,0),mats.wood);
+for(let x=-3.7;x<4;x+=.58)box(room,'Floor plank',(.012,.006,6.9),(x,0,.02),mat('#b98860'));
+box(room,'Back wall',(8,4.2,.18),(0,2.08,-3.5),mats.wall);
+box(room,'Left wall',(.18,4.2,7),( -4,2.08,0),mats.wall);
+box(room,'Back baseboard',(8,.16,.22),(0,.08,-3.35),mats.woodLight);
+box(room,'Left baseboard',(.22,.16,7),(-3.86,.08,0),mats.woodLight);
+// wallpaper panels and framed art
+for(let x=-3.5;x<=3.5;x+=.5)box(room,'Wallpaper seam',(.012,3.9,.01),(x,2.1,-3.39),mat('#dfcba9'));
+box(room,'Window frame',(2.15,1.9,.15),(-2.65,2.55,-3.34),mats.white);
+box(room,'Window glass',(1.87,1.63,.05),(-2.65,2.55,-3.24),mat('#b8d4d0'));
+box(room,'Window mullion',(.07,1.7,.06),(-2.65,2.55,-3.19),mats.white);
+box(room,'Window crossbar',(1.9,.07,.06),(-2.65,2.55,-3.19),mats.white);
+box(room,'Window sill',(2.4,.13,.28),(-2.65,1.57,-3.19),mats.white);
+box(room,'Rug',(3.15,.045,2.25),(0,.025,.1),mat('#d9b9a0'));
+box(room,'Rug inner',(2.86,.012,1.96),(0,.05,.1),mat('#ead5bf'));
+for(let x=-1.3;x<=1.31;x+=.26)box(room,'Rug stripe',(.018,.01,1.9),(x,.06,.1),mat('#d6b29b'));
+function groupItem(type,label,x,z){const g=new THREE.Group();g.userData={type,label};g.position.set(x,0,z);room.add(g);return g}
+function addFurniture(type,x,z,rot=0){const g=groupItem(type,defs[type].label,x,z);defs[type].build(g);g.rotation.y=rot;const hit=box(g,'hit-area',defs[type].hit,[0,.06,0],new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));hit.userData.hit=true;return g}
+function leg(g,x,z,h=.45,color=mats.wood){box(g,'leg',(.09,h,.09),(x,h/2,z),color)}
+const defs={
+ sofa:{label:'Sage sofa',emoji:'🛋️',hit:[1.8,.9,.82],build(g){box(g,'sofa base',(1.8,.36,.76),(0,.38,0),mats.sage);box(g,'sofa back',(1.8,.65,.2),(0,.78,-.29),mats.darkSage);for(const x of [-.58,0,.58])box(g,'cushion',(.54,.15,.54),(x,.64,.04),mats.sage);box(g,'pillow',(.36,.32,.13),(-.52,.83,.04),mats.pink);box(g,'pillow',(.34,.3,.13),(.48,.82,.04),mats.linen);leg(g,-.72,.28,.23);leg(g,.72,.28,.23)}},
+ bed:{label:'Cozy bed',emoji:'🛏️',hit:[1.65,.75,2.15],build(g){box(g,'bed frame',(1.65,.35,2.1),(0,.28,0),mats.wood);box(g,'mattress',(1.56,.24,1.98),(0,.52,.02),mats.linen);box(g,'headboard',(1.68,.82,.16),(0,.75,-.96),mats.woodLight);box(g,'duvet',(1.48,.13,1.22),(0,.7,.38),mats.sage);box(g,'pillow',(.55,.16,.38),(-.42,.72,-.55),mats.white);box(g,'pillow',(.55,.16,.38),(.38,.72,-.55),mats.pink);for(const x of [-.68,.68])for(const z of [-.82,.82])leg(g,x,z,.27)}},
+ table:{label:'Coffee table',emoji:'🪵',hit:[1.2,.65,.8],build(g){box(g,'table top',(1.2,.13,.8),(0,.55,0),mats.woodLight);for(const x of [-.48,.48])for(const z of [-.29,.29])leg(g,x,z,.52)}},
+ plant:{label:'Potted plant',emoji:'🪴',hit:[.65,1.3,.65],build(g){const pot=new THREE.Mesh(new THREE.CylinderGeometry(.23,.31,.4,12),mats.pink);pot.position.y=.22;pot.castShadow=true;g.add(pot);const soil=new THREE.Mesh(new THREE.CylinderGeometry(.23,.23,.035,12),mats.soil);soil.position.y=.43;g.add(soil);for(let i=0;i<9;i++){const a=i*2.4,r=.12+(i%3)*.04;const leaf=new THREE.Mesh(new THREE.SphereGeometry(.14,9,7),mats.leaf);leaf.scale.set(.65,1.65,.48);leaf.position.set(Math.cos(a)*r,.62+(i%4)*.13,Math.sin(a)*r);leaf.rotation.z=Math.cos(a)*.55;leaf.castShadow=true;g.add(leaf)}box(g,'stem',(.035,.5,.035),(0,.67,0),mats.darkSage)}},
+ lamp:{label:'Floor lamp',emoji:'💡',hit:[.5,1.8,.5],build(g){const pole=new THREE.Mesh(new THREE.CylinderGeometry(.035,.045,1.15,10),mats.wood);pole.position.y=.62;g.add(pole);const base=new THREE.Mesh(new THREE.CylinderGeometry(.24,.24,.08,16),mats.woodLight);base.position.y=.05;g.add(base);const shade=new THREE.Mesh(new THREE.CylinderGeometry(.18,.32,.35,16,1,true),mats.linen);shade.position.y=1.36;g.add(shade);const bulb=new THREE.PointLight(0xffdca0,.8,3);bulb.position.y=1.25;g.add(bulb)}},
+ shelf:{label:'Book shelf',emoji:'📚',hit:[1.1,1.7,.38],build(g){box(g,'shelf back',(1.1,1.65,.09),(0,.85,-.12),mats.wood);for(const y of [.15,.65,1.15,1.62])box(g,'shelf board',(1.12,.08,.42),(0,y,0),mats.woodLight);for(let i=0;i<4;i++){const b=box(g,'book',(.13,.3,.25),(-.35+i*.18,.34,.01),[mats.pink,mats.blue,mats.sage,mats.gold][i]);b.rotation.z=(i%2?-.08:.08)}for(let i=0;i<3;i++)box(g,'book',(.14,.35,.24),(-.3+i*.18,.83,.01),[mats.blue,mats.pink,mats.linen][i])}},
+ chair:{label:'Reading chair',emoji:'🪑',hit:[.85,1,.8],build(g){box(g,'seat',(.78,.18,.7),(0,.48,0),mats.pink);box(g,'back',(.78,.7,.15),(0,.83,-.27),mats.pink);box(g,'seat cushion',(.64,.12,.52),(0,.61,.02),mats.linen);for(const x of [-.3,.3])for(const z of [-.24,.24])leg(g,x,z,.4)}},
+ desk:{label:'Writing desk',emoji:'📝',hit:[1.35,.95,.72],build(g){box(g,'desk top',(1.35,.12,.72),(0,.82,0),mats.woodLight);for(const x of [-.55,.55]){leg(g,x,-.25,.8);leg(g,x,.25,.8)}box(g,'notebook',(.35,.035,.25),(-.2,.9,.02),mats.linen);box(g,'mug',(.12,.14,.12),(.4,.94,-.12),mats.white)}},
+ dresser:{label:'Little dresser',emoji:'🗄️',hit:[1.1,1.1,.5],build(g){box(g,'dresser',(1.1,.9,.48),(0,.52,0),mats.woodLight);for(const y of [.32,.58,.84]){box(g,'drawer',(.92,.21,.04),(0,y,.25),mats.wood);box(g,'knob',(.07,.06,.05),(0,y,.29),mats.gold)}box(g,'top',(1.18,.1,.55),(0,1.03,0),mats.wood)}},
+ flower:{label:'Flower vase',emoji:'🌷',hit:[.5,.8,.5],build(g){const vase=new THREE.Mesh(new THREE.CylinderGeometry(.13,.19,.38,12),mats.blue);vase.position.y=.2;g.add(vase);for(let i=0;i<4;i++){const stem=box(g,'stem',(.025,.42,.025),[(i-1.5)*.08,.55,0],mats.leaf);stem.rotation.z=(i-1.5)*.15;const bloom=new THREE.Mesh(new THREE.SphereGeometry(.1,8,7),[mats.pink,mats.gold,mats.pink,mats.white][i]);bloom.position.set((i-1.5)*.08,.8,0);g.add(bloom)}}}
+};
+const placed=[];let selected=null,placingType=null,dragging=null,dragOffset=new THREE.Vector3(),pointerDown=null;
+const catalog=document.querySelector('#items');
+for(const [type,d] of Object.entries(defs)){const el=document.createElement('div');el.className='item';el.draggable=true;el.innerHTML='<span class="emoji">'+d.emoji+'</span><span class="label">'+d.label+'</span>';el.addEventListener('click',()=>{placingType=type;document.querySelectorAll('.item').forEach(x=>x.classList.remove('active'));el.classList.add('active');status('Click an open spot on the floor to place '+d.label.toLowerCase()+'.')});el.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',type);placingType=type});catalog.appendChild(el)}
+function status(t){document.querySelector('#status').textContent=t}
+function select(g){selected=g;document.querySelector('#selectedName').textContent=g?g.userData.label:'Nothing selected';document.querySelector('#selectedDesc').textContent=g?'Move it around, rotate it, or make a copy.':'Pick a piece of furniture in the room or from the catalog.';updateCount()}
+function updateCount(){document.querySelector('#count').textContent=placed.length+' item'+(placed.length===1?'':'s')}
+function place(type,x,z){const g=addFurniture(type,x,z);placed.push(g);select(g);placingType=null;document.querySelectorAll('.item').forEach(e=>e.classList.remove('active'));return g}
+function remove(g){const i=placed.indexOf(g);if(i>=0)placed.splice(i,1);room.remove(g);select(null)}
+const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
+function cast(e){const r=renderer.domElement.getBoundingClientRect();mouse.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height*2-1));raycaster.setFromCamera(mouse,camera);return raycaster}
+function floorPoint(e){const r=cast(e);const plane=new THREE.Plane(new THREE.Vector3(0,1,0),0);const p=new THREE.Vector3();return r.ray.intersectPlane(plane,p)?p:null}
+function findFurniture(e){const r=cast(e);const hits=r.intersectObjects(placed,true);for(const h of hits){let o=h.object;while(o.parent&&o.parent!==room)o=o.parent;if(placed.includes(o))return o}return null}
+renderer.domElement.addEventListener('pointerdown',e=>{pointerDown={x:e.clientX,y:e.clientY};const g=findFurniture(e);if(g){selected=g;select(g);dragging=g;controls.enabled=false;const p=floorPoint(e);if(p)dragOffset.copy(g.position).sub(p);renderer.domElement.setPointerCapture(e.pointerId)}});
+renderer.domElement.addEventListener('pointermove',e=>{if(!dragging)return;const p=floorPoint(e);if(p){dragging.position.x=THREE.MathUtils.clamp(p.x+dragOffset.x,-3.45,3.45);dragging.position.z=THREE.MathUtils.clamp(p.z+dragOffset.z,-2.95,2.95)}});
+renderer.domElement.addEventListener('pointerup',e=>{if(dragging){dragging=null;controls.enabled=true;return}if(pointerDown&&Math.hypot(e.clientX-pointerDown.x,e.clientY-pointerDown.y)<5){const g=findFurniture(e);if(!g){const p=floorPoint(e);if(p&&placingType){place(placingType,THREE.MathUtils.clamp(p.x,-3.4,3.4),THREE.MathUtils.clamp(p.z,-2.9,2.9))}else select(null)}}pointerDown=null});
+stage.addEventListener('dragover',e=>e.preventDefault());stage.addEventListener('drop',e=>{e.preventDefault();const type=e.dataTransfer.getData('text/plain');if(!defs[type])return;const rect=renderer.domElement.getBoundingClientRect();const fake={clientX:e.clientX,clientY:e.clientY};const p=floorPoint(fake);if(p)place(type,THREE.MathUtils.clamp(p.x,-3.4,3.4),THREE.MathUtils.clamp(p.z,-2.9,2.9))});
+document.querySelector('#rotate').onclick=()=>{if(selected)selected.rotation.y+=Math.PI/4};
+document.querySelector('#duplicate').onclick=()=>{if(selected){const g=place(selected.userData.type,selected.position.x+.45,selected.position.z+.35);g.rotation.y=selected.rotation.y}};
+document.querySelector('#raise').onclick=()=>{if(selected)selected.position.y=Math.min(1,selected.position.y+.1)};
+document.querySelector('#lower').onclick=()=>{if(selected)selected.position.y=Math.max(0,selected.position.y-.1)};
+document.querySelector('#remove').onclick=()=>{if(selected)remove(selected)};
+function serialize(){return placed.map(g=>({type:g.userData.type,x:g.position.x,y:g.position.y,z:g.position.z,rot:g.rotation.y}))}
+function loadData(data){for(const g of [...placed])remove(g);for(const d of data){if(defs[d.type]){const g=place(d.type,d.x,d.z,d.rot);g.position.y=d.y||0;g.rotation.y=d.rot||0}}select(null)}
+document.querySelector('#save').onclick=()=>{localStorage.setItem('potted-apartment-experiment',JSON.stringify(serialize()));status('Saved locally in this browser.');};
+document.querySelector('#load').onclick=()=>{const s=localStorage.getItem('potted-apartment-experiment');if(!s){status('No saved experiment found in this browser yet.');return}try{loadData(JSON.parse(s));status('Loaded your saved room.')}catch{status('Could not read that saved room.')}};
+document.querySelector('#reset').onclick=()=>{loadData([]);status('Room reset. Your saved browser snapshot is unchanged.')};
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}window.addEventListener('resize',resize);resize();
+function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}animate();
+// starter layout
+place('bed',1.75,-1.75);place('sofa',-.1,.75);place('table',-.1,.65);place('plant',-3,-2.35);place('lamp',-1.55,.9);place('shelf',3,-2.7);place('chair',-1.45,2);place('flower',2.95,-.5);select(null);
+</script>
+</body></html>
